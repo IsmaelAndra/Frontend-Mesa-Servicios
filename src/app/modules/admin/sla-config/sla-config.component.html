@@ -1,0 +1,45 @@
+<div class="space-y-6" *ngIf="catalog">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-2xl font-bold text-primary">Configuración SLA</h1>
+    <button class="btn btn-primary btn-sm" (click)="generateEvaluations()">
+      <span *ngIf="loadingEvals" class="loading loading-spinner loading-xs"></span>
+      Generar evaluación mensual
+    </button>
+  </div>
+
+  <div class="card bg-base-100 shadow-md overflow-x-auto">
+    <table class="table table-sm">
+      <thead>
+        <tr><th>Política</th><th>Respuesta (min)</th><th>Resolución (min)</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let s of catalog.slaPolicies">
+          <td class="font-semibold">{{ s.name }}</td>
+          <td>{{ s.response }}</td>
+          <td>{{ s.resolution }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card bg-base-100 shadow-md overflow-x-auto" *ngIf="evaluations.length">
+    <div class="card-body">
+      <h2 class="card-title">Evaluaciones del mes</h2>
+      <table class="table table-sm">
+        <thead>
+          <tr><th>Agente</th><th>Tickets cerrados</th><th>Cumplimiento SLA %</th><th>Requerimientos</th><th>Satisfacción</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of evaluations">
+            <td>{{ e.agentEmail }}</td>
+            <td>{{ e.ticketsClosed }}</td>
+            <td>{{ e.slaComplianceRate ?? '—' }}</td>
+            <td>{{ e.avgRequirementsMet ?? '—' }}</td>
+            <td>{{ e.satisfactionScore ?? '—' }}</td>
+            <td><span class="badge" [ngClass]="e.status==='REVIEWED' ? 'badge-success' : 'badge-warning'">{{ e.status }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

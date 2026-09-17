@@ -1,0 +1,168 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Notificaciones</h1>
+        <p class="text-sm opacity-70">Historial de notificaciones del sistema</p>
+      </div>
+    </div>
+
+    <!-- Botón marcar todas como leídas -->
+    <button
+      class="btn btn-outline btn-sm gap-2"
+      (click)="markAllAsRead()"
+      *ngIf="hasUnread"
+      aria-label="Marcar todas como leídas"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      Marcar todas como leídas
+    </button>
+  </header>
+
+  <!-- Barra de filtros -->
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-3">
+      <div class="flex flex-wrap gap-2 items-center">
+        <!-- Estado -->
+        <div class="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-50 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          <select
+            [(ngModel)]="statusFilter"
+            (ngModelChange)="filterByStatus()"
+            class="select select-bordered select-sm pl-9 w-full sm:w-48"
+            aria-label="Filtrar por estado"
+          >
+            <option value="ALL">Todas</option>
+            <option value="LEIDA">Leídas</option>
+            <option value="NO_LEIDA">No leídas</option>
+          </select>
+        </div>
+
+        <!-- Contador de resultados -->
+        <span class="badge badge-ghost badge-sm ml-auto">
+          {{ notifications?.length || 0 }} notificacion{{ (notifications?.length || 0) === 1 ? '' : 'es' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20 gap-3" role="status" aria-live="polite">
+    <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+    <span class="text-sm opacity-70">Cargando notificaciones...</span>
+  </div>
+
+  <!-- Estado vacío -->
+  <div *ngIf="!isLoading && notifications.length === 0" class="card bg-base-100 shadow-md border border-base-200">
+    <div class="card-body">
+      <div class="flex flex-col items-center justify-center py-12 gap-3 opacity-70">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+        <span class="text-sm">No hay notificaciones</span>
+        <span class="text-xs opacity-70">
+          {{ statusFilter === 'ALL' ? 'Aún no tienes notificaciones registradas' : 'No hay notificaciones con ese filtro' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de notificaciones -->
+  <div *ngIf="!isLoading && notifications.length > 0" class="space-y-2">
+    <div
+      *ngFor="let notif of notifications"
+      class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-all cursor-pointer"
+      [ngClass]="notif.statusNotification === 'NO_LEIDA' ? 'border-l-4 border-l-primary' : ''"
+      (click)="openNotification(notif)"
+    >
+      <div class="card-body p-4">
+        <!-- Header: estado + fecha -->
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2">
+            <!-- Indicador no leída -->
+            <span
+              *ngIf="notif.statusNotification === 'NO_LEIDA'"
+              class="w-2 h-2 rounded-full bg-primary animate-pulse"
+              aria-hidden="true"
+            ></span>
+
+            <!-- Badge de estado -->
+            <span
+              class="badge badge-sm gap-1"
+              [ngClass]="notif.statusNotification === 'LEIDA' ? 'badge-ghost' : 'badge-primary'"
+            >
+              <svg *ngIf="notif.statusNotification === 'LEIDA'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <svg *ngIf="notif.statusNotification !== 'LEIDA'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ notif.statusNotification === 'LEIDA' ? 'Leída' : 'No leída' }}
+            </span>
+          </div>
+
+          <!-- Fecha -->
+          <span class="text-xs opacity-60 font-mono" [title]="notif.sentAt | date: 'dd/MM/yyyy HH:mm'">
+            {{ notif.sentAt | date: 'shortDate' }}
+          </span>
+        </div>
+
+        <!-- Título -->
+        <h3
+          class="font-semibold text-sm leading-snug"
+          [ngClass]="notif.statusNotification === 'NO_LEIDA' ? 'text-primary' : ''"
+        >
+          {{ notif.subjectNotification }}
+        </h3>
+
+        <!-- Mensaje -->
+        <p class="text-xs opacity-70 line-clamp-2 mt-1">
+          {{ notif.messageNotification }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paginación -->
+  <div *ngIf="totalPages > 1" class="flex items-center justify-center gap-3 pt-2">
+    <button
+      class="btn btn-outline btn-sm gap-2"
+      (click)="prevPage()"
+      [disabled]="currentPage === 1"
+      aria-label="Página anterior"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      Anterior
+    </button>
+
+    <span class="badge badge-ghost badge-lg gap-1 px-4 py-3">
+      <span class="font-semibold text-primary">{{ currentPage }}</span>
+      <span class="opacity-60">de</span>
+      <span class="font-semibold">{{ totalPages }}</span>
+    </span>
+
+    <button
+      class="btn btn-outline btn-sm gap-2"
+      (click)="nextPage()"
+      [disabled]="currentPage === totalPages"
+      aria-label="Página siguiente"
+    >
+      Siguiente
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+  </div>
+</div>

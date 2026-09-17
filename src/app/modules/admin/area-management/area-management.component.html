@@ -1,0 +1,319 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Gestión de Áreas</h1>
+        <p class="text-sm opacity-70">Administra las áreas y su nivel de prioridad</p>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-sm gap-2" (click)="showCreate = !showCreate">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      {{ showCreate ? 'Cerrar' : 'Nueva Área' }}
+    </button>
+  </header>
+
+  <!-- Formulario de creación -->
+  <div class="card bg-base-100 shadow-md border border-base-200" *ngIf="showCreate">
+    <div class="card-body">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+        </div>
+        <h3 class="card-title text-base">Nueva Área</h3>
+      </div>
+
+      <form class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2" (ngSubmit)="create()">
+        <!-- Nombre -->
+        <label class="form-control w-full md:col-span-2">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Nombre <span class="text-error">*</span>
+            </span>
+          </div>
+          <input
+            [(ngModel)]="newArea.nameArea"
+            name="nameArea"
+            class="input input-bordered input-sm w-full"
+            required
+            placeholder="Ej. Tecnología"
+          />
+        </label>
+
+        <!-- Prioridad -->
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Prioridad</span>
+          </div>
+          <input
+            type="number"
+            [(ngModel)]="newArea.priorityLevel"
+            name="priorityLevel"
+            class="input input-bordered input-sm w-full"
+            min="1"
+            max="10"
+            placeholder="1-10"
+          />
+        </label>
+
+        <!-- Estado -->
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Estado</span>
+          </div>
+          <select
+            [(ngModel)]="newArea.statusArea"
+            name="statusArea"
+            class="select select-bordered select-sm w-full"
+          >
+            <option [ngValue]="true">✅ Activa</option>
+            <option [ngValue]="false">🚫 Inactiva</option>
+          </select>
+        </label>
+
+        <!-- Descripción -->
+        <label class="form-control w-full md:col-span-2">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Descripción</span>
+          </div>
+          <input
+            [(ngModel)]="newArea.descriptionArea"
+            name="descriptionArea"
+            class="input input-bordered input-sm w-full"
+            placeholder="Descripción del área"
+          />
+        </label>
+
+        <!-- Acciones -->
+        <div class="md:col-span-4 flex justify-end gap-2 pt-2 border-t border-base-200">
+          <button type="button" class="btn btn-sm btn-ghost" (click)="showCreate = false">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="btn btn-sm btn-primary gap-2"
+            [disabled]="loading || !newArea.nameArea"
+          >
+            <span *ngIf="loading" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+            <svg *ngIf="!loading" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            {{ loading ? 'Creando...' : 'Crear área' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card bg-base-100 shadow-md border border-base-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-sm table-zebra">
+        <thead class="bg-primary text-primary-content">
+          <tr>
+            <th class="text-center">Nombre</th>
+            <th class="text-center">Descripción</th>
+            <th class="text-center">Prioridad</th>
+            <th class="text-center">Estado</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Cargando -->
+          <tr *ngIf="loading">
+            <td colspan="5">
+              <div class="flex flex-col items-center justify-center py-10 gap-3" role="status" aria-live="polite">
+                <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+                <span class="text-sm opacity-70">Cargando áreas...</span>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Filas -->
+          <ng-container *ngFor="let area of areas">
+            <!-- Modo visualización -->
+            <tr
+              *ngIf="!editArea || editArea.idArea !== area.idArea"
+              class="hover:bg-base-200/50 transition-colors"
+            >
+              <td>
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <span class="font-medium">{{ area.nameArea }}</span>
+                </div>
+              </td>
+
+              <td class="opacity-80">{{ area.descriptionArea || '—' }}</td>
+
+              <td>
+                <span
+                  class="badge badge-sm gap-1"
+                  [ngClass]="{
+                    'badge-error': area.priorityLevel >= 8,
+                    'badge-warning': area.priorityLevel >= 5 && area.priorityLevel < 8,
+                    'badge-info': area.priorityLevel < 5
+                  }"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                  </svg>
+                  Nivel {{ area.priorityLevel }}
+                </span>
+              </td>
+
+              <td>
+                <span
+                  class="badge badge-sm gap-1"
+                  [ngClass]="area.statusArea ? 'badge-success' : 'badge-error'"
+                >
+                  <svg *ngIf="area.statusArea" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <svg *ngIf="!area.statusArea" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  {{ area.statusArea ? 'Activa' : 'Inactiva' }}
+                </span>
+              </td>
+
+              <td class="text-right">
+                <div class="flex justify-end gap-1 whitespace-nowrap">
+                  <button
+                    class="btn btn-xs btn-ghost gap-1"
+                    (click)="edit(area)"
+                    aria-label="Editar área"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Editar
+                  </button>
+
+                  <button
+                    class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
+                    (click)="delete(area)"
+                    aria-label="Eliminar área"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Modo edición -->
+            <tr *ngIf="editArea && editArea.idArea === area.idArea" class="bg-base-200/50">
+              <td colspan="5">
+                <div class="flex flex-wrap items-end gap-2 p-2">
+                  <!-- Nombre -->
+                  <label class="form-control flex-1 min-w-[160px]">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Nombre</span>
+                    </div>
+                    <input
+                      [(ngModel)]="editArea.nameArea"
+                      class="input input-bordered input-sm w-full"
+                      required
+                    />
+                  </label>
+
+                  <!-- Descripción -->
+                  <label class="form-control flex-1 min-w-[160px]">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Descripción</span>
+                    </div>
+                    <input
+                      [(ngModel)]="editArea.descriptionArea"
+                      class="input input-bordered input-sm w-full"
+                    />
+                  </label>
+
+                  <!-- Prioridad -->
+                  <label class="form-control w-full sm:w-auto">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Prioridad</span>
+                    </div>
+                    <input
+                      type="number"
+                      [(ngModel)]="editArea.priorityLevel"
+                      class="input input-bordered input-sm w-full sm:w-24"
+                      min="1"
+                      max="10"
+                    />
+                  </label>
+
+                  <!-- Activa -->
+                  <label class="form-control w-full sm:w-auto">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Estado</span>
+                    </div>
+                    <label class="label cursor-pointer flex items-center gap-2 h-8 px-2 border border-base-300 rounded-lg">
+                      <input
+                        type="checkbox"
+                        class="checkbox checkbox-primary checkbox-sm"
+                        [(ngModel)]="editArea.statusArea"
+                      />
+                      <span class="label-text text-sm">
+                        {{ editArea.statusArea ? 'Activa' : 'Inactiva' }}
+                      </span>
+                    </label>
+                  </label>
+
+                  <!-- Acciones -->
+                  <div class="flex gap-2 ml-auto">
+                    <button class="btn btn-sm btn-ghost gap-1" (click)="cancelEdit()">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Cancelar
+                    </button>
+                    <button class="btn btn-sm btn-primary gap-1" (click)="saveEdit()">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Guardar
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <!-- Estado vacío -->
+          <tr *ngIf="!loading && areas.length === 0">
+            <td colspan="5">
+              <div class="flex flex-col items-center justify-center py-12 gap-3 opacity-70">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <span class="text-sm">No hay áreas registradas</span>
+                <button class="btn btn-sm btn-primary gap-2 mt-1" (click)="showCreate = true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Crear la primera
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

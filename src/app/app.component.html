@@ -1,0 +1,16 @@
+<div *ngIf="isAuthPage" class="min-h-screen">
+  <router-outlet></router-outlet>
+</div>
+
+<div *ngIf="!isAuthPage" class="h-screen bg-base-200 flex overflow-hidden">
+  <app-sidebar #sidebar></app-sidebar>
+  <div class="flex-1 flex flex-col min-w-0 h-full">
+    <app-navbar (toggleSidebar)="sidebar.toggleSidebar()"></app-navbar>
+    <main class="flex-1 overflow-y-auto">
+      <div class="container mx-auto px-4 py-6">
+        <app-breadcrumb></app-breadcrumb>
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+</div>

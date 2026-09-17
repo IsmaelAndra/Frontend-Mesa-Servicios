@@ -1,0 +1,357 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Gestión de Categorías</h1>
+        <p class="text-sm opacity-70">Administra categorías, equipos e iconos</p>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-sm gap-2" (click)="showCreate = !showCreate">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      {{ showCreate ? 'Cerrar' : 'Nueva Categoría' }}
+    </button>
+  </header>
+
+  <!-- Formulario de creación -->
+  <div class="card bg-base-100 shadow-md border border-base-200" *ngIf="showCreate">
+    <div class="card-body">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+        </div>
+        <h3 class="card-title text-base">Nueva Categoría</h3>
+      </div>
+
+      <form class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2" (ngSubmit)="create()">
+        <!-- Nombre -->
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Nombre <span class="text-error">*</span>
+            </span>
+          </div>
+          <input
+            [(ngModel)]="newCategory.nameCategory"
+            name="nameCategory"
+            class="input input-bordered input-sm w-full"
+            required
+            placeholder="Ej. Soporte Técnico"
+          />
+        </label>
+
+        <!-- Equipo -->
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Equipo <span class="text-error">*</span>
+            </span>
+          </div>
+          <select
+            [(ngModel)]="newCategory.teamCategory"
+            name="teamCategory"
+            class="select select-bordered select-sm w-full"
+            [ngModelOptions]="{standalone: true}"
+            required
+          >
+            <option [ngValue]="null" disabled>Seleccione equipo</option>
+            <option *ngFor="let t of teams" [ngValue]="t">{{ t.nameTeam }}</option>
+          </select>
+        </label>
+
+        <!-- Icono -->
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Icono (PrimeIcons)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="p-1.5 rounded-lg bg-base-200 shrink-0" aria-hidden="true">
+              <i [class]="newCategory.iconCategory || 'pi pi-tag'" class="text-base"></i>
+            </span>
+            <input
+              [(ngModel)]="newCategory.iconCategory"
+              name="iconCategory"
+              class="input input-bordered input-sm w-full"
+              placeholder="pi pi-desktop"
+            />
+          </div>
+        </label>
+
+        <!-- Color -->
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Color</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input
+              [(ngModel)]="newCategory.colorCategory"
+              name="colorCategory"
+              type="color"
+              class="input input-bordered input-sm w-14 h-9 p-1 cursor-pointer shrink-0"
+            />
+            <span class="text-xs opacity-70 font-mono">
+              {{ newCategory.colorCategory || '#062e86' }}
+            </span>
+          </div>
+        </label>
+
+        <!-- Descripción -->
+        <label class="form-control w-full md:col-span-2">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Descripción</span>
+          </div>
+          <textarea
+            [(ngModel)]="newCategory.descriptionCategory"
+            name="descriptionCategory"
+            class="textarea textarea-bordered textarea-sm w-full"
+            rows="2"
+            placeholder="Descripción de la categoría"
+          ></textarea>
+        </label>
+
+        <!-- Acciones -->
+        <div class="md:col-span-3 flex justify-end gap-2 pt-2 border-t border-base-200">
+          <button type="button" class="btn btn-sm btn-ghost" (click)="showCreate = false">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="btn btn-sm btn-primary gap-2"
+            [disabled]="loading || !newCategory.nameCategory || !newCategory.teamCategory?.idTeam"
+          >
+            <span *ngIf="loading" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+            <svg *ngIf="!loading" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            {{ loading ? 'Creando...' : 'Crear categoría' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card bg-base-100 shadow-md border border-base-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-sm table-zebra">
+        <thead class="bg-primary text-primary-content">
+          <tr>
+            <th class="text-center">Nombre</th>
+            <th class="text-center">Equipo</th>
+            <th class="text-center">Icono</th>
+            <th class="text-center">Color</th>
+            <th class="text-center">Descripción</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Cargando -->
+          <tr *ngIf="loading">
+            <td colspan="6">
+              <div class="flex flex-col items-center justify-center py-10 gap-3" role="status" aria-live="polite">
+                <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+                <span class="text-sm opacity-70">Cargando categorías...</span>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Filas -->
+          <ng-container *ngFor="let cat of categories">
+            <!-- Modo visualización -->
+            <tr
+              *ngIf="!editCategory || editCategory.idCategory !== cat.idCategory"
+              class="hover:bg-base-200/50 transition-colors"
+            >
+              <td>
+                <div class="flex items-center gap-2">
+                  <div
+                    class="p-1.5 rounded-lg shrink-0"
+                    [style.background-color]="(cat.colorCategory || '#062e86') + '20'"
+                    [style.color]="cat.colorCategory || '#062e86'"
+                    aria-hidden="true"
+                  >
+                    <i [class]="cat.iconCategory || 'pi pi-tag'" class="text-base"></i>
+                  </div>
+                  <span class="font-medium">{{ cat.nameCategory }}</span>
+                </div>
+              </td>
+
+              <td>
+                <span class="badge badge-sm badge-outline gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {{ cat.teamCategory?.nameTeam || '—' }}
+                </span>
+              </td>
+
+              <td>
+                <code class="text-xs bg-base-200 px-2 py-0.5 rounded">
+                  {{ cat.iconCategory || 'pi pi-tag' }}
+                </code>
+              </td>
+
+              <td>
+                <div class="flex items-center gap-2">
+                  <div
+                    class="w-6 h-6 rounded border border-base-300 shrink-0"
+                    [style.background-color]="cat.colorCategory || '#062e86'"
+                    aria-hidden="true"
+                  ></div>
+                  <span class="text-xs font-mono opacity-70">{{ cat.colorCategory || '#062e86' }}</span>
+                </div>
+              </td>
+
+              <td class="opacity-80 max-w-xs truncate" [title]="cat.descriptionCategory">
+                {{ cat.descriptionCategory || '—' }}
+              </td>
+
+              <td class="text-right">
+                <div class="flex justify-end gap-1 whitespace-nowrap">
+                  <button
+                    class="btn btn-xs btn-ghost gap-1"
+                    (click)="edit(cat)"
+                    aria-label="Editar categoría"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Editar
+                  </button>
+
+                  <button
+                    class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
+                    (click)="delete(cat)"
+                    aria-label="Eliminar categoría"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Modo edición -->
+            <tr *ngIf="editCategory && editCategory.idCategory === cat.idCategory" class="bg-base-200/50">
+              <td colspan="6">
+                <div class="flex flex-wrap items-end gap-2 p-2">
+                  <!-- Nombre -->
+                  <label class="form-control flex-1 min-w-[160px]">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Nombre</span>
+                    </div>
+                    <input
+                      [(ngModel)]="editCategory.nameCategory"
+                      class="input input-bordered input-sm w-full"
+                      required
+                    />
+                  </label>
+
+                  <!-- Equipo -->
+                  <label class="form-control w-full sm:w-auto">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Equipo</span>
+                    </div>
+                    <select
+                      [(ngModel)]="editCategory.teamCategory"
+                      class="select select-bordered select-sm w-full sm:w-48"
+                      [ngModelOptions]="{standalone: true}"
+                    >
+                      <option *ngFor="let t of teams" [ngValue]="t">{{ t.nameTeam }}</option>
+                    </select>
+                  </label>
+
+                  <!-- Icono -->
+                  <label class="form-control w-full sm:w-auto">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Icono</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="p-1.5 rounded-lg bg-base-200 shrink-0" aria-hidden="true">
+                        <i [class]="editCategory.iconCategory || 'pi pi-tag'" class="text-base"></i>
+                      </span>
+                      <input
+                        [(ngModel)]="editCategory.iconCategory"
+                        class="input input-bordered input-sm w-32"
+                        placeholder="pi pi-tag"
+                      />
+                    </div>
+                  </label>
+
+                  <!-- Color -->
+                  <label class="form-control w-full sm:w-auto">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Color</span>
+                    </div>
+                    <input
+                      [(ngModel)]="editCategory.colorCategory"
+                      type="color"
+                      class="input input-bordered input-sm w-14 h-9 p-1 cursor-pointer"
+                    />
+                  </label>
+
+                  <!-- Descripción -->
+                  <label class="form-control flex-1 min-w-[200px]">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Descripción</span>
+                    </div>
+                    <input
+                      [(ngModel)]="editCategory.descriptionCategory"
+                      class="input input-bordered input-sm w-full"
+                    />
+                  </label>
+
+                  <!-- Acciones -->
+                  <div class="flex gap-2 ml-auto">
+                    <button class="btn btn-sm btn-ghost gap-1" (click)="cancelEdit()">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Cancelar
+                    </button>
+                    <button class="btn btn-sm btn-primary gap-1" (click)="saveEdit()">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Guardar
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <!-- Estado vacío -->
+          <tr *ngIf="!loading && categories.length === 0">
+            <td colspan="6">
+              <div class="flex flex-col items-center justify-center py-12 gap-3 opacity-70">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                <span class="text-sm">No hay categorías registradas</span>
+                <button class="btn btn-sm btn-primary gap-2 mt-1" (click)="showCreate = true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Crear la primera
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

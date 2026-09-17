@@ -1,0 +1,427 @@
+<div class="space-y-6" *ngIf="catalog">
+  <!-- Encabezado -->
+  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Panel de administración</h1>
+        <p class="text-sm opacity-70">Gestiona áreas, categorías y políticas SLA del sistema</p>
+      </div>
+    </div>
+
+    <a routerLink="/admin/users" class="btn btn-primary btn-sm gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Gestionar usuarios
+    </a>
+  </header>
+
+  <!-- KPIs resumen -->
+  <section aria-label="Resumen del catálogo">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <!-- Áreas -->
+      <div class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body p-4 flex-row items-center gap-3">
+          <div class="p-3 rounded-xl bg-primary/10 text-primary shrink-0" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-2xl font-bold text-primary">{{ catalog.areas.length }}</div>
+            <div class="text-xs opacity-70 uppercase tracking-wide">Áreas</div>
+          </div>
+          <div class="badge badge-sm badge-ghost gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            {{ getActiveAreasCount() }} activas
+          </div>
+        </div>
+      </div>
+
+      <!-- Categorías -->
+      <div class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body p-4 flex-row items-center gap-3">
+          <div class="p-3 rounded-xl bg-success/10 text-success shrink-0" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-2xl font-bold text-success">{{ catalog.categories.length }}</div>
+            <div class="text-xs opacity-70 uppercase tracking-wide">Categorías</div>
+          </div>
+          <div class="badge badge-sm badge-ghost gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+            Registradas
+          </div>
+        </div>
+      </div>
+
+      <!-- SLA -->
+      <div class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body p-4 flex-row items-center gap-3">
+          <div class="p-3 rounded-xl bg-warning/10 text-warning shrink-0" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-2xl font-bold text-warning">{{ catalog.slaPolicies.length }}</div>
+            <div class="text-xs opacity-70 uppercase tracking-wide">Políticas SLA</div>
+          </div>
+          <div class="badge badge-sm badge-ghost gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            Configuradas
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tarjetas de catálogo detalladas -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Áreas -->
+    <div class="card bg-base-100 shadow-md border border-base-200 hover:shadow-lg transition-all duration-200">
+      <div class="card-body">
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h2 class="card-title text-base">Áreas</h2>
+          </div>
+          <span class="badge badge-sm badge-primary">{{ catalog.areas.length }}</span>
+        </div>
+
+        <ul class="text-sm space-y-1.5 max-h-64 overflow-y-auto">
+          <li *ngFor="let a of catalog.areas"
+            class="flex items-center justify-between gap-2 py-1.5 border-b border-base-200 last:border-0 hover:bg-base-200/40 transition-colors rounded px-1">
+            <span class="truncate">{{ a.name }}</span>
+            <div class="flex items-center gap-1 shrink-0">
+              <span class="badge badge-sm gap-1" [ngClass]="{
+                  'badge-error': a.priorityLevel >= 8,
+                  'badge-warning': a.priorityLevel >= 5 && a.priorityLevel < 8,
+                  'badge-info': a.priorityLevel < 5
+                }" [title]="'Prioridad ' + a.priorityLevel">
+                {{ a.priorityLevel }}
+              </span>
+              <span *ngIf="!a.status" class="badge badge-sm badge-error gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+                Inactiva
+              </span>
+            </div>
+          </li>
+        </ul>
+
+        <div *ngIf="catalog.areas.length === 0" class="flex flex-col items-center py-6 gap-2 opacity-60">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+          <span class="text-xs italic">Sin áreas registradas</span>
+        </div>
+
+        <div class="card-actions justify-end mt-3">
+          <a routerLink="/admin/areas" class="btn btn-xs btn-ghost gap-1">
+            Ver todas
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categorías -->
+    <div class="card bg-base-100 shadow-md border border-base-200 hover:shadow-lg transition-all duration-200">
+      <div class="card-body">
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-lg bg-success/10 text-success" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+            </div>
+            <h2 class="card-title text-base">Categorías</h2>
+          </div>
+          <span class="badge badge-sm badge-success">{{ catalog.categories.length }}</span>
+        </div>
+
+        <ul class="text-sm space-y-1.5 max-h-64 overflow-y-auto">
+          <li *ngFor="let c of catalog.categories"
+            class="flex items-center gap-2 py-1.5 border-b border-base-200 last:border-0 hover:bg-base-200/40 transition-colors rounded px-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-success shrink-0" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span class="truncate">{{ c.name }}</span>
+          </li>
+        </ul>
+
+        <div *ngIf="catalog.categories.length === 0" class="flex flex-col items-center py-6 gap-2 opacity-60">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          <span class="text-xs italic">Sin categorías registradas</span>
+        </div>
+
+        <div class="card-actions justify-end mt-3">
+          <a routerLink="/admin/categories" class="btn btn-xs btn-ghost gap-1">
+            Ver todas
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Políticas SLA -->
+    <div class="card bg-base-100 shadow-md border border-base-200 hover:shadow-lg transition-all duration-200">
+      <div class="card-body">
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-lg bg-warning/10 text-warning" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 class="card-title text-base">Políticas SLA</h2>
+          </div>
+          <span class="badge badge-sm badge-warning">{{ catalog.slaPolicies.length }}</span>
+        </div>
+
+        <ul class="text-sm space-y-3 max-h-64 overflow-y-auto">
+          <li *ngFor="let s of catalog.slaPolicies"
+            class="pb-2 border-b border-base-200 last:border-0 hover:bg-base-200/40 transition-colors rounded px-1">
+            <div class="flex items-center gap-2 font-semibold truncate">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-warning shrink-0" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              {{ s.name }}
+            </div>
+            <div class="flex flex-wrap gap-1.5 mt-1.5">
+              <span class="badge badge-sm badge-outline gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                {{ s.response }} min
+              </span>
+              <span class="badge badge-sm badge-outline gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ s.resolution }} min
+              </span>
+            </div>
+          </li>
+        </ul>
+
+        <div *ngIf="catalog.slaPolicies.length === 0" class="flex flex-col items-center py-6 gap-2 opacity-60">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-xs italic">Sin políticas registradas</span>
+        </div>
+
+        <div class="card-actions justify-end mt-3">
+          <a routerLink="/admin/sla" class="btn btn-xs btn-ghost gap-1">
+            Configurar
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accesos directos -->
+  <section aria-label="Accesos directos">
+    <h2 class="text-sm font-semibold opacity-70 uppercase tracking-wide mb-3">Accesos directos</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <a routerLink="/admin/users"
+        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div class="p-2 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <span class="text-sm font-medium">Usuarios</span>
+        </div>
+      </a>
+
+      <a routerLink="/admin/areas"
+        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div class="p-2 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <span class="text-sm font-medium">Áreas</span>
+        </div>
+      </a>
+
+      <a routerLink="/admin/categories"
+        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div class="p-2 rounded-lg bg-success/10 text-success" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+          </div>
+          <span class="text-sm font-medium">Categorías</span>
+        </div>
+      </a>
+
+      <a routerLink="/admin/teams"
+        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div class="p-2 rounded-lg bg-info/10 text-info" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <span class="text-sm font-medium">Equipos</span>
+        </div>
+      </a>
+
+      <a routerLink="/admin/sla"
+        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div class="p-2 rounded-lg bg-warning/10 text-warning" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <span class="text-sm font-medium">SLA</span>
+        </div>
+      </a>
+
+      <a routerLink="/admin/escalations"
+        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div class="p-2 rounded-lg bg-error/10 text-error" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+          </div>
+          <span class="text-sm font-medium">Escalaciones</span>
+        </div>
+      </a>
+
+      <a routerLink="/admin/templates"
+        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div class="p-2 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <span class="text-sm font-medium">Plantillas</span>
+        </div>
+      </a>
+
+      <a routerLink="/admin/branding"
+        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div class="p-2 rounded-lg bg-secondary/10 text-secondary" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+          </div>
+          <span class="text-sm font-medium">Marca</span>
+        </div>
+      </a>
+
+      <a *ngIf="isSuperAdmin" routerLink="/admin/ai-config"
+        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div class="p-2 rounded-lg bg-accent/10 text-accent" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5" />
+            </svg>
+          </div>
+          <span class="text-sm font-medium">Inteligencia Artificial</span>
+        </div>
+      </a>
+    </div>
+  </section>
+</div>
+
+<!-- Estado de carga -->
+<div *ngIf="!catalog" class="flex flex-col items-center justify-center py-20 gap-3" role="status" aria-live="polite">
+  <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+  <span class="text-sm opacity-70">Cargando panel de administración...</span>
+</div>

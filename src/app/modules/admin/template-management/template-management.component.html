@@ -1,0 +1,307 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Plantillas de Notificación</h1>
+        <p class="text-sm opacity-70">Administra las plantillas de correo del sistema</p>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-sm gap-2" (click)="showNew = !showNew">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      {{ showNew ? 'Cerrar' : 'Nueva Plantilla' }}
+    </button>
+  </header>
+
+  <!-- Formulario de creación -->
+  <div class="card bg-base-100 shadow-md border border-base-200" *ngIf="showNew">
+    <div class="card-body">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+        </div>
+        <h3 class="card-title text-base">Nueva Plantilla</h3>
+      </div>
+
+      <form class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2" (ngSubmit)="create()">
+        <!-- Nombre -->
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Nombre <span class="text-error">*</span>
+            </span>
+          </div>
+          <input
+            [(ngModel)]="newTemplate.nameTemplate"
+            name="nameTemplate"
+            class="input input-bordered input-sm w-full font-mono"
+            required
+            placeholder="Ej. TICKET_CREADO"
+          />
+        </label>
+
+        <!-- Tipo -->
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Tipo <span class="text-error">*</span>
+            </span>
+          </div>
+          <select
+            [(ngModel)]="newTemplate.typeTemplate"
+            name="typeTemplate"
+            class="select select-bordered select-sm w-full"
+            required
+          >
+            <option [ngValue]="null" disabled>Seleccione tipo</option>
+            <option *ngFor="let t of types" [ngValue]="t">{{ t }}</option>
+          </select>
+        </label>
+
+        <!-- Asunto -->
+        <label class="form-control w-full md:col-span-2">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Asunto <span class="text-error">*</span>
+            </span>
+          </div>
+          <input
+            [(ngModel)]="newTemplate.subjectTemplate"
+            name="subjectTemplate"
+            class="input input-bordered input-sm w-full"
+            required
+            placeholder="Ej. Ticket #[id] creado"
+          />
+        </label>
+
+        <!-- Cuerpo -->
+        <label class="form-control w-full md:col-span-2">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Cuerpo (HTML) <span class="text-error">*</span>
+            </span>
+          </div>
+          <textarea
+            [(ngModel)]="newTemplate.bodyTemplate"
+            name="bodyTemplate"
+            class="textarea textarea-bordered textarea-sm w-full font-mono text-xs"
+            rows="6"
+            required
+            placeholder="Cuerpo del email con variables [id], [nombre], [titulo], [estado], [prioridad], [agente]"
+          ></textarea>
+          <div class="label pt-1">
+            <span class="label-text-alt text-xs opacity-60">
+              Variables disponibles:
+              <code class="badge badge-sm badge-ghost">[id]</code>
+              <code class="badge badge-sm badge-ghost">[nombre]</code>
+              <code class="badge badge-sm badge-ghost">[titulo]</code>
+              <code class="badge badge-sm badge-ghost">[estado]</code>
+              <code class="badge badge-sm badge-ghost">[prioridad]</code>
+              <code class="badge badge-sm badge-ghost">[agente]</code>
+            </span>
+          </div>
+        </label>
+
+        <!-- Vista previa en vivo -->
+        <div class="md:col-span-2" *ngIf="newTemplate.bodyTemplate">
+          <div class="rounded-xl border border-base-200 overflow-hidden">
+            <div class="px-3 py-2 bg-base-200/60 border-b border-base-200 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <span class="text-xs font-medium">Vista previa</span>
+            </div>
+            <div class="p-4">
+              <p class="text-sm font-semibold mb-2 border-b border-base-200 pb-2">
+                {{ newTemplate.subjectTemplate || '(sin asunto)' }}
+              </p>
+              <iframe
+                class="w-full h-80 border-0 rounded-lg bg-white"
+                [srcdoc]="previewHtml(newTemplate.bodyTemplate)"
+                title="Vista previa de la plantilla"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="md:col-span-2 flex justify-end gap-2 pt-2 border-t border-base-200">
+          <button type="button" class="btn btn-sm btn-ghost" (click)="showNew = false">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="btn btn-sm btn-primary gap-2"
+            [disabled]="!newTemplate.nameTemplate || !newTemplate.typeTemplate || !newTemplate.subjectTemplate || !newTemplate.bodyTemplate"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Crear plantilla
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Vista previa de plantilla seleccionada -->
+  <div class="card bg-base-100 shadow-md border border-base-200" *ngIf="previewTemplate">
+    <div class="card-body">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <div class="p-1.5 rounded-lg bg-info/10 text-info" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </div>
+          <h3 class="card-title text-base">
+            Vista previa: <code class="font-mono text-sm">{{ previewTemplate.nameTemplate }}</code>
+          </h3>
+        </div>
+        <button class="btn btn-ghost btn-xs btn-circle" (click)="previewTemplate = null" aria-label="Cerrar vista previa">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="rounded-xl border border-base-200 p-4">
+        <p class="text-sm font-semibold mb-2 border-b border-base-200 pb-2">
+          {{ previewTemplate.subjectTemplate }}
+        </p>
+        <iframe
+          class="w-full h-80 border-0 rounded-lg bg-white"
+          [srcdoc]="previewHtml(previewTemplate.bodyTemplate)"
+          title="Vista previa de la plantilla"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card bg-base-100 shadow-md border border-base-200">
+    <div class="card-body">
+      <!-- Header de la tabla -->
+      <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+        <div class="flex items-center gap-2">
+          <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h3 class="card-title text-base">Plantillas registradas</h3>
+          <span class="badge badge-sm badge-ghost">{{ templates.length || 0 }}</span>
+        </div>
+      </div>
+
+      <!-- Wrapper con border radius -->
+      <div class="rounded-xl border border-base-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="table table-sm table-zebra">
+            <thead class="bg-primary text-primary-content">
+              <tr>
+                <th class="text-center">Nombre</th>
+                <th class="text-center">Tipo</th>
+                <th class="text-center">Asunto</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Filas -->
+              <tr *ngFor="let t of templates" class="hover:bg-base-200/50 transition-colors">
+                <!-- Nombre -->
+                <td>
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0" aria-hidden="true">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <code class="font-mono text-xs bg-base-200 px-2 py-0.5 rounded">
+                      {{ t.nameTemplate }}
+                    </code>
+                  </div>
+                </td>
+
+                <!-- Tipo -->
+                <td>
+                  <span class="badge badge-sm badge-primary">{{ t.typeTemplate }}</span>
+                </td>
+
+                <!-- Asunto -->
+                <td class="max-w-xs truncate opacity-80" [title]="t.subjectTemplate">
+                  {{ t.subjectTemplate }}
+                </td>
+
+                <!-- Estado -->
+                <td>
+                  <span
+                    class="badge badge-sm gap-1"
+                    [ngClass]="t.activeTemplate ? 'badge-success' : 'badge-error'"
+                  >
+                    <svg *ngIf="t.activeTemplate" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <svg *ngIf="!t.activeTemplate" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    {{ t.activeTemplate ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+
+                <!-- Acciones -->
+                <td class="text-right">
+                  <button
+                    class="btn btn-xs btn-ghost gap-1"
+                    (click)="preview(t)"
+                    aria-label="Ver vista previa"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    Vista previa
+                  </button>
+                  <button
+                    class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
+                    (click)="delete(t)"
+                    aria-label="Eliminar plantilla"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Estado vacío -->
+              <tr *ngIf="!templates || templates.length === 0">
+                <td colspan="5">
+                  <div class="flex flex-col items-center justify-center py-10 gap-2 opacity-70">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-sm">No hay plantillas registradas</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

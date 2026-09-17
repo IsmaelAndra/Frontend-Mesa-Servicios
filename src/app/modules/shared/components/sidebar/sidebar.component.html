@@ -1,0 +1,210 @@
+<aside
+  class="fixed md:relative top-0 left-0 h-screen bg-base-100 border-r border-base-300 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+  [class.w-64]="!isMobile && !collapsed"
+  [class.w-20]="!isMobile && collapsed"
+  [class.w-72]="isMobile"
+  [class.-translate-x-full]="isMobile && !isOpen"
+  [class.translate-x-0]="!isMobile || isOpen"
+  [style.z-index]="isMobile ? '50' : 'auto'">
+
+  <!-- ============ Header ============ -->
+  <div class="p-3 border-b border-base-300 flex items-center justify-between gap-2 shrink-0">
+    <div class="flex items-center gap-3 min-w-0">
+      <!-- Logo -->
+      <img
+        *ngIf="logoUrl"
+        [src]="logoUrl"
+        alt="Logo"
+        class="h-10 w-10 object-contain shrink-0"
+      />
+      <div
+        *ngIf="!logoUrl"
+        class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-content font-bold text-lg shrink-0"
+        aria-hidden="true"
+      >
+        COAC
+      </div>
+
+      <!-- Nombre (se oculta al contraer) -->
+      <div
+        class="min-w-0 transition-all duration-300"
+        [class.opacity-0]="!isMobile && collapsed"
+        [class.w-0]="!isMobile && collapsed"
+        [class.pointer-events-none]="!isMobile && collapsed"
+      >
+        <p class="font-bold text-base text-primary leading-tight whitespace-nowrap">
+          Mesa de Ayuda
+        </p>
+        <p class="text-[10px] opacity-60 uppercase tracking-wide whitespace-nowrap">
+          Sistema de soporte
+        </p>
+      </div>
+    </div>
+
+    <!-- Botón cerrar (móvil) -->
+    <button
+      *ngIf="isMobile"
+      class="btn btn-ghost btn-sm btn-square shrink-0"
+      (click)="toggleSidebar()"
+      aria-label="Cerrar menú"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <!-- Botón contraer (desktop) -->
+    <button
+      *ngIf="!isMobile"
+      class="btn btn-ghost btn-sm btn-square shrink-0"
+      (click)="toggleSidebar()"
+      [attr.aria-label]="collapsed ? 'Expandir menú' : 'Contraer menú'"
+      [title]="collapsed ? 'Expandir menú' : 'Contraer a iconos'"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5 transition-transform duration-300"
+        [class.rotate-180]="collapsed"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        aria-hidden="true"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7 1.4 1.4L6.8 12l4.6 4.6L11 19z" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- ============ Navegación ============ -->
+  <nav class="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-1 sidebar-scroll">
+    <div
+      *ngFor="let item of navItems"
+      class="space-y-1"
+      [class.hidden]="!isVisible(item)"
+    >
+      <!-- Item sin hijos -->
+      <div *ngIf="!item.children">
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          class="sidebar-link tooltip tooltip-right"
+          [attr.data-tip]="collapsed && !isMobile ? item.label : null"
+          [title]="collapsed && !isMobile ? item.label : ''"
+          [class.active]="isActive(item.route)"
+        >
+          <i [class]="item.icon" class="shrink-0 text-base"></i>
+          <span
+            class="truncate transition-all duration-300 whitespace-nowrap"
+            [class.opacity-0]="!isMobile && collapsed"
+            [class.w-0]="!isMobile && collapsed"
+          >{{ item.label }}</span>
+        </a>
+      </div>
+
+      <!-- Item con hijos -->
+      <div *ngIf="item.children && hasVisibleChildren(item)">
+        <button
+          class="sidebar-link w-full justify-between tooltip tooltip-right"
+          [attr.data-tip]="collapsed && !isMobile ? item.label : null"
+          [title]="collapsed && !isMobile ? item.label : ''"
+          (click)="toggleChild(item)"
+          [class.active]="isChildActive(item)"
+          [attr.aria-expanded]="item.expanded"
+        >
+          <div class="flex items-center gap-3 min-w-0">
+            <i [class]="item.icon" class="shrink-0 text-base"></i>
+            <span
+              class="truncate transition-all duration-300 whitespace-nowrap"
+              [class.opacity-0]="!isMobile && collapsed"
+              [class.w-0]="!isMobile && collapsed"
+            >{{ item.label }}</span>
+          </div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 shrink-0 transition-transform duration-300"
+            [class.rotate-180]="item.expanded"
+            [class.opacity-0]="!isMobile && collapsed"
+            [class.w-0]="!isMobile && collapsed"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <!-- Submenu -->
+        <div
+          *ngIf="item.expanded"
+          class="ml-4 pl-3 border-l-2 border-base-300 space-y-1 mt-1"
+          [class.hidden]="!isMobile && collapsed"
+        >
+          <a
+            *ngFor="let child of item.children"
+            [routerLink]="child.route"
+            routerLinkActive="active"
+            class="sidebar-link text-sm"
+            [class.active]="isActive(child.route)"
+            [class.hidden]="!isVisible(child)"
+            [title]="child.label"
+          >
+            <i [class]="child.icon" class="text-xs shrink-0"></i>
+            <span class="truncate">{{ child.label }}</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============ Footer ============ -->
+  <div class="p-3 border-t border-base-300 shrink-0">
+    <!-- Card de usuario -->
+    <div
+      class="flex items-center gap-3 p-2 bg-base-200 rounded-lg mb-3 transition-all duration-300"
+      [class.justify-center]="!isMobile && collapsed"
+      [class.p-1.5]="!isMobile && collapsed"
+      [class.bg-transparent]="!isMobile && collapsed"
+      [title]="authService.getEmail() || 'Usuario'"
+    >
+      <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-content font-medium text-sm shrink-0">
+        {{ initials }}
+      </div>
+      <div
+        class="flex-1 min-w-0 transition-all duration-300"
+        [class.hidden]="!isMobile && collapsed"
+      >
+        <p class="text-sm font-medium truncate">
+          {{ authService.getEmail() || 'Usuario' }}
+        </p>
+        <p class="text-[10px] uppercase tracking-wide opacity-60 truncate">
+          {{ role.toLowerCase().replace('_', ' ') }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Botón logout -->
+    <button
+      class="btn btn-outline btn-error btn-sm w-full gap-2"
+      [class.btn-square]="!isMobile && collapsed"
+      (click)="logout()"
+      [title]="'Cerrar sesión'"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+      </svg>
+      <span
+        class="transition-all duration-300 whitespace-nowrap"
+        [class.hidden]="!isMobile && collapsed"
+      >Cerrar sesión</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Overlay móvil -->
+<div
+  *ngIf="isMobile && isOpen"
+  class="fixed inset-0 bg-black/50 z-40 animate-[fadeIn_200ms_ease]"
+  (click)="toggleSidebar()"
+  aria-hidden="true"
+></div>

@@ -1,0 +1,187 @@
+/* ============ Contenedor del calendario ============ */
+app-calendar {
+  display: block;
+}
+
+.calendar-wrap {
+  height: 680px;
+  background: hsl(var(--b1));
+  overflow: hidden;
+  position: relative;
+}
+
+.calendar-wrap #calendarEl,
+.calendar-wrap > div {
+  height: 100%;
+  width: 100%;
+}
+
+.calendar-wrap .toastui-calendar-layout {
+  height: 100% !important;
+  min-height: 680px;
+  background: hsl(var(--b1));
+  color: hsl(var(--bc));
+}
+
+/* Vista de mes: un poco más alta para que se vean las 6 semanas */
+.calendar-wrap.calendar-month {
+  height: 720px;
+}
+
+.calendar-wrap.calendar-month .toastui-calendar-layout {
+  min-height: 720px;
+}
+
+/* ============ Adaptación al tema ============ */
+.calendar-wrap .toastui-calendar-panel,
+.calendar-wrap .toastui-calendar-weekday-panel,
+.calendar-wrap .toastui-calendar-time-panel,
+.calendar-wrap .toastui-calendar-month-panel {
+  background: hsl(var(--b1));
+}
+
+/* Encabezado de días */
+.calendar-wrap .toastui-calendar-day-name-item,
+.calendar-wrap .toastui-calendar-day-name-item > span {
+  color: hsl(var(--bc) / 0.75);
+  font-weight: 600;
+}
+
+/* Líneas de cuadrícula */
+.calendar-wrap .toastui-calendar-weekday-grid-line,
+.calendar-wrap .toastui-calendar-time-grid-line {
+  border-color: hsl(var(--b3));
+}
+
+/* Números de día */
+.calendar-wrap .toastui-calendar-day-name-item span,
+.calendar-wrap .toastui-calendar-weekday-grid-date {
+  color: hsl(var(--bc));
+}
+
+/* Día actual resaltado */
+.calendar-wrap
+  .toastui-calendar-weekday-grid-date.toastui-calendar-weekday-grid-date-decorator {
+  background-color: hsl(var(--p));
+  color: hsl(var(--pc));
+  border-radius: 9999px;
+}
+
+/* ============================================================
+   EVENTOS: chip con bullet + borde izquierdo, sin fondo
+   ============================================================ */
+
+/* Contenedor del evento (para vistas time y allday) */
+.calendar-wrap .toastui-calendar-template-timeEvent,
+.calendar-wrap .toastui-calendar-template-weekdayEvent,
+.calendar-wrap .toastui-calendar-template-alldayEvent {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
+}
+
+/* Contenedor del evento en vista mes */
+.calendar-wrap .toastui-calendar-template-monthEvent {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
+  font-size: 0.7rem;
+}
+
+/* El chip interno que generamos en la plantilla */
+.calendar-wrap .tui-event-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 2px 6px;
+  border-left: 3px solid currentColor;
+  border-radius: 0.25rem;
+  min-width: 0;
+  height: 100%;
+}
+
+/* El bullet de color */
+.calendar-wrap .tui-event-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+/* El título del evento */
+.calendar-wrap .tui-event-title {
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Vista de mes: chip compacto */
+.calendar-wrap .toastui-calendar-template-monthEvent .tui-event-chip {
+  padding: 1px 4px;
+  border-left-width: 3px;
+}
+
+.calendar-wrap .toastui-calendar-template-monthEvent .tui-event-title {
+  font-size: 0.7rem;
+}
+
+/* Hover: leve feedback */
+.calendar-wrap .tui-event-chip:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* ============================================================
+   OVERRIDES de ToastUI para vista de mes
+   (ToastUI pinta el fondo del evento con el color del calendario.
+   Aquí lo forzamos a transparente)
+   ============================================================ */
+.calendar-wrap .toastui-calendar-month-event,
+.calendar-wrap .toastui-calendar-weekday-event,
+.calendar-wrap .toastui-calendar-time-event,
+.calendar-wrap .toastui-calendar-allday-event {
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+
+/* Quitar cualquier borde que ToastUI agregue por defecto */
+.calendar-wrap .toastui-calendar-weekday-event-title,
+.calendar-wrap .toastui-calendar-time-event-title,
+.calendar-wrap .toastui-calendar-month-event-title {
+  background: transparent !important;
+}
+
+/* Días fuera del mes actual */
+.calendar-wrap .toastui-calendar-day-except-this-month {
+  opacity: 0.4;
+}
+
+/* Botones dentro del calendario */
+.calendar-wrap .toastui-calendar-today,
+.calendar-wrap .toastui-calendar-holiday {
+  color: hsl(var(--er));
+}
+
+/* Scrollbar suave */
+.calendar-wrap ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.calendar-wrap ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.calendar-wrap ::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--bc) / 0.15);
+  border-radius: 4px;
+}
+
+.calendar-wrap ::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--bc) / 0.25);
+}

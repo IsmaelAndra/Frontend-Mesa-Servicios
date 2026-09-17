@@ -1,0 +1,300 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Gestión de Equipos</h1>
+        <p class="text-sm opacity-70">Administra equipos y métodos de asignación</p>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-sm gap-2" (click)="showCreate = !showCreate">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      {{ showCreate ? 'Cerrar' : 'Nuevo Equipo' }}
+    </button>
+  </header>
+
+  <!-- Formulario de creación -->
+  <div class="card bg-base-100 shadow-md border border-base-200" *ngIf="showCreate">
+    <div class="card-body">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+        </div>
+        <h3 class="card-title text-base">Nuevo Equipo</h3>
+      </div>
+
+      <form class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2" (ngSubmit)="create()">
+        <!-- Nombre -->
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Nombre <span class="text-error">*</span>
+            </span>
+          </div>
+          <input
+            [(ngModel)]="newTeam.nameTeam"
+            name="nameTeam"
+            class="input input-bordered input-sm w-full"
+            required
+            placeholder="Ej. Equipo TI"
+          />
+        </label>
+
+        <!-- Descripción -->
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Descripción</span>
+          </div>
+          <input
+            [(ngModel)]="newTeam.descriptionTeam"
+            name="descriptionTeam"
+            class="input input-bordered input-sm w-full"
+            placeholder="Descripción del equipo"
+          />
+        </label>
+
+        <!-- Método de asignación -->
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Método de asignación</span>
+          </div>
+          <select
+            [(ngModel)]="newTeam.assignmentMethod"
+            name="assignmentMethod"
+            class="select select-bordered select-sm w-full"
+          >
+            <option value="ROUND_ROBIN">🔄 Rotativo</option>
+            <option value="LEAST_ASSIGNED">⚖️ Menos asignados</option>
+            <option value="MANUAL">✋ Manual</option>
+          </select>
+        </label>
+
+        <!-- Acciones -->
+        <div class="md:col-span-3 flex justify-end gap-2 pt-2 border-t border-base-200">
+          <button type="button" class="btn btn-sm btn-ghost" (click)="showCreate = false">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="btn btn-sm btn-primary gap-2"
+            [disabled]="loading || !newTeam.nameTeam"
+          >
+            <span *ngIf="loading" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+            <svg *ngIf="!loading" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            {{ loading ? 'Creando...' : 'Crear equipo' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card bg-base-100 shadow-md border border-base-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-sm table-zebra">
+        <thead class="bg-primary text-primary-content">
+          <tr>
+            <th class="text-center">Nombre</th>
+            <th class="text-center">Descripción</th>
+            <th class="text-center">Método</th>
+            <th class="text-center">Estado</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Cargando -->
+          <tr *ngIf="loading">
+            <td colspan="5">
+              <div class="flex flex-col items-center justify-center py-10 gap-3" role="status" aria-live="polite">
+                <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+                <span class="text-sm opacity-70">Cargando equipos...</span>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Filas -->
+          <ng-container *ngFor="let team of teams">
+            <!-- Modo visualización -->
+            <tr
+              *ngIf="!editTeam || editTeam.idTeam !== team.idTeam"
+              class="hover:bg-base-200/50 transition-colors"
+            >
+              <td>
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <span class="font-medium">{{ team.nameTeam }}</span>
+                </div>
+              </td>
+
+              <td class="opacity-80">{{ team.descriptionTeam || '—' }}</td>
+
+              <td>
+                <span class="badge badge-sm badge-primary gap-1">
+                  <ng-container [ngSwitch]="team.assignmentMethod">
+                    <span *ngSwitchCase="'ROUND_ROBIN'">🔄 Rotativo</span>
+                    <span *ngSwitchCase="'LEAST_ASSIGNED'">⚖️ Menos asignados</span>
+                    <span *ngSwitchCase="'MANUAL'">✋ Manual</span>
+                    <span *ngSwitchDefault>{{ getMethodLabel(team.assignmentMethod) }}</span>
+                  </ng-container>
+                </span>
+              </td>
+
+              <td>
+                <span
+                  class="badge badge-sm gap-1"
+                  [ngClass]="team.activeTeam ? 'badge-success' : 'badge-error'"
+                >
+                  <svg *ngIf="team.activeTeam" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <svg *ngIf="!team.activeTeam" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  {{ team.activeTeam ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+
+              <td class="text-right">
+                <div class="flex justify-end gap-1 whitespace-nowrap">
+                  <button
+                    class="btn btn-xs btn-ghost gap-1"
+                    (click)="edit(team)"
+                    aria-label="Editar equipo"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Editar
+                  </button>
+
+                  <button
+                    class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
+                    (click)="delete(team)"
+                    aria-label="Eliminar equipo"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Modo edición -->
+            <tr *ngIf="editTeam && editTeam.idTeam === team.idTeam" class="bg-base-200/50">
+              <td colspan="5">
+                <div class="flex flex-wrap items-end gap-2 p-2">
+                  <!-- Nombre -->
+                  <label class="form-control flex-1 min-w-[160px]">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Nombre</span>
+                    </div>
+                    <input
+                      [(ngModel)]="editTeam.nameTeam"
+                      class="input input-bordered input-sm w-full"
+                      required
+                    />
+                  </label>
+
+                  <!-- Descripción -->
+                  <label class="form-control flex-1 min-w-[160px]">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Descripción</span>
+                    </div>
+                    <input
+                      [(ngModel)]="editTeam.descriptionTeam"
+                      class="input input-bordered input-sm w-full"
+                    />
+                  </label>
+
+                  <!-- Método -->
+                  <label class="form-control w-full sm:w-auto">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Método</span>
+                    </div>
+                    <select
+                      [(ngModel)]="editTeam.assignmentMethod"
+                      class="select select-bordered select-sm w-full sm:w-44"
+                    >
+                      <option value="ROUND_ROBIN">🔄 Rotativo</option>
+                      <option value="LEAST_ASSIGNED">⚖️ Menos asignados</option>
+                      <option value="MANUAL">✋ Manual</option>
+                    </select>
+                  </label>
+
+                  <!-- Activo -->
+                  <label class="form-control w-full sm:w-auto">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Estado</span>
+                    </div>
+                    <label class="label cursor-pointer flex items-center gap-2 h-8 px-2 border border-base-300 rounded-lg">
+                      <input
+                        type="checkbox"
+                        class="checkbox checkbox-primary checkbox-sm"
+                        [(ngModel)]="editTeam.activeTeam"
+                      />
+                      <span class="label-text text-sm">
+                        {{ editTeam.activeTeam ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </label>
+                  </label>
+
+                  <!-- Acciones -->
+                  <div class="flex gap-2 ml-auto">
+                    <button class="btn btn-sm btn-ghost gap-1" (click)="cancelEdit()">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Cancelar
+                    </button>
+                    <button class="btn btn-sm btn-primary gap-1" (click)="saveEdit()">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Guardar
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <!-- Estado vacío -->
+          <tr *ngIf="!loading && teams.length === 0">
+            <td colspan="5">
+              <div class="flex flex-col items-center justify-center py-12 gap-3 opacity-70">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span class="text-sm">No hay equipos registrados</span>
+                <button class="btn btn-sm btn-primary gap-2 mt-1" (click)="showCreate = true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Crear el primero
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

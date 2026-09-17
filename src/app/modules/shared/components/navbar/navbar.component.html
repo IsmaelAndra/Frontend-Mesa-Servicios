@@ -1,0 +1,201 @@
+<header class="navbar bg-base-100 shadow-sm border-b border-base-300 sticky top-0 z-30">
+  <!-- ============ navbar-start ============ -->
+  <div class="navbar-start flex items-center gap-2 sm:gap-3">
+    <!-- Botón toggle sidebar -->
+    <button class="btn btn-ghost btn-sm btn-square" (click)="toggleSidebar.emit()" title="Contraer/Expandir menú"
+      aria-label="Alternar menú lateral">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+
+    <!-- Logo + nombre -->
+    <a routerLink="/" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
+      <img *ngIf="logoUrl" [src]="logoUrl" alt="Logo" class="h-8 w-auto object-contain" />
+      <span class="font-bold text-base sm:text-lg text-primary hidden sm:block whitespace-nowrap">
+        Mesa de Ayuda COAC
+      </span>
+    </a>
+  </div>
+
+  <!-- ============ navbar-center (opcional) ============ -->
+  <div class="navbar-center hidden lg:flex">
+    <div class="badge badge-lg badge-primary gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+      Sistema de Mesa de Ayuda
+    </div>
+  </div>
+
+  <!-- ============ navbar-end ============ -->
+  <div class="navbar-end gap-1 sm:gap-2">
+
+    <!-- Notificaciones -->
+    <div class="dropdown dropdown-end">
+      <label tabindex="0" class="btn btn-ghost btn-circle btn-sm" aria-label="Notificaciones">
+        <div class="indicator">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          <span *ngIf="notificationsCount > 0" class="badge badge-xs badge-error indicator-item">
+            {{ notificationsCount > 99 ? '99+' : notificationsCount }}
+          </span>
+        </div>
+      </label>
+
+      <!-- Contenedor del dropdown -->
+      <div tabindex="0"
+        class="dropdown-content mt-3 z-[1] bg-base-100 rounded-box w-80 shadow-lg border border-base-200 overflow-hidden">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-4 py-3 bg-base-200/40 border-b border-base-200">
+          <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <span class="font-semibold text-sm">Notificaciones</span>
+          </div>
+          <span *ngIf="notificationsCount > 0" class="badge badge-sm badge-primary">{{ notificationsCount }}</span>
+        </div>
+
+        <!-- Lista scrolleable -->
+        <div class="max-h-80 overflow-y-auto">
+          <ul class="menu menu-sm p-2 w-full">
+            <li *ngFor="let n of notifications">
+              <a class="flex items-start gap-2 py-2 rounded-lg">
+                <div class="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0 mt-0.5" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium truncate" [title]="n.subjectNotification">
+                    {{ n.subjectNotification }}
+                  </p>
+                  <p class="text-xs opacity-70 truncate" [title]="n.messageNotification">
+                    {{ n.messageNotification }}
+                  </p>
+                  <p class="text-[10px] opacity-50 mt-0.5">
+                    {{ n.createdAtNotification | date: 'dd/MM HH:mm' }}
+                  </p>
+                </div>
+              </a>
+            </li>
+
+            <!-- Estado vacío -->
+            <li *ngIf="!notifications || notifications.length === 0">
+              <div class="flex flex-col items-center py-8 gap-2 opacity-60">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span class="text-xs">Sin notificaciones</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Footer con "Ver todas" -->
+        <div class="border-t border-base-200 p-2">
+          <a routerLink="/notifications"
+            class="flex items-center justify-center gap-1 text-primary text-xs font-medium py-2 rounded-lg hover:bg-primary/10 transition-colors">
+            Ver todas las notificaciones
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menú de usuario -->
+    <div class="dropdown dropdown-end">
+      <label tabindex="0" class="btn btn-ghost btn-circle btn-sm" aria-label="Menú de usuario">
+        <span
+          class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-content font-medium text-sm leading-none">
+          {{ initials }}
+        </span>
+      </label>
+
+      <!-- Contenedor del dropdown (NO es ul, es un div) -->
+      <div tabindex="0"
+        class="dropdown-content mt-3 z-[1] bg-base-100 rounded-box w-64 shadow-lg border border-base-200 overflow-hidden">
+        <!-- Header del usuario -->
+        <div class="flex items-center gap-3 p-4 bg-base-200/40 border-b border-base-200">
+          <div
+            class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-content font-bold shrink-0">
+            {{ initials }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-sm truncate" [title]="email">
+              {{ email || 'Usuario' }}
+            </p>
+            <span class="badge badge-xs badge-primary mt-1">{{ role }}</span>
+          </div>
+        </div>
+
+        <!-- Items del menú -->
+        <ul class="menu menu-sm p-2 w-full">
+          <li>
+            <a routerLink="/settings/profile" class="gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Mi Perfil
+            </a>
+          </li>
+
+          <li>
+            <a routerLink="/settings/password" class="gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+              Cambiar Contraseña
+            </a>
+          </li>
+
+          <!-- Bloque admin -->
+          <ng-container *ngIf="isAdmin">
+            <li class="mt-1 pt-1 border-t border-base-200">
+              <a routerLink="/admin/branding" class="gap-3 mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
+                Configuración de Marca
+              </a>
+            </li>
+          </ng-container>
+
+          <!-- Logout -->
+          <li class="mt-1 pt-1 border-t border-base-200">
+            <a (click)="logout()" class="text-error hover:bg-error/10 gap-3 mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Cerrar sesión
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,100 @@
+<div class="space-y-6 max-w-3xl mx-auto">
+  <header class="flex items-center gap-3">
+    <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.308 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+      </svg>
+    </div>
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-bold text-primary">Configuración de IA</h1>
+      <p class="text-sm opacity-70">Almacena los datos de conexión del proveedor de IA (solo configuración)</p>
+    </div>
+  </header>
+
+  <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20 gap-3" role="status" aria-live="polite">
+    <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+    <span class="text-sm opacity-70">Cargando configuración...</span>
+  </div>
+
+  <form [formGroup]="aiForm" *ngIf="!isLoading" class="card bg-base-100 shadow-md border border-base-200">
+    <div class="card-body space-y-4">
+      <label class="flex items-center gap-3 p-3 rounded-lg border border-base-200 hover:bg-base-200/40 transition-colors cursor-pointer">
+        <input formControlName="enabled" type="checkbox" class="toggle toggle-primary toggle-sm" />
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium">Habilitar integración de IA</p>
+          <p class="text-xs opacity-60">Al deshabilitarse, la configuración se conserva pero no se usará</p>
+        </div>
+      </label>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Proveedor <span class="text-error">*</span></span>
+          </div>
+          <select formControlName="provider" class="select select-bordered select-sm w-full">
+            <option *ngFor="let p of providers" [value]="p">{{ p }}</option>
+          </select>
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Modelo <span class="text-error">*</span></span>
+          </div>
+          <input formControlName="model" type="text" class="input input-bordered input-sm w-full font-mono"
+            placeholder="gpt-4o-mini" />
+        </label>
+      </div>
+
+      <label class="form-control w-full">
+        <div class="label pt-0 pb-1">
+          <span class="label-text text-xs font-medium">API Key</span>
+          <span *ngIf="apiKeyMasked" class="label-text-alt text-xs opacity-60">Actual: {{ apiKeyMasked }}</span>
+        </div>
+        <div class="relative">
+          <input formControlName="apiKey" [type]="showApiKey ? 'text' : 'password'"
+            class="input input-bordered input-sm w-full pr-10 font-mono" placeholder="Dejar vacío para conservar la actual"
+            autocomplete="new-password" />
+          <button type="button" class="btn btn-ghost btn-xs btn-circle absolute right-1 top-1/2 -translate-y-1/2"
+            (click)="showApiKey = !showApiKey"
+            [attr.aria-label]="showApiKey ? 'Ocultar API key' : 'Mostrar API key'">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+        </div>
+      </label>
+
+      <label class="form-control w-full">
+        <div class="label pt-0 pb-1">
+          <span class="label-text text-xs font-medium">URL base (opcional)</span>
+        </div>
+        <input formControlName="baseUrl" type="text" class="input input-bordered input-sm w-full font-mono"
+          placeholder="https://api.openai.com/v1" />
+      </label>
+
+      <div class="flex justify-end gap-2 pt-3 mt-1 border-t border-base-200">
+        <button type="button" class="btn btn-primary btn-sm gap-2" (click)="onSave()" [disabled]="isLoading || aiForm.invalid">
+          <span *ngIf="isLoading" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+          Guardar configuración
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <div class="card bg-info/5 border border-info/20">
+    <div class="card-body p-4 flex-row items-start gap-3">
+      <div class="p-2 rounded-lg bg-info/10 text-info shrink-0" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div class="text-sm">
+        <p class="font-semibold text-info mb-1">Solo almacenamiento</p>
+        <p class="text-xs opacity-80">Por ahora esta sección únicamente guarda la configuración. El procesamiento con IA se incorporará en una etapa posterior.</p>
+      </div>
+    </div>
+  </div>
+</div>

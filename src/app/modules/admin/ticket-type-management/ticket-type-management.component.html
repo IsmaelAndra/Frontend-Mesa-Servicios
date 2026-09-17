@@ -1,0 +1,121 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Tipos de ticket</h1>
+        <p class="text-sm opacity-70">Clasificación de tickets: incidentes, requerimientos, consultas y proyectos</p>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-sm gap-2" (click)="showCreate = !showCreate">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      {{ showCreate ? 'Cancelar' : 'Nuevo tipo' }}
+    </button>
+  </header>
+
+  <!-- Formulario de creación -->
+  <div *ngIf="showCreate" class="card bg-base-100 shadow-md border border-base-200">
+    <div class="card-body">
+      <div class="flex flex-wrap gap-3 items-end">
+        <label class="form-control w-full sm:flex-1">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Nombre <span class="text-error">*</span></span></div>
+          <input [(ngModel)]="newType.name" class="input input-bordered input-sm w-full" placeholder="Ej. INCIDENTE" maxlength="50" />
+        </label>
+        <label class="form-control w-full sm:flex-[2]">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Descripción</span></div>
+          <input [(ngModel)]="newType.description" class="input input-bordered input-sm w-full" placeholder="Descripción breve del tipo" maxlength="255" />
+        </label>
+        <button class="btn btn-primary btn-sm gap-2" (click)="create()" [disabled]="!newType.name?.trim()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Listado -->
+  <div class="card bg-base-100 shadow-md border border-base-200">
+    <div class="card-body">
+      <div *ngIf="loading" class="flex justify-center py-10">
+        <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+      </div>
+
+      <div *ngIf="!loading" class="overflow-x-auto">
+        <table class="table table-sm table-zebra">
+          <thead class="bg-primary text-primary-content">
+            <tr>
+              <th class="text-center">ID</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of types">
+              <td class="text-center font-mono text-xs">{{ t.id }}</td>
+
+              <!-- Fila en edición -->
+              <ng-container *ngIf="editType?.id === t.id; else readonlyRow">
+                <td>
+                  <input [(ngModel)]="editType!.name" class="input input-bordered input-xs w-full" maxlength="50" />
+                </td>
+                <td>
+                  <input [(ngModel)]="editType!.description" class="input input-bordered input-xs w-full" maxlength="255" />
+                </td>
+                <td class="text-center">
+                  <div class="flex gap-1 justify-center">
+                    <button class="btn btn-ghost btn-xs btn-success gap-1" (click)="saveEdit()">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Guardar
+                    </button>
+                    <button class="btn btn-ghost btn-xs" (click)="cancelEdit()">Cancelar</button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Fila solo lectura -->
+              <ng-template #readonlyRow>
+                <td class="text-left font-semibold">{{ t.name }}</td>
+                <td class="opacity-70">{{ t.description || '—' }}</td>
+                <td class="text-center">
+                  <div class="flex gap-1 justify-center">
+                    <button class="btn btn-ghost btn-xs gap-1" (click)="edit(t)" aria-label="Editar tipo">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Editar
+                    </button>
+                    <button class="btn btn-ghost btn-xs text-error gap-1" (click)="delete(t)" aria-label="Eliminar tipo">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </ng-template>
+            </tr>
+
+            <tr *ngIf="!types.length">
+              <td colspan="4" class="text-center opacity-60 py-8">No hay tipos de ticket registrados</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

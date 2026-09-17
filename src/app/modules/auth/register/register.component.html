@@ -1,0 +1,44 @@
+<div class="flex items-center justify-center min-h-[80vh]">
+  <div class="card w-full max-w-lg bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title justify-center text-primary text-2xl">Registro de usuario</h2>
+      <form [formGroup]="form" (ngSubmit)="register()">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="form-control">
+            <label class="label"><span class="label-text">Identificación</span></label>
+            <input formControlName="identification" class="input input-bordered" placeholder="Cédula / RUC" />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">Teléfono</span></label>
+            <input formControlName="phone" class="input input-bordered" placeholder="09xxxxxxxx" />
+          </div>
+          <div class="form-control md:col-span-2">
+            <label class="label"><span class="label-text">Correo corporativo</span></label>
+            <input type="email" formControlName="corporateEmail" class="input input-bordered" placeholder="usuario@coac.local" />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">Contraseña</span></label>
+            <input type="password" formControlName="password" class="input input-bordered" placeholder="Mínimo 8 caracteres" />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">Área</span></label>
+            <select formControlName="areaId" class="select select-bordered w-full">
+              <option [ngValue]="null" disabled>Seleccione su área</option>
+              <option *ngFor="let a of areas" [ngValue]="a.id">{{ a.name }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-control mt-6">
+          <button class="btn btn-primary" [disabled]="loading">
+            <span *ngIf="loading" class="loading loading-spinner loading-xs"></span>
+            {{ loading ? 'Registrando...' : 'Crear cuenta' }}
+          </button>
+        </div>
+      </form>
+      <p class="text-sm text-center mt-4">
+        ¿Ya tiene cuenta?
+        <a routerLink="/auth/login" class="link link-primary">Inicie sesión</a>
+      </p>
+    </div>
+  </div>
+</div>

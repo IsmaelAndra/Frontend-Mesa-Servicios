@@ -1,0 +1,94 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Calendario</h1>
+        <p class="text-sm opacity-70">Tareas propias y tickets asignados</p>
+      </div>
+    </div>
+
+    <!-- Controles de navegación -->
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- Selector de vista -->
+      <div role="tablist" class="tabs tabs-boxed bg-base-200 p-1">
+        <button role="tab" class="tab tab-sm gap-1.5" [class.tab-active]="currentView === 'day'" (click)="setView('day')" aria-label="Ver por día">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span class="hidden sm:inline">Día</span>
+        </button>
+
+        <button role="tab" class="tab tab-sm gap-1.5" [class.tab-active]="currentView === 'week'" (click)="setView('week')" aria-label="Ver por semana">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+          </svg>
+          <span class="hidden sm:inline">Semana</span>
+        </button>
+
+        <button role="tab" class="tab tab-sm gap-1.5" [class.tab-active]="currentView === 'month'" (click)="setView('month')" aria-label="Ver por mes">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span class="hidden sm:inline">Mes</span>
+        </button>
+      </div>
+
+      <!-- Hoy -->
+      <button class="btn btn-outline btn-sm gap-2" (click)="today()" aria-label="Ir a hoy">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        Hoy
+      </button>
+
+      <!-- Prev / Next -->
+      <div class="join">
+        <button class="btn btn-outline btn-sm join-item" (click)="prev()" aria-label="Anterior">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <button class="btn btn-outline btn-sm join-item" (click)="next()" aria-label="Siguiente">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Título del rango visible -->
+  <div class="flex items-center justify-center">
+    <div class="badge badge-lg badge-outline gap-2 px-4 py-3">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+      <span class="text-sm sm:text-base font-semibold">{{ rangeLabel }}</span>
+    </div>
+  </div>
+
+  <!-- Calendario -->
+  <div class="card bg-base-100 shadow-md border border-base-200 overflow-hidden">
+    <div class="calendar-wrap" [class.calendar-month]="currentView === 'month'">
+      <div #calendarEl></div>
+    </div>
+  </div>
+
+  <!-- Leyenda -->
+  <div class="flex flex-wrap items-center justify-center gap-4 text-xs opacity-70">
+    <div class="flex items-center gap-2">
+      <span class="w-3 h-3 rounded-full" style="background-color: #062e86"></span>
+      <span>Tareas</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="w-3 h-3 rounded-full" style="background-color: #ec9811"></span>
+      <span>Tickets</span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,215 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #062e86;
+  --secondary-color: #ec9811;
+  --logo-url: '';
+  --logo-height: 48px;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background-color: #f3f4f6;
+}
+
+.p-datatable .p-datatable-header {
+  background-color: #062e86;
+  color: #ffffff;
+  border-color: #062e86;
+}
+
+.p-datatable .p-column-title {
+  color: #ffffff;
+}
+
+.p-button.p-button-primary {
+  background-color: #062e86;
+  border-color: #062e86;
+}
+
+.p-button.p-button-primary:hover {
+  background-color: #042066;
+  border-color: #042066;
+}
+
+.p-inputtext:focus, .p-dropdown:focus, .p-multiselect:focus {
+  border-color: #062e86;
+  box-shadow: 0 0 0 0.2rem rgba(6, 46, 134, 0.25);
+}
+
+.swal2-title {
+  font-size: 1.35rem;
+  color: #062e86;
+}
+
+.swal2-confirm {
+  background-color: #062e86 !important;
+  border-color: #062e86 !important;
+}
+
+.swal2-cancel {
+  background-color: #6b7280 !important;
+  border-color: #6b7280 !important;
+}
+
+.logo-img {
+  height: var(--logo-height);
+  width: auto;
+  max-width: 100%;
+}
+
+.sidebar-logo {
+  height: 40px;
+  width: auto;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-primary-content hover:bg-primary-light;
+  }
+  .btn-secondary {
+    @apply bg-secondary text-secondary-content hover:bg-secondary-light;
+  }
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 text-base-content/80 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors;
+  }
+  .sidebar-link.active {
+    @apply text-primary bg-primary/10 font-medium;
+  }
+  .card-ticket {
+    @apply bg-primary/5 text-primary shadow-sm border border-primary/20 rounded-xl p-5 transition-shadow hover:shadow-md;
+  }
+  .stat-card {
+    @apply bg-primary/5 text-primary shadow-sm border border-primary/20 rounded-xl p-6;
+  }
+  .table-header {
+    @apply bg-primary text-primary-content;
+  }
+}
+
+/* Editor enriquecido (quill) */
+.rich-editor .ql-container { min-height: 150px; }
+.rich-editor.compact .ql-container { min-height: 110px; }
+
+/* Badges: texto blanco en fondos de color; texto negro en escala gris clara */
+.badge {
+  color: #ffffff !important;
+}
+
+.badge.badge-ghost:not(.badge-primary):not(.badge-secondary):not(.badge-info):not(.badge-warning):not(.badge-success):not(.badge-error):not(.badge-neutral),
+.badge.badge-outline:not(.badge-primary):not(.badge-secondary):not(.badge-info):not(.badge-warning):not(.badge-success):not(.badge-error):not(.badge-neutral) {
+  color: #000000 !important;
+}
+
+/* Sidebar colapsado (solo iconos) */
+aside.sidebar-collapsed .sidebar-text,
+aside.sidebar-collapsed .sidebar-user-info,
+aside.sidebar-collapsed .sidebar-chevron {
+  display: none;
+}
+
+aside.sidebar-collapsed .sidebar-link {
+  justify-content: center;
+  gap: 0;
+}
+
+aside.sidebar-collapsed .sidebar-header {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+aside.sidebar-collapsed .sidebar-footer {
+  padding: 0.75rem 0.5rem;
+}
+
+aside.sidebar-collapsed .sidebar-user {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+aside.sidebar-collapsed .sidebar-logo,
+aside.sidebar-collapsed .sidebar-header img,
+aside.sidebar-collapsed .sidebar-header .w-10 {
+  margin: 0 auto;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #062e86;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #042066;
+}
+
+/* Responsive sidebar */
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    @apply fixed inset-0 bg-black/50 z-40 lg:hidden;
+  }
+  .sidebar-panel {
+    @apply fixed top-0 left-0 h-full w-64 bg-base-100 z-50 transform transition-transform duration-300 lg:relative lg:translate-x-0;
+  }
+  .sidebar-panel.open {
+    @apply translate-x-0;
+  }
+  .sidebar-panel.closed {
+    @apply -translate-x-full;
+  }
+}
+
+/* ============ Inputs de SweetAlert con estilo DaisyUI ============ */
+.swal-daisy-input {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  border: 1px solid hsl(var(--b3)) !important;
+  border-radius: 0.5rem !important;
+  background-color: hsl(var(--b1)) !important;
+  color: hsl(var(--bc)) !important;
+  outline: none !important;
+  transition: border-color 150ms ease, box-shadow 150ms ease !important;
+}
+
+.swal-daisy-input:focus {
+  border-color: hsl(var(--p)) !important;
+  box-shadow: 0 0 0 3px hsl(var(--p) / 0.2) !important;
+}
+
+textarea.swal-daisy-input {
+  resize: vertical !important;
+  min-height: 80px !important;
+}
+
+select.swal-daisy-input {
+  cursor: pointer !important;
+}
+
+/* Fix del popup de SweetAlert */
+.swal2-popup {
+  padding: 1.5rem !important;
+}
+
+.swal2-html-container {
+  margin: 0.5rem 0 1rem 0 !important;
+}
+
+.swal2-actions {
+  gap: 0.5rem !important;
+  margin-top: 1rem !important;
+}
