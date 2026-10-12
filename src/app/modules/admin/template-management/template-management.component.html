@@ -198,7 +198,7 @@
 
         <!-- Imagen de la plantilla nueva -->
         <div class="md:col-span-2">
-          <label class="flex items-start gap-3 p-3 rounded-lg border border-base-200 cursor-pointer">
+          <div class="flex items-start gap-3 p-3 rounded-lg border border-base-200">
             <div class="w-14 h-14 rounded-lg border border-base-300 bg-base-200/40 flex items-center justify-center overflow-hidden shrink-0">
               <img
                 *ngIf="nuevoImageUrl; else sinImagenNueva"
@@ -217,16 +217,13 @@
                 [imagen] y [imagenUrl] en el cuerpo.
               </p>
               <div class="flex flex-wrap gap-2">
-                <label class="btn btn-outline btn-xs gap-1.5 cursor-pointer">
-                  <i class="fa-solid fa-upload text-[11px]" aria-hidden="true"></i>
-                  Seleccionar
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/gif,image/webp"
-                    (change)="onImageSelected($event)"
-                    class="hidden"
-                  />
-                </label>
+                <app-dropzone
+                  class="basis-full"
+                  [compacta]="true"
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  hint="PNG, JPG, GIF o WebP"
+                  (cambio)="onImageSelected($event)"
+                ></app-dropzone>
                 <button
                   type="button"
                   class="btn btn-primary btn-xs gap-1.5"
@@ -258,7 +255,7 @@
                 {{ nuevoImageUrl }}
               </p>
             </div>
-          </label>
+          </div>
         </div>
 
         <!-- Avisos sobre el HTML escrito -->
@@ -472,7 +469,7 @@
 
         <!-- Imagen de la plantilla -->
         <div class="md:col-span-2">
-          <label class="flex items-start gap-3 p-3 rounded-lg border border-base-200 cursor-pointer">
+          <div class="flex items-start gap-3 p-3 rounded-lg border border-base-200">
             <div class="w-14 h-14 rounded-lg border border-base-300 bg-base-200/40 flex items-center justify-center overflow-hidden shrink-0">
               <img
                 *ngIf="editImageUrl; else sinImagenPlantilla"
@@ -491,16 +488,13 @@
                 dirección) dentro del cuerpo. Sin imagen, ambos tokens se vacían.
               </p>
               <div class="flex flex-wrap gap-2">
-                <label class="btn btn-outline btn-xs gap-1.5 cursor-pointer">
-                  <i class="fa-solid fa-upload text-[11px]" aria-hidden="true"></i>
-                  Seleccionar
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/gif,image/webp"
-                    (change)="onImageSelected($event)"
-                    class="hidden"
-                  />
-                </label>
+                <app-dropzone
+                  class="basis-full"
+                  [compacta]="true"
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  hint="PNG, JPG, GIF o WebP"
+                  (cambio)="onImageSelected($event)"
+                ></app-dropzone>
                 <button
                   type="button"
                   class="btn btn-primary btn-xs gap-1.5"
@@ -541,7 +535,7 @@
                 {{ editImageUrl }}
               </p>
             </div>
-          </label>
+          </div>
         </div>
 
         <!-- Avisos sobre el HTML escrito -->

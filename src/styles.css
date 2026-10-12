@@ -968,9 +968,13 @@ select.swal-daisy-input {
    ============================================================================ */
 
 /* ---------- Encabezado de página ---------- */
+/* Sin overflow: hidden. Recortaba los menús desplegables de las acciones
+   (estado y "Asignar a" del ticket) y no hacía falta: el fondo ya respeta el
+   border-radius y el trazo de ::before queda dentro. El z-index pone esos menús
+   por encima de las tarjetas que vienen después en la página. */
 .page-head {
   position: relative;
-  overflow: hidden;
+  z-index: 20;
   padding: 1.1rem 1.25rem;
   border-radius: 1.5rem;
   background:

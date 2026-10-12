@@ -6,6 +6,7 @@ import { AdminService } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { MasterSelectComponent } from '../../shared/components/master-select/master-select.component';
+import { DropzoneComponent } from '../../shared/components/dropzone/dropzone.component';
 import { TemplateManagementComponent } from './template-management.component';
 
 /** Cuerpo con la misma forma que las plantillas de correo reales. */
@@ -48,7 +49,7 @@ describe('Vista previa de plantillas', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [TemplateManagementComponent, PaginatorComponent, MasterSelectComponent],
+      declarations: [TemplateManagementComponent, PaginatorComponent, MasterSelectComponent, DropzoneComponent],
       imports: [CommonModule, FormsModule],
       providers: [
         { provide: AdminService, useValue: adminServiceStub() },

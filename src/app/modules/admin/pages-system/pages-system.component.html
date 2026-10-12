@@ -1,4 +1,4 @@
-<div class="space-y-6 max-w-7xl mx-auto">
+<div class="space-y-6 w-full">
   <!-- ============================ HEADER ============================ -->
   <header
     class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
@@ -287,25 +287,14 @@
             </div>
 
             <div class="flex flex-wrap gap-2">
-              <label class="btn btn-sm btn-primary gap-2 flex-1 cursor-pointer">
-                <span
-                  *ngIf="uploadingLogo"
-                  class="loading loading-spinner loading-xs"
-                  aria-hidden="true"
-                ></span>
-                <i
-                  *ngIf="!uploadingLogo"
-                  class="fa-solid fa-upload text-[15px]"
-                  aria-hidden="true"
-                ></i>
-                {{ uploadingLogo ? "Subiendo..." : "Subir" }}
-                <input
-                  type="file"
-                  class="hidden"
-                  accept="image/png,image/jpeg,image/gif,image/webp"
-                  (change)="onLogoSelected($event)"
-                />
-              </label>
+              <app-dropzone
+                class="basis-full"
+                [compacta]="true"
+                [disabled]="uploadingLogo"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                [hint]="uploadingLogo ? 'Subiendo el logo…' : 'PNG, JPG, GIF o WebP · se sube al elegirlo'"
+                (cambio)="onLogoSelected($event)"
+              ></app-dropzone>
               <button
                 *ngIf="logo"
                 type="button"

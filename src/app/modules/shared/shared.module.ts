@@ -11,14 +11,15 @@ import { AiFloatButtonComponent } from './components/ai-float-button/ai-float-bu
 import { PaginatorComponent } from './components/paginator/paginator.component';
 import { PresenceDotComponent } from './components/presence-dot/presence-dot.component';
 import { GlobalSearchComponent } from './components/global-search/global-search.component';
+import { DropzoneComponent } from './components/dropzone/dropzone.component';
 import { PrimeNGModule } from './primeng.module';
 
 import { SkeletonComponent } from './components/skeleton/skeleton.component';
 
 @NgModule({
-  declarations: [NavbarComponent, SidebarComponent, StatusBadgeComponent, MasterSelectComponent, BreadcrumbComponent, ToastContainerComponent, AiFloatButtonComponent, PaginatorComponent, PresenceDotComponent, GlobalSearchComponent],
+  declarations: [NavbarComponent, SidebarComponent, StatusBadgeComponent, MasterSelectComponent, BreadcrumbComponent, ToastContainerComponent, AiFloatButtonComponent, PaginatorComponent, PresenceDotComponent, GlobalSearchComponent, DropzoneComponent],
   imports: [CommonModule, RouterModule, PrimeNGModule, SkeletonComponent],
-  exports: [NavbarComponent, SidebarComponent, StatusBadgeComponent, MasterSelectComponent, BreadcrumbComponent, ToastContainerComponent, AiFloatButtonComponent, PaginatorComponent, PresenceDotComponent, GlobalSearchComponent, SkeletonComponent, CommonModule, RouterModule, PrimeNGModule]
+  exports: [NavbarComponent, SidebarComponent, StatusBadgeComponent, MasterSelectComponent, BreadcrumbComponent, ToastContainerComponent, AiFloatButtonComponent, PaginatorComponent, PresenceDotComponent, GlobalSearchComponent, DropzoneComponent, SkeletonComponent, CommonModule, RouterModule, PrimeNGModule]
 })
 export class SharedModule {}
 

@@ -2,13 +2,18 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  ElementRef,
   HostListener,
   Input,
+  NgZone,
   OnChanges,
+  OnDestroy,
   SimpleChanges,
+  ViewChild,
   forwardRef,
   inject
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 /**
@@ -85,10 +90,17 @@ interface MasterOptionView extends MasterOption {
 
       <span *ngIf="label" [id]="labelId" class="sr-only">{{ label }}</span>
 
+      <!--
+        La lista se mueve al <body> al abrirse y se coloca con position: fixed
+        junto al botón (ver "panel" y posicionar()). Antes era absolute dentro
+        del componente y cualquier tarjeta o modal con overflow la recortaba:
+        quedaba "por detrás" y no se podía elegir.
+      -->
       <div
+        #panel
         *ngIf="open"
         [id]="listId"
-        class="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-btn border border-base-300 bg-base-100 shadow-lg py-1"
+        class="master-select-panel max-h-60 overflow-y-auto rounded-btn border border-base-300 bg-base-100 shadow-lg py-1"
         role="listbox"
         [attr.aria-labelledby]="label ? labelId : null"
       >
@@ -134,7 +146,7 @@ interface MasterOptionView extends MasterOption {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MasterSelectComponent implements ControlValueAccessor, OnChanges {
+export class MasterSelectComponent implements ControlValueAccessor, OnChanges, OnDestroy {
   /** Opciones a listar. Cada una trae icono y color si el maestro los define. */
   @Input() options: MasterOption[] = [];
   /** Texto cuando no hay nada seleccionado. */
@@ -152,6 +164,36 @@ export class MasterSelectComponent implements ControlValueAccessor, OnChanges {
   highlighted = 0;
 
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly zone = inject(NgZone);
+  private readonly document = inject(DOCUMENT);
+
+  @ViewChild('trigger', { static: true }) private trigger?: ElementRef<HTMLButtonElement>;
+
+  /** Lista abierta, ya movida al <body>. */
+  private panelEl: HTMLElement | null = null;
+  /** Recoloca la lista al hacer scroll en cualquier contenedor o al redimensionar. */
+  private readonly alMoverse = () => this.posicionar();
+
+  /**
+   * Al aparecer la lista (*ngIf) se saca al <body>: ahí ningún antepasado con
+   * overflow ni transform (tarjetas, modal-box de daisyUI) puede recortarla ni
+   * cambiar la referencia de position: fixed.
+   */
+  @ViewChild('panel')
+  private set panel(ref: ElementRef<HTMLElement> | undefined) {
+    const el = ref?.nativeElement ?? null;
+    if (el === this.panelEl) return;
+    this.quitarPanel();
+    if (!el) return;
+    this.panelEl = el;
+    this.document.body.appendChild(el);
+    this.posicionar();
+    this.zone.runOutsideAngular(() => {
+      // capture: el scroll de un contenedor interno no burbujea hasta window.
+      this.document.addEventListener('scroll', this.alMoverse, true);
+      window.addEventListener('resize', this.alMoverse);
+    });
+  }
   private readonly uid = Math.random().toString(36).slice(2, 9);
   private onChange: (v: unknown) => void = () => {};
   private onTouched: () => void = () => {};
@@ -273,11 +315,11 @@ export class MasterSelectComponent implements ControlValueAccessor, OnChanges {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     if (!this.open) return;
-    const target = event.target as HTMLElement | null;
-    const host = target?.closest('app-master-select');
-    // Se busca por etiqueta porque el componente usa ViewEncapsulation por
-    // defecto y su <div> interno no es referenciable desde fuera.
-    if (!host) this.close();
+    const target = event.target as Node | null;
+    // La lista vive en el <body>, fuera del componente: un clic en ella no es
+    // "fuera". Tampoco lo es un clic en el propio botón (lo gestiona toggle()).
+    if (target && (this.panelEl?.contains(target) || this.trigger?.nativeElement.contains(target))) return;
+    this.close();
   }
 
   @HostListener('keydown', ['$event'])
@@ -330,6 +372,39 @@ export class MasterSelectComponent implements ControlValueAccessor, OnChanges {
       default:
         break;
     }
+  }
+
+  ngOnDestroy(): void {
+    this.quitarPanel();
+  }
+
+  /**
+   * Coloca la lista pegada al botón, con su mismo ancho. Si debajo no cabe y
+   * arriba hay más sitio, se abre hacia arriba (campos al final de un modal).
+   */
+  private posicionar(): void {
+    const panel = this.panelEl;
+    const boton = this.trigger?.nativeElement;
+    if (!panel || !boton) return;
+    const r = boton.getBoundingClientRect();
+    const margen = 4;
+    const alto = Math.min(panel.scrollHeight || 240, 240);
+    const abajo = window.innerHeight - r.bottom;
+    const haciaArriba = abajo < alto + margen * 2 && r.top > abajo;
+
+    panel.style.position = 'fixed';
+    panel.style.zIndex = '1100'; // por encima del modal de daisyUI (999)
+    panel.style.left = `${Math.max(margen, r.left)}px`;
+    panel.style.width = `${r.width}px`;
+    panel.style.top = haciaArriba ? `${Math.max(margen, r.top - alto - margen)}px` : `${r.bottom + margen}px`;
+  }
+
+  private quitarPanel(): void {
+    if (!this.panelEl) return;
+    this.document.removeEventListener('scroll', this.alMoverse, true);
+    window.removeEventListener('resize', this.alMoverse);
+    this.panelEl.remove();
+    this.panelEl = null;
   }
 
   private indexOf(value: unknown): number {

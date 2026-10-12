@@ -39,6 +39,7 @@ En desarrollo la API se llama en `http://localhost:8080/api` (`src/environments/
 
 ## Producción
 
+- **Docker:** `Dockerfile` (compila y sirve con Nginx sin privilegios) y `nginx.conf` (SPA, proxy de `/api`, SSE sin búfer, caché, gzip y cabeceras de seguridad con la CSP de abajo). Se levanta junto al backend con el `docker-compose.yml` de `Backend-Mesa-Servicios/despliegue/` (ver su `INSTALACION.md`).
 - `npm run build` genera `dist/mesa-ayuda-frontend`; se sirve como sitio estático con *fallback* a `index.html` (rutas de Angular).
 - La API se llama en `/api` (mismo origen): el servidor web debe reenviar `/api` al backend, **sin búfer** para `/api/events` (SSE).
 - La aplicación ya es compatible con una CSP estricta (no hay scripts en línea; el tema se aplica desde `assets/tema.js`). Cabecera recomendada en el servidor:

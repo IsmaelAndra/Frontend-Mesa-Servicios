@@ -1,0 +1,25 @@
+# Lo que NO entra al contexto de build de Docker.
+# node_modules se instala dentro de la imagen (npm ci) para Linux; copiar el de
+# Windows rompería los binarios nativos y haría el build mucho más lento.
+
+node_modules/
+dist/
+.angular/
+coverage/
+
+# Control de versiones, CI, editores y herramientas de agentes
+.git/
+.github/
+.vscode/
+.idea/
+.agents/
+.claude/
+.codex/
+.impeccable/
+
+# Secretos y basura local
+.env
+.env.*
+*.log
+Dockerfile
+.dockerignore

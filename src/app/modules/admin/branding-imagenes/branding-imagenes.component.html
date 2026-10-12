@@ -51,19 +51,13 @@
 
       <div class="flex flex-col gap-2.5 w-full lg:flex-1">
         <div class="flex flex-wrap gap-2">
-          <label class="btn btn-outline btn-sm gap-2 cursor-pointer">
-            <i
-              class="fa-solid fa-upload text-[15px]"
-              aria-hidden="true"
-            ></i>
-            Seleccionar
-            <input
-              type="file"
-              accept="image/png,image/jpeg"
-              (change)="b.onBackgroundSelected($event)"
-              class="hidden"
-            />
-          </label>
+          <app-dropzone
+            class="basis-full"
+            [compacta]="true"
+            accept="image/png,image/jpeg"
+            hint="PNG, JPG, GIF o WebP"
+            (cambio)="b.onBackgroundSelected($event)"
+          ></app-dropzone>
 
           <button
             class="btn btn-primary btn-sm gap-2"
@@ -154,19 +148,13 @@
 
       <div class="flex flex-col gap-2.5 w-full lg:flex-1">
         <div class="flex flex-wrap gap-2">
-          <label class="btn btn-outline btn-sm gap-2 cursor-pointer">
-            <i
-              class="fa-solid fa-upload text-[15px]"
-              aria-hidden="true"
-            ></i>
-            Seleccionar
-            <input
-              type="file"
-              accept="image/png,image/jpeg"
-              (change)="b.onProfileCoverSelected($event)"
-              class="hidden"
-            />
-          </label>
+          <app-dropzone
+            class="basis-full"
+            [compacta]="true"
+            accept="image/png,image/jpeg"
+            hint="PNG, JPG, GIF o WebP"
+            (cambio)="b.onProfileCoverSelected($event)"
+          ></app-dropzone>
 
           <button
             class="btn btn-primary btn-sm gap-2"
@@ -208,8 +196,9 @@
 </div>
 
 <!-- ============ Fondos de los chats ============ -->
+<!-- Ancho completo: dentro ya reparte los dos fondos en dos columnas. -->
 <div
-  class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+  class="xl:col-span-2 card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
 >
   <div class="card-body">
     <div class="flex items-start gap-4 mb-4">
@@ -276,19 +265,13 @@
         </div>
 
         <div class="flex flex-wrap gap-2 mt-3">
-          <label class="btn btn-outline btn-xs gap-1.5 cursor-pointer">
-            <i
-              class="fa-solid fa-upload text-[11px]"
-              aria-hidden="true"
-            ></i>
-            Seleccionar
-            <input
-              type="file"
-              accept="image/png,image/jpeg"
-              (change)="b.onChatBackgroundLightSelected($event)"
-              class="hidden"
-            />
-          </label>
+          <app-dropzone
+            class="basis-full"
+            [compacta]="true"
+            accept="image/png,image/jpeg"
+            hint="PNG, JPG, GIF o WebP"
+            (cambio)="b.onChatBackgroundLightSelected($event)"
+          ></app-dropzone>
           <button
             class="btn btn-primary btn-xs gap-1.5"
             (click)="b.uploadChatBackground('light')"
@@ -361,19 +344,13 @@
         </div>
 
         <div class="flex flex-wrap gap-2 mt-3">
-          <label class="btn btn-outline btn-xs gap-1.5 cursor-pointer">
-            <i
-              class="fa-solid fa-upload text-[11px]"
-              aria-hidden="true"
-            ></i>
-            Seleccionar
-            <input
-              type="file"
-              accept="image/png,image/jpeg"
-              (change)="b.onChatBackgroundDarkSelected($event)"
-              class="hidden"
-            />
-          </label>
+          <app-dropzone
+            class="basis-full"
+            [compacta]="true"
+            accept="image/png,image/jpeg"
+            hint="PNG, JPG, GIF o WebP"
+            (cambio)="b.onChatBackgroundDarkSelected($event)"
+          ></app-dropzone>
           <button
             class="btn btn-primary btn-xs gap-1.5"
             (click)="b.uploadChatBackground('dark')"

@@ -1,4 +1,4 @@
-<div class="space-y-6 max-w-5xl mx-auto">
+<div class="space-y-6 w-full">
   <!-- ============================ HEADER ============================ -->
   <header
     class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
@@ -44,10 +44,10 @@
   </div>
 
   <!-- ============================ TAB: LOGOS E ICONOS ============================ -->
-  <app-branding-logos *ngIf="tab === 'logos'" class="block space-y-5"></app-branding-logos>
+  <app-branding-logos *ngIf="tab === 'logos'" class="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start"></app-branding-logos>
 
   <!-- ============================ TAB: IMÁGENES ============================ -->
-  <app-branding-imagenes *ngIf="tab === 'imagenes'" class="block space-y-5"></app-branding-imagenes>
+  <app-branding-imagenes *ngIf="tab === 'imagenes'" class="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start"></app-branding-imagenes>
 
   <!-- ============================ TAB: COLORES ============================ -->
   <app-branding-colores *ngIf="tab === 'colores'" class="block space-y-5"></app-branding-colores>

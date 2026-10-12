@@ -1,0 +1,226 @@
+/* ============================================================================
+   Ficha 360° del solicitante
+   Hoja aparte: ticket-detail.component.css ya está cerca del límite de 16 kB
+   por hoja (anyComponentStyle) y el build de producción falla si lo pasa.
+   ============================================================================ */
+
+/* Entrada al abrirla: aparece y baja un poco, sin rebote. */
+.ficha360 {
+  animation: ficha360-entra 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@keyframes ficha360-entra {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ficha360 {
+    animation: none;
+  }
+}
+
+/* ---------- Banda superior: identidad y contacto ---------- */
+.ficha360__banda {
+  background:
+    radial-gradient(120% 180% at 0% 0%, oklch(var(--p) / 0.12) 0%, transparent 60%),
+    oklch(var(--b2) / 0.45);
+  border-bottom: 1px solid oklch(var(--bc) / 0.07);
+}
+
+/* Datos en fila: se reparten el ancho y bajan de línea si no caben. */
+.ficha360__datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.5rem;
+}
+.ficha360__datos > div {
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.85rem;
+  background: oklch(var(--b1) / 0.7);
+  border: 1px solid oklch(var(--bc) / 0.06);
+}
+.ficha360__datos dt {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: oklch(var(--bc) / 0.55);
+}
+.ficha360__datos dt i {
+  font-size: 0.65rem;
+}
+.ficha360__datos dd {
+  margin-top: 0.15rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Señales ---------- */
+.ficha360__senal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.ficha360__senal--info {
+  color: oklch(var(--in));
+  background: oklch(var(--in) / 0.1);
+  border-color: oklch(var(--in) / 0.25);
+}
+.ficha360__senal--success {
+  color: oklch(var(--su));
+  background: oklch(var(--su) / 0.1);
+  border-color: oklch(var(--su) / 0.25);
+}
+.ficha360__senal--warning {
+  color: oklch(var(--wa));
+  background: oklch(var(--wa) / 0.12);
+  border-color: oklch(var(--wa) / 0.3);
+}
+.ficha360__senal--error {
+  color: oklch(var(--er));
+  background: oklch(var(--er) / 0.1);
+  border-color: oklch(var(--er) / 0.25);
+}
+
+/* ---------- Indicadores ---------- */
+.ficha360__kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.85rem;
+  border-radius: 1rem;
+  background: oklch(var(--b1));
+  border: 1px solid oklch(var(--bc) / 0.08);
+}
+.ficha360__kpi-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.65rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.4rem;
+}
+.ficha360__kpi-valor {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.ficha360__kpi-valor small {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.55;
+  margin-left: 0.1rem;
+}
+.ficha360__kpi-etiqueta {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: oklch(var(--bc) / 0.55);
+}
+
+/* ---------- Paneles (estados, tendencia, historial) ---------- */
+.ficha360__panel {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: oklch(var(--b2) / 0.35);
+  border: 1px solid oklch(var(--bc) / 0.06);
+}
+.ficha360__titulo {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: oklch(var(--bc) / 0.6);
+}
+
+/* Tendencia: 6 columnas, la barra crece desde abajo dentro de su pista. */
+.ficha360__barras {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.5rem;
+  height: 9rem;
+  margin-top: 0.75rem;
+}
+.ficha360__mes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 0;
+}
+.ficha360__mes-valor {
+  height: 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ficha360__mes-pista {
+  flex: 1;
+  width: 100%;
+  max-width: 2.25rem;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 0.5rem;
+  background: oklch(var(--bc) / 0.05);
+  overflow: hidden;
+}
+.ficha360__mes-barra {
+  width: 100%;
+  border-radius: 0.5rem 0.5rem 0 0;
+  background: linear-gradient(180deg, oklch(var(--p)) 0%, oklch(var(--p) / 0.6) 100%);
+  transition: height 300ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.ficha360__mes-nombre {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: oklch(var(--bc) / 0.55);
+}
+
+/* Historial: filas compactas; la del ticket abierto, resaltada. */
+.ficha360__fila {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 0.85rem;
+  border: 1px solid transparent;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+.ficha360__fila:hover {
+  background: oklch(var(--b1));
+  border-color: oklch(var(--p) / 0.25);
+}
+.ficha360__fila--actual {
+  background: oklch(var(--p) / 0.08);
+  border-color: oklch(var(--p) / 0.3);
+}
+.ficha360__fila-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.65rem;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}

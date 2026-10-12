@@ -198,14 +198,44 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  onFilesSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.files = Array.from(input.files || []);
-    input.value = '';
+  /**
+   * Añade lo elegido o soltado en la zona de adjuntos. Se suma a lo que ya
+   * había (antes, elegir otra vez reemplazaba la lista) y sin repetir archivos.
+   */
+  agregarArchivos(nuevos: File[]): void {
+    const grandes = nuevos.filter(f => f.size > MAX_BYTES_ADJUNTO);
+    if (grandes.length) {
+      this.toastService.warn(`Supera 20 MB y no se adjunta: ${grandes.map(f => f.name).join(', ')}`);
+    }
+    const clave = (f: File) => `${f.name}|${f.size}|${f.lastModified}`;
+    const ya = new Set(this.files.map(clave));
+    const validos = nuevos.filter(f => f.size <= MAX_BYTES_ADJUNTO && !ya.has(clave(f)));
+    this.files = [...this.files, ...validos];
+  }
+
+  avisarRechazados(nombres: string[]): void {
+    this.toastService.warn(`Tipo de archivo no permitido: ${nombres.join(', ')}`);
+  }
+
+  tamanoLegible(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  iconoArchivo(nombre: string): string {
+    const ext = nombre.split('.').pop()?.toLowerCase() || '';
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) return 'fa-regular fa-file-image';
+    if (ext === 'pdf') return 'fa-regular fa-file-pdf';
+    if (['doc', 'docx'].includes(ext)) return 'fa-regular fa-file-word';
+    if (['xls', 'xlsx', 'csv'].includes(ext)) return 'fa-regular fa-file-excel';
+    if (['ppt', 'pptx'].includes(ext)) return 'fa-regular fa-file-powerpoint';
+    if (ext === 'zip') return 'fa-regular fa-file-zipper';
+    return 'fa-regular fa-file-lines';
   }
 
   removeFile(i: number): void {
-    this.files.splice(i, 1);
+    this.files = this.files.filter((_, j) => j !== i);
   }
 
   submit(): void {
@@ -251,3 +281,6 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
     this.files = [];
   }
 }
+
+/** Igual que spring.servlet.multipart.max-file-size del backend. */
+const MAX_BYTES_ADJUNTO = 20 * 1024 * 1024;

@@ -221,486 +221,322 @@
     </div>
   </header>
 
-  <!-- Ficha 360° del solicitante -->
+  <!-- ============================ Ficha 360° del solicitante ============================ -->
+  <!--
+    Todo lo que un agente necesita saber de quien pide ayuda, de un vistazo:
+    quién es y cómo contactarle (banda superior), señales a tener en cuenta,
+    indicadores, estados, tendencia y su historial con este ticket marcado.
+  -->
   <section
     *ngIf="fichaAbierta"
-    class="card bg-base-100 shadow-md border border-primary/20 rounded-[1.5rem] overflow-hidden"
+    class="ficha360 card bg-base-100 shadow-md border border-primary/20 rounded-[1.5rem] overflow-hidden"
+    aria-label="Ficha 360° del solicitante"
   >
-    <div class="card-body">
-      <!-- ============================ HEADER ============================ -->
-      <div class="flex flex-wrap items-center gap-2 mb-4">
-        <h2 class="card-title text-base gap-2 m-0">
-          <span
-            class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
-            aria-hidden="true"
+    <!-- ============ Banda: identidad y contacto ============ -->
+    <div class="ficha360__banda px-5 sm:px-6 py-5">
+      <div class="flex flex-wrap items-center gap-4">
+        <!-- Avatar con presencia -->
+        <div class="relative shrink-0">
+          <div
+            class="w-16 h-16 rounded-2xl overflow-hidden bg-primary/15 ring-2 ring-offset-2 ring-offset-base-100"
+            [ngClass]="{
+              'ring-success/50': sesionSolicitante() === 'EN_LINEA',
+              'ring-warning/50': sesionSolicitante() === 'RECIENTE',
+              'ring-base-300': sesionSolicitante() === 'DESCONECTADO',
+            }"
           >
-            <i class="fa-regular fa-user text-[15px]"></i>
-          </span>
-          Ficha 360°
-        </h2>
-
-        <div class="flex flex-wrap items-center gap-2 ms-auto">
-          <!-- Badge: Solicitante (kanban-tag, color primary) -->
-          <span
-            class="badge badge-sm kanban-tag min-w-0 shrink border"
-            style="
-              background-color: #062e861f;
-              --bc: #062e86;
-              border-color: #062e86;
-              color: #062e86;
-            "
-            title="Rol en el ticket"
-          >
-            <i
-              class="fa-regular fa-user text-[10px] shrink-0"
+            <img
+              *ngIf="solicitantePhoto()"
+              [src]="solicitantePhoto()"
+              alt=""
+              class="w-full h-full object-cover"
+            />
+            <div
+              *ngIf="!solicitantePhoto()"
+              class="w-full h-full flex items-center justify-center text-2xl font-bold text-primary"
               aria-hidden="true"
-            ></i>
-            <span class="font-medium truncate">Solicitante</span>
-          </span>
+            >
+              {{ ficha ? solicitanteInicial() : "?" }}
+            </div>
+          </div>
+          <app-presence-dot
+            class="absolute -bottom-1 -right-1 pointer-events-none"
+            [state]="sesionSolicitante()"
+          />
+        </div>
 
-          <!-- Badge: Estado de la cuenta (kanban-tag) -->
-          <span
-            *ngIf="solicitanteTieneEstado()"
-            class="badge badge-sm kanban-tag min-w-0 shrink border"
-            [style.background-color]="
-              solicitanteActivo() ? '#0596691F' : '#DC26261F'
-            "
-            [style.--bc]="solicitanteActivo() ? '#059669' : '#DC2626'"
-            [style.border-color]="solicitanteActivo() ? '#059669' : '#DC2626'"
-            [style.color]="solicitanteActivo() ? '#059669' : '#DC2626'"
-            [title]="
-              solicitanteActivo() ? 'Cuenta habilitada' : 'Cuenta deshabilitada'
-            "
-          >
-            <i
-              class="fa-solid text-[10px] shrink-0"
-              [ngClass]="
-                solicitanteActivo() ? 'fa-circle-check' : 'fa-circle-xmark'
-              "
-              aria-hidden="true"
-            ></i>
-            <span class="font-medium truncate">{{
-              solicitanteEstadoLabel()
-            }}</span>
-          </span>
+        <!-- Nombre, correo y etiquetas -->
+        <div class="min-w-0 flex-1">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/80 flex items-center gap-1.5">
+            <i class="fa-solid fa-id-card-clip" aria-hidden="true"></i>
+            Ficha 360° del solicitante
+          </p>
+          <h2 class="text-xl font-bold leading-tight truncate" [title]="ficha ? solicitanteNombre() : ''">
+            {{ ficha ? solicitanteNombre() : "Cargando…" }}
+          </h2>
+          <p *ngIf="ficha" class="text-sm opacity-70 truncate" [title]="ficha.solicitante.corporateEmailUser">
+            {{ ficha.solicitante.corporateEmailUser }}
+          </p>
+          <div *ngIf="ficha" class="flex flex-wrap items-center gap-1.5 mt-2">
+            <span
+              class="badge badge-sm kanban-tag border gap-1"
+              [style.background-color]="sesionSolicitanteColor() + '1F'"
+              [style.--bc]="sesionSolicitanteColor()"
+              [style.border-color]="sesionSolicitanteColor()"
+              [style.color]="sesionSolicitanteColor()"
+              [title]="'Sesión: ' + sesionSolicitanteLabel()"
+            >
+              <i class="fa-solid text-[10px]" [ngClass]="sesionSolicitanteIcon()" aria-hidden="true"></i>
+              <span class="font-medium">{{ sesionSolicitanteLabel() }}</span>
+            </span>
+            <span
+              *ngIf="solicitanteTieneEstado()"
+              class="badge badge-sm kanban-tag border gap-1"
+              [style.background-color]="solicitanteActivo() ? '#0596691F' : '#DC26261F'"
+              [style.--bc]="solicitanteActivo() ? '#059669' : '#DC2626'"
+              [style.border-color]="solicitanteActivo() ? '#059669' : '#DC2626'"
+              [style.color]="solicitanteActivo() ? '#059669' : '#DC2626'"
+              [title]="solicitanteActivo() ? 'Cuenta habilitada' : 'Cuenta deshabilitada'"
+            >
+              <i
+                class="fa-solid text-[10px]"
+                [ngClass]="solicitanteActivo() ? 'fa-circle-check' : 'fa-circle-xmark'"
+                aria-hidden="true"
+              ></i>
+              <span class="font-medium">Cuenta {{ solicitanteEstadoLabel() | lowercase }}</span>
+            </span>
+            <span class="badge badge-sm badge-ghost gap-1 font-medium" title="Rol en el sistema">
+              <i class="fa-regular fa-user text-[10px]" aria-hidden="true"></i>
+              {{ ficha.solicitante.role }}
+            </span>
+          </div>
+        </div>
 
-          <!-- Badge: Estado de sesión (kanban-tag) -->
-          <span
-            class="badge badge-sm kanban-tag min-w-0 shrink border"
-            [style.background-color]="sesionSolicitanteColor() + '1F'"
-            [style.--bc]="sesionSolicitanteColor()"
-            [style.border-color]="sesionSolicitanteColor()"
-            [style.color]="sesionSolicitanteColor()"
-            [title]="'Sesión: ' + sesionSolicitanteLabel()"
+        <!-- Acciones de contacto -->
+        <div *ngIf="ficha" class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <a class="btn btn-sm btn-primary gap-2 text-white" [href]="mailtoSolicitante()">
+            <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+            Escribir
+          </a>
+          <a
+            *ngIf="ficha.solicitante.phoneUser"
+            class="btn btn-sm btn-ghost border border-base-300 gap-2"
+            [href]="'tel:' + ficha.solicitante.phoneUser"
           >
-            <i
-              class="fa-solid text-[10px] shrink-0"
-              [ngClass]="sesionSolicitanteIcon()"
-              aria-hidden="true"
-            ></i>
-            <span class="font-medium truncate">{{
-              sesionSolicitanteLabel()
-            }}</span>
-          </span>
+            <i class="fa-solid fa-phone" aria-hidden="true"></i>
+            Llamar
+          </a>
+          <button
+            type="button"
+            class="btn btn-sm btn-ghost btn-square border border-base-300"
+            (click)="copiarCorreoSolicitante()"
+            title="Copiar correo"
+            aria-label="Copiar correo del solicitante"
+          >
+            <i class="fa-regular fa-copy" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-ghost btn-square"
+            (click)="toggleFicha()"
+            title="Cerrar ficha"
+            aria-label="Cerrar ficha 360°"
+          >
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
         </div>
       </div>
 
-      <!-- ============================ LOADING ============================ -->
-      <div
-        *ngIf="fichaCargando"
-        class="flex flex-col items-center justify-center py-10 gap-3"
-        role="status"
-        aria-live="polite"
-      >
-        <span class="loading loading-spinner loading-md text-primary"></span>
-        <span class="text-sm opacity-60"
-          >Cargando ficha del solicitante...</span
+      <!-- Datos de contacto en una línea -->
+      <dl *ngIf="ficha" class="ficha360__datos mt-4">
+        <div>
+          <dt><i class="fa-solid fa-building" aria-hidden="true"></i> Área</dt>
+          <dd [title]="ficha.solicitante.area || ''">{{ ficha.solicitante.area || "—" }}</dd>
+        </div>
+        <div>
+          <dt><i class="fa-solid fa-phone" aria-hidden="true"></i> Teléfono</dt>
+          <dd [class.opacity-60]="!ficha.solicitante.phoneUser">
+            {{ ficha.solicitante.phoneUser || "No registrado" }}
+          </dd>
+        </div>
+        <div>
+          <dt><i class="fa-regular fa-calendar" aria-hidden="true"></i> Usuario desde</dt>
+          <dd>
+            {{ ficha.solicitante.createdAtUser ? (ficha.solicitante.createdAtUser | date: "dd/MM/yyyy") : "—" }}
+          </dd>
+        </div>
+        <div>
+          <dt><i class="fa-solid fa-ticket" aria-hidden="true"></i> Último ticket</dt>
+          <dd>
+            {{ ficha.historial.length ? (ficha.historial[0].createdAtTicket | date: "dd/MM/yyyy") : "—" }}
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- ============ Cargando ============ -->
+    <div
+      *ngIf="fichaCargando"
+      class="flex flex-col items-center justify-center py-12 gap-3"
+      role="status"
+      aria-live="polite"
+    >
+      <span class="loading loading-spinner loading-md text-primary"></span>
+      <span class="text-sm opacity-60">Cargando ficha del solicitante…</span>
+    </div>
+
+    <!-- ============ Contenido ============ -->
+    <div *ngIf="ficha && !fichaCargando" class="card-body pt-5 gap-5">
+      <!-- Señales: lo que conviene saber antes de responder -->
+      <ul *ngIf="fichaSenales.length" class="flex flex-wrap gap-2" aria-label="Señales del solicitante">
+        <li
+          *ngFor="let s of fichaSenales; trackBy: trackSenal"
+          class="ficha360__senal"
+          [ngClass]="'ficha360__senal--' + s.tono"
         >
-      </div>
+          <i [class]="s.icono" aria-hidden="true"></i>
+          {{ s.texto }}
+        </li>
+      </ul>
 
-      <!-- ============================ CONTENIDO ============================ -->
-      <div
-        *ngIf="ficha && !fichaCargando"
-        class="grid grid-cols-1 lg:grid-cols-3 gap-6"
-      >
-        <!-- ============================ Columna: Perfil ============================ -->
-        <div class="space-y-4">
-          <!-- Avatar + nombre -->
-          <div
-            class="flex items-center gap-3 p-3 rounded-xl bg-base-200/40 border border-base-200"
-          >
-            <div class="avatar relative shrink-0">
-              <div
-                class="w-14 rounded-full ring-2 ring-offset-2 ring-offset-base-100 bg-primary/15 overflow-hidden"
-                [ngClass]="{
-                  'ring-success/40': sesionSolicitante() === 'EN_LINEA',
-                  'ring-warning/40': sesionSolicitante() === 'RECIENTE',
-                  'ring-base-300': sesionSolicitante() === 'DESCONECTADO',
-                }"
-              >
-                <img
-                  *ngIf="solicitantePhoto()"
-                  [src]="solicitantePhoto()"
-                  alt="Foto del solicitante"
-                  class="w-full h-full object-cover"
-                />
-                <div
-                  *ngIf="!solicitantePhoto()"
-                  class="w-full h-full flex items-center justify-center text-xl font-bold text-primary"
-                >
-                  {{ solicitanteInicial() }}
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+        <!-- ===== Columna izquierda: indicadores, estados y tendencia ===== -->
+        <div class="xl:col-span-7 space-y-5">
+          <!-- Indicadores -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div class="ficha360__kpi">
+              <span class="ficha360__kpi-icono bg-primary/10 text-primary"><i class="fa-solid fa-ticket" aria-hidden="true"></i></span>
+              <p class="ficha360__kpi-valor">{{ ficha.totalTickets }}</p>
+              <p class="ficha360__kpi-etiqueta">Tickets</p>
+            </div>
+            <div class="ficha360__kpi">
+              <span class="ficha360__kpi-icono bg-info/10 text-info"><i class="fa-solid fa-folder-open" aria-hidden="true"></i></span>
+              <p class="ficha360__kpi-valor" [class.text-warning]="ficha.openTickets >= 3">{{ ficha.openTickets }}</p>
+              <p class="ficha360__kpi-etiqueta">Abiertos</p>
+            </div>
+            <div class="ficha360__kpi" [title]="ficha.resolvedTickets + ' de ' + ficha.totalTickets + ' resueltos'">
+              <span class="ficha360__kpi-icono bg-success/10 text-success"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+              <p class="ficha360__kpi-valor">{{ tasaResolucion() }}<small>%</small></p>
+              <p class="ficha360__kpi-etiqueta">Resueltos</p>
+            </div>
+            <div class="ficha360__kpi" title="Satisfacción promedio (1 a 5)">
+              <span class="ficha360__kpi-icono bg-warning/10 text-warning"><i class="fa-solid fa-star" aria-hidden="true"></i></span>
+              <p class="ficha360__kpi-valor">
+                {{ ficha.avgSatisfaction != null ? (ficha.avgSatisfaction | number: "1.1-1") : "—" }}<small *ngIf="ficha.avgSatisfaction != null">/5</small>
+              </p>
+              <p class="ficha360__kpi-etiqueta">Satisfacción</p>
+            </div>
+            <div class="ficha360__kpi" title="Tiempo promedio hasta resolver">
+              <span class="ficha360__kpi-icono bg-secondary/10 text-secondary"><i class="fa-solid fa-stopwatch" aria-hidden="true"></i></span>
+              <p class="ficha360__kpi-valor">
+                {{ ficha.avgResolutionHours != null ? (ficha.avgResolutionHours | number: "1.0-1") : "—" }}<small *ngIf="ficha.avgResolutionHours != null">h</small>
+              </p>
+              <p class="ficha360__kpi-etiqueta">Resolución</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Estados: barra apilada + leyenda -->
+            <div class="ficha360__panel">
+              <p class="ficha360__titulo">Sus tickets por estado</p>
+              <ng-container *ngIf="fichaEstados.length; else sinEstados">
+                <div class="flex h-2.5 rounded-full overflow-hidden bg-base-200 my-3" aria-hidden="true">
+                  <span
+                    *ngFor="let e of fichaEstados; trackBy: trackEstadoFicha"
+                    class="h-full"
+                    [style.width.%]="e.pct"
+                    [style.background-color]="statusMeta(e.estado).color || '#94a3b8'"
+                  ></span>
                 </div>
-              </div>
-              <app-presence-dot
-                class="absolute -bottom-0.5 -right-0.5 pointer-events-none"
-                [state]="sesionSolicitante()"
-              />
-            </div>
-            <div class="min-w-0 flex-1">
-              <p
-                class="font-bold truncate leading-tight"
-                [title]="solicitanteNombre()"
-              >
-                {{ solicitanteNombre() }}
-              </p>
-              <p
-                class="text-xs opacity-70 truncate"
-                [title]="ficha.solicitante.corporateEmailUser"
-              >
-                {{ ficha.solicitante.corporateEmailUser }}
-              </p>
-            </div>
-          </div>
-
-          <!-- Datos del perfil -->
-          <dl class="text-sm space-y-2">
-            <div
-              class="flex items-center justify-between gap-2 py-1.5 border-b border-base-200"
-            >
-              <dt class="opacity-60 flex items-center gap-1.5">
-                <i
-                  class="fa-solid fa-building text-[10px] opacity-60"
-                  aria-hidden="true"
-                ></i>
-                Área
-              </dt>
-              <dd
-                class="font-medium text-right truncate"
-                [title]="ficha.solicitante.area || ''"
-              >
-                {{ ficha.solicitante.area || "—" }}
-              </dd>
-            </div>
-
-            <div
-              class="flex items-center justify-between gap-2 py-1.5 border-b border-base-200"
-            >
-              <dt class="opacity-60 flex items-center gap-1.5">
-                <i
-                  class="fa-solid fa-shield-halved text-[10px] opacity-60"
-                  aria-hidden="true"
-                ></i>
-                Rol
-              </dt>
-              <dd>
-                <span class="badge badge-sm badge-ghost gap-1 font-medium">
-                  <i
-                    class="fa-regular fa-user text-[10px]"
-                    aria-hidden="true"
-                  ></i>
-                  {{ ficha.solicitante.role }}
-                </span>
-              </dd>
-            </div>
-
-            <div
-              class="flex items-center justify-between gap-2 py-1.5 border-b border-base-200"
-            >
-              <dt class="opacity-60 flex items-center gap-1.5">
-                <i
-                  class="fa-solid fa-phone text-[10px] opacity-60"
-                  aria-hidden="true"
-                ></i>
-                Teléfono
-              </dt>
-              <dd
-                class="font-medium text-right truncate"
-                [class.italic]="!ficha.solicitante.phoneUser"
-                [class.opacity-60]="!ficha.solicitante.phoneUser"
-              >
-                {{ ficha.solicitante.phoneUser || "No registrado" }}
-              </dd>
-            </div>
-
-            <div class="flex items-center justify-between gap-2 py-1.5">
-              <dt class="opacity-60 flex items-center gap-1.5">
-                <i
-                  class="fa-regular fa-calendar text-[10px] opacity-60"
-                  aria-hidden="true"
-                ></i>
-                Usuario desde
-              </dt>
-              <dd class="font-medium text-right">
-                {{
-                  ficha.solicitante.createdAtUser
-                    ? (ficha.solicitante.createdAtUser | date: "dd/MM/yyyy")
-                    : "—"
-                }}
-              </dd>
-            </div>
-          </dl>
-        </div>
-
-        <!-- ============================ Columna: Métricas ============================ -->
-        <div class="space-y-4">
-          <!-- KPIs -->
-          <div class="grid grid-cols-2 gap-2">
-            <div
-              class="bg-primary/5 border border-primary/10 rounded-xl p-3 text-center"
-            >
-              <p class="text-2xl font-bold text-primary leading-none">
-                {{ ficha.totalTickets }}
-              </p>
-              <p class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
-                Total
-              </p>
-            </div>
-
-            <div
-              class="bg-info/5 border border-info/10 rounded-xl p-3 text-center"
-            >
-              <p class="text-2xl font-bold text-info leading-none">
-                {{ ficha.openTickets }}
-              </p>
-              <p class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
-                Abiertos
-              </p>
-            </div>
-
-            <div
-              class="bg-success/5 border border-success/10 rounded-xl p-3 text-center"
-            >
-              <p class="text-2xl font-bold text-success leading-none">
-                {{ ficha.resolvedTickets }}
-              </p>
-              <p class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
-                Resueltos
-              </p>
-            </div>
-
-            <div
-              class="bg-warning/5 border border-warning/10 rounded-xl p-3 text-center"
-              title="Satisfacción promedio"
-            >
-              <p class="text-2xl font-bold text-warning leading-none">
-                {{
-                  ficha.avgSatisfaction != null
-                    ? (ficha.avgSatisfaction | number: "1.1-1")
-                    : "—"
-                }}
-              </p>
-              <p class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
-                Satisfacción
-              </p>
-            </div>
-
-            <div
-              class="bg-secondary/5 border border-secondary/10 rounded-xl p-3 text-center"
-              title="Tiempo promedio de resolución"
-            >
-              <p class="text-2xl font-bold text-secondary leading-none">
-                {{
-                  ficha.avgResolutionHours != null
-                    ? (ficha.avgResolutionHours | number: "1.0-1") + "h"
-                    : "—"
-                }}
-              </p>
-              <p class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
-                Resolución
-              </p>
-            </div>
-
-            <div
-              class="bg-base-200/60 border border-base-200 rounded-xl p-3 text-center"
-              title="Abiertos / total"
-            >
-              <p class="text-2xl font-bold leading-none">
-                {{ ficha.openTickets
-                }}<span class="text-sm opacity-60"
-                  >/{{ ficha.totalTickets }}</span
-                >
-              </p>
-              <p class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
-                Pendientes
-              </p>
-            </div>
-          </div>
-
-          <!-- Distribución por estado -->
-          <div
-            *ngIf="
-              ficha.ticketsPorEstado &&
-              (ficha.ticketsPorEstado | keyvalue)?.length
-            "
-          >
-            <p
-              class="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-2"
-            >
-              Distribución por estado
-            </p>
-            <div class="space-y-1.5">
-              <ng-container
-                *ngFor="let kv of ficha.ticketsPorEstado | keyvalue"
-              >
-                <div class="flex items-center gap-2 text-xs">
-                  <span class="w-20 truncate font-medium" [title]="kv.key">
-                    {{ kv.key }}
-                  </span>
-                  <div
-                    class="flex-1 bg-base-200 rounded-full h-2 overflow-hidden"
+                <ul class="space-y-1.5">
+                  <li
+                    *ngFor="let e of fichaEstados; trackBy: trackEstadoFicha"
+                    class="flex items-center gap-2 text-xs"
                   >
+                    <span
+                      class="w-2.5 h-2.5 rounded-full shrink-0"
+                      [style.background-color]="statusMeta(e.estado).color || '#94a3b8'"
+                      aria-hidden="true"
+                    ></span>
+                    <span class="flex-1 truncate font-medium">{{ e.estado }}</span>
+                    <span class="tabular-nums font-bold">{{ e.cantidad }}</span>
+                    <span class="tabular-nums opacity-50 w-9 text-right">{{ e.pct | number: "1.0-0" }}%</span>
+                  </li>
+                </ul>
+              </ng-container>
+              <ng-template #sinEstados>
+                <p class="text-xs opacity-60 italic mt-3">Sin tickets todavía.</p>
+              </ng-template>
+            </div>
+
+            <!-- Tendencia de 6 meses -->
+            <div class="ficha360__panel">
+              <p class="ficha360__titulo">Tickets por mes</p>
+              <div class="ficha360__barras" role="img" aria-label="Tickets en los últimos 6 meses">
+                <div *ngFor="let m of fichaTendencia; trackBy: trackMesFicha" class="ficha360__mes">
+                  <span class="ficha360__mes-valor">{{ m.valor || "" }}</span>
+                  <div class="ficha360__mes-pista">
                     <div
-                      class="h-2 rounded-full transition-[width] duration-300 ease-out-fluid {{
-                        estadoColorEstado(kv.key)
-                      }}"
-                      [ngStyle]="{
-                        width: (kv.value / anchoEstado()) * 100 + '%',
-                      }"
+                      class="ficha360__mes-barra"
+                      [style.height.%]="m.alto"
+                      [title]="m.mes + ': ' + m.valor + ' ticket(s)'"
                     ></div>
                   </div>
-                  <span class="font-bold w-6 text-right tabular-nums">
-                    {{ kv.value }}
-                  </span>
+                  <span class="ficha360__mes-nombre">{{ m.mes }}</span>
                 </div>
-              </ng-container>
-            </div>
-          </div>
-
-          <!-- Tendencia -->
-          <div *ngIf="ficha.ticketsUltimos6Meses.length">
-            <p
-              class="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-2"
-            >
-              Tendencia últimos 6 meses
-            </p>
-            <div class="flex items-end gap-1.5 h-24">
-              <div
-                *ngFor="let v of ficha.ticketsUltimos6Meses; let i = index"
-                class="flex-1 flex flex-col gap-1"
-              >
-                <span class="text-[10px] font-bold text-center tabular-nums">
-                  {{ v || "" }}
-                </span>
-                <div class="flex-1 flex items-end justify-center">
-                  <div
-                    class="w-full max-w-[18px] rounded-t bg-primary/70 hover:bg-primary transition-colors cursor-help"
-                    [ngStyle]="estiloBarra(v)"
-                    [title]="fichaMeses()[i] + ': ' + v + ' ticket(s)'"
-                  ></div>
-                </div>
-                <span class="text-[10px] text-center opacity-60">
-                  {{ fichaMeses()[i] }}
-                </span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ============================ Columna: Historial ============================ -->
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <p
-              class="text-[10px] font-bold uppercase tracking-wider opacity-60"
-            >
-              Historial del solicitante
-            </p>
-            <span
-              *ngIf="ficha.historial.length"
-              class="badge badge-xs badge-ghost font-medium"
-            >
+        <!-- ===== Columna derecha: historial ===== -->
+        <div class="xl:col-span-5 ficha360__panel flex flex-col min-h-0">
+          <div class="flex items-center justify-between gap-2">
+            <p class="ficha360__titulo">Historial</p>
+            <span *ngIf="ficha.historial.length" class="badge badge-sm badge-ghost font-medium">
               {{ ficha.historial.length }}
             </span>
           </div>
 
-          <!-- Estado vacío -->
           <div
             *ngIf="!ficha.historial.length"
             class="flex flex-col items-center justify-center py-8 gap-2 opacity-60"
           >
-            <i
-              class="fa-regular fa-folder-open text-2xl"
-              aria-hidden="true"
-            ></i>
+            <i class="fa-regular fa-folder-open text-2xl" aria-hidden="true"></i>
             <span class="text-xs italic">Sin tickets previos</span>
           </div>
 
-          <!-- Lista -->
-          <ul class="space-y-2 max-h-80 overflow-y-auto overflow-x-hidden pe-1">
-            <li *ngFor="let t of ficha.historial">
+          <ul *ngIf="ficha.historial.length" class="mt-3 space-y-1.5 max-h-[22rem] overflow-y-auto overflow-x-hidden pe-1">
+            <li *ngFor="let t of ficha.historial; trackBy: trackTicketHistorial">
               <a
-                class="block p-2.5 rounded-xl border border-base-200 hover:border-primary/40 hover:bg-base-200/40 transition"
+                class="ficha360__fila"
+                [class.ficha360__fila--actual]="t.idTicket === ticket.idTicket"
                 [routerLink]="['/tickets', t.idTicket]"
+                [attr.aria-current]="t.idTicket === ticket.idTicket ? 'page' : null"
               >
-                <!-- Header: ID + estado -->
-                <div class="flex items-center justify-between gap-2 mb-1">
-                  <span class="font-mono text-xs opacity-60 font-medium">
-                    #{{ t.numberTicket }}
+                <span
+                  class="ficha360__fila-icono"
+                  [style.background-color]="(statusMeta(t.status).color || '#059669') + '1F'"
+                  [style.color]="statusMeta(t.status).color || '#059669'"
+                  [title]="t.status"
+                >
+                  <i [class]="statusMeta(t.status).icon || 'fa-solid fa-circle-check'" aria-hidden="true"></i>
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="flex items-center gap-2">
+                    <span class="font-mono text-[11px] opacity-60">#{{ t.numberTicket }}</span>
+                    <span *ngIf="t.idTicket === ticket.idTicket" class="badge badge-xs badge-primary text-white">Este ticket</span>
                   </span>
-
-                  <!-- Estado kanban-tag: color en la letra, fondo translúcido -->
-                  <span
-                    class="badge badge-sm kanban-tag min-w-0 shrink border"
-                    [style.background-color]="
-                      (statusMeta(t.status).color || '#059669') + '1F'
-                    "
-                    [style.--bc]="statusMeta(t.status).color || '#059669'"
-                    [style.border-color]="
-                      statusMeta(t.status).color || '#059669'
-                    "
-                    [style.color]="statusMeta(t.status).color || '#059669'"
-                    [title]="t.status"
-                  >
-                    <i
-                      [class]="
-                        statusMeta(t.status).icon || 'fa-solid fa-circle-check'
-                      "
-                      class="text-[10px] shrink-0"
-                      aria-hidden="true"
-                    ></i>
-                    <span class="font-medium truncate">{{ t.status }}</span>
+                  <span class="block text-sm font-medium truncate" [title]="t.titleTicket">{{ t.titleTicket }}</span>
+                  <span class="flex items-center gap-2 text-[11px] opacity-70 mt-0.5">
+                    <span [style.color]="statusMeta(t.status).color || null" class="font-semibold">{{ t.status }}</span>
+                    <span *ngIf="t.priority" aria-hidden="true">·</span>
+                    <span *ngIf="t.priority" [style.color]="priorityMeta(t.priority).color || null">{{ t.priority }}</span>
                   </span>
-                </div>
-
-                <!-- Título -->
-                <p class="text-sm font-medium truncate" [title]="t.titleTicket">
-                  {{ t.titleTicket }}
-                </p>
-
-                <!-- Footer: prioridad + fecha (sin icono) -->
-                <div class="flex items-center justify-between gap-2 mt-1.5">
-                  <span
-                    class="badge badge-xs kanban-tag min-w-0 shrink border"
-                    *ngIf="priorityMeta(t.priority).color"
-                    [style.background-color]="
-                      priorityMeta(t.priority).color + '1F'
-                    "
-                    [style.--bc]="priorityMeta(t.priority).color"
-                    [style.border-color]="priorityMeta(t.priority).color"
-                    [style.color]="priorityMeta(t.priority).color"
-                    [title]="'Prioridad: ' + t.priority"
-                  >
-                    <i
-                      [class]="priorityMeta(t.priority).icon"
-                      class="text-[10px] shrink-0"
-                      aria-hidden="true"
-                    ></i>
-                    <span class="font-medium truncate">{{ t.priority }}</span>
-                  </span>
-
-                  <span class="text-xs opacity-60 tabular-nums">
-                    {{ t.createdAtTicket | date: "dd/MM/yyyy" }}
-                  </span>
-                </div>
+                </span>
+                <span class="text-[11px] opacity-60 tabular-nums shrink-0 self-start">
+                  {{ t.createdAtTicket | date: "dd/MM/yy" }}
+                </span>
               </a>
             </li>
           </ul>
@@ -1120,31 +956,54 @@
             </button>
           </div>
 
-          <label
-            class="btn btn-sm btn-outline gap-2 w-full cursor-pointer"
-            [class.btn-disabled]="!file"
-          >
-            <i
-              class="fa-solid fa-folder-open text-[15px]"
-              aria-hidden="true"
-            ></i>
-            {{ file ? file.name : "Seleccionar archivo" }}
-            <input
-              type="file"
-              class="hidden"
-              accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"
-              (change)="onFileSelected($event)"
-              [disabled]="!file"
-            />
-          </label>
+          <!--
+            Antes el botón "Seleccionar archivo" llevaba [disabled]="!file": estaba
+            deshabilitado justo cuando no había archivo, así que nunca se podía elegir.
+          -->
+          <app-dropzone
+            [multiple]="true"
+            [compacta]="true"
+            [disabled]="subiendoAdjuntos"
+            accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"
+            hint="Imágenes, PDF, Office, TXT, CSV o ZIP · hasta 20 MB"
+            (archivos)="elegirAdjuntos($event)"
+            (rechazados)="avisarAdjuntosRechazados($event)"
+          ></app-dropzone>
+
+          <!-- Elegidos, pendientes de subir -->
+          <ul *ngIf="adjuntosPorSubir.length" class="mt-2 space-y-1.5" aria-label="Archivos por subir">
+            <li
+              *ngFor="let f of adjuntosPorSubir; let i = index"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg border border-primary/20 bg-primary/5"
+            >
+              <i [class]="fileIcon(f.name)" class="text-primary text-sm shrink-0" aria-hidden="true"></i>
+              <span class="min-w-0 flex-1">
+                <span class="block text-xs font-medium truncate" [title]="f.name">{{ f.name }}</span>
+                <span class="block text-[11px] opacity-60">{{ fileSize(f.size) }}</span>
+              </span>
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs btn-square"
+                (click)="quitarAdjuntoPorSubir(i)"
+                [disabled]="subiendoAdjuntos"
+                [attr.aria-label]="'Quitar ' + f.name"
+                title="Quitar"
+              >
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+            </li>
+          </ul>
 
           <button
-            *ngIf="file"
-            class="btn btn-sm btn-primary gap-2 w-full mt-2"
+            *ngIf="adjuntosPorSubir.length"
+            type="button"
+            class="btn btn-sm btn-primary gap-2 w-full mt-2 text-white"
             (click)="upload()"
+            [disabled]="subiendoAdjuntos"
           >
-            <i class="fa-solid fa-upload text-[15px]" aria-hidden="true"></i>
-            Subir {{ file.name }}
+            <span *ngIf="subiendoAdjuntos" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+            <i *ngIf="!subiendoAdjuntos" class="fa-solid fa-upload text-[15px]" aria-hidden="true"></i>
+            {{ subiendoAdjuntos ? "Subiendo…" : adjuntosPorSubir.length === 1 ? "Subir archivo" : "Subir " + adjuntosPorSubir.length + " archivos" }}
           </button>
         </div>
       </div>

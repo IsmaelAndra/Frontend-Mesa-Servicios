@@ -53,7 +53,7 @@ interface EstadoMensaje {
 @Component({
   selector: "app-ticket-detail",
   templateUrl: "./ticket-detail.component.html",
-  styleUrls: ["./ticket-detail.component.css", "./ticket-detail-chat.css"],
+  styleUrls: ["./ticket-detail.component.css", "./ticket-detail-chat.css", "./ticket-detail-ficha.css"],
 })
 export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   ticketId!: string;
@@ -140,10 +140,20 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   private descargando = new Set<string>();
   messageFiles: File[] = [];
   internalMessage = false;
-  file?: File;
+  /** Adjuntos elegidos en la tarjeta de información, pendientes de "Subir". */
+  adjuntosPorSubir: File[] = [];
+  subiendoAdjuntos = false;
   ficha?: SolicitanteResumen;
   fichaAbierta = false;
   fichaCargando = false;
+  /**
+   * Datos de la ficha 360 ya preparados para pintar. Se calculan una vez al
+   * cargarla (prepararFicha) y no en getters: el navbar fuerza detección de
+   * cambios cada segundo y un getter devolvería arrays nuevos en cada vuelta.
+   */
+  fichaEstados: { estado: string; cantidad: number; pct: number }[] = [];
+  fichaTendencia: { mes: string; valor: number; alto: number }[] = [];
+  fichaSenales: { icono: string; texto: string; tono: "info" | "success" | "warning" | "error" }[] = [];
   toolbarOpen = false;
   /** true mientras el mensaje propio está volando al backend. */
   sending = false;
@@ -1139,6 +1149,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     this.ticketService.solicitanteResumen(uid).subscribe({
       next: (r) => {
         this.ficha = r;
+        this.prepararFicha();
         this.fichaCargando = false;
       },
       error: () => {
@@ -1147,6 +1158,76 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       },
     });
   }
+
+  /** Estados (de más a menos), tendencia de 6 meses y señales para el agente. */
+  private prepararFicha(): void {
+    const f = this.ficha;
+    if (!f) return;
+    const total = Math.max(1, f.totalTickets || 0);
+    this.fichaEstados = Object.entries(f.ticketsPorEstado || {})
+      .filter(([, n]) => n > 0)
+      .sort((a, b) => b[1] - a[1])
+      .map(([estado, cantidad]) => ({ estado, cantidad, pct: (cantidad / total) * 100 }));
+
+    const meses = this.fichaMeses();
+    const valores = f.ticketsUltimos6Meses || [];
+    const max = Math.max(1, ...valores);
+    this.fichaTendencia = valores.map((valor, i) => ({
+      mes: meses[i] ?? "",
+      valor,
+      // Un mínimo visible para que un mes con 1 ticket no parezca vacío.
+      alto: valor ? Math.max(8, Math.round((valor / max) * 100)) : 0,
+    }));
+
+    const senales: TicketDetailComponent["fichaSenales"] = [];
+    if (f.openTickets >= 3) {
+      senales.push({ icono: "fa-solid fa-layer-group", texto: `Tiene ${f.openTickets} tickets abiertos a la vez`, tono: "warning" });
+    }
+    if (f.avgSatisfaction != null && f.avgSatisfaction < 3) {
+      senales.push({ icono: "fa-solid fa-face-frown", texto: `Satisfacción baja: ${f.avgSatisfaction.toFixed(1)} de 5`, tono: "error" });
+    } else if (f.avgSatisfaction != null && f.avgSatisfaction >= 4.5) {
+      senales.push({ icono: "fa-solid fa-face-smile", texto: "Suele quedar muy satisfecho", tono: "success" });
+    }
+    if (f.totalTickets <= 1) {
+      senales.push({ icono: "fa-solid fa-seedling", texto: "Es su primer ticket", tono: "info" });
+    }
+    const desde = f.solicitante?.createdAtUser ? new Date(f.solicitante.createdAtUser) : null;
+    if (desde && Date.now() - desde.getTime() < 30 * 86_400_000) {
+      senales.push({ icono: "fa-solid fa-user-plus", texto: "Usuario nuevo (menos de 30 días)", tono: "info" });
+    }
+    if (this.solicitanteTieneEstado() && !this.solicitanteActivo()) {
+      senales.push({ icono: "fa-solid fa-user-slash", texto: "Su cuenta está deshabilitada", tono: "error" });
+    }
+    this.fichaSenales = senales;
+  }
+
+  /** Porcentaje de sus tickets que terminaron resueltos o cerrados. */
+  tasaResolucion(): number {
+    const f = this.ficha;
+    if (!f?.totalTickets) return 0;
+    return Math.round((f.resolvedTickets / f.totalTickets) * 100);
+  }
+
+  copiarCorreoSolicitante(): void {
+    const correo = this.ficha?.solicitante?.corporateEmailUser;
+    if (!correo || !navigator.clipboard) return;
+    navigator.clipboard.writeText(correo).then(
+      () => this.toastService.success("Correo copiado"),
+      () => this.toastService.warn("No se pudo copiar el correo"),
+    );
+  }
+
+  /** Enlace mailto con el número del ticket ya en el asunto. */
+  mailtoSolicitante(): string {
+    const correo = this.ficha?.solicitante?.corporateEmailUser || "";
+    const asunto = encodeURIComponent(`Ticket #${this.ticket?.numberTicket ?? ""}`);
+    return `mailto:${correo}?subject=${asunto}`;
+  }
+
+  trackTicketHistorial = (_: number, t: { idTicket: string }) => t.idTicket;
+  trackEstadoFicha = (_: number, e: { estado: string }) => e.estado;
+  trackMesFicha = (i: number) => i;
+  trackSenal = (_: number, s: { texto: string }) => s.texto;
 
   solicitanteNombre(): string {
     const s = this.ficha?.solicitante;
@@ -1272,8 +1353,9 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     return out;
   }
 
-  estiloBarra(value: number): { width: string } {
-    return { width: `${Math.round((value / this.maxTendencia()) * 100)}%` };
+  /** Alto de la barra de un mes. Antes devolvía width y las barras verticales no se veían. */
+  estiloBarra(value: number): { height: string } {
+    return { height: `${Math.round((value / this.maxTendencia()) * 100)}%` };
   }
 
   estadoColorEstado(key: string): string {
@@ -1873,22 +1955,52 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.file = input.files?.[0];
+  elegirAdjuntos(nuevos: File[]): void {
+    const grandes = nuevos.filter((f) => f.size > 20 * 1024 * 1024);
+    if (grandes.length) {
+      this.toastService.warn(`Supera 20 MB y no se adjunta: ${grandes.map((f) => f.name).join(", ")}`);
+    }
+    const clave = (f: File) => `${f.name}|${f.size}|${f.lastModified}`;
+    const ya = new Set(this.adjuntosPorSubir.map(clave));
+    this.adjuntosPorSubir = [
+      ...this.adjuntosPorSubir,
+      ...nuevos.filter((f) => f.size <= 20 * 1024 * 1024 && !ya.has(clave(f))),
+    ];
   }
 
+  avisarAdjuntosRechazados(nombres: string[]): void {
+    this.toastService.warn(`Tipo de archivo no permitido: ${nombres.join(", ")}`);
+  }
+
+  quitarAdjuntoPorSubir(i: number): void {
+    this.adjuntosPorSubir = this.adjuntosPorSubir.filter((_, j) => j !== i);
+  }
+
+  /** Sube los elegidos de uno en uno; si alguno falla, se queda en la lista. */
   upload(): void {
-    if (!this.file) return;
-    this.ticketService.uploadAttachment(this.ticketId, this.file).subscribe({
-      next: () => {
-        this.file = undefined;
+    if (!this.adjuntosPorSubir.length || this.subiendoAdjuntos) return;
+    const pendientes = [...this.adjuntosPorSubir];
+    const fallidos: File[] = [];
+    this.subiendoAdjuntos = true;
+    const siguiente = (): void => {
+      const f = pendientes.shift();
+      if (!f) {
+        this.subiendoAdjuntos = false;
+        this.adjuntosPorSubir = fallidos;
         this.loadAttachments();
-        this.toastService.success("Archivo subido");
-      },
-      error: (err) =>
-        this.toastService.error(err?.error?.message || "No se pudo subir"),
-    });
+        if (!fallidos.length) this.toastService.success("Archivos subidos");
+        return;
+      }
+      this.ticketService.uploadAttachment(this.ticketId, f).subscribe({
+        next: () => siguiente(),
+        error: (err) => {
+          fallidos.push(f);
+          this.toastService.error(err?.error?.message || `No se pudo subir ${f.name}`);
+          siguiente();
+        },
+      });
+    };
+    siguiente();
   }
 
   /**
