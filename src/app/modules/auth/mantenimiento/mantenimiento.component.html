@@ -1,0 +1,54 @@
+<!--
+  Páginas de aviso (404, 403, 500, 503 y mantenimiento).
+
+  Antes era una tarjeta de 512 px con un título de 30 px y un logo de 64 px:
+  en un monitor normal quedaba perdida en el centro. Ahora ocupa el espacio:
+  a la izquierda el código enorme en el color del estado (lo primero que hay
+  que reconocer), a la derecha el texto y las acciones a un tamaño legible.
+-->
+<div class="aviso" role="alert" [style.--aviso-color]="colorIcono">
+  <div class="aviso__tarjeta">
+    <!-- ============ Visual: código e icono ============ -->
+    <div class="aviso__visual" aria-hidden="true">
+      <span class="aviso__halo"></span>
+      <p *ngIf="status && mostrarCodigo" class="aviso__codigo">{{ status }}</p>
+      <div class="aviso__icono">
+        <i [ngClass]="icono"></i>
+      </div>
+    </div>
+
+    <!-- ============ Texto y acciones ============ -->
+    <div class="aviso__contenido">
+      <img *ngIf="logo" [src]="logo" alt="" class="aviso__logo" />
+
+      <!-- El código ayuda a que quien reporta el problema diga algo útil -->
+      <p *ngIf="status" class="aviso__etiqueta">Error {{ status }}</p>
+
+      <h1 class="aviso__titulo">{{ titulo }}</h1>
+
+      <p class="aviso__mensaje">{{ mensaje }}</p>
+
+      <p *ngIf="eta" class="aviso__eta">
+        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+        {{ eta }}
+      </p>
+
+      <div class="aviso__acciones">
+        <button type="button" class="btn btn-primary gap-2 shadow-md" (click)="volver()">
+          <i class="fa-solid fa-arrow-left text-[15px]" aria-hidden="true"></i>
+          {{ botonTexto }}
+        </button>
+
+        <!--
+          La política de privacidad es pública y no necesita sesión, así que
+          enlaza incluso desde el 403 o el 500: es justo cuando más importa poder
+          consultar cómo se tratan los datos.
+        -->
+        <button *ngIf="mostrarPrivacidad" type="button" class="btn btn-ghost gap-2" (click)="verPrivacidad()">
+          <i class="fa-solid fa-shield-halved text-[14px]" aria-hidden="true"></i>
+          Política de privacidad
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

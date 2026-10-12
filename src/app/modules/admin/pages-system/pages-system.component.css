@@ -1,0 +1,97 @@
+
+
+/* ============ Vista previa de las páginas de aviso ============
+   Misma pieza que la página real (mantenimiento.component.css), en su versión
+   de una columna. --aviso-color es el color del estado que se está editando. */
+.aviso-previa {
+  --aviso-color: #64748b;
+  overflow: hidden;
+  border-radius: 1.4rem;
+  background: oklch(var(--b1));
+  border: 1px solid oklch(var(--bc) / 0.07);
+  box-shadow: 0 24px 50px -30px rgb(2 6 23 / 0.4);
+}
+.aviso-previa__visual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.4rem 1rem 1rem;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--aviso-color) 7%, oklch(var(--b1)));
+}
+.aviso-previa__halo {
+  position: absolute;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--aviso-color) 22%, transparent) 0%, transparent 70%);
+}
+.aviso-previa__codigo {
+  position: relative;
+  font-size: 4.2rem;
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  background: linear-gradient(180deg, var(--aviso-color) 0%, color-mix(in srgb, var(--aviso-color) 45%, transparent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.aviso-previa__icono {
+  position: relative;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: var(--aviso-color);
+  background: oklch(var(--b1));
+  box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--aviso-color) 12%, transparent),
+    0 10px 22px -12px color-mix(in srgb, var(--aviso-color) 70%, transparent);
+}
+.aviso-previa__contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.45rem;
+  padding: 1rem 1.1rem 1.3rem;
+}
+.aviso-previa__etiqueta {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--aviso-color);
+}
+.aviso-previa__titulo {
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.aviso-previa__mensaje {
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: oklch(var(--bc) / 0.72);
+  overflow-wrap: anywhere;
+}
+.aviso-previa__eta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--aviso-color);
+  background: color-mix(in srgb, var(--aviso-color) 12%, transparent);
+}
+

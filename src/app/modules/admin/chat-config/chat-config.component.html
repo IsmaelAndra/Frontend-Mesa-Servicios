@@ -1,0 +1,325 @@
+<div class="space-y-6 max-w-4xl mx-auto">
+  <!-- ============================ HEADER ============================ -->
+  <header
+    class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+  >
+    <div class="flex items-center gap-3 min-w-0">
+      <div
+        class="page-head__icono p-3 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary shrink-0 ring-1 ring-primary/10"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-check-double text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">
+          Acuses de lectura del chat
+        </h1>
+        <p class="text-sm opacity-70 truncate">
+          Decide quién ve el doble check azul y quién ha leído cada mensaje
+        </p>
+      </div>
+    </div>
+
+    <!-- Badge de estado -->
+    <span
+      *ngIf="!isLoading"
+      class="badge badge-lg gap-2 font-semibold self-start sm:self-center shrink-0 py-3 px-4"
+      [ngClass]="badgeVisible.className"
+    >
+      <i [class]="badgeVisible.icon" aria-hidden="true"></i>
+      {{ badgeVisible.label }}
+    </span>
+  </header>
+
+  <!-- ============================ LOADING ============================ -->
+  <div
+    *ngIf="isLoading"
+    role="status"
+    aria-live="polite"
+    aria-label="Cargando configuración del chat"
+  >
+    <div
+      class="card bg-base-100 shadow-md border border-base-200 border-t-4 border-t-primary rounded-[1.5rem] overflow-hidden animate-pulse"
+    >
+      <div class="card-body space-y-5">
+        <div class="h-5 bg-base-300 rounded w-56"></div>
+        <div class="h-14 bg-base-300 rounded"></div>
+        <div class="h-20 bg-base-300 rounded-xl"></div>
+        <div class="h-16 bg-base-300 rounded-xl"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ FORMULARIO ============================ -->
+  <form
+    *ngIf="!isLoading"
+    [formGroup]="form"
+    (ngSubmit)="guardar()"
+    class="space-y-5"
+  >
+    <!-- ============ Card: Visibilidad ============ -->
+    <div
+      class="card bg-base-100 shadow-md border border-base-200 border-t-4 border-t-primary rounded-[1.5rem] overflow-hidden"
+    >
+      <div class="card-body space-y-5">
+        <div class="flex items-start gap-3">
+          <div
+            class="p-2 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-users-viewfinder text-lg"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-base font-semibold">Visibilidad de los acuses</h2>
+            <p class="text-xs opacity-60 mt-0.5">
+              Controla el doble check y el texto "Leído por…"
+            </p>
+          </div>
+        </div>
+
+        <!-- Opciones como radio-cards -->
+        <div class="space-y-2">
+          <label
+            *ngFor="let o of opciones"
+            class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
+            [ngClass]="
+              form.get('readVisibleTo')?.value === o.valor
+                ? 'border-primary/50 bg-primary/5 shadow-sm'
+                : 'border-base-200 bg-base-100 hover:border-primary/30 hover:bg-base-200/40'
+            "
+          >
+            <input
+              type="radio"
+              [value]="o.valor"
+              formControlName="readVisibleTo"
+              class="radio radio-primary radio-sm mt-1 shrink-0"
+            />
+
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span
+                  class="text-sm font-semibold"
+                  [ngClass]="
+                    form.get('readVisibleTo')?.value === o.valor
+                      ? 'text-primary'
+                      : ''
+                  "
+                >
+                  {{ o.texto }}
+                </span>
+
+                <span
+                  class="badge badge-xs gap-1 font-medium"
+                  [ngClass]="alcanceBadge(o.valor).className"
+                >
+                  <i
+                    [class]="alcanceBadge(o.valor).icon"
+                    class="text-[8px]"
+                    aria-hidden="true"
+                  ></i>
+                  {{ alcanceBadge(o.valor).label }}
+                </span>
+              </div>
+
+              <p class="text-xs opacity-70 mt-1 leading-relaxed">
+                {{ explicacionDe(o.valor) }}
+              </p>
+            </div>
+
+            <i
+              *ngIf="form.get('readVisibleTo')?.value === o.valor"
+              class="fa-solid fa-circle-check text-primary text-lg shrink-0 mt-1"
+              aria-hidden="true"
+            ></i>
+          </label>
+        </div>
+
+        <div class="divider my-0"></div>
+
+        <!-- Interruptor de nombres -->
+        <label
+          *ngIf="puedeElegirNombres"
+          class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
+          [ngClass]="
+            form.get('showReadByNames')?.value
+              ? 'border-primary/40 bg-primary/5 hover:bg-primary/10'
+              : 'border-base-200 bg-base-100 hover:border-primary/30 hover:bg-base-200/40'
+          "
+        >
+          <input
+            type="checkbox"
+            class="toggle toggle-primary toggle-sm mt-0.5 shrink-0"
+            formControlName="showReadByNames"
+          />
+          <div class="flex-1 min-w-0">
+            <span class="text-sm font-semibold flex items-center gap-2">
+              <i
+                class="fa-solid fa-id-card text-xs"
+                [ngClass]="
+                  form.get('showReadByNames')?.value
+                    ? 'text-primary'
+                    : 'opacity-60'
+                "
+                aria-hidden="true"
+              ></i>
+              Mostrar los nombres de quienes leyeron
+            </span>
+            <p class="text-xs opacity-60 mt-1 leading-relaxed">
+              Si lo desactivas, quien esté autorizado verá que el mensaje fue
+              leído y cuántos lo leyeron, pero no por quién.
+            </p>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- ============ Card: Vista previa ============ -->
+    <div
+      class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+    >
+      <div class="card-body space-y-4">
+        <div class="flex items-start gap-3">
+          <div
+            class="p-2 rounded-xl bg-success/10 text-success ring-1 ring-success/15 shrink-0"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-eye text-lg"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-base font-semibold">Vista previa</h2>
+            <p class="text-xs opacity-60 mt-0.5">
+              Así se verá el acuse según el rol del lector
+            </p>
+          </div>
+        </div>
+
+        <!-- Burbuja de ejemplo -->
+        <div class="p-4 rounded-xl bg-base-200/40 border border-base-200">
+          <p
+            class="text-[10px] font-semibold uppercase tracking-wider opacity-60 mb-3"
+          >
+            Ejemplo en un ticket
+          </p>
+
+          <div class="flex items-start gap-2.5">
+            <div class="avatar placeholder shrink-0" aria-hidden="true">
+              <div
+                class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center"
+              >
+                <span class="text-xs font-bold">JD</span>
+              </div>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline gap-2 text-xs opacity-70 mb-1">
+                <span class="font-semibold opacity-100">Juan Delgado</span>
+                <time>hace 2 min</time>
+              </div>
+
+              <div
+                class="px-4 py-3 rounded-2xl rounded-es-sm bg-base-200/70 border border-base-300 max-w-[80%]"
+              >
+                <p class="text-sm">¿Podrían revisar el ticket cuando puedan?</p>
+
+                <!-- Acuse según configuración -->
+                <div
+                  class="flex items-center gap-1.5 mt-2 text-[10px]"
+                  [ngClass]="previewAcuse().className"
+                >
+                  <i [class]="previewAcuse().icon" aria-hidden="true"></i>
+                  <span>{{ previewAcuse().texto }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <span class="badge badge-sm badge-primary gap-1.5 font-medium">
+            <i
+              class="fa-solid fa-user-shield text-[10px]"
+              aria-hidden="true"
+            ></i>
+            {{ labelVisible() }}
+          </span>
+
+          <span
+            *ngIf="puedeElegirNombres"
+            class="badge badge-sm gap-1.5 font-medium"
+            [ngClass]="
+              form.get('showReadByNames')?.value
+                ? 'badge-success text-success-content'
+                : 'badge-ghost text-base-content/70'
+            "
+          >
+            <i
+              [class]="
+                form.get('showReadByNames')?.value
+                  ? 'fa-solid fa-id-card text-[10px]'
+                  : 'fa-solid fa-user-secret text-[10px]'
+              "
+              aria-hidden="true"
+            ></i>
+            {{
+              form.get("showReadByNames")?.value
+                ? "Nombres visibles"
+                : "Nombres ocultos"
+            }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Card informativa ============ -->
+    <div
+      class="flex items-start gap-3 p-4 rounded-xl bg-info/5 border border-info/20 shadow-sm"
+    >
+      <div
+        class="p-2 rounded-lg bg-info/15 text-info shrink-0 ring-1 ring-info/15"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-shield-halved text-sm"></i>
+      </div>
+      <div class="text-sm flex-1 min-w-0">
+        <p class="font-semibold text-info">Los mensajes siempre se registran</p>
+        <p class="text-xs opacity-80 mt-1 leading-relaxed">
+          Este ajuste solo decide qué se muestra. Las lecturas se siguen
+          guardando aunque nadie las vea, así que si después amplías la
+          visibilidad el historial ya está completo y no hay que reconstruirlo.
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ Acciones ============ -->
+    <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm gap-2"
+        (click)="cancelar()"
+        [disabled]="isSaving"
+      >
+        <i class="fa-solid fa-rotate-left text-[15px]" aria-hidden="true"></i>
+        Descartar
+      </button>
+
+      <button
+        type="submit"
+        class="btn btn-primary btn-sm gap-2 shadow-md hover:shadow-lg transition"
+        [disabled]="isSaving"
+      >
+        <span
+          *ngIf="isSaving"
+          class="loading loading-spinner loading-xs"
+          aria-hidden="true"
+        ></span>
+        <i
+          *ngIf="!isSaving"
+          class="fa-solid fa-check text-[15px]"
+          aria-hidden="true"
+        ></i>
+        {{ isSaving ? "Guardando..." : "Guardar cambios" }}
+      </button>
+    </div>
+  </form>
+</div>

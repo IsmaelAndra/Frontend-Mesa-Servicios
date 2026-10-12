@@ -1,0 +1,327 @@
+<div class="space-y-6 max-w-4xl mx-auto">
+  <!-- ============================ HEADER ============================ -->
+  <header
+    class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+  >
+    <div class="flex items-center gap-3 min-w-0">
+      <div
+        class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-shield-halved text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">
+          Doble factor (MFA)
+        </h1>
+        <p class="text-sm opacity-70">
+          Verificación con app de autenticación además de la contraseña
+        </p>
+      </div>
+    </div>
+
+    <span
+      *ngIf="!loading"
+      class="badge badge-lg gap-2 font-semibold self-start sm:self-center shrink-0 py-3 px-4"
+      [ngClass]="
+        config.mfaEnabled
+          ? 'badge-success text-success-content'
+          : 'badge-ghost text-base-content/60'
+      "
+    >
+      <span
+        class="w-2 h-2 rounded-full"
+        [ngClass]="
+          config.mfaEnabled
+            ? 'bg-success-content animate-pulse'
+            : 'bg-base-content/40'
+        "
+      ></span>
+      {{ config.mfaEnabled ? "Protegido" : "Sin protección" }}
+    </span>
+  </header>
+
+  <!-- ============================ LOADING ============================ -->
+  <div
+    *ngIf="loading"
+    class="flex justify-center py-12"
+    role="status"
+    aria-live="polite"
+  >
+    <span
+      class="loading loading-spinner loading-lg text-primary"
+      aria-hidden="true"
+    ></span>
+  </div>
+
+  <!-- ============================ CONTENIDO ============================ -->
+  <div *ngIf="!loading" class="space-y-5">
+    <!-- ============ Card: Interruptor ============ -->
+    <div
+      class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+      [ngClass]="
+        config.mfaEnabled
+          ? 'border-t-4 border-t-success'
+          : 'border-t-4 border-t-base-300'
+      "
+    >
+      <div class="card-body space-y-5">
+        <label
+          class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
+          [ngClass]="
+            config.mfaEnabled
+              ? 'border-success/40 bg-success/5 hover:bg-success/10'
+              : 'border-base-200 bg-base-100 hover:border-primary/30 hover:bg-base-200/40'
+          "
+        >
+          <input
+            type="checkbox"
+            class="toggle toggle-primary toggle-lg mt-0.5 shrink-0"
+            [ngModel]="config.mfaEnabled"
+            (ngModelChange)="config.mfaEnabled = $event"
+            [disabled]="guardando"
+            aria-label="Activar o desactivar el doble factor"
+          />
+          <div class="flex-1 min-w-0">
+            <span class="text-sm font-semibold flex items-center gap-2">
+              <i
+                class="fa-solid fa-lock text-xs"
+                [ngClass]="config.mfaEnabled ? 'text-success' : 'opacity-60'"
+                aria-hidden="true"
+              ></i>
+              Exigir doble factor
+            </span>
+            <p class="text-xs opacity-60 mt-1 leading-relaxed">
+              {{
+                config.mfaEnabled
+                  ? "Todos los usuarios, agentes y administradores necesitan su app al entrar."
+                  : "Ahora mismo basta la contrasena."
+              }}
+            </p>
+          </div>
+        </label>
+
+        <!-- ============ Alert informativo ============ -->
+        <div
+          class="flex items-start gap-3 p-3 rounded-xl border text-xs"
+          [ngClass]="
+            config.mfaEnabled
+              ? 'bg-success/10 border-success/30'
+              : 'bg-info/10 border-info/30'
+          "
+        >
+          <div
+            class="p-1.5 rounded-lg shrink-0"
+            [ngClass]="
+              config.mfaEnabled
+                ? 'bg-success text-success-content'
+                : 'bg-info text-info-content'
+            "
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-circle-info text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0 space-y-1">
+            <p>
+              <b>{{ config.enrolledCount }}</b> cuenta(s) tienen ya la app
+              configurada.
+            </p>
+            <p *ngIf="!config.mfaEnabled" class="opacity-80">
+              Al activarlo, quien no la tenga verá un QR en su próximo acceso y
+              tendrá que configurarla antes de entrar. Se les avisa con
+              <b>códigos de recuperación</b> por si pierden el móvil.
+            </p>
+            <p *ngIf="config.mfaEnabled" class="opacity-80">
+              Al desactivarlo, nadie pierde nada: las apps configuradas siguen
+              ahí y vuelven a pedir el código si se reactiva.
+            </p>
+            <p class="opacity-80">
+              Su propia cuenta de super administrador
+              <b>{{
+                config.superAdminEnrolled ? "tiene" : "NO tiene todavía"
+              }}</b>
+              doble factor.
+            </p>
+            <p
+              *ngIf="!config.mfaEnabled && !config.superAdminEnrolled"
+              class="font-semibold pt-1 border-t border-current/10 mt-2"
+            >
+              <i
+                class="fa-solid fa-triangle-exclamation mr-1"
+                aria-hidden="true"
+              ></i>
+              Si activa esto ahora, su próximo acceso le pedirá configurar la
+              app y mostrarle códigos de recuperación. Anótelos: son la única
+              forma de volver a entrar si pierde el móvil.
+            </p>
+          </div>
+        </div>
+
+        <!-- ============ Nombre en la app ============ -->
+        <div>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Nombre en la aplicación
+            </span>
+          </label>
+          <div class="relative">
+            <i
+              class="fa-solid fa-tag text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+              aria-hidden="true"
+            ></i>
+            <input
+              type="text"
+              class="input input-bordered input-sm w-full pl-9 focus:ring-2 focus:ring-primary/25"
+              [(ngModel)]="config.issuer"
+              [disabled]="guardando"
+              maxlength="120"
+              placeholder="Mesa de Servicios"
+            />
+          </div>
+          <p class="text-[11px] opacity-60 mt-1 leading-relaxed">
+            Así aparecerá la cuenta en la app. Cambiarlo no afecta a quienes ya
+            la tienen configurada: su app conserva el nombre anterior.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Barra de acciones sticky ============ -->
+    <div class="sticky bottom-4 z-20">
+      <div
+        class="card bg-base-100/95 backdrop-blur-md shadow-xl border rounded-2xl overflow-hidden transition"
+        [ngClass]="
+          huboCambios()
+            ? 'border-warning/40 ring-2 ring-warning/20'
+            : 'border-base-200'
+        "
+      >
+        <div
+          class="card-body p-3 sm:p-4 flex-row items-center justify-between gap-3"
+        >
+          <div class="flex items-center gap-3 min-w-0">
+            <div
+              class="p-2 rounded-lg shrink-0"
+              [ngClass]="
+                huboCambios()
+                  ? 'bg-warning/15 text-warning'
+                  : 'bg-success/15 text-success'
+              "
+              aria-hidden="true"
+            >
+              <i
+                class="fa-solid text-sm"
+                [ngClass]="
+                  huboCambios()
+                    ? 'fa-circle-exclamation animate-pulse'
+                    : 'fa-circle-check'
+                "
+              ></i>
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold truncate">
+                {{
+                  huboCambios() ? "Tienes cambios sin guardar" : "Todo guardado"
+                }}
+              </p>
+              <p class="text-[11px] opacity-60 truncate">
+                {{
+                  huboCambios()
+                    ? "Activar el doble factor afecta a todas las cuentas"
+                    : "La configuración está al día"
+                }}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm gap-2 hidden sm:inline-flex"
+              (click)="descartar()"
+              [disabled]="guardando || !huboCambios()"
+            >
+              <i
+                class="fa-solid fa-rotate-left text-[15px]"
+                aria-hidden="true"
+              ></i>
+              Descartar
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-primary btn-sm gap-2 shadow-md hover:shadow-lg transition min-w-[150px] text-primary-content"
+              (click)="pedirCambio()"
+              [disabled]="guardando || !huboCambios()"
+            >
+              <span
+                *ngIf="guardando"
+                class="loading loading-spinner loading-xs"
+                aria-hidden="true"
+              ></span>
+              <i
+                *ngIf="!guardando"
+                class="fa-solid fa-check text-[15px]"
+                aria-hidden="true"
+              ></i>
+              {{ guardando ? "Guardando..." : "Guardar cambios" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Confirmacion antes de activar ============ -->
+  <div *ngIf="confirmando" class="modal modal-open" role="dialog">
+    <div class="modal-box max-w-lg rounded-[1.5rem]">
+      <div class="flex items-start gap-3 mb-2">
+        <div
+          class="p-2 rounded-xl bg-warning/15 text-warning shrink-0"
+          aria-hidden="true"
+        >
+          <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-lg leading-tight">
+            ¿Activar el doble factor ahora?
+          </h3>
+          <p class="text-xs opacity-60 mt-0.5">
+            Este cambio afecta a todos los accesos
+          </p>
+        </div>
+      </div>
+
+      <div class="space-y-3 text-sm py-3">
+        <p>
+          A partir de este momento, {{ config.enrolledCount }} cuenta(s) con la
+          app configurada pedirán un código de 6 dígitos al entrar. Las que no
+          la tengan tendrán que configurarla con su móvil antes de poder
+          acceder.
+        </p>
+        <div class="alert alert-warning text-xs rounded-xl py-2.5">
+          <i class="fa-solid fa-circle-info shrink-0" aria-hidden="true"></i>
+          <span>
+            Asegurese de haber avisado antes. Si alguien no tiene móvil, se
+            queda fuera y necesita soporte para volver a entrar.
+          </span>
+        </div>
+      </div>
+
+      <div class="modal-action">
+        <button type="button" class="btn btn-ghost btn-sm" (click)="cancelar()">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-warning btn-sm gap-2"
+          (click)="confirmar()"
+        >
+          <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
+          Si, activar
+        </button>
+      </div>
+    </div>
+    <div class="modal-backdrop" (click)="cancelar()"></div>
+  </div>
+</div>

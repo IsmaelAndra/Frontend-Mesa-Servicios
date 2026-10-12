@@ -1,5 +1,5 @@
 import { AuthGuard } from './auth.guard';
-import { RouterStateSnapshot, UrlTree } from '@angular/router';
+import { RouterStateSnapshot } from '@angular/router';
 
 describe('AuthGuard', () => {
   let auth: any;

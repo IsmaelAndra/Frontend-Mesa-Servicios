@@ -1,11 +1,11 @@
 export interface TaskItem {
-  id: number;
+  id: string;
   title: string;
   description?: string;
   status: TaskStatus;
-  assignedUserId: number;
+  assignedUserId: string;
   assignedUserEmail: string;
-  createdByUserId: number;
+  createdByUserId: string;
   createdByEmail: string;
   start?: string;
   due?: string;
@@ -21,7 +21,7 @@ export interface TaskRequest {
   title: string;
   description?: string;
   status?: TaskStatus;
-  assignedUserId: number;
+  assignedUserId: string;
   start?: string;
   due?: string;
   durationMinutes?: number;
@@ -43,6 +43,10 @@ export interface CalendarEvent {
   end: string;
   status: string;
   color: string;
-  refId: number;
+  refId: string;
+  /** Número visible del ticket; null en las tareas. */
+  refNumber?: number | null;
   allDay: boolean;
+  /** Fecha de creación del recurso (tarea o ticket) */
+  createdAt?: string;
 }

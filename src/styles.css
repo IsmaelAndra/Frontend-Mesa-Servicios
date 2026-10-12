@@ -1,20 +1,106 @@
+/* La CSS base de ToastUI Calendar se carga desde angular.json ("styles"). Antes
+   también se importaba aquí y el navegador la recibía dos veces. */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Tipografía: Inter con sus alternativas más legibles en interfaz (la "l" con
+   cola y la "1" con base, que no se confunden con la "I"), y cifras tabulares
+   en las tablas para que las columnas de números queden alineadas. */
+@layer base {
+  html {
+    font-feature-settings: 'cv05', 'cv08', 'ss03';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+  h1, h2, h3 {
+    letter-spacing: -0.015em;
+  }
+}
+
 :root {
+  /* ============ Movimiento ============
+     Curvas y duraciones compartidas. Toda animación del sistema sale de aquí
+     (o de sus equivalentes en tailwind.config.js), para que todo se mueva igual. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --dur-slow: 300ms;
+
   --primary-color: #062e86;
   --secondary-color: #ec9811;
-  --logo-url: '';
+  --logo-url: "";
   --logo-height: 48px;
 }
 
-html, body {
+/* Barra superior y menú lateral: siempre del color primario de marca,
+   igual en modo claro y oscuro. */
+.app-chrome {
+  background-color: var(--primary-color, #062e86);
+  color: #ffffff;
+}
+
+/* En modo oscuro las letras del contenido que usan el color primario
+   se aclaran para que no se pierdan sobre el fondo oscuro. */
+:root[data-theme="dark"] .text-primary {
+  /* #1d4ed8 seguía siendo oscuro sobre el fondo del modo oscuro (contraste
+     ~2,5:1). Un azul claro se lee bien y sigue siendo el color de marca. */
+  color: #7aa7ff;
+}
+/* Sobre fondo blanco (botones del encabezado del tablero, logo del login) el
+   azul oscuro de siempre sigue siendo el que se lee. */
+:root[data-theme="dark"] .bg-white.text-primary {
+  color: #062e86;
+}
+:root[data-theme="dark"] .border-primary\/50 {
+  border-color: rgb(122 167 255 / 0.5);
+}
+
+html,
+body {
   height: 100%;
 }
 
 body {
   background-color: #f3f4f6;
+}
+
+/* ============ MODO OSCURO: login ============ */
+/* En dark solo cambia el contenedor de los inputs del login; el resto mantiene su estilo. */
+:root[data-theme="dark"] app-login input[type="email"],
+:root[data-theme="dark"] app-login input[type="password"],
+:root[data-theme="dark"] app-login input[type="text"],
+:root[data-theme="dark"] app-login textarea {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #475569 !important;
+}
+
+:root[data-theme="dark"] app-login input::placeholder {
+  color: #94a3b8 !important;
+}
+
+:root[data-theme="dark"] app-login input:focus {
+  background-color: #1e293b !important;
+}
+
+/* Scrollbar acorde al tema oscuro */
+:root[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #334155;
 }
 
 .p-datatable .p-datatable-header {
@@ -37,7 +123,9 @@ body {
   border-color: #042066;
 }
 
-.p-inputtext:focus, .p-dropdown:focus, .p-multiselect:focus {
+.p-inputtext:focus,
+.p-dropdown:focus,
+.p-multiselect:focus {
   border-color: #062e86;
   box-shadow: 0 0 0 0.2rem rgba(6, 46, 134, 0.25);
 }
@@ -76,10 +164,10 @@ body {
     @apply bg-secondary text-secondary-content hover:bg-secondary-light;
   }
   .sidebar-link {
-    @apply flex items-center gap-3 px-4 py-3 text-base-content/80 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors;
+    @apply flex items-center gap-3 px-4 py-3 text-white/75 hover:text-white hover:bg-white/10 rounded-lg transition-colors;
   }
   .sidebar-link.active {
-    @apply text-primary bg-primary/10 font-medium;
+    @apply text-white bg-white/15 font-medium;
   }
   .card-ticket {
     @apply bg-primary/5 text-primary shadow-sm border border-primary/20 rounded-xl p-5 transition-shadow hover:shadow-md;
@@ -93,17 +181,45 @@ body {
 }
 
 /* Editor enriquecido (quill) */
-.rich-editor .ql-container { min-height: 150px; }
-.rich-editor.compact .ql-container { min-height: 110px; }
+.rich-editor .ql-container {
+  min-height: 150px;
+}
+.rich-editor.compact .ql-container {
+  min-height: 110px;
+}
 
-/* Badges: texto blanco en fondos de color; texto negro en escala gris clara */
 .badge {
+  min-height: 24px;
+  padding: 5px 12px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  box-sizing: border-box;
+}
+
+.badge.badge-xs {
+  min-height: 20px;
+  padding: 3px 8px !important;
+}
+
+.badge.badge-primary,
+.badge.badge-secondary,
+.badge.badge-info,
+.badge.badge-warning,
+.badge.badge-success,
+.badge.badge-error,
+.badge.badge-neutral {
   color: #ffffff !important;
 }
 
-.badge.badge-ghost:not(.badge-primary):not(.badge-secondary):not(.badge-info):not(.badge-warning):not(.badge-success):not(.badge-error):not(.badge-neutral),
-.badge.badge-outline:not(.badge-primary):not(.badge-secondary):not(.badge-info):not(.badge-warning):not(.badge-success):not(.badge-error):not(.badge-neutral) {
-  color: #000000 !important;
+.badge:not(.badge-primary):not(.badge-secondary):not(.badge-info):not(
+    .badge-warning
+  ):not(.badge-success):not(.badge-error):not(.badge-neutral) {
+  color: var(--bc, #6b7280) !important;
 }
 
 /* Sidebar colapsado (solo iconos) */
@@ -125,6 +241,49 @@ aside.sidebar-collapsed .sidebar-header {
 
 aside.sidebar-collapsed .sidebar-footer {
   padding: 0.75rem 0.5rem;
+}
+
+/* Botón cerrar sesión del sidebar: visible sobre el fondo primary */
+.sidebar-logout {
+  border-color: rgb(248 113 113 / 0.6);
+  color: #fecaca;
+}
+
+/* Tooltips del sidebar: daisyUI los pinta con el color "neutral" del tema
+   (#1e1e1e en claro, #111827 en oscuro), así que al pasar el cursor por una
+   sección con el menú contraído salía un cuadro negro sobre el fondo azul.
+   Se fuerza a blanco con texto oscuro: destaca contra el azul y se sigue
+   leyendo bien.
+   OJO: esto no arregla el "indicador negro" si el elemento lleva atributo
+   `title`, porque ese aviso lo dibuja el navegador y no admite CSS. Por eso
+   en el sidebar se quitaron los `title` y se usa solo el tooltip de daisyUI.
+   Va fuera de @layer a propósito: en Tailwind una regla sin capa gana a las
+   que están dentro de @layer, y así no hace falta !important. */
+aside .tooltip::before,
+aside .tooltip::after,
+.sidebar-link.tooltip::before,
+.sidebar-link.tooltip::after,
+.sidebar-logout.tooltip::before,
+.sidebar-logout.tooltip::after {
+  background-color: #ffffff;
+  color: #0f172a;
+  border-color: #ffffff;
+}
+
+.sidebar-logout:hover {
+  color: #ffffff !important;
+}
+
+/* Scrollbar del menú del sidebar (fondo azul primary) */
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.25);
+  border-radius: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / 0.4);
 }
 
 aside.sidebar-collapsed .sidebar-user {
@@ -178,17 +337,19 @@ aside.sidebar-collapsed .sidebar-header .w-10 {
   padding: 0.5rem 0.75rem !important;
   font-size: 0.875rem !important;
   line-height: 1.25rem !important;
-  border: 1px solid hsl(var(--b3)) !important;
+  border: 1px solid oklch(var(--b3)) !important;
   border-radius: 0.5rem !important;
-  background-color: hsl(var(--b1)) !important;
-  color: hsl(var(--bc)) !important;
+  background-color: oklch(var(--b1)) !important;
+  color: oklch(var(--bc)) !important;
   outline: none !important;
-  transition: border-color 150ms ease, box-shadow 150ms ease !important;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease !important;
 }
 
 .swal-daisy-input:focus {
-  border-color: hsl(var(--p)) !important;
-  box-shadow: 0 0 0 3px hsl(var(--p) / 0.2) !important;
+  border-color: oklch(var(--p)) !important;
+  box-shadow: 0 0 0 3px oklch(var(--p) / 0.2) !important;
 }
 
 textarea.swal-daisy-input {
@@ -212,4 +373,936 @@ select.swal-daisy-input {
 .swal2-actions {
   gap: 0.5rem !important;
   margin-top: 1rem !important;
+}
+
+/* ============ Fondo tipo WhatsApp para los chats ============ */
+/* Doodle sutil + tinte del color primario; funciona en claro y oscuro.
+   Si el admin sube una imagen (branding), --chat-bg-image la reemplaza. */
+.chat-wa-bg {
+  background-color: oklch(var(--p) / 0.05);
+  background-image: var(
+    --chat-bg-image,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='%236b7280' fill-opacity='0.10'%3E%3Ccircle cx='12' cy='14' r='4'/%3E%3Ccircle cx='48' cy='24' r='2.5'/%3E%3Ccircle cx='64' cy='54' r='5'/%3E%3Ccircle cx='22' cy='58' r='3'/%3E%3Cpath d='M40 8l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3Cpath d='M14 40c0-4 4-7 8-7h12c4 0 8 3 8 7v6c0 4-4 7-8 7h-4l-5 6 1-7c-7-1-12-5-12-9z'/%3E%3Cpath d='M52 32h2v6h6v2h-6v6h-2v-6h-6v-2h6z'/%3E%3Cpath d='M10 68l5-6 5 6-5 6z'/%3E%3Cpath d='M56 68c0-3 2-5 6-5s6 2 6 5-2 5-6 5-6-2-6-5z'/%3E%3Cpath d='M70 14l1.5 3.5L75 19l-3.5 1.5L70 24l-1.5-3.5L65 19l3.5-1.5z'/%3E%3C/g%3E%3C/svg%3E")
+  );
+  background-size: cover;
+  background-position: center;
+}
+
+:root[data-theme="dark"] .chat-wa-bg {
+  background-color: oklch(var(--b3) / 0.38);
+  background-blend-mode: soft-light;
+}
+
+:root[data-theme="dark"] .chat-wa-bg .chat-message {
+  background-color: oklch(var(--b1) / 0.96) !important;
+  color: oklch(var(--bc)) !important;
+  border-color: oklch(var(--b3) / 0.95) !important;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.28);
+}
+
+:root[data-theme="dark"] .chat-wa-bg .chat-message-user {
+  background-color: oklch(var(--p) / 0.82) !important;
+  color: oklch(var(--pc)) !important;
+  border-color: oklch(var(--p)) !important;
+}
+
+:root[data-theme="dark"] .chat-wa-bg .chat-message-internal {
+  background-color: rgb(245 158 11 / 0.22) !important;
+  color: #fde68a !important;
+  border-color: rgb(245 158 11 / 0.55) !important;
+}
+
+/* ============ Burbujas del chat ============ */
+/*
+ * Cada tipo tiene fondo y texto propios, con !important para ganar a las clases
+ * utilitarias del componente. Antes los mensajes de otra persona heredaban el
+ * color del texto y salian blancos sobre fondo claro: ilegibles.
+ *
+ * Los fondos van CON ALPHA y no sólidos: el grupo de fondo tiene una marca de
+ * agua que debe verse a traves de las burbujas. Al poner la burbuja propia al
+ * 100 % tapaba la imagen y el chat perdia el efecto; ademas el texto blanco
+ * sobre un fondo claro quedaba ilegible, asi que se usa el color de texto del
+ * tema en vez de blanco fijo.
+ */
+.chat-wa-bg .chat-message-user {
+  background-color: oklch(var(--p) / 0.22) !important;
+  color: oklch(var(--bc)) !important;
+  border-color: oklch(var(--p) / 0.45) !important;
+}
+
+.chat-wa-bg .chat-message-other {
+  background-color: oklch(var(--b3)) !important;
+  color: oklch(var(--bc)) !important;
+  border-color: oklch(var(--bc) / 0.25) !important;
+}
+
+.chat-wa-bg .chat-message-internal {
+  background-color: rgb(245 158 11 / 0.18) !important;
+  color: oklch(var(--bc)) !important;
+  border-color: rgb(245 158 11 / 0.5) !important;
+}
+
+/* El contenido va con innerHTML, asi que puede traer etiquetas sueltas: se
+   fuerza el color tambien dentro, o un <p> sin clase se quedaba con el del
+   navegador (negro sobre azul, o blanco sobre claro). */
+.chat-wa-bg .chat-message .message-html,
+.chat-wa-bg .chat-message .message-html * {
+  color: inherit !important;
+}
+
+/* En oscuro la regla generica de arriba (tres clases) gana a estas, asi que se
+   repiten con el tema para que cada burbuja conserve su color. */
+:root[data-theme="dark"] .chat-wa-bg .chat-message-user {
+  background-color: oklch(var(--p) / 0.32) !important;
+  color: oklch(var(--bc)) !important;
+  border-color: oklch(var(--p) / 0.6) !important;
+}
+
+:root[data-theme="dark"] .chat-wa-bg .chat-message-other {
+  background-color: oklch(var(--b2)) !important;
+  color: oklch(var(--bc)) !important;
+  border-color: oklch(var(--b3)) !important;
+}
+
+:root[data-theme="dark"] .chat-wa-bg .chat-message-internal {
+  background-color: rgb(245 158 11 / 0.22) !important;
+  color: #fde68a !important;
+  border-color: rgb(245 158 11 / 0.55) !important;
+}
+
+/* ============ Avatares de respaldo (sin foto) en modo oscuro ============ */
+/* En claro se mantienen los tonos suaves; en oscuro usan fondo sólido
+   (propio = success, ajenos = primary) con texto blanco para contraste. */
+:root[data-theme="dark"] .avatar-fallback-own {
+  background-color: oklch(var(--su)) !important;
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .avatar-fallback-other {
+  background-color: oklch(var(--p)) !important;
+  color: #ffffff !important;
+}
+/* ============ Chip de dato maestro (app-master-chip) ============ */
+/* Un solo estilo para tipo, prioridad, area, categoria, estado y usuario:
+   texto e icono en el color del maestro, fondo al 12% y borde solido. */
+.badge.master-chip {
+  min-height: 20px;
+  padding: 2px 8px !important;
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  gap: 4px;
+  max-width: 100%;
+}
+/* ============ Punto de presencia (app-presence-dot) ============ */
+/* Mismo tamaño en navbar, sidebar, tarjetas y chat para que se lea igual
+   en cualquier pantalla. El aro lo separa del fondo del avatar. */
+.presence-dot {
+  display: inline-block;
+  width: 0.425rem;
+  height: 0.425rem;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 2px oklch(var(--b1));
+}
+/* ============ Badge compacto de maestro (.kanban-tag) ============ */
+/* La regla global de .badge fija 24px de alto y 12px de fuente con !important,
+   asi que badge-sm quedaba igual de grande que uno normal. Esta clase compacta
+   el badge y deja que el texto ceda espacio con truncate, para que ni la
+   prioridad ni el tipo se salgan de la tarjeta. Va global porque se usa en el
+   kanban de tickets y tambien en el detalle, y un CSS de componente no
+   alcanzaba al otro. */
+.kanban-tag {
+  min-height: 18px !important;
+  padding: 1px 6px !important;
+  font-size: 10px !important;
+  line-height: 1.3 !important;
+  gap: 3px !important;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ============ Barra de progreso indeterminado del splash ============ */
+/* daisyUI solo trae barras con valor determinista; esta recorre el carril de
+   izquierda a derecha en bucle para sugerir que la carga sigue en marcha. Va
+   global porque el splash vive en el componente raiz y no tiene hoja propia. */
+@keyframes loading-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.loading-bar-track {
+  overflow: hidden;
+  position: relative;
+}
+
+.loading-bar-indeterminate {
+  width: 25%;
+  animation: loading-indeterminate 1.4s ease-in-out infinite;
+}
+
+/* ============ Efectos del logo de la pantalla de carga ============ */
+/* El logo del splash es lo que el usuario mira mientras espera, asi que se
+   anima por separado del indicador de carga. Cada clase envuelve a la imagen o
+   al icono: solo hay que aplicarla al contenedor. Los que pintan un halo o un
+   barrido de luz necesitan position: relative, y por eso lo traen puesto. */
+.loading-logo-fade {
+  animation: loading-logo-fade 1.7s ease-in-out infinite;
+}
+.loading-logo-fade-in {
+  animation: loading-logo-fade-in 0.7s ease-out both;
+}
+.loading-logo-scale-pulse {
+  animation: loading-logo-scale-pulse 1.7s ease-in-out infinite;
+}
+.loading-logo-zoom {
+  animation: loading-logo-zoom 2.2s ease-in-out infinite;
+}
+.loading-logo-float {
+  animation: loading-logo-float 2.2s ease-in-out infinite;
+}
+.loading-logo-bounce {
+  animation: loading-logo-bounce 1.5s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+}
+.loading-logo-swing {
+  transform-origin: top center;
+  animation: loading-logo-swing 1.4s ease-in-out infinite;
+}
+.loading-logo-spin {
+  animation: loading-logo-spin 2.6s linear infinite;
+}
+
+/* Halo que se expande y se apaga: usa currentColor para tomar el color de
+   texto configurado sin tener que reinyectar el color desde Angular. */
+.loading-logo-glow {
+  position: relative;
+}
+.loading-logo-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid currentColor;
+  border-radius: 1rem;
+  animation: loading-logo-glow 1.8s ease-out infinite;
+}
+
+/* Barrido de luz, como el brillo de un esqueleto de carga. */
+.loading-logo-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.loading-logo-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: loading-logo-shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes loading-logo-fade {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes loading-logo-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes loading-logo-scale-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.09);
+  }
+}
+@keyframes loading-logo-zoom {
+  0%,
+  100% {
+    transform: scale(0.88);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+@keyframes loading-logo-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+@keyframes loading-logo-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-20px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes loading-logo-swing {
+  0%,
+  100% {
+    transform: rotate(-9deg);
+  }
+  50% {
+    transform: rotate(9deg);
+  }
+}
+@keyframes loading-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes loading-logo-glow {
+  0% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
+@keyframes loading-logo-shimmer {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(110%);
+  }
+}
+
+/* ============================================================================
+   MOVIMIENTO COMPARTIDO
+   ============================================================================ */
+
+/* Ventanas superpuestas (modales propios con *ngIf). El fondo entra con un
+   fundido y el panel crece apenas desde el centro; nunca desde scale(0). */
+.overlay-backdrop {
+  animation: fade-in var(--dur-base) var(--ease-out) both;
+}
+.overlay-panel {
+  animation: pop-in 250ms var(--ease-out) both;
+}
+
+/* Paneles laterales (visor de plantillas, detalle del calendario): entran
+   desde el borde derecho, por donde se cierran, con la curva de cajón. */
+.overlay-drawer {
+  animation: drawer-in var(--dur-slow) var(--ease-drawer) both;
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* Un elemento que se quita de una lista (aprobación decidida…): se desvanece
+   hacia la derecha y cierra su hueco, para que los de abajo suban en vez de
+   saltar. max-height parte de un valor holgado porque la altura real varía. */
+.item-saliendo {
+  overflow: hidden;
+  pointer-events: none;
+  animation: item-salida 260ms var(--ease-in-out) forwards;
+}
+@keyframes item-salida {
+  0% {
+    opacity: 1;
+    transform: none;
+    max-height: 40rem;
+  }
+  45% {
+    opacity: 0;
+    transform: translateX(24px);
+    max-height: 40rem;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(24px);
+    max-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+  }
+}
+
+/* Kanban: al soltar, la tarjeta se desliza hasta su sitio en vez de saltar. */
+.cdk-drag-animating {
+  transition: transform 220ms var(--ease-out);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ============ Reducir movimiento ============
+   Quien lo pide en su sistema operativo no recibe desplazamientos, rebotes,
+   sacudidas ni bucles: solo fundidos muy cortos. No es "cero animación": un
+   cambio de estado sin ningún puente también desorienta. */
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Una salida de lista se queda en un fundido, sin desplazarse. */
+  .item-saliendo {
+    animation: fade-out 150ms ease forwards !important;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 150ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* Las animaciones de entrada del sistema pasan a un fundido corto. */
+  .overlay-panel,
+  .overlay-drawer,
+  .animate-pop-in,
+  .animate-rise-in,
+  .animate-check-pop,
+  .animate-shake,
+  .animate-count-pop,
+  .motion-reemplazable {
+    animation-name: fade-in !important;
+    animation-duration: 150ms !important;
+    animation-timing-function: linear !important;
+  }
+  /* Bucles decorativos: fuera. Los spinners de carga (.loading, animate-spin)
+     se quedan: indican que algo está pasando y quitarlos confunde más. */
+  .animate-pulse,
+  .animate-ping,
+  .animate-bounce,
+  [class*="loading-logo"] {
+    animation: none !important;
+  }
+}
+
+/* SweetAlert2 — cohesión visual con DaisyUI */
+.swal2-popup {
+  border-radius: 1.5rem !important;
+  font-family: inherit !important;
+  padding: 1.5rem !important;
+}
+
+.swal2-title {
+  font-size: 1.125rem !important;
+  font-weight: 700 !important;
+  color: var(--fallback-p, oklch(var(--p))) !important;
+  padding: 0 0 0.5rem 0 !important;
+}
+
+.swal2-html-container {
+  font-size: 0.875rem !important;
+  color: color-mix(in oklch, currentColor 70%, transparent) !important;
+  margin: 0 !important;
+}
+
+.swal2-actions {
+  gap: 0.5rem !important;
+  margin-top: 1.25rem !important;
+}
+
+.swal2-confirm,
+.swal2-cancel {
+  border-radius: 0.75rem !important;
+  font-weight: 600 !important;
+  font-size: 0.8125rem !important;
+  padding: 0.5rem 1rem !important;
+  box-shadow: none !important;
+}
+
+.swal2-input {
+  border-radius: 0.75rem !important;
+  border: 1px solid color-mix(in oklch, currentColor 15%, transparent) !important;
+  font-size: 0.875rem !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+.swal2-input:focus {
+  border-color: var(--fallback-p, oklch(var(--p))) !important;
+  box-shadow: 0 0 0 3px
+    color-mix(in oklch, var(--fallback-p, oklch(var(--p))) 20%, transparent) !important;
+}
+
+
+/* ============================================================================
+   CALENDARIO: urgencia de los eventos
+   Va aquí y no en el CSS del componente porque los eventos los pinta ToastUI
+   fuera del encapsulado de Angular.
+   ============================================================================ */
+.cal-punto {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.3rem;
+  border-radius: 9999px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+/* Vencido: rojo con un latido, para que salte a la vista en la rejilla. */
+.cal-punto--vencido {
+  background: #dc2626;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.85);
+  animation: cal-latido 1.6s var(--ease-in-out) infinite;
+}
+.cal-punto--claro {
+  background: #fff;
+  box-shadow: none;
+}
+.cal-punto--proximo {
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.85);
+}
+.cal-hora {
+  font-weight: 700;
+}
+@keyframes cal-latido {
+  0%, 100% { opacity: 1; scale: 1; }
+  50% { opacity: 0.55; scale: 0.8; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cal-punto--vencido {
+    animation: none;
+  }
+}
+
+/* ============================================================================
+   NAVBAR: punto de conexión en tiempo real (SSE)
+   ============================================================================ */
+.nav-vivo {
+  position: relative;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+.nav-vivo--ok {
+  background: #4ade80;
+}
+/* Una onda suave cada pocos segundos: está vivo, sin reclamar atención. */
+.nav-vivo--ok::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #4ade80;
+  animation: nav-vivo-onda 3s var(--ease-out) infinite;
+}
+.nav-vivo--espera {
+  background: #fbbf24;
+  animation: nav-vivo-espera 1.2s var(--ease-in-out) infinite;
+}
+@keyframes nav-vivo-onda {
+  0% { opacity: 0.6; scale: 1; }
+  40%, 100% { opacity: 0; scale: 2.6; }
+}
+@keyframes nav-vivo-espera {
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-vivo--ok::after,
+  .nav-vivo--espera {
+    animation: none;
+  }
+}
+
+/* ============================================================================
+   DISEÑO DE LAS PÁGINAS
+   Una sola capa para todas las pantallas: encabezado, tarjetas, tablas y
+   campos se ven igual en todo el sistema. Las páginas siguen usando sus clases
+   de siempre; aquí solo se afina cómo se pintan.
+   ============================================================================ */
+
+/* ---------- Encabezado de página ---------- */
+.page-head {
+  position: relative;
+  overflow: hidden;
+  padding: 1.1rem 1.25rem;
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(90% 160% at 0% 0%, oklch(var(--p) / 0.07) 0%, transparent 55%),
+    oklch(var(--b1));
+  border: 1px solid oklch(var(--bc) / 0.07);
+  box-shadow: 0 6px 22px -18px rgb(15 23 42 / 0.45);
+}
+@media (min-width: 640px) {
+  .page-head {
+    padding: 1.25rem 1.5rem;
+  }
+}
+/* Si no caben título y acciones en una línea, las acciones bajan a la
+   siguiente: antes el título se encogía hasta solaparse con ellas. */
+.page-head.flex {
+  flex-wrap: wrap;
+}
+.page-head > :first-child {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+/* Algunas cabeceras empiezan por el icono (auditoría, contraseña): el icono
+   no crece nunca y el espacio lo toma el bloque del título que le sigue. */
+.page-head > .page-head__icono:first-child {
+  flex: 0 0 auto;
+}
+.page-head > .page-head__icono:first-child + * {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+/* Un trazo del color institucional a la izquierda: marca el inicio de la página. */
+.page-head::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1.1rem;
+  bottom: 1.1rem;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: oklch(var(--p));
+}
+:root .page-head .page-head__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border-radius: 1rem;
+  color: #fff;
+  background: linear-gradient(135deg, oklch(var(--p)) 0%, oklch(var(--p) / 0.75) 100%);
+  box-shadow: 0 10px 20px -10px oklch(var(--p) / 0.7);
+  flex-shrink: 0;
+}
+:root .page-head .page-head__icono i {
+  font-size: 1.25rem;
+}
+:root .page-head .page-head__titulo {
+  color: oklch(var(--bc));
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+@media (min-width: 640px) {
+  .page-head .page-head__titulo {
+    font-size: 1.65rem;
+  }
+}
+
+/* ---------- Tarjetas ---------- */
+main .card {
+  border-radius: 1.25rem;
+}
+main .card.border-base-200 {
+  border-color: oklch(var(--bc) / 0.08);
+}
+main .card.shadow-md,
+main .card.shadow-sm,
+main .card.shadow {
+  box-shadow: 0 6px 22px -18px rgb(15 23 42 / 0.45);
+}
+
+/* ---------- Tablas ---------- */
+/* Cabecera discreta: el color de marca en un bloque entero pesaba más que los
+   datos. Ahora es una banda suave con títulos pequeños en mayúsculas. */
+main .table thead tr,
+main .table thead.bg-primary {
+  background: oklch(var(--bc) / 0.035);
+  color: oklch(var(--bc) / 0.6);
+}
+main .table thead th {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: oklch(var(--bc) / 0.6);
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid oklch(var(--bc) / 0.08);
+}
+main .table tbody tr {
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+main .table tbody tr:hover {
+  background: oklch(var(--p) / 0.035);
+}
+main .table :where(tbody tr:not(:last-child)) td {
+  border-bottom: 1px solid oklch(var(--bc) / 0.05);
+}
+main .table-zebra tbody tr:nth-child(even) {
+  background: oklch(var(--bc) / 0.018);
+}
+main .table-zebra tbody tr:nth-child(even):hover {
+  background: oklch(var(--p) / 0.045);
+}
+main .table td {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+/* ---------- Campos ---------- */
+main .input,
+main .select,
+main .textarea {
+  border-radius: 0.75rem;
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+main .input:focus,
+main .input:focus-within,
+main .select:focus,
+main .textarea:focus {
+  outline: none;
+  border-color: oklch(var(--p) / 0.6);
+  box-shadow: 0 0 0 3px oklch(var(--p) / 0.14);
+}
+
+/* ---------- Botones ---------- */
+main .btn {
+  border-radius: 0.75rem;
+}
+/* daisyUI deja que el contenido del botón salte de línea: en un botón estrecho
+   el icono quedaba arriba y el texto abajo, fuera del botón. Una sola línea. */
+.btn {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+main .btn-circle {
+  border-radius: 9999px;
+}
+/* Respuesta al pulsar: el botón cede un poco. Rápido, para no frenar. */
+.btn:active:not(:disabled) {
+  scale: 0.97;
+}
+.btn {
+  transition-property: color, background-color, border-color, box-shadow, scale;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-out);
+}
+main .btn-primary {
+  box-shadow: 0 6px 14px -8px oklch(var(--p) / 0.8);
+}
+
+/* ---------- Pestañas tipo "boxed" ---------- */
+main .tabs-boxed {
+  border-radius: 0.9rem;
+  background: oklch(var(--bc) / 0.05);
+}
+main .tabs-boxed .tab {
+  border-radius: 0.65rem;
+}
+main .tabs-boxed .tab-active {
+  box-shadow: 0 4px 10px -6px rgb(15 23 42 / 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:active:not(:disabled) {
+    scale: 1;
+  }
+}
+
+/* Fondo del área de trabajo: un gris apenas tintado del color institucional,
+   para que las tarjetas blancas se separen sin bordes duros. */
+.app-fondo {
+  background:
+    radial-gradient(60rem 30rem at 100% -10%, oklch(var(--p) / 0.05), transparent 70%),
+    oklch(var(--b2));
+}
+
+/* Etiquetas pintadas con el color de cada elemento (sede, área, equipo,
+   categoría…): un color oscuro, como el azul institucional, no se leía sobre el
+   fondo del modo oscuro. Solo en oscuro se aclaran; el color guardado no cambia. */
+:root[data-theme="dark"] main .table [style*="color:"][style*="background"] {
+  filter: brightness(1.9) saturate(1.15);
+}
+
+/* ============================================================================
+   EDITOR DE TEXTO (Quill)
+   El tema "snow" trae bordes y botones grises fijos pensados para fondo blanco:
+   en modo oscuro se veía una caja clara encima de la tarjeta. Se adapta al tema.
+   ============================================================================ */
+main .ql-toolbar.ql-snow {
+  border: 1px solid oklch(var(--bc) / 0.12);
+  border-radius: 0.75rem 0.75rem 0 0;
+  background: oklch(var(--bc) / 0.03);
+}
+main .ql-container.ql-snow {
+  border: 1px solid oklch(var(--bc) / 0.12);
+  border-top: 0;
+  border-radius: 0 0 0.75rem 0.75rem;
+  color: oklch(var(--bc));
+}
+main .ql-toolbar.ql-snow + .ql-container.ql-snow:focus-within {
+  border-color: oklch(var(--p) / 0.5);
+}
+main .ql-snow .ql-stroke {
+  stroke: oklch(var(--bc) / 0.7);
+}
+main .ql-snow .ql-fill {
+  fill: oklch(var(--bc) / 0.7);
+}
+main .ql-snow .ql-picker {
+  color: oklch(var(--bc) / 0.75);
+}
+main .ql-snow .ql-picker-options {
+  background: oklch(var(--b1));
+  border-color: oklch(var(--bc) / 0.12) !important;
+  border-radius: 0.6rem;
+}
+main .ql-editor.ql-blank::before {
+  color: oklch(var(--bc) / 0.45);
+  font-style: normal;
+}
+main .ql-snow.ql-toolbar button:hover .ql-stroke,
+main .ql-snow.ql-toolbar button.ql-active .ql-stroke {
+  stroke: oklch(var(--p));
+}
+:root[data-theme="dark"] main .ql-snow.ql-toolbar button:hover .ql-stroke,
+:root[data-theme="dark"] main .ql-snow.ql-toolbar button.ql-active .ql-stroke {
+  stroke: #7aa7ff;
+}
+
+/* ============ Calendario: contador "+N más" ============ */
+/* Va aquí y no en calendar.component.css: el calendario lo pinta Toast UI
+   fuera de la plantilla, sus nodos no llevan el atributo _ngcontent y la hoja
+   encapsulada del componente no les llega. */
+.calendar-wrap .toastui-calendar-weekday-exceed-in-week {
+  right: 4px;
+  bottom: 3px;
+  margin-right: 0;
+  z-index: 3;
+  padding: 0 7px;
+  border: none;
+  border-radius: 9999px;
+  background-color: oklch(var(--b1));
+  color: oklch(var(--p));
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 18px;
+  box-shadow:
+    0 1px 3px rgb(0 0 0 / 0.25),
+    0 0 0 1px oklch(var(--p) / 0.35);
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .calendar-wrap .toastui-calendar-weekday-exceed-in-week:hover {
+    background-color: oklch(var(--p));
+    color: oklch(var(--pc));
+  }
+}
+
+/* ============ Cuerpo Markdown de la política de privacidad (.privacy-body) ============ */
+/* El HTML lo genera markdownToHtml y entra por [innerHTML]: sus nodos no llevan
+   el atributo _ngcontent, así que en la hoja (encapsulada) del componente estas
+   reglas no se aplicaban nunca. Van aquí, globales y acotadas a .privacy-body.
+   Las usa la página /privacidad y la vista previa de Páginas del Sistema. */
+.privacy-body {
+  @apply text-sm leading-relaxed text-base-content/85;
+}
+
+.privacy-body h1 {
+  @apply text-xl font-bold text-base-content mt-0 mb-3;
+}
+.privacy-body h2 {
+  @apply text-base font-bold text-base-content mt-6 mb-2;
+}
+.privacy-body h3,
+.privacy-body h4,
+.privacy-body h5,
+.privacy-body h6 {
+  @apply text-sm font-semibold text-base-content mt-5 mb-2;
+}
+
+.privacy-body p {
+  @apply mb-3;
+}
+/* El ultimo parrafo antes de la lista no necesita margen doble. */
+.privacy-body > p:last-of-type {
+  @apply mb-0;
+}
+
+.privacy-body ul,
+.privacy-body ol {
+  @apply pl-6 mb-3 space-y-1;
+}
+.privacy-body ul {
+  @apply list-disc;
+}
+.privacy-body ol {
+  @apply list-decimal;
+}
+
+.privacy-body strong {
+  @apply font-semibold text-base-content;
+}
+.privacy-body em {
+  @apply italic;
+}
+
+.privacy-body code {
+  @apply px-1.5 py-0.5 rounded text-[13px] font-mono bg-base-200 text-base-content;
+}
+
+.privacy-body blockquote {
+  @apply my-4 pl-4 py-2 border-l-4 border-warning text-base-content/80;
+}
+.privacy-body blockquote p:last-child {
+  @apply mb-0;
+}
+
+.privacy-body a {
+  @apply link link-primary;
 }

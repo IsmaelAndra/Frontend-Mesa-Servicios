@@ -1,15 +1,12 @@
 <div class="space-y-6">
   <!-- Encabezado -->
-  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div class="flex items-center gap-3">
-      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-regular fa-clock text-2xl"></i>
       </div>
       <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Gestión de SLA</h1>
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">Gestión de SLA</h1>
         <p class="text-sm opacity-70">Configura políticas, reglas y escalaciones</p>
       </div>
     </div>
@@ -17,27 +14,16 @@
     <!-- Tabs -->
     <div role="tablist" class="tabs tabs-boxed bg-base-200 p-1">
       <a role="tab" class="tab gap-2" [class.tab-active]="activeTab === 'policies'" (click)="activeTab = 'policies'">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-          aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
+        <i class="fa-solid fa-file-lines text-[15px]" aria-hidden="true"></i>
         Políticas
       </a>
       <a role="tab" class="tab gap-2" [class.tab-active]="activeTab === 'rules'" (click)="activeTab = 'rules'">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-          aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-        </svg>
+        <i class="fa-solid fa-clipboard-check text-[15px]" aria-hidden="true"></i>
         Reglas
       </a>
       <a role="tab" class="tab gap-2" [class.tab-active]="activeTab === 'escalations'"
         (click)="activeTab = 'escalations'">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-          aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-        </svg>
+        <i class="fa-solid fa-arrow-trend-up text-[15px]" aria-hidden="true"></i>
         Escalaciones
       </a>
     </div>
@@ -49,20 +35,13 @@
       <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
         <div class="flex items-center gap-2">
           <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+<i class="fa-solid fa-file-lines text-[15px]"></i>
           </div>
           <h3 class="card-title text-base">Políticas SLA</h3>
           <span class="badge badge-sm badge-ghost">{{ policies.length || 0 }}</span>
         </div>
         <button class="btn btn-primary btn-sm gap-2" (click)="showNewPolicy = !showNewPolicy">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
+          <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
           {{ showNewPolicy ? 'Cerrar' : 'Nueva Política' }}
         </button>
       </div>
@@ -108,14 +87,40 @@
               class="input input-bordered input-sm w-full" placeholder="Descripción" />
           </label>
 
+          <div class="form-control w-full">
+            <div class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Icono (Font Awesome)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
+                [style.background-color]="(newPolicy.colorSlaPolicy || '#D97706') + '22'"
+                [style.color]="newPolicy.colorSlaPolicy || '#D97706'"
+                aria-hidden="true">
+                <i [class]="policyIcon(newPolicy)" class="text-[15px]"></i>
+              </span>
+              <input [(ngModel)]="newPolicy.iconSlaPolicy" name="iconSlaPolicy"
+                class="input input-bordered input-sm w-full font-mono" placeholder="fa-solid fa-clock" />
+            </div>
+          </div>
+
+          <div class="form-control w-full">
+            <div class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Color</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="color" [(ngModel)]="newPolicy.colorSlaPolicy" name="colorSlaPolicy"
+                class="w-10 h-9 shrink-0 cursor-pointer rounded-lg border border-base-300 p-0.5"
+                aria-label="Color de la política" />
+              <input [(ngModel)]="newPolicy.colorSlaPolicy" name="colorSlaPolicyHex"
+                class="input input-bordered input-sm w-full font-mono" placeholder="#D97706" />
+            </div>
+          </div>
+
           <div class="md:col-span-4 flex justify-end gap-2 pt-2 border-t border-base-300">
             <button type="button" class="btn btn-sm btn-ghost" (click)="showNewPolicy = false">Cancelar</button>
             <button type="submit" class="btn btn-sm btn-primary gap-2"
               [disabled]="!newPolicy.nameSlaPolicy || !newPolicy.responseTimeMinutes || !newPolicy.resolutionTimeMinutes">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
+              <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
               Crear política
             </button>
           </div>
@@ -136,75 +141,159 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let p of policies" class="hover:bg-base-200/50 transition-colors">
-              <td>
-                <div class="flex items-center gap-2">
-                  <div class="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
+            <ng-container *ngFor="let p of policies">
+              <!-- Modo edición -->
+              <tr *ngIf="editPolicy?.idSlaPolicy === p.idSlaPolicy" class="bg-base-200/50">
+                <td colspan="6">
+                  <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 p-2 items-end">
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Nombre</span>
+                      </div>
+                      <input [(ngModel)]="editPolicy!.nameSlaPolicy" class="input input-bordered input-sm w-full" />
+                    </div>
+
+                    <div class="form-control md:col-span-2">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Descripción</span>
+                      </div>
+                      <input [(ngModel)]="editPolicy!.descriptionSlaPolicy" class="input input-bordered input-sm w-full" />
+                    </div>
+
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Respuesta (min)</span>
+                      </div>
+                      <input type="number" min="1" [(ngModel)]="editPolicy!.responseTimeMinutes"
+                        class="input input-bordered input-sm w-full" />
+                    </div>
+
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Resolución (min)</span>
+                      </div>
+                      <input type="number" min="1" [(ngModel)]="editPolicy!.resolutionTimeMinutes"
+                        class="input input-bordered input-sm w-full" />
+                    </div>
+
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Icono</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
+                          [style.background-color]="policyColor(editPolicy!) + '22'"
+                          [style.color]="policyColor(editPolicy!)"
+                          aria-hidden="true">
+                          <i [class]="policyIcon(editPolicy!)" class="text-[15px]"></i>
+                        </span>
+                        <input [(ngModel)]="editPolicy!.iconSlaPolicy"
+                          class="input input-bordered input-sm w-full font-mono" placeholder="fa-solid fa-clock" />
+                      </div>
+                    </div>
+
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Color</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <input type="color" [(ngModel)]="editPolicy!.colorSlaPolicy"
+                          class="w-9 h-8 shrink-0 cursor-pointer rounded-lg border border-base-300 p-0.5"
+                          aria-label="Color de la política" />
+                        <input [(ngModel)]="editPolicy!.colorSlaPolicy"
+                          class="input input-bordered input-sm w-full font-mono" />
+                      </div>
+                    </div>
+
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Estado</span>
+                      </div>
+                      <label class="h-8 px-2 border border-base-300 rounded-lg flex items-center gap-2 cursor-pointer bg-base-100">
+                        <input type="checkbox" class="checkbox checkbox-primary checkbox-sm"
+                          [(ngModel)]="editPolicy!.activeSlaPolicy" />
+                        <span class="text-sm">
+                          {{ editPolicy!.activeSlaPolicy ? 'Activa' : 'Inactiva' }}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div class="col-span-2 md:col-span-4 xl:col-span-6 flex justify-end gap-2 pt-2 border-t border-base-300">
+                      <button class="btn btn-sm btn-ghost gap-1" (click)="cancelEditPolicy()">
+                        <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i>
+                        Cancelar
+                      </button>
+                      <button class="btn btn-sm btn-primary gap-1" (click)="saveEditPolicy()">
+                        <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
+                        Guardar
+                      </button>
+                    </div>
                   </div>
-                  <span class="font-medium">{{ p.nameSlaPolicy }}</span>
-                </div>
-              </td>
-              <td class="opacity-80 max-w-xs truncate" [title]="p.descriptionSlaPolicy">
-                {{ p.descriptionSlaPolicy || '—' }}
-              </td>
-              <td>
-                <span class="badge badge-sm badge-outline gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                  </svg>
-                  {{ p.responseTimeMinutes }} min
-                </span>
-              </td>
-              <td>
-                <span class="badge badge-sm badge-outline gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {{ p.resolutionTimeMinutes }} min
-                </span>
-              </td>
-              <td>
-                <span class="badge badge-sm gap-1" [ngClass]="p.activeSlaPolicy ? 'badge-success' : 'badge-error'">
-                  <svg *ngIf="p.activeSlaPolicy" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <svg *ngIf="!p.activeSlaPolicy" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  {{ p.activeSlaPolicy ? 'Activa' : 'Inactiva' }}
-                </span>
-              </td>
-              <td class="text-right">
-                <button class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1" (click)="deletePolicy(p)"
-                  aria-label="Eliminar política">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Eliminar
-                </button>
-              </td>
-            </tr>
+                </td>
+              </tr>
+
+              <!-- Modo lectura -->
+              <tr *ngIf="editPolicy?.idSlaPolicy !== p.idSlaPolicy" class="hover:bg-base-200/50 transition-colors">
+                <td>
+                  <div class="flex items-center gap-2">
+                    <div
+                      class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
+                      [style.background-color]="policyColor(p) + '22'"
+                      [style.color]="policyColor(p)"
+                      aria-hidden="true"
+                    >
+                      <i [class]="policyIcon(p)" class="text-[15px]"></i>
+                    </div>
+                    <span
+                      class="badge badge-sm gap-1.5 font-medium min-w-0 uppercase"
+                      [style.background-color]="policyColor(p) + '22'"
+                      [style.color]="policyColor(p)  + '!important'"
+                    >
+                      {{ p.nameSlaPolicy }}
+                    </span>
+                  </div>
+                </td>
+                <td class="opacity-80 max-w-xs truncate" [title]="p.descriptionSlaPolicy">
+                  {{ p.descriptionSlaPolicy || '—' }}
+                </td>
+                <td>
+                  <span class="badge badge-sm badge-outline gap-1">
+                    <i class="fa-solid fa-comment text-xs" aria-hidden="true"></i>
+                    {{ duracion(p.responseTimeMinutes) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-sm badge-outline gap-1">
+                    <i class="fa-solid fa-circle-check text-xs" aria-hidden="true"></i>
+                    {{ duracion(p.resolutionTimeMinutes) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-sm gap-1" [ngClass]="p.activeSlaPolicy ? 'badge-success' : 'badge-error'">
+                    <i *ngIf="p.activeSlaPolicy" class="fa-solid fa-check text-xs" aria-hidden="true"></i>
+                    <i *ngIf="!p.activeSlaPolicy" class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+                    {{ p.activeSlaPolicy ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+                <td class="text-right">
+                  <div class="flex justify-end gap-1 whitespace-nowrap">
+                    <button class="btn btn-xs btn-ghost gap-1" (click)="startEditPolicy(p)" aria-label="Editar política">
+                      <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
+                      Editar
+                    </button>
+                    <button class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1" (click)="deletePolicy(p)"
+                      aria-label="Eliminar política">
+                      <i class="fa-solid fa-trash text-sm" aria-hidden="true"></i>
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
             <tr *ngIf="!policies || policies.length === 0">
               <td colspan="6">
                 <div class="flex flex-col items-center justify-center py-10 gap-2 opacity-70">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+                  <i class="fa-solid fa-file-lines text-3xl" aria-hidden="true"></i>
                   <span class="text-sm">No hay políticas registradas</span>
                 </div>
               </td>
@@ -221,20 +310,13 @@
       <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
         <div class="flex items-center gap-2">
           <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
+<i class="fa-solid fa-clipboard-check text-[15px]"></i>
           </div>
           <h3 class="card-title text-base">Reglas SLA</h3>
           <span class="badge badge-sm badge-ghost">{{ rules.length || 0 }}</span>
         </div>
         <button class="btn btn-primary btn-sm gap-2" (click)="showNewRule = !showNewRule">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
+          <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
           {{ showNewRule ? 'Cerrar' : 'Nueva Regla' }}
         </button>
       </div>
@@ -253,58 +335,77 @@
             </select>
           </label>
 
-          <label class="form-control w-full">
-            <div class="label pt-0 pb-1">
-              <span class="label-text text-xs font-medium">Área <span class="text-error">*</span></span>
+<!--
+              Antes era un <select> con <span>/<i> dentro de cada <option>: el
+              navegador descarta ese markup, así que el icono nunca se veía y solo
+              quedaba el punto de color. app-master-select sí pinta cada fila.
+            -->
+            <div class="form-control w-full">
+              <div class="label pt-0 pb-1">
+                <span class="label-text text-xs font-medium">Área <span class="text-error">*</span></span>
+              </div>
+              <app-master-select
+                [(ngModel)]="newRule.areaId"
+                name="areaId"
+                [options]="areaOptions()"
+                [allowEmpty]="false"
+                placeholder="Seleccione área"
+                label="Área"
+              ></app-master-select>
             </div>
-            <select [(ngModel)]="newRule.areaId" name="areaId" class="select select-bordered select-sm w-full" required>
-              <option [ngValue]="null" disabled>Seleccione área</option>
-              <option *ngFor="let a of areas" [ngValue]="a.idArea">{{ a.nameArea }}</option>
-            </select>
-          </label>
 
-          <label class="form-control w-full">
-            <div class="label pt-0 pb-1">
-              <span class="label-text text-xs font-medium">Prioridad <span class="text-error">*</span></span>
+            <div class="form-control w-full">
+              <div class="label pt-0 pb-1">
+                <span class="label-text text-xs font-medium">Prioridad <span class="text-error">*</span></span>
+              </div>
+              <app-master-select
+                [(ngModel)]="newRule.priorityId"
+                name="priorityId"
+                [options]="priorityOptions()"
+                [allowEmpty]="false"
+                placeholder="Seleccione prioridad"
+                label="Prioridad"
+              ></app-master-select>
             </div>
-            <select [(ngModel)]="newRule.priorityId" name="priorityId" class="select select-bordered select-sm w-full"
-              required>
-              <option [ngValue]="null" disabled>Seleccione prioridad</option>
-              <option *ngFor="let p of priorities" [ngValue]="p.id">{{ p.name }}</option>
-            </select>
-          </label>
 
-          <label class="form-control w-full">
-            <div class="label pt-0 pb-1">
-              <span class="label-text text-xs font-medium">Categoría</span>
+            <div class="form-control w-full">
+              <div class="label pt-0 pb-1">
+                <span class="label-text text-xs font-medium">Categoría</span>
+              </div>
+              <app-master-select
+                [(ngModel)]="newRule.categoryId"
+                name="categoryId"
+                [options]="categoryOptions()"
+                [allowEmpty]="true"
+                emptyLabel="Todas"
+                placeholder="Todas"
+                label="Categoría"
+              ></app-master-select>
             </div>
-            <select [(ngModel)]="newRule.categoryId" name="categoryId" class="select select-bordered select-sm w-full">
-              <option [ngValue]="null">Todas</option>
-              <option *ngFor="let c of categories" [ngValue]="c.id">{{ c.name }}</option>
-            </select>
-          </label>
 
-          <label class="form-control w-full">
-            <div class="label pt-0 pb-1">
-              <span class="label-text text-xs font-medium">
-                Tipo de ticket
-                <span class="badge badge-ghost badge-xs ml-1">Opcional</span>
-              </span>
+            <div class="form-control w-full">
+              <div class="label pt-0 pb-1">
+                <span class="label-text text-xs font-medium">
+                  Tipo de ticket
+                  <span class="badge badge-ghost badge-xs ml-1">Opcional</span>
+                </span>
+              </div>
+              <app-master-select
+                [(ngModel)]="newRule.typeId"
+                name="typeId"
+                [options]="ticketTypeOptions()"
+                [allowEmpty]="true"
+                emptyLabel="Todos"
+                placeholder="Todos"
+                label="Tipo de ticket"
+              ></app-master-select>
             </div>
-            <select [(ngModel)]="newRule.typeId" name="typeId" class="select select-bordered select-sm w-full">
-              <option [ngValue]="null">Todos</option>
-              <option *ngFor="let t of ticketTypes" [ngValue]="t.id">{{ t.name }}</option>
-            </select>
-          </label>
 
           <div class="md:col-span-4 flex justify-end gap-2 pt-2 border-t border-base-300">
             <button type="button" class="btn btn-sm btn-ghost" (click)="showNewRule = false">Cancelar</button>
             <button type="submit" class="btn btn-sm btn-primary gap-2"
               [disabled]="!newRule.slaPolicyId || !newRule.areaId || !newRule.priorityId">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
+              <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
               Crear regla
             </button>
           </div>
@@ -325,65 +426,177 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let r of rules" class="hover:bg-base-200/50 transition-colors">
-              <td>
-                <span class="badge badge-sm badge-primary gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  {{ getPolicyName(r.slaPolicyId) }}
-                </span>
-              </td>
-              <td class="opacity-80">{{ getAreaName(r.areaId) }}</td>
-              <td>
-                <span class="badge badge-sm badge-outline">{{ getPriorityName(r.priorityId) }}</span>
-              </td>
-              <td>
-                <span *ngIf="r.categoryId" class="badge badge-sm badge-ghost gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                  {{ getCategoryName(r.categoryId) }}
-                </span>
-                <span *ngIf="!r.categoryId" class="text-xs opacity-60 italic">Todas</span>
-              </td>
-              <td>
-                <span class="badge badge-sm gap-1" [ngClass]="r.activeSlaRule ? 'badge-success' : 'badge-error'">
-                  <svg *ngIf="r.activeSlaRule" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <svg *ngIf="!r.activeSlaRule" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  {{ r.activeSlaRule ? 'Activa' : 'Inactiva' }}
-                </span>
-              </td>
-              <td class="text-right">
-                <button class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1" (click)="deleteRule(r)"
-                  aria-label="Eliminar regla">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Eliminar
-                </button>
-              </td>
-            </tr>
+            <ng-container *ngFor="let r of pagRules.vista">
+              <!-- Modo edición -->
+              <tr *ngIf="editRule?.idSlaRule === r.idSlaRule" class="bg-base-200/50">
+                <td colspan="6">
+                  <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 p-2 items-end">
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Política</span>
+                      </div>
+                      <select [(ngModel)]="editRule!.slaPolicyId" class="select select-bordered select-sm w-full">
+                        <option *ngFor="let p of policies" [ngValue]="p.idSlaPolicy">{{ p.nameSlaPolicy }}</option>
+                      </select>
+                    </div>
+
+<div class="form-control">
+                        <div class="label pt-0 pb-1">
+                          <span class="label-text text-xs font-medium">Área</span>
+                        </div>
+                        <app-master-select
+                          [(ngModel)]="editRule!.areaId"
+                          [options]="areaOptions()"
+                          [allowEmpty]="false"
+                          label="Área"
+                        ></app-master-select>
+                      </div>
+
+                      <div class="form-control">
+                        <div class="label pt-0 pb-1">
+                          <span class="label-text text-xs font-medium">Prioridad</span>
+                        </div>
+                        <app-master-select
+                          [(ngModel)]="editRule!.priorityId"
+                          [options]="priorityOptions()"
+                          [allowEmpty]="false"
+                          label="Prioridad"
+                        ></app-master-select>
+                      </div>
+
+                      <div class="form-control">
+                        <div class="label pt-0 pb-1">
+                          <span class="label-text text-xs font-medium">Categoría</span>
+                        </div>
+                        <app-master-select
+                          [(ngModel)]="editRule!.categoryId"
+                          [options]="categoryOptions()"
+                          [allowEmpty]="true"
+                          emptyLabel="Todas"
+                          placeholder="Todas"
+                          label="Categoría"
+                        ></app-master-select>
+                      </div>
+
+                      <div class="form-control">
+                        <div class="label pt-0 pb-1">
+                          <span class="label-text text-xs font-medium">Tipo</span>
+                        </div>
+                        <app-master-select
+                          [(ngModel)]="editRule!.typeId"
+                          [options]="ticketTypeOptions()"
+                          [allowEmpty]="true"
+                          emptyLabel="Todos"
+                          placeholder="Todos"
+                          label="Tipo de ticket"
+                        ></app-master-select>
+                      </div>
+
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Estado</span>
+                      </div>
+                      <label
+                        class="h-8 px-2 border border-base-300 rounded-lg flex items-center gap-2 cursor-pointer bg-base-100"
+                      >
+                        <input
+                          type="checkbox"
+                          class="checkbox checkbox-primary checkbox-sm"
+                          [(ngModel)]="editRule!.activeSlaRule"
+                        />
+                        <span class="text-sm">
+                          {{ editRule!.activeSlaRule ? 'Activa' : 'Inactiva' }}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div class="col-span-2 md:col-span-3 xl:col-span-6 flex justify-end gap-2 pt-2 border-t border-base-300">
+                      <button class="btn btn-sm btn-ghost gap-1" (click)="cancelEditRule()">
+                        <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i>
+                        Cancelar
+                      </button>
+                      <button
+                        class="btn btn-sm btn-primary gap-1"
+                        (click)="saveEditRule()"
+                        [disabled]="!editRule!.slaPolicyId || !editRule!.areaId || !editRule!.priorityId"
+                      >
+                        <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
+                        Guardar
+                      </button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Modo lectura -->
+              <tr *ngIf="editRule?.idSlaRule !== r.idSlaRule" class="hover:bg-base-200/50 transition-colors">
+                <td>
+                  <span
+                    class="badge badge-sm gap-1.5"
+                    [style.background-color]="policyMeta(r.slaPolicyId).color + '22'"
+                    [style.color]="policyMeta(r.slaPolicyId).color"
+                  >
+                    <i [class]="policyMeta(r.slaPolicyId).icon" class="text-xs" aria-hidden="true"></i>
+                    {{ getPolicyName(r.slaPolicyId) }}
+                  </span>
+                </td>
+                <td>
+                  <span
+                    class="badge badge-sm gap-1.5"
+                    [style.background-color]="areaMeta(r.areaId).color + '22'"
+                    [style.color]="areaMeta(r.areaId).color"
+                  >
+                    <i [class]="areaMeta(r.areaId).icon" class="text-xs" aria-hidden="true"></i>
+                    {{ getAreaName(r.areaId) }}
+                  </span>
+                </td>
+                <td>
+                  <span
+                    class="badge badge-sm gap-1.5"
+                    [style.background-color]="priorityMeta(r.priorityId).color + '22'"
+                    [style.color]="priorityMeta(r.priorityId).color"
+                  >
+                    <i [class]="priorityMeta(r.priorityId).icon" class="text-xs" aria-hidden="true"></i>
+                    {{ getPriorityName(r.priorityId) }}
+                  </span>
+                </td>
+                <td>
+                  <span *ngIf="r.categoryId; else todasCategorias" class="badge badge-sm gap-1.5"
+                    [style.background-color]="categoryMeta(r.categoryId).color + '22'"
+                    [style.color]="categoryMeta(r.categoryId).color">
+                    <i [class]="categoryMeta(r.categoryId).icon" class="text-xs" aria-hidden="true"></i>
+                    {{ getCategoryName(r.categoryId) }}
+                  </span>
+                  <ng-template #todasCategorias>
+                    <span class="text-xs opacity-60 italic">Todas</span>
+                  </ng-template>
+                </td>
+                <td>
+                  <span class="badge badge-sm gap-1" [ngClass]="r.activeSlaRule ? 'badge-success' : 'badge-error'">
+                    <i *ngIf="r.activeSlaRule" class="fa-solid fa-check text-xs" aria-hidden="true"></i>
+                    <i *ngIf="!r.activeSlaRule" class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+                    {{ r.activeSlaRule ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+                <td class="text-right">
+                  <div class="flex justify-end gap-1 whitespace-nowrap">
+                    <button class="btn btn-xs btn-ghost gap-1" (click)="startEditRule(r)" aria-label="Editar regla">
+                      <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
+                      Editar
+                    </button>
+                    <button class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1" (click)="deleteRule(r)"
+                      aria-label="Eliminar regla">
+                      <i class="fa-solid fa-trash text-sm" aria-hidden="true"></i>
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
             <tr *ngIf="!rules || rules.length === 0">
               <td colspan="6">
                 <div class="flex flex-col items-center justify-center py-10 gap-2 opacity-70">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                  </svg>
+                  <i class="fa-solid fa-clipboard-check text-3xl" aria-hidden="true"></i>
                   <span class="text-sm">No hay reglas registradas</span>
                 </div>
               </td>
@@ -391,6 +604,13 @@
           </tbody>
         </table>
       </div>
+      <app-paginator
+        [total]="rules.length"
+        [page]="pagRules.page"
+        [pageSize]="pagRules.pageSize"
+        (pageChange)="pagRules.cambiarPagina($event)"
+        (pageSizeChange)="pagRules.cambiarTamano($event)"
+      ></app-paginator>
     </div>
   </div>
 
@@ -400,20 +620,13 @@
       <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
         <div class="flex items-center gap-2">
           <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
+<i class="fa-solid fa-arrow-trend-up text-[15px]"></i>
           </div>
           <h3 class="card-title text-base">Escalaciones</h3>
           <span class="badge badge-sm badge-ghost">{{ escalations.length || 0 }}</span>
         </div>
         <button class="btn btn-primary btn-sm gap-2" (click)="showNewEscalation = !showNewEscalation">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
+          <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
           {{ showNewEscalation ? 'Cerrar' : 'Nueva Escalación' }}
         </button>
       </div>
@@ -449,31 +662,48 @@
             </div>
             <select [(ngModel)]="newEscalation.actionType" name="actionType"
               class="select select-bordered select-sm w-full" required>
-              <option value="NOTIFY_SUPERVISOR">🔔 Notificar Supervisor</option>
-              <option value="ESCALATE">⬆️ Escalar</option>
-              <option value="REASSIGN">🔀 Reasignar</option>
+              <option value="NOTIFY_SUPERVISOR">Notificar Supervisor</option>
+              <option value="ESCALATE">Escalar</option>
+              <option value="REASSIGN">Reasignar</option>
             </select>
           </label>
 
+<div class="form-control w-full">
+              <div class="label pt-0 pb-1">
+                <span class="label-text text-xs font-medium">Equipo destino</span>
+              </div>
+              <app-master-select
+                [(ngModel)]="newEscalation.destinationTeamId"
+                name="destinationTeamId"
+                [options]="teamOptions()"
+                [allowEmpty]="true"
+                emptyLabel="Ninguno"
+                placeholder="Ninguno"
+                label="Equipo destino"
+              ></app-master-select>
+            </div>
+
           <label class="form-control w-full">
             <div class="label pt-0 pb-1">
-              <span class="label-text text-xs font-medium">Equipo destino</span>
+              <span class="label-text text-xs font-medium">Plantilla de notificación</span>
             </div>
-            <select [(ngModel)]="newEscalation.destinationTeamId" name="destinationTeamId"
+            <select [(ngModel)]="newEscalation.notificationTemplateId" name="notificationTemplateId"
               class="select select-bordered select-sm w-full">
-              <option [ngValue]="null">Ninguno</option>
-              <option *ngFor="let t of teams" [ngValue]="t.idTeam">{{ t.nameTeam }}</option>
+              <option [ngValue]="null">Sin plantilla</option>
+              <option *ngFor="let t of templates" [ngValue]="t.idTemplate">{{ t.nameTemplate }}</option>
             </select>
+            <div class="label pt-1">
+              <span class="label-text-alt text-xs opacity-60">
+                Correo que recibe el supervisor o el equipo al ejecutarse la escalación.
+              </span>
+            </div>
           </label>
 
           <div class="md:col-span-3 flex justify-end gap-2 pt-2 border-t border-base-300">
             <button type="button" class="btn btn-sm btn-ghost" (click)="showNewEscalation = false">Cancelar</button>
             <button type="submit" class="btn btn-sm btn-primary gap-2"
               [disabled]="!newEscalation.slaPolicyId || !newEscalation.triggerPercentage || !newEscalation.actionType">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
+              <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
               Crear escalación
             </button>
           </div>
@@ -489,83 +719,152 @@
               <th class="text-center">Disparo</th>
               <th class="text-center">Acción</th>
               <th class="text-center">Equipo destino</th>
+              <th class="text-center">Plantilla</th>
               <th class="text-center rounded-tr-lg">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let e of escalations" class="hover:bg-base-200/50 transition-colors">
-              <td>
-                <span class="badge badge-sm badge-primary gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  {{ getPolicyName(e.slaPolicyId) }}
-                </span>
-              </td>
-              <td>
-                <div class="flex flex-col items-center gap-1">
-                  <span class="badge badge-sm badge-outline font-mono">{{ e.triggerPercentage }}%</span>
-                  <progress class="progress progress-primary w-20 h-1.5" [value]="e.triggerPercentage"
-                    max="100"></progress>
-                </div>
-              </td>
-              <td>
-                <span class="badge badge-sm gap-1" [ngClass]="{
-                    'badge-warning': e.actionType === 'NOTIFY_SUPERVISOR',
-                    'badge-error': e.actionType === 'ESCALATE',
-                    'badge-info': e.actionType === 'REASSIGN'
-                  }">
-                  <svg *ngIf="e.actionType === 'NOTIFY_SUPERVISOR'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3"
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  <svg *ngIf="e.actionType === 'ESCALATE'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3"
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                  </svg>
-                  <svg *ngIf="e.actionType === 'REASSIGN'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3"
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                  </svg>
-                  {{ e.actionType }}
-                </span>
-              </td>
-              <td>
-                <span *ngIf="e.destinationTeamId" class="badge badge-sm badge-outline gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {{ getTeamName(e.destinationTeamId) }}
-                </span>
-                <span *ngIf="!e.destinationTeamId" class="opacity-50">—</span>
-              </td>
-              <td class="text-right">
-                <button class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1" (click)="deleteEscalation(e)"
-                  aria-label="Eliminar escalación">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Eliminar
-                </button>
-              </td>
-            </tr>
+            <ng-container *ngFor="let e of pagEscalations.vista">
+              <!-- Modo edición -->
+              <tr *ngIf="editEscalation?.idEscalation === e.idEscalation" class="bg-base-200/50">
+                <td colspan="6">
+                  <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 p-2 items-end">
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Política</span>
+                      </div>
+                      <select [(ngModel)]="editEscalation!.slaPolicyId"
+                        class="select select-bordered select-sm w-full">
+                        <option *ngFor="let p of policies" [ngValue]="p.idSlaPolicy">{{ p.nameSlaPolicy }}</option>
+                      </select>
+                    </div>
+
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Disparo (%)</span>
+                      </div>
+                      <input type="number" min="1" max="100" [(ngModel)]="editEscalation!.triggerPercentage"
+                        class="input input-bordered input-sm w-full" />
+                    </div>
+
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Acción</span>
+                      </div>
+                      <select [(ngModel)]="editEscalation!.actionType"
+                        class="select select-bordered select-sm w-full">
+                        <option value="NOTIFY_SUPERVISOR">Notificar Supervisor</option>
+                        <option value="ESCALATE">Escalar</option>
+                        <option value="REASSIGN">Reasignar</option>
+                      </select>
+                    </div>
+
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Equipo destino</span>
+                      </div>
+<app-master-select
+                          [(ngModel)]="editEscalation!.destinationTeamId"
+                          [options]="teamOptions()"
+                          [allowEmpty]="true"
+                          emptyLabel="Ninguno"
+                          placeholder="Ninguno"
+                          label="Equipo destino"
+                        ></app-master-select>
+                    </div>
+
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Plantilla</span>
+                      </div>
+                      <select [(ngModel)]="editEscalation!.notificationTemplateId"
+                        class="select select-bordered select-sm w-full">
+                        <option [ngValue]="null">Sin plantilla</option>
+                        <option *ngFor="let t of templates" [ngValue]="t.idTemplate">{{ t.nameTemplate }}</option>
+                      </select>
+                    </div>
+
+                    <div class="col-span-2 md:col-span-3 xl:col-span-5 flex justify-end gap-2 pt-2 border-t border-base-300">
+                      <button class="btn btn-sm btn-ghost gap-1" (click)="cancelEditEscalation()">
+                        <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i>
+                        Cancelar
+                      </button>
+                      <button class="btn btn-sm btn-primary gap-1" (click)="saveEditEscalation()">
+                        <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
+                        Guardar
+                      </button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Modo lectura -->
+              <tr *ngIf="editEscalation?.idEscalation !== e.idEscalation"
+                class="hover:bg-base-200/50 transition-colors">
+                <td>
+                  <span class="badge badge-sm gap-1.5" [ngClass]="'badge-primary'">
+                    <i class="fa-solid fa-shield-halved text-xs" aria-hidden="true"></i>
+                    {{ getPolicyName(e.slaPolicyId) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="flex flex-col items-center gap-1">
+                    <span class="badge badge-sm badge-outline font-mono">{{ e.triggerPercentage }}%</span>
+                    <progress class="progress progress-primary w-20 h-1.5" [value]="e.triggerPercentage"
+                      max="100"></progress>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge badge-sm gap-1" [ngClass]="{
+                      'badge-warning': e.actionType === 'NOTIFY_SUPERVISOR',
+                      'badge-error': e.actionType === 'ESCALATE',
+                      'badge-info': e.actionType === 'REASSIGN'
+                    }">
+                    <i *ngIf="e.actionType === 'NOTIFY_SUPERVISOR'" class="fa-regular fa-bell text-xs" aria-hidden="true"></i>
+                    <i *ngIf="e.actionType === 'ESCALATE'" class="fa-solid fa-arrow-up text-xs" aria-hidden="true"></i>
+                    <i *ngIf="e.actionType === 'REASSIGN'" class="fa-solid fa-arrow-right-arrow-left text-xs" aria-hidden="true"></i>
+                    {{ e.actionType }}
+                  </span>
+                </td>
+                <td>
+                  <span *ngIf="e.destinationTeamId" class="badge badge-sm badge-outline gap-1">
+                    <i class="fa-solid fa-users text-xs" aria-hidden="true"></i>
+                    {{ getTeamName(e.destinationTeamId) }}
+                  </span>
+                  <span *ngIf="!e.destinationTeamId" class="opacity-50">—</span>
+                </td>
+                <td>
+                  <span *ngIf="e.notificationTemplateId; else sinPlantilla"
+                    class="badge badge-sm gap-1.5"
+                    [style.background-color]="templateColor(e.notificationTemplateId) + '22'"
+                    [style.color]="templateColor(e.notificationTemplateId)">
+                    <i [class]="templateIcon(e.notificationTemplateId)" class="text-xs" aria-hidden="true"></i>
+                    {{ templateName(e.notificationTemplateId) }}
+                  </span>
+                  <ng-template #sinPlantilla>
+                    <span class="opacity-50 text-xs">Sin plantilla</span>
+                  </ng-template>
+                </td>
+                <td class="text-right">
+                  <div class="flex justify-end gap-1 whitespace-nowrap">
+                    <button class="btn btn-xs btn-ghost gap-1" (click)="startEditEscalation(e)"
+                      aria-label="Editar escalación">
+                      <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
+                      Editar
+                    </button>
+                    <button class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1" (click)="deleteEscalation(e)"
+                      aria-label="Eliminar escalación">
+                      <i class="fa-solid fa-trash text-sm" aria-hidden="true"></i>
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
             <tr *ngIf="!escalations || escalations.length === 0">
-              <td colspan="5">
+              <td colspan="6">
                 <div class="flex flex-col items-center justify-center py-10 gap-2 opacity-70">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
+                  <i class="fa-solid fa-arrow-trend-up text-3xl" aria-hidden="true"></i>
                   <span class="text-sm">No hay escalaciones registradas</span>
                 </div>
               </td>
@@ -573,6 +872,13 @@
           </tbody>
         </table>
       </div>
+      <app-paginator
+        [total]="escalations.length"
+        [page]="pagEscalations.page"
+        [pageSize]="pagEscalations.pageSize"
+        (pageChange)="pagEscalations.cambiarPagina($event)"
+        (pageSizeChange)="pagEscalations.cambiarTamano($event)"
+      ></app-paginator>
     </div>
   </div>
 </div>

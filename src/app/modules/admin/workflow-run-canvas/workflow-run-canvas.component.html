@@ -1,0 +1,298 @@
+<div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px]">
+
+  <!-- ============================ LIENZO ============================ -->
+  <div class="relative rounded-xl border border-base-200 bg-base-200/40 overflow-hidden">
+
+    <!-- Controles -->
+    <div class="flex flex-wrap items-center gap-1.5 px-3 py-2 border-b border-base-200 bg-base-100/80 backdrop-blur-sm">
+      <span
+        *ngIf="enVivo()"
+        class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-error/10 text-error text-[11px] font-semibold"
+      >
+        <span class="run-directo" aria-hidden="true"></span>
+        En vivo
+      </span>
+      <span
+        *ngIf="!enVivo()"
+        class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-base-200 text-base-content/70 text-[11px] font-semibold"
+      >
+        <i class="fa-solid fa-clapperboard text-[10px]" aria-hidden="true"></i>
+        Repetición
+      </span>
+
+      <div class="flex items-center gap-0.5 ml-auto">
+        <button
+          type="button"
+          class="btn btn-ghost btn-xs btn-square"
+          (click)="alternarPausa()"
+          [attr.aria-label]="terminado() ? 'Repetir' : pausado() ? 'Reanudar' : 'Pausar'"
+          [title]="terminado() ? 'Repetir' : pausado() ? 'Reanudar' : 'Pausar'"
+        >
+          <i
+            class="fa-solid text-xs"
+            [ngClass]="terminado() ? 'fa-rotate-left' : pausado() ? 'fa-play' : 'fa-pause'"
+            aria-hidden="true"
+          ></i>
+        </button>
+        <button
+          type="button"
+          class="btn btn-ghost btn-xs font-mono tabular-nums w-9"
+          (click)="cambiarVelocidad()"
+          [attr.aria-label]="'Velocidad ' + velocidad() + 'x'"
+          title="Velocidad"
+        >
+          {{ velocidad() }}×
+        </button>
+        <button
+          type="button"
+          class="btn btn-ghost btn-xs btn-square"
+          (click)="saltarAlFinal()"
+          [disabled]="terminado()"
+          aria-label="Ir al final"
+          title="Ir al final"
+        >
+          <i class="fa-solid fa-forward-step text-xs" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+
+    <div #marco class="overflow-auto run-marco" [style.height.px]="alto">
+      <div
+        class="relative"
+        [style.width.px]="limites().w * escala()"
+        [style.height.px]="limites().h * escala()"
+      >
+        <div
+          class="absolute top-0 left-0 origin-top-left"
+          [style.width.px]="limites().w"
+          [style.height.px]="limites().h"
+          [style.transform]="'scale(' + escala() + ')'"
+        >
+          <!-- Conectores -->
+          <svg
+            class="absolute inset-0 overflow-visible"
+            [attr.width]="limites().w"
+            [attr.height]="limites().h"
+            [attr.viewBox]="limites().minX + ' ' + limites().minY + ' ' + limites().w + ' ' + limites().h"
+            aria-hidden="true"
+          >
+            <defs>
+              <!-- Una punta por color: el marcador no hereda el color del trazo. -->
+              <marker
+                *ngFor="let m of marcasLineas(); trackBy: trackMarca"
+                [attr.id]="'runPunta-' + m.id"
+                markerWidth="10"
+                markerHeight="10"
+                refX="8"
+                refY="3"
+                orient="auto"
+                markerUnits="strokeWidth"
+              >
+                <path d="M0,0 L0,6 L9,3 z" [style.fill]="m.color" />
+              </marker>
+            </defs>
+
+            <g
+              *ngFor="let l of lineas(); trackBy: trackLinea"
+              class="run-linea"
+              [class.run-linea--descartada]="terminado() && !tomadas().has(l.clave)"
+            >
+              <!-- Cada conector nace del color de su nodo de origen. -->
+              <path
+                [attr.d]="l.path"
+                class="run-arista"
+                [style.stroke]="l.color"
+                stroke-opacity="0.35"
+                [attr.marker-end]="'url(#runPunta-' + idColor(l.color) + ')'"
+              />
+              <!-- Trazo de la rama tomada: se "dibuja" mientras pasa el punto. -->
+              <path
+                [attr.d]="l.path"
+                pathLength="1"
+                class="run-arista-traza"
+                [style.stroke]="l.color"
+                [class.run-arista-traza--on]="tomadas().has(l.clave)"
+                [attr.marker-end]="tomadas().has(l.clave) ? 'url(#runPunta-' + idColor(l.color) + ')' : null"
+              />
+              <g *ngIf="l.etiqueta">
+                <rect
+                  [attr.x]="l.lx - 22"
+                  [attr.y]="l.ly - 9"
+                  width="44"
+                  height="18"
+                  rx="9"
+                  class="run-etiqueta-fondo"
+                  [style.fill]="tomadas().has(l.clave) ? l.color : null"
+                  [style.stroke]="tomadas().has(l.clave) ? l.color : null"
+                />
+                <text
+                  [attr.x]="l.lx"
+                  [attr.y]="l.ly + 3.5"
+                  text-anchor="middle"
+                  class="run-etiqueta"
+                  [style.fill]="tomadas().has(l.clave) ? contraste(l.color) : null"
+                >{{ l.etiqueta }}</text>
+              </g>
+            </g>
+
+            <!-- Punto que viaja por el conector, con el color del trazo que recorre -->
+            <g *ngIf="punto() as pt">
+              <circle
+                [attr.cx]="pt.x"
+                [attr.cy]="pt.y"
+                r="11"
+                class="run-punto-halo"
+                [style.fill]="colorPunto() ? colorPunto() + '40' : null"
+              />
+              <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="6" class="run-punto" [style.fill]="colorPunto()" />
+            </g>
+          </svg>
+
+          <!-- Nodos -->
+          <div
+            *ngFor="let n of grafoS()?.nodes ?? []; trackBy: trackNodo"
+            class="absolute"
+            [style.left.px]="n.positionX - limites().minX"
+            [style.top.px]="n.positionY - limites().minY"
+            [style.width.px]="ANCHO"
+          >
+            <div
+              class="run-nodo"
+              [ngClass]="'run-nodo--' + estadoDe(n.id).toLowerCase()"
+              [class.run-nodo--nexa]="n.type === 'NEXA'"
+              [style.height.px]="ALTO"
+            >
+              <span
+                class="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-xl text-white text-sm shadow-sm"
+                [style.background]="colorDe(n.type)"
+                aria-hidden="true"
+              >
+                <i [class]="iconoDe(n.type)"></i>
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="text-[13px] font-semibold leading-tight truncate text-base-content">{{ n.name }}</p>
+                <p
+                  *ngIf="!(estadoDe(n.id) === 'EJECUTANDO' && n.type === 'NEXA')"
+                  class="text-[10px] uppercase tracking-wide text-base-content/50 truncate mt-0.5"
+                >{{ n.type }}</p>
+                <p
+                  *ngIf="estadoDe(n.id) === 'EJECUTANDO' && n.type === 'NEXA'"
+                  class="run-pensando text-[11px] font-semibold mt-0.5"
+                >NEXA está pensando…</p>
+              </div>
+
+              <!-- Marca de estado -->
+              <span class="shrink-0 w-6 h-6 inline-flex items-center justify-center" aria-hidden="true">
+                <span *ngIf="estadoDe(n.id) === 'EJECUTANDO'" class="loading loading-spinner loading-xs text-primary"></span>
+                <span
+                  *ngIf="estadoDe(n.id) === 'COMPLETADO'"
+                  class="w-6 h-6 rounded-full bg-success text-success-content inline-flex items-center justify-center text-[11px] animate-check-pop"
+                ><i class="fa-solid fa-check"></i></span>
+                <span
+                  *ngIf="estadoDe(n.id) === 'ERROR'"
+                  class="w-6 h-6 rounded-full bg-error text-error-content inline-flex items-center justify-center text-[11px] animate-pop-in"
+                ><i class="fa-solid fa-xmark"></i></span>
+                <span
+                  *ngIf="estadoDe(n.id) === 'PAUSA'"
+                  class="run-reloj w-6 h-6 rounded-full bg-warning text-warning-content inline-flex items-center justify-center text-[11px]"
+                ><i class="fa-solid fa-hourglass-half"></i></span>
+              </span>
+
+              <!-- Resultado del paso, con el badge de las tablas -->
+              <span
+                *ngIf="chip(pasoPorNodo().get(n.id)) as c"
+                class="run-chip badge badge-sm gap-1 font-medium badge-success text-success-content"
+              >{{ c }}</span>
+            </div>
+
+            <!-- Motivo del error, pegado al nodo que falló -->
+            <div
+              *ngIf="estadoDe(n.id) === 'ERROR' && pasoPorNodo().get(n.id)?.motivo as motivo"
+              class="mt-1.5 px-2.5 py-1.5 rounded-lg bg-error/10 border border-error/30 text-[11px] leading-snug text-error animate-rise-in line-clamp-3"
+              [title]="motivo"
+            >{{ motivo }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjeta final -->
+    <div
+      *ngIf="terminado() && resumenFinal() as r"
+      class="absolute left-1/2 bottom-4 -translate-x-1/2 w-[min(26rem,calc(100%-2rem))] animate-rise-in"
+      role="status"
+    >
+      <div
+        class="flex items-start gap-3 p-3 rounded-2xl border shadow-lg bg-base-100"
+        [ngClass]="{
+          'border-success/40': r.tono === 'success',
+          'border-error/40': r.tono === 'error',
+          'border-warning/40': r.tono === 'warning',
+          'border-base-300': r.tono === 'neutral'
+        }"
+      >
+        <span
+          class="shrink-0 w-9 h-9 rounded-full inline-flex items-center justify-center text-base"
+          [ngClass]="{
+            'bg-success/15 text-success animate-check-pop': r.tono === 'success',
+            'bg-error/15 text-error animate-shake': r.tono === 'error',
+            'bg-warning/15 text-warning animate-pop-in': r.tono === 'warning',
+            'bg-base-200 text-base-content/60': r.tono === 'neutral'
+          }"
+          aria-hidden="true"
+        ><i [class]="r.icono"></i></span>
+        <div class="min-w-0 flex-1">
+          <p class="font-semibold text-sm">{{ r.titulo }}</p>
+          <p *ngIf="r.texto" class="text-xs text-base-content/70 mt-0.5 break-words">{{ r.texto }}</p>
+        </div>
+        <button type="button" class="btn btn-ghost btn-xs gap-1 shrink-0" (click)="reiniciar()">
+          <i class="fa-solid fa-rotate-left text-[10px]" aria-hidden="true"></i>
+          Repetir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ LÍNEA DE TIEMPO ============================ -->
+  <aside class="rounded-xl border border-base-200 bg-base-100 overflow-hidden flex flex-col" [style.maxHeight.px]="alto + 41">
+    <div class="px-3 py-2 border-b border-base-200 flex items-center gap-2">
+      <i class="fa-solid fa-timeline text-xs opacity-60" aria-hidden="true"></i>
+      <span class="text-xs font-semibold">Recorrido</span>
+      <span class="badge badge-xs badge-ghost ml-auto tabular-nums">{{ pasosVisibles().length }}/{{ pasosS().length }}</span>
+    </div>
+    <ol class="flex-1 overflow-y-auto p-2 space-y-1">
+      <li *ngFor="let p of pasosVisibles(); let i = index; trackBy: trackPaso" class="animate-rise-in">
+        <button
+          type="button"
+          class="w-full text-left flex items-start gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-base-200"
+          [ngClass]="{ 'bg-primary/10': i === indice() && (fase() === 'ejecutando' || fase() === 'viajando') }"
+          (click)="irAPaso(i)"
+          [title]="'Ir al paso ' + p.secuencia"
+        >
+          <span class="mt-0.5 w-4 shrink-0 text-center text-[11px]" aria-hidden="true">
+            <span
+              *ngIf="i >= resueltos()"
+              class="loading loading-spinner loading-xs text-primary"
+            ></span>
+            <i *ngIf="i < resueltos() && p.estado !== 'ERROR'" class="fa-solid fa-circle-check text-success"></i>
+            <i *ngIf="i < resueltos() && p.estado === 'ERROR'" class="fa-solid fa-circle-xmark text-error"></i>
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-xs font-medium truncate">{{ nombreDe(p.nodeId) }}</span>
+            <span class="block text-[10px] text-base-content/50 truncate">
+              {{ p.nodeType }}<ng-container *ngIf="i < resueltos() && chip(p) as c"> · {{ c }}</ng-container>
+            </span>
+          </span>
+          <span
+            *ngIf="i < resueltos() && p.duracionMs !== null"
+            class="text-[10px] font-mono tabular-nums text-base-content/40 shrink-0 mt-0.5"
+          >{{ duracionTexto(p.duracionMs) }}</span>
+        </button>
+      </li>
+      <li *ngIf="pasosVisibles().length === 0" class="px-2 py-6 text-center text-xs text-base-content/50">
+        <span class="loading loading-dots loading-sm text-primary block mx-auto mb-2" aria-hidden="true"></span>
+        Esperando el primer paso…
+      </li>
+    </ol>
+  </aside>
+</div>

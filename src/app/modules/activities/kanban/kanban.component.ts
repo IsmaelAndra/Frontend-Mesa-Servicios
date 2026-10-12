@@ -2,9 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import Swal from 'sweetalert2';
 import { TaskService } from '../../../core/services/task.service';
-import { AdminService } from '../../../core/services/admin.service';
+import { AdminService, AssignableAgent } from '../../../core/services/admin.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { TaskItem, TaskRequest, TaskStatus, KANBAN_STATUSES } from '../../../models/task.model';
 import { User } from '../../../models/user.model';
+import { ToastService } from '../../../core/services/toast.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-kanban',
@@ -13,13 +16,50 @@ import { User } from '../../../models/user.model';
 })
 export class KanbanComponent implements OnInit {
   columns: { key: TaskStatus; label: string; color: string; tasks: TaskItem[] }[] = [];
-  agents: User[] = [];
+  agents: AssignableAgent[] = [];
   loading = true;
   dragging = false;
 
+  /**
+   * Cuantas tarjetas se pintan por columna. No se usa un paginador porque el
+   * arrastre entre columnas depende de que la lista que recibe el drop sea la
+   * real: si se cortara, la tarjeta se moveria pero desapareceria de la vista.
+   * Se revela de aplicationes de a 20 en su lugar.
+   */
+  private readonly PASO = 20;
+  private visiblesPorColumna: Record<string, number> = {};
+
+  tareasVisibles(col: { key: TaskStatus; tasks: TaskItem[] }): TaskItem[] {
+    const pedidas = this.visiblesPorColumna[this.claveDe(col)] ?? this.PASO;
+    return col.tasks.slice(0, pedidas);
+  }
+
+  quedanOcultas(col: { tasks: TaskItem[] }): number {
+    const pedidas = this.visiblesPorColumna[this.claveDe(col)] ?? this.PASO;
+    return Math.max(0, col.tasks.length - pedidas);
+  }
+
+  mostrarMas(col: { key: TaskStatus }): void {
+    const clave = this.claveDe(col);
+    this.visiblesPorColumna = {
+      ...this.visiblesPorColumna,
+      [clave]: (this.visiblesPorColumna[clave] ?? this.PASO) + this.PASO
+    };
+  }
+
+  mostrarTodas(col: { key: TaskStatus }): void {
+    this.visiblesPorColumna = { ...this.visiblesPorColumna, [this.claveDe(col)]: Number.MAX_SAFE_INTEGER };
+  }
+
+  private claveDe(col: { key?: TaskStatus; tasks?: TaskItem[] }): string {
+    return col.key ?? (col.tasks?.[0]?.status as string) ?? '';
+  }
+
   constructor(
     private taskService: TaskService,
-    private adminService: AdminService
+    private adminService: AdminService,
+    private toastService: ToastService,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -49,9 +89,53 @@ export class KanbanComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
-        Swal.fire('Error', 'No se pudieron cargar las tareas', 'error');
+        this.toastService.error('No se pudieron cargar las tareas');
       }
     });
+  }
+
+  /** Foto del usuario asignado cuando está disponible (fallback a iniciales). */
+  assignedPhoto(task: TaskItem): string | null {
+    const agent = this.agents.find((a) => a.corporateEmailUser === task.assignedUserEmail);
+    const url = agent?.photoUrl;
+    if (!url) {
+      return null;
+    }
+    return /^https?:\/\//i.test(url) ? url : `${environment.apiUrl}${url}`;
+  }
+
+  /**
+   * Nombre corto del responsable. Antes se pintaba el correo completo
+   * (agente@coacmagisterio.fin.ec), que es larguisimo y estiraba la tarjeta
+   * hasta hacer el tablero ilegible. Se usa el nombre del agente y, si no hay,
+   * la parte del correo antes de la arroba.
+   */
+  asignado(task: TaskItem): string {
+    const agent = this.agents.find((a) => a.corporateEmailUser === task.assignedUserEmail);
+    const nombre = agent?.displayName?.trim();
+    if (nombre) {
+      return nombre;
+    }
+    const email = (task.assignedUserEmail || '').trim();
+    return email.includes('@') ? email.split('@')[0] : email || 'Sin asignar';
+  }
+
+  /**
+   * Estado de sesión de la persona asignada. Se busca en la lista de agentes
+   * (con su sessionState) y, si es el usuario con sesión, se usa el suyo: sin
+   * esto el avatar no distinguía a nadie en línea de nadie desconectado.
+   */
+  sesionDe(task: TaskItem): string {
+    const agente = this.agents.find((a) => a.corporateEmailUser === task.assignedUserEmail);
+    if (agente) return agente.sessionState || 'DESCONECTADO';
+    if (task.assignedUserEmail === this.currentUser()?.corporateEmailUser) {
+      return this.sesionPropia;
+    }
+    return 'DESCONECTADO';
+  }
+
+  private get sesionPropia(): string {
+    return this.authService.currentUserSnapshot()?.sessionState || 'DESCONECTADO';
   }
 
   openNew(): void {
@@ -71,14 +155,60 @@ export class KanbanComponent implements OnInit {
     setTimeout(() => (this.dragging = false), 120);
   }
 
+  /**
+   * Agentes a los que se puede asignar. Incluye al usuario con sesion aunque no
+   * venga en /users/agents (un admin, por ejemplo), para que crear una actividad
+   * propia no quede bloqueado.
+   */
+  private opcionesDeAsignado(): AssignableAgent[] {
+    const lista = [...this.agents];
+    const yo = this.currentUser();
+    if (yo && !lista.some((a) => a.idUser === yo.idUser)) {
+      lista.unshift(yo);
+    }
+    return lista;
+  }
+
+  private currentUser(): User | null {
+    return this.authService.currentUserSnapshot();
+  }
+
   private openModal(task: TaskItem | null): void {
     const editing = !!task;
-    const agentOptions = this.agents
-      .map(
-        (a) =>
-          `<option value="${a.idUser}"${task && task.assignedUserId === a.idUser ? ' selected' : ''
-          }>${escHtml(a.corporateEmailUser)}</option>`
-      )
+    // /users/agents solo devuelve los usuarios con rol AGENT, asi que quien
+    // logged como ADMIN no aparecia en la lista y no podia asignarse a si mismo
+    // (el backend lo marca como obligatorio). Se agrega el usuario actual a las
+    // opciones y se deja preseleccionado al crear.
+    const opciones = this.opcionesDeAsignado();
+    const preseleccionado = task
+      ? task.assignedUserId
+      : (this.currentUser()?.idUser ?? opciones[0]?.idUser ?? null);
+
+    const agentOptions = opciones
+      .map((a) => {
+        const selected = preseleccionado != null && a.idUser === preseleccionado;
+        const url = a.photoUrl
+          ? /^https?:\/\//i.test(a.photoUrl)
+            ? a.photoUrl
+            : `${environment.apiUrl}${a.photoUrl}`
+          : '';
+        const initial = (a.corporateEmailUser || '?').charAt(0).toUpperCase();
+        const avatar = url
+          ? `<img src="${escHtml(url)}" alt="" class="w-6 h-6 rounded-full object-cover shrink-0" />`
+          : `<span class="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold shrink-0">${escHtml(
+              initial
+            )}</span>`;
+        const label = a.displayName || a.corporateEmailUser;
+        return `<label class="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-base-200 transition-colors${
+          selected ? ' bg-base-200/70' : ''
+        }">
+            <input type="radio" name="tk-assigned" value="${a.idUser}"${
+          selected ? ' checked' : ''
+        } class="radio radio-primary radio-xs shrink-0" />
+            ${avatar}
+            <span class="text-sm min-w-0 truncate">${escHtml(label)}</span>
+          </label>`;
+      })
       .join('');
 
     Swal.fire({
@@ -100,7 +230,7 @@ export class KanbanComponent implements OnInit {
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Asignado <span class="text-error">*</span></label>
-            <select id="tk-assigned" class="swal-daisy-input">${agentOptions}</select>
+            <div class="border border-base-300 rounded-lg p-1.5 max-h-48 overflow-y-auto space-y-1 text-left">${agentOptions}</div>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -139,7 +269,9 @@ export class KanbanComponent implements OnInit {
       preConfirm: () => {
         const popup = Swal.getPopup();
         const title = (popup?.querySelector('#tk-title') as HTMLInputElement)?.value.trim() ?? '';
-        const assigned = (popup?.querySelector('#tk-assigned') as HTMLSelectElement)?.value ?? '';
+        const assigned =
+          (popup?.querySelector('input[name="tk-assigned"]:checked') as HTMLInputElement)?.value ??
+          '';
         if (!title || !assigned) {
           Swal.showValidationMessage('Complete el título y seleccione el asignado');
           return false;
@@ -152,7 +284,7 @@ export class KanbanComponent implements OnInit {
           title,
           description:
             (popup?.querySelector('#tk-desc') as HTMLTextAreaElement)?.value.trim() || undefined,
-          assignedUserId: Number(assigned),
+          assignedUserId: assigned,
           start: start ? new Date(start).toISOString() : undefined,
           due: due ? new Date(due).toISOString() : undefined,
           durationMinutes: duration
@@ -169,23 +301,18 @@ export class KanbanComponent implements OnInit {
     });
   }
 
-  private saveTask(id: number | null, data: TaskRequest): void {
+  private saveTask(id: string | null, data: TaskRequest): void {
     const call = id ? this.taskService.update(id, data) : this.taskService.create(data);
     call.subscribe({
       next: () => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Tarea guardada',
-          timer: 1200,
-          showConfirmButton: false
-        });
+        this.toastService.success('Tarea guardada');
         this.load();
       },
-      error: (err) => Swal.fire('Error', err?.error?.message || 'No se pudo guardar', 'error')
+      error: (err) => this.toastService.error(err?.error?.message || 'No se pudo guardar')
     });
   }
 
-  deleteTask(id: number): void {
+  deleteTask(id: string): void {
     Swal.fire({
       title: '¿Eliminar tarea?',
       text: 'Esta acción no se puede deshacer',
@@ -199,15 +326,10 @@ export class KanbanComponent implements OnInit {
       if (!result.isConfirmed) return;
       this.taskService.delete(id).subscribe({
         next: () => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Eliminada',
-            timer: 1000,
-            showConfirmButton: false
-          });
+          this.toastService.success('Tarea eliminada');
           this.load();
         },
-        error: (err) => Swal.fire('Error', err?.error?.message || 'No se pudo eliminar', 'error')
+        error: (err) => this.toastService.error(err?.error?.message || 'No se pudo eliminar')
       });
     });
   }
@@ -232,15 +354,10 @@ export class KanbanComponent implements OnInit {
     this.taskService.changeStatus(task.id, to.key).subscribe({
       next: () => {
         task.status = to.key;
-        Swal.fire({
-          icon: 'success',
-          title: `Movida a ${to.label}`,
-          timer: 800,
-          showConfirmButton: false
-        });
+        this.toastService.info(`Tarea movida a ${to.label}`);
       },
       error: () => {
-        Swal.fire('Error', 'No se pudo actualizar el estado', 'error');
+        this.toastService.error('No se pudo actualizar el estado');
         this.load();
       }
     });

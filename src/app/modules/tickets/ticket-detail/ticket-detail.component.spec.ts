@@ -12,12 +12,21 @@ describe('TicketDetailComponent (visualización del chat)', () => {
     const auth = jasmine.createSpyObj('AuthService', ['getRole', 'getEmail']);
     auth.getRole.and.returnValue(role);
     auth.getEmail.and.returnValue(email);
-    return new TicketDetailComponent(route, ticketService, adminService, auth);
+    // El constructor pide siete dependencias: se añadieron el toast, el canal de
+    // eventos y las notificaciones del navegador, y el spec se quedó pasando
+    // cuatro, así que ni siquiera compilaba.
+    const toastService = jasmine.createSpyObj('ToastService', ['success', 'error', 'info', 'warning']);
+    const sseService = jasmine.createSpyObj('SseService', ['connect', 'disconnect', 'on', 'off']);
+    const browserNotif = jasmine.createSpyObj('BrowserNotificationService', ['show', 'requestPermission']);
+    return new TicketDetailComponent(
+      route, ticketService, adminService, auth, toastService, sseService, browserNotif,
+      jasmine.createSpyObj('QuickReplyService', ['listar', 'crear', 'actualizar', 'eliminar'])
+    );
   }
 
   function answer(user: string): Answer {
     return {
-      idAnswer: 1,
+      idAnswer: '1',
       messageAnswer: '<p>Hola</p>',
       internalAnswer: false,
       user,

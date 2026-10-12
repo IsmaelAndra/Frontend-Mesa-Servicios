@@ -1,0 +1,729 @@
+<!-- ============ Aviso informativo ============ -->
+<div
+  class="flex items-start gap-2.5 p-3 rounded-xl bg-info/5 border border-info/20 text-xs"
+>
+  <i
+    class="fa-solid fa-circle-info text-info mt-0.5 shrink-0"
+    aria-hidden="true"
+  ></i>
+  <span class="opacity-80 leading-relaxed">
+    Esta pantalla se muestra mientras la aplicación arranca, antes de que
+    exista sesión. Si no hay imagen ni icono propios, se usa el icono del
+    sistema, y el fondo por defecto es el color primario.
+  </span>
+</div>
+
+<!-- ============ Grid principal ============ -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+  <!-- ============================================================ -->
+  <!-- ============ COLUMNA IZQUIERDA: Configuración (8/12) ====== -->
+  <!-- ============================================================ -->
+  <div class="lg:col-span-8 space-y-5">
+    <!-- ============ 1. APARIENCIA ============ -->
+    <div
+      class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+    >
+      <div class="card-body p-5 space-y-5">
+        <!-- Header numerado -->
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-lg bg-primary text-primary-content flex items-center justify-center text-sm font-bold shrink-0"
+            aria-hidden="true"
+          >
+            1
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-base font-semibold">Apariencia</h2>
+            <p class="text-xs opacity-60 mt-0.5">
+              Qué se muestra en el centro de la pantalla
+            </p>
+          </div>
+        </div>
+
+        <!-- Origen -->
+        <div>
+          <label class="label pt-0 pb-2">
+            <span class="label-text text-xs font-medium">Origen</span>
+          </label>
+          <div class="grid grid-cols-3 gap-2">
+            <button
+              *ngFor="let m of b.loadingModos"
+              type="button"
+              class="p-3 rounded-xl border-2 transition flex flex-col items-center gap-1.5 text-center"
+              [ngClass]="
+                b.config.loadingMode === m.value
+                  ? 'border-primary bg-primary/5 shadow-sm'
+                  : 'border-base-200 hover:border-primary/40 hover:bg-base-200/40'
+              "
+              (click)="b.cambiarModoLoading(m.value)"
+            >
+              <i
+                class="fa-solid text-lg"
+                [ngClass]="{
+                  'fa-image': m.value === 'IMAGE',
+                  'fa-icons': m.value === 'ICON',
+                  'fa-star': m.value === 'AUTO',
+                }"
+                [class.text-primary]="b.config.loadingMode === m.value"
+                [class.opacity-50]="b.config.loadingMode !== m.value"
+                aria-hidden="true"
+              ></i>
+              <span
+                class="text-[11px] font-semibold leading-tight"
+                [class.text-primary]="b.config.loadingMode === m.value"
+              >
+                {{ m.label }}
+              </span>
+            </button>
+          </div>
+          <p
+            class="text-[11px] opacity-60 mt-2 text-center leading-relaxed"
+          >
+            {{ b.loadingModoAyuda }}
+          </p>
+        </div>
+
+        <!-- Imagen (siempre visible) -->
+        <div>
+          <div class="divider my-0 opacity-60"></div>
+
+          <label class="label pt-0 pb-2">
+            <span class="label-text text-xs font-medium">
+              Imagen
+              <span class="opacity-60 font-normal">
+                · se usa cuando el origen es "Imagen"
+              </span>
+            </span>
+          </label>
+
+          <div class="flex items-center gap-4">
+            <div class="shrink-0">
+              <div
+                *ngIf="b.loadingImagePreview; else sinImagenLoading"
+                class="w-16 h-16 app-chrome rounded-xl flex items-center justify-center overflow-hidden ring-1 ring-white/20"
+              >
+                <img
+                  [src]="b.loadingImagePreview"
+                  alt="Imagen de la pantalla de carga"
+                  class="w-full h-full object-contain p-2"
+                />
+              </div>
+              <ng-template #sinImagenLoading>
+                <div
+                  class="w-16 h-16 rounded-xl flex items-center justify-center border-2 border-dashed border-base-300 text-base-content/40 bg-base-200/40"
+                >
+                  <i
+                    class="fa-solid fa-image text-lg"
+                    aria-hidden="true"
+                  ></i>
+                </div>
+              </ng-template>
+            </div>
+
+            <div class="flex flex-wrap gap-2 flex-1">
+              <label class="btn btn-outline btn-sm gap-2 cursor-pointer">
+                <i
+                  class="fa-solid fa-upload text-[15px]"
+                  aria-hidden="true"
+                ></i>
+                {{ b.loadingImagePreview ? "Cambiar" : "Subir" }}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  (change)="b.onLoadingImageSelected($event)"
+                  class="hidden"
+                />
+              </label>
+
+              <button
+                class="btn btn-primary btn-sm gap-2"
+                (click)="b.uploadLoadingImage()"
+                [disabled]="b.loading || !b.loadingImageFile"
+              >
+                <span
+                  *ngIf="b.loading"
+                  class="loading loading-spinner loading-xs"
+                  aria-hidden="true"
+                ></span>
+                Guardar
+              </button>
+
+              <button
+                *ngIf="b.config.loadingImageUrl"
+                class="btn btn-ghost btn-sm btn-square text-error hover:bg-error/10"
+                (click)="b.clearLoadingImage()"
+                title="Quitar imagen"
+                aria-label="Quitar imagen"
+              >
+                <i
+                  class="fa-solid fa-trash text-[15px]"
+                  aria-hidden="true"
+                ></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Galería de iconos (solo en modo ICON) -->
+        <div *ngIf="b.config.loadingMode === 'ICON'">
+          <div class="divider my-0 opacity-60"></div>
+
+          <label class="label pt-0 pb-2">
+            <span class="label-text text-xs font-medium">
+              Icono · {{ b.loadingIconoNombre() }}
+            </span>
+          </label>
+
+          <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
+            <button
+              *ngFor="let ic of b.loadingIconos"
+              type="button"
+              class="aspect-square rounded-xl border-2 flex items-center justify-center transition hover:scale-105"
+              [ngClass]="
+                b.config.loadingIcon === ic.value
+                  ? 'border-primary bg-primary/10 shadow-sm'
+                  : 'border-base-200 bg-base-100 hover:border-primary/40 hover:bg-primary/5'
+              "
+              [attr.aria-label]="ic.label"
+              [title]="ic.label"
+              (click)="b.elegirIconoLoading(ic.value)"
+            >
+              <i
+                [class]="ic.value + ' text-base'"
+                [class.text-primary]="b.config.loadingIcon === ic.value"
+                [class.opacity-70]="b.config.loadingIcon !== ic.value"
+                aria-hidden="true"
+              ></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 2. COMPORTAMIENTO ============ -->
+    <div
+      class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+    >
+      <div class="card-body p-5 space-y-5">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-lg bg-primary text-primary-content flex items-center justify-center text-sm font-bold shrink-0"
+            aria-hidden="true"
+          >
+            2
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-base font-semibold">Comportamiento</h2>
+            <p class="text-xs opacity-60 mt-0.5">
+              Textos, animación y tiempos
+            </p>
+          </div>
+        </div>
+
+        <!-- Título + Mensaje (2 columnas) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="label pt-0 pb-2">
+              <span class="label-text text-xs font-medium">Título</span>
+            </label>
+            <div class="relative">
+              <i
+                class="fa-solid fa-heading text-[13px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                aria-hidden="true"
+              ></i>
+              <input
+                [(ngModel)]="b.config.loadingTitle"
+                class="input input-bordered input-sm w-full pl-9"
+                maxlength="60"
+                placeholder="Mesa de Servicios"
+                [disabled]="b.loadingPreview.soloMarca"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="label pt-0 pb-2">
+              <span class="label-text text-xs font-medium">Mensaje</span>
+            </label>
+            <div class="relative">
+              <i
+                class="fa-solid fa-comment text-[13px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                aria-hidden="true"
+              ></i>
+              <input
+                [(ngModel)]="b.config.loadingMessage"
+                class="input input-bordered input-sm w-full pl-9"
+                maxlength="60"
+                placeholder="Cargando..."
+                [disabled]="b.loadingPreview.soloMarca"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Indicador + Variante (2 columnas) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="label pt-0 pb-2">
+              <span class="label-text text-xs font-medium">
+                Indicador de carga
+              </span>
+            </label>
+            <select
+              [(ngModel)]="b.config.loadingAnimation"
+              class="select select-bordered select-sm w-full"
+            >
+              <option
+                *ngFor="let a of b.loadingAnimaciones"
+                [ngValue]="a.value"
+              >
+                {{ a.label }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="label pt-0 pb-2">
+              <span class="label-text text-xs font-medium">Variante</span>
+            </label>
+            <div class="join w-full">
+              <button
+                *ngFor="let t of b.loadingTemas"
+                type="button"
+                class="btn btn-sm join-item flex-1"
+                [class.btn-primary]="b.config.loadingTheme === t.value"
+                [class.btn-outline]="b.config.loadingTheme !== t.value"
+                (click)="b.config.loadingTheme = t.value"
+              >
+                {{ t.label }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sliders (2 columnas) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="label pt-0 pb-2">
+              <span class="label-text text-xs font-medium"
+                >Tamaño de la imagen</span
+              >
+              <span class="label-text-alt font-mono text-primary text-xs">
+                {{ b.loadingPreview.imageSize }}px
+              </span>
+            </label>
+            <input
+              type="range"
+              min="48"
+              max="256"
+              step="8"
+              [(ngModel)]="b.config.loadingImageSize"
+              class="range range-primary range-sm"
+              aria-label="Tamaño de la imagen"
+            />
+            <div
+              class="flex justify-between text-[10px] opacity-50 mt-1 font-mono"
+            >
+              <span>48</span>
+              <span>256</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="label pt-0 pb-2">
+              <span class="label-text text-xs font-medium"
+                >Duración mínima</span
+              >
+              <span class="label-text-alt font-mono text-primary text-xs">
+                {{ b.config.loadingMinDurationMs || 0 }}ms
+              </span>
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="10000"
+              step="100"
+              [(ngModel)]="b.config.loadingMinDurationMs"
+              class="range range-primary range-sm"
+              aria-label="Duración mínima"
+            />
+            <div
+              class="flex justify-between text-[10px] opacity-50 mt-1 font-mono"
+            >
+              <span>0</span>
+              <span>10000</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toggles (2 columnas) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <label
+            class="flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition"
+            [ngClass]="
+              b.config.loadingSoloMarca
+                ? 'border-primary/40 bg-primary/5'
+                : 'border-base-200 hover:border-primary/30'
+            "
+          >
+            <input
+              type="checkbox"
+              [(ngModel)]="b.config.loadingSoloMarca"
+              class="toggle toggle-sm toggle-primary mt-0.5 shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold block">
+                Solo el logo
+              </span>
+              <span
+                class="text-[10px] opacity-60 leading-tight block mt-0.5"
+              >
+                Sin textos ni indicador encima
+              </span>
+            </div>
+          </label>
+
+          <label
+            class="flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition"
+            [ngClass]="
+              b.loadingPreview.soloMarca
+                ? 'border-base-200 opacity-40'
+                : b.config.loadingProgress
+                  ? 'border-primary/40 bg-primary/5'
+                  : 'border-base-200 hover:border-primary/30'
+            "
+          >
+            <input
+              type="checkbox"
+              [(ngModel)]="b.config.loadingProgress"
+              class="toggle toggle-sm toggle-primary mt-0.5 shrink-0"
+              [disabled]="b.loadingPreview.soloMarca"
+            />
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold block">
+                Barra de progreso
+              </span>
+              <span
+                class="text-[10px] opacity-60 leading-tight block mt-0.5"
+              >
+                Franja en la parte inferior
+              </span>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 3. ESTILO ============ -->
+    <div
+      class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+    >
+      <div class="card-body p-5 space-y-5">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-lg bg-primary text-primary-content flex items-center justify-center text-sm font-bold shrink-0"
+            aria-hidden="true"
+          >
+            3
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-base font-semibold">Estilo</h2>
+            <p class="text-xs opacity-60 mt-0.5">
+              Colores y efecto del logo
+            </p>
+          </div>
+        </div>
+
+        <!-- Colores (2 columnas) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Fondo -->
+          <div>
+            <label class="label pt-0 pb-2">
+              <span class="label-text text-xs font-medium"
+                >Color de fondo</span
+              >
+            </label>
+            <div class="flex items-center gap-2">
+              <input
+                type="color"
+                [(ngModel)]="b.config.loadingBackgroundColor"
+                class="w-11 h-10 cursor-pointer rounded-xl border-2 border-base-300 p-0.5 shrink-0"
+                aria-label="Selector color de fondo"
+              />
+              <input
+                [(ngModel)]="b.config.loadingBackgroundColor"
+                class="input input-bordered input-sm w-full font-mono uppercase"
+                maxlength="7"
+                placeholder="#062E86"
+              />
+            </div>
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              <button
+                *ngFor="let c of b.loadingColores"
+                type="button"
+                class="w-6 h-6 rounded-lg border-2 transition hover:scale-105"
+                [class.border-primary]="b.config.loadingBackgroundColor === c"
+                [class.border-base-300]="
+                  b.config.loadingBackgroundColor !== c
+                "
+                [style.backgroundColor]="c"
+                [title]="'Usar ' + c"
+                (click)="b.config.loadingBackgroundColor = c"
+              ></button>
+            </div>
+            <p class="text-[10px] opacity-50 mt-1.5">
+              Vacío = color primario de la marca
+            </p>
+          </div>
+
+          <!-- Texto -->
+          <div>
+            <label class="label pt-0 pb-2">
+              <span class="label-text text-xs font-medium"
+                >Color del texto</span
+              >
+            </label>
+            <div class="flex items-center gap-2">
+              <input
+                type="color"
+                [(ngModel)]="b.config.loadingTextColor"
+                class="w-11 h-10 cursor-pointer rounded-xl border-2 border-base-300 p-0.5 shrink-0"
+                aria-label="Selector color de texto"
+              />
+              <input
+                [(ngModel)]="b.config.loadingTextColor"
+                class="input input-bordered input-sm w-full font-mono uppercase"
+                maxlength="7"
+                placeholder="#FFFFFF"
+              />
+            </div>
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              <button
+                *ngFor="let c of b.loadingColoresTexto"
+                type="button"
+                class="w-6 h-6 rounded-lg border-2 transition hover:scale-105"
+                [class.border-primary]="b.config.loadingTextColor === c"
+                [class.border-base-300]="b.config.loadingTextColor !== c"
+                [style.backgroundColor]="c"
+                [title]="'Usar ' + c"
+                (click)="b.config.loadingTextColor = c"
+              ></button>
+            </div>
+            <p class="text-[10px] opacity-50 mt-1.5">
+              Vacío = blanco o negro según contraste
+            </p>
+          </div>
+        </div>
+
+        <!-- Efecto del logo -->
+        <div>
+          <div class="divider my-0 opacity-60"></div>
+
+          <div class="flex items-center justify-between pt-2">
+            <label class="label pt-0 pb-0">
+              <span class="label-text text-xs font-medium">
+                Efecto del logo
+              </span>
+            </label>
+            <span class="badge badge-sm badge-ghost">
+              {{ b.loadingEfectoNombre() }}
+            </span>
+          </div>
+
+          <p class="text-[10px] opacity-60 mb-3">
+            Animación del logo o icono, independiente del indicador de carga
+          </p>
+
+          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+            <button
+              *ngFor="let e of b.loadingEfectosLogo"
+              type="button"
+              class="rounded-xl border-2 p-2 flex flex-col items-center gap-1.5 transition hover:scale-105"
+              [ngClass]="
+                (b.config.loadingLogoEffect || 'NONE') === e.value
+                  ? 'border-primary bg-primary/5'
+                  : 'border-base-200 hover:border-primary/40'
+              "
+              (click)="b.config.loadingLogoEffect = e.value"
+            >
+              <span
+                class="w-10 h-10 rounded-lg bg-base-200 flex items-center justify-center overflow-hidden"
+              >
+                <span
+                  class="inline-flex items-center justify-center w-full h-full"
+                  [ngClass]="b.loadingEfectoClase(e.value)"
+                >
+                  <i
+                    class="fa-solid fa-headset text-sm"
+                    [class.text-primary]="
+                      (b.config.loadingLogoEffect || 'NONE') === e.value
+                    "
+                    [class.opacity-60]="
+                      (b.config.loadingLogoEffect || 'NONE') !== e.value
+                    "
+                    aria-hidden="true"
+                  ></i>
+                </span>
+              </span>
+              <span
+                class="text-[10px] font-medium leading-tight text-center"
+              >
+                {{ e.label }}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ============ COLUMNA DERECHA: Preview sticky (4/12) ======= -->
+  <!-- ============================================================ -->
+  <div class="lg:col-span-4">
+    <div class="lg:sticky lg:top-4 space-y-4">
+      <!-- Preview -->
+      <div
+        class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+      >
+        <div class="card-body p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div
+                class="p-1.5 rounded-lg bg-success/10 text-success ring-1 ring-success/15 shrink-0"
+                aria-hidden="true"
+              >
+                <i class="fa-solid fa-eye text-sm"></i>
+              </div>
+              <span class="text-sm font-semibold">Vista previa</span>
+            </div>
+            <span class="badge badge-sm badge-ghost font-mono">
+              {{ b.loadingPreview.imageSize }}px
+            </span>
+          </div>
+
+          <!-- Frame tipo teléfono -->
+          <div
+            class="mx-auto w-full max-w-[240px] p-2 bg-base-800 rounded-[2.5rem] shadow-xl"
+          >
+            <div
+              class="relative w-full aspect-[9/16] rounded-[2rem] overflow-hidden flex flex-col items-center justify-center gap-4 p-4"
+              [style.backgroundColor]="b.loadingPreview.backgroundColor"
+              [attr.data-theme]="b.loadingPreview.theme"
+              aria-hidden="true"
+            >
+              <!-- Indicador -->
+              <span
+                *ngIf="b.loadingPreview.animation !== 'NONE'"
+                class="loading"
+                [ngClass]="
+                  'loading-' + b.loadingPreview.animation.toLowerCase()
+                "
+                [class.w-3]="b.loadingPreview.animation === 'PULSE'"
+                [style.color]="b.loadingPreview.textColor"
+              ></span>
+
+              <!-- Logo / Icono -->
+              <div
+                class="inline-flex items-center justify-center"
+                [ngClass]="b.loadingPreview.logoEffectClass"
+                [style.width.px]="b.loadingPreview.imageSize / 2.5"
+                [style.height.px]="b.loadingPreview.imageSize / 2.5"
+              >
+                <img
+                  *ngIf="b.loadingPreview.mode !== 'ICON'"
+                  [src]="b.loadingPreview.imageUrl"
+                  alt=""
+                  class="w-full h-full object-contain rounded-xl p-2"
+                />
+                <i
+                  *ngIf="b.loadingPreview.mode === 'ICON'"
+                  [class]="b.loadingPreview.icon + ' text-4xl'"
+                  [style.color]="b.loadingPreview.textColor"
+                  [style.fontSize.px]="
+                    (b.loadingPreview.imageSize / 2.5) * 0.72
+                  "
+                ></i>
+              </div>
+
+              <!-- Textos -->
+              <div
+                *ngIf="b.loadingPreview.showTexts"
+                class="text-center space-y-1 px-2"
+              >
+                <p
+                  class="text-sm font-semibold break-words"
+                  [style.color]="b.loadingPreview.textColor"
+                >
+                  {{ b.loadingPreview.title }}
+                </p>
+                <p
+                  class="text-[11px] break-words"
+                  [style.color]="b.loadingPreview.textColor"
+                  [style.opacity]="0.75"
+                >
+                  {{ b.loadingPreview.message }}
+                </p>
+              </div>
+
+              <!-- Barra progreso -->
+              <div
+                *ngIf="b.loadingPreview.progress"
+                class="loading-bar-track w-32 h-1 rounded-full"
+                [style.backgroundColor]="b.loadingPreview.textColor + '4d'"
+              >
+                <div
+                  class="loading-bar-indeterminate h-full rounded-full"
+                  [style.backgroundColor]="b.loadingPreview.textColor"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-[10px] opacity-60 text-center leading-relaxed">
+            Mínimo en pantalla:
+            <strong class="text-primary">{{
+              b.loadingPreview.minDurationMs
+            }}</strong>
+            ms
+          </p>
+        </div>
+      </div>
+
+      <!-- Guardar -->
+      <div
+        class="card bg-base-100 shadow-md border border-primary/25 rounded-[1.5rem] overflow-hidden"
+      >
+        <div class="card-body p-4 gap-3">
+          <div class="flex items-center gap-2">
+            <i
+              class="fa-solid fa-floppy-disk text-primary text-sm"
+              aria-hidden="true"
+            ></i>
+            <span class="text-sm font-semibold">Guardar cambios</span>
+          </div>
+          <p class="text-[11px] opacity-60 leading-relaxed">
+            Los cambios se aplican al recargar la aplicación.
+          </p>
+          <button
+            class="btn btn-primary btn-sm w-full gap-2 shadow-md hover:shadow-lg transition"
+            (click)="b.saveLoading()"
+            [disabled]="b.loading"
+          >
+            <span
+              *ngIf="b.loading"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="!b.loading"
+              class="fa-solid fa-check text-[15px]"
+              aria-hidden="true"
+            ></i>
+            {{ b.loading ? "Guardando..." : "Guardar pantalla" }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

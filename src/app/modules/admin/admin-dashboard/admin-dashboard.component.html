@@ -1,427 +1,711 @@
 <div class="space-y-6" *ngIf="catalog">
-  <!-- Encabezado -->
-  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-    <div class="flex items-center gap-3">
-      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
+
+  <!-- ============================ HEADER ============================ -->
+  <header
+    class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+  >
+    <div class="flex items-center gap-3 min-w-0">
+      <div
+        class="page-head__icono p-3 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary shrink-0 ring-1 ring-primary/10"
+      >
+        <i class="fa-solid fa-gear text-2xl" aria-hidden="true"></i>
       </div>
-      <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Panel de administración</h1>
-        <p class="text-sm opacity-70">Gestiona áreas, categorías y políticas SLA del sistema</p>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">
+          Panel de administración
+        </h1>
+        <p class="text-sm opacity-70 truncate">
+          Gestiona áreas, categorías y políticas SLA del sistema
+        </p>
       </div>
     </div>
 
-    <a routerLink="/admin/users" class="btn btn-primary btn-sm gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-        aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-      </svg>
+    <a routerLink="/admin/users" class="btn btn-sm btn-primary gap-2 shrink-0">
+      <i class="fa-solid fa-user-plus text-[15px]" aria-hidden="true"></i>
       Gestionar usuarios
     </a>
   </header>
 
-  <!-- KPIs resumen -->
+  <!-- ============================ KPIs RESUMEN ============================ -->
   <section aria-label="Resumen del catálogo">
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+
       <!-- Áreas -->
-      <div class="card bg-base-100 shadow-md border border-base-200">
-        <div class="card-body p-4 flex-row items-center gap-3">
-          <div class="p-3 rounded-xl bg-primary/10 text-primary shrink-0" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
+      <div
+        class="card bg-base-100 shadow-md hover:shadow-lg transition duration-200 border border-base-200 border-t-4 border-t-primary rounded-[0.5rem] overflow-hidden"
+      >
+        <div class="card-body p-5 flex-row flex-wrap items-center gap-x-4 gap-y-2">
+          <div
+            class="p-3 rounded-xl bg-primary/10 text-primary shrink-0 ring-1 ring-primary/15"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-building text-xl"></i>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="text-2xl font-bold text-primary">{{ catalog.areas.length }}</div>
-            <div class="text-xs opacity-70 uppercase tracking-wide">Áreas</div>
+            <div class="text-3xl font-bold text-primary leading-none">
+              {{ catalog.areas.length }}
+            </div>
+            <div class="text-xs opacity-60 uppercase tracking-wider mt-1">
+              Áreas registradas
+            </div>
           </div>
-          <div class="badge badge-sm badge-ghost gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            {{ getActiveAreasCount() }} activas
-          </div>
+          <span
+            class="badge badge-sm badge-primary gap-1.5 shrink-0 font-medium"
+            [title]="getActiveAreasCount() + ' de ' + catalog.areas.length + ' activas'"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-primary-content/80"></span>
+            {{ getActiveAreasPercent() }}% activas
+          </span>
         </div>
       </div>
 
       <!-- Categorías -->
-      <div class="card bg-base-100 shadow-md border border-base-200">
-        <div class="card-body p-4 flex-row items-center gap-3">
-          <div class="p-3 rounded-xl bg-success/10 text-success shrink-0" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-            </svg>
+      <div
+        class="card bg-base-100 shadow-md hover:shadow-lg transition duration-200 border border-base-200 border-t-4 border-t-success rounded-[0.5rem] overflow-hidden"
+      >
+        <div class="card-body p-5 flex-row flex-wrap items-center gap-x-4 gap-y-2">
+          <div
+            class="p-3 rounded-xl bg-success/10 text-success shrink-0 ring-1 ring-success/15"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-tag text-xl"></i>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="text-2xl font-bold text-success">{{ catalog.categories.length }}</div>
-            <div class="text-xs opacity-70 uppercase tracking-wide">Categorías</div>
+            <div class="text-3xl font-bold text-success leading-none">
+              {{ catalog.categories.length }}
+            </div>
+            <div class="text-xs opacity-60 uppercase tracking-wider mt-1">
+              Categorías
+            </div>
           </div>
-          <div class="badge badge-sm badge-ghost gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-            </svg>
+          <span class="badge badge-sm badge-success gap-1.5 shrink-0 font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-success-content/80"></span>
             Registradas
-          </div>
+          </span>
         </div>
       </div>
 
       <!-- SLA -->
-      <div class="card bg-base-100 shadow-md border border-base-200">
-        <div class="card-body p-4 flex-row items-center gap-3">
-          <div class="p-3 rounded-xl bg-warning/10 text-warning shrink-0" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+      <div
+        class="card bg-base-100 shadow-md hover:shadow-lg transition duration-200 border border-base-200 border-t-4 border-t-warning rounded-[0.5rem] overflow-hidden"
+      >
+        <div class="card-body p-5 flex-row flex-wrap items-center gap-x-4 gap-y-2">
+          <div
+            class="p-3 rounded-xl bg-warning/10 text-warning shrink-0 ring-1 ring-warning/15"
+            aria-hidden="true"
+          >
+            <i class="fa-regular fa-clock text-xl"></i>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="text-2xl font-bold text-warning">{{ catalog.slaPolicies.length }}</div>
-            <div class="text-xs opacity-70 uppercase tracking-wide">Políticas SLA</div>
+            <div class="text-3xl font-bold text-warning leading-none">
+              {{ catalog.slaPolicies.length }}
+            </div>
+            <div class="text-xs opacity-60 uppercase tracking-wider mt-1">
+              Políticas SLA
+            </div>
           </div>
-          <div class="badge badge-sm badge-ghost gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
+          <span class="badge badge-sm badge-warning gap-1.5 shrink-0 font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-warning-content/80"></span>
             Configuradas
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ ESTADÍSTICAS RÁPIDAS ============================ -->
+  <section aria-label="Estadísticas del catálogo" *ngIf="catalog.areas.length || catalog.slaPolicies.length">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+      <!-- Distribución de prioridad de áreas -->
+      <div
+        class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl overflow-hidden"
+        *ngIf="catalog.areas.length"
+      >
+        <div class="card-body p-4">
+          <div class="flex items-center gap-2 mb-3">
+            <div
+              class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-flag text-sm"></i>
+            </div>
+            <h3 class="text-sm font-semibold">Prioridad de áreas</h3>
+          </div>
+
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-error shrink-0"></span>
+                <span class="opacity-70">Alta (8+)</span>
+              </div>
+              <span class="font-semibold">{{ getPriorityDistribution().high }}</span>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-warning shrink-0"></span>
+                <span class="opacity-70">Media (5-7)</span>
+              </div>
+              <span class="font-semibold">{{ getPriorityDistribution().medium }}</span>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-info shrink-0"></span>
+                <span class="opacity-70">Baja (&lt;5)</span>
+              </div>
+              <span class="font-semibold">{{ getPriorityDistribution().low }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Promedios SLA -->
+      <div
+        class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl overflow-hidden"
+        *ngIf="catalog.slaPolicies.length"
+      >
+        <div class="card-body p-4">
+          <div class="flex items-center gap-2 mb-3">
+            <div
+              class="p-1.5 rounded-lg bg-warning/10 text-warning ring-1 ring-warning/15"
+              aria-hidden="true"
+            >
+              <i class="fa-regular fa-clock text-sm"></i>
+            </div>
+            <h3 class="text-sm font-semibold">Promedios SLA</h3>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-base-200/50 rounded-xl p-3 text-center">
+              <div class="text-xl font-bold text-warning">
+                {{ formatMinutes(getAvgResponse()) }}
+              </div>
+              <div class="text-xs opacity-60 mt-0.5">Respuesta</div>
+            </div>
+            <div class="bg-base-200/50 rounded-xl p-3 text-center">
+              <div class="text-xl font-bold text-success">
+                {{ formatMinutes(getAvgResolution()) }}
+              </div>
+              <div class="text-xs opacity-60 mt-0.5">Resolución</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado de áreas -->
+      <div
+        class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl overflow-hidden"
+        *ngIf="catalog.areas.length"
+      >
+        <div class="card-body p-4">
+          <div class="flex items-center gap-2 mb-3">
+            <div
+              class="p-1.5 rounded-lg bg-success/10 text-success ring-1 ring-success/15"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-circle-check text-sm"></i>
+            </div>
+            <h3 class="text-sm font-semibold">Estado de áreas</h3>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-success/10 rounded-xl p-3 text-center">
+              <div class="text-xl font-bold text-success">
+                {{ getActiveAreasCount() }}
+              </div>
+              <div class="text-xs opacity-70 mt-0.5">Activas</div>
+            </div>
+            <div class="bg-error/10 rounded-xl p-3 text-center">
+              <div class="text-xl font-bold text-error">
+                {{ getInactiveAreasCount() }}
+              </div>
+              <div class="text-xs opacity-70 mt-0.5">Inactivas</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Tarjetas de catálogo detalladas -->
+  <!-- ============================ CATÁLOGO DETALLADO ============================ -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <!-- Áreas -->
-    <div class="card bg-base-100 shadow-md border border-base-200 hover:shadow-lg transition-all duration-200">
+
+    <!-- ============ ÁREAS ============ -->
+    <div
+      class="card bg-base-100 shadow-md hover:shadow-lg transition duration-200 border border-base-200 border-t-4 border-t-primary rounded-[0.5rem] overflow-hidden"
+    >
       <div class="card-body">
-        <div class="flex items-center justify-between gap-2 mb-3">
+        <div class="flex items-center justify-between gap-2 mb-4">
           <div class="flex items-center gap-2">
-            <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
+            <div
+              class="p-2 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-building text-sm"></i>
             </div>
-            <h2 class="card-title text-base">Áreas</h2>
+            <h2 class="text-base font-semibold">Áreas</h2>
           </div>
-          <span class="badge badge-sm badge-primary">{{ catalog.areas.length }}</span>
+          <span class="badge badge-sm badge-primary font-semibold min-w-[2rem]">
+            {{ catalog.areas.length }}
+          </span>
         </div>
 
-        <ul class="text-sm space-y-1.5 max-h-64 overflow-y-auto">
-          <li *ngFor="let a of catalog.areas"
-            class="flex items-center justify-between gap-2 py-1.5 border-b border-base-200 last:border-0 hover:bg-base-200/40 transition-colors rounded px-1">
-            <span class="truncate">{{ a.name }}</span>
+        <ul class="text-sm space-y-1 max-h-64 overflow-y-auto overflow-x-hidden pe-1">
+          <li
+            *ngFor="let a of catalog.areas"
+            class="flex items-center justify-between gap-2 py-2 border-b border-base-200 last:border-0 hover:bg-base-200/40 transition-colors rounded-lg px-2 -mx-2"
+          >
+            <span class="truncate font-medium">{{ a.name }}</span>
             <div class="flex items-center gap-1 shrink-0">
-              <span class="badge badge-sm gap-1" [ngClass]="{
-                  'badge-error': a.priorityLevel >= 8,
-                  'badge-warning': a.priorityLevel >= 5 && a.priorityLevel < 8,
-                  'badge-info': a.priorityLevel < 5
-                }" [title]="'Prioridad ' + a.priorityLevel">
+              <span
+                class="badge badge-sm gap-1 font-semibold"
+                [ngClass]="{
+                  'badge-soft badge-error': a.priorityLevel >= 8,
+                  'badge-soft badge-warning': a.priorityLevel >= 5 && a.priorityLevel < 8,
+                  'badge-soft badge-info': a.priorityLevel < 5
+                }"
+                [title]="'Prioridad ' + a.priorityLevel"
+              >
+                <i class="fa-solid fa-flag text-[10px]" aria-hidden="true"></i>
                 {{ a.priorityLevel }}
               </span>
-              <span *ngIf="!a.status" class="badge badge-sm badge-error gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                </svg>
+              <span
+                *ngIf="!a.status"
+                class="badge badge-sm badge-soft badge-error gap-1 font-medium"
+                title="Área inactiva"
+              >
+                <i class="fa-solid fa-circle-xmark text-[10px]" aria-hidden="true"></i>
                 Inactiva
               </span>
             </div>
           </li>
         </ul>
 
-        <div *ngIf="catalog.areas.length === 0" class="flex flex-col items-center py-6 gap-2 opacity-60">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-          </svg>
-          <span class="text-xs italic">Sin áreas registradas</span>
+        <div
+          *ngIf="catalog.areas.length === 0"
+          class="flex flex-col items-center py-8 gap-2 opacity-60"
+        >
+          <div class="p-3 rounded-full bg-base-200 text-base-content/40">
+            <i class="fa-solid fa-building text-2xl" aria-hidden="true"></i>
+          </div>
+          <span class="text-sm font-medium">Sin áreas registradas</span>
+          <span class="text-xs opacity-70">Crea la primera área para empezar</span>
         </div>
 
-        <div class="card-actions justify-end mt-3">
+        <div class="card-actions justify-end mt-4 pt-3 border-t border-base-200">
           <a routerLink="/admin/areas" class="btn btn-xs btn-ghost gap-1">
             Ver todas
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
+            <i class="fa-solid fa-chevron-right text-[10px]" aria-hidden="true"></i>
           </a>
         </div>
       </div>
     </div>
 
-    <!-- Categorías -->
-    <div class="card bg-base-100 shadow-md border border-base-200 hover:shadow-lg transition-all duration-200">
+    <!-- ============ CATEGORÍAS ============ -->
+    <div
+      class="card bg-base-100 shadow-md hover:shadow-lg transition duration-200 border border-base-200 border-t-4 border-t-success rounded-[0.5rem] overflow-hidden"
+    >
       <div class="card-body">
-        <div class="flex items-center justify-between gap-2 mb-3">
+        <div class="flex items-center justify-between gap-2 mb-4">
           <div class="flex items-center gap-2">
-            <div class="p-1.5 rounded-lg bg-success/10 text-success" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-              </svg>
+            <div
+              class="p-2 rounded-lg bg-success/10 text-success ring-1 ring-success/15"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-tag text-sm"></i>
             </div>
-            <h2 class="card-title text-base">Categorías</h2>
+            <h2 class="text-base font-semibold">Categorías</h2>
           </div>
-          <span class="badge badge-sm badge-success">{{ catalog.categories.length }}</span>
+          <span class="badge badge-sm badge-success font-semibold min-w-[2rem]">
+            {{ catalog.categories.length }}
+          </span>
         </div>
 
-        <ul class="text-sm space-y-1.5 max-h-64 overflow-y-auto">
-          <li *ngFor="let c of catalog.categories"
-            class="flex items-center gap-2 py-1.5 border-b border-base-200 last:border-0 hover:bg-base-200/40 transition-colors rounded px-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-success shrink-0" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span class="truncate">{{ c.name }}</span>
+        <ul class="text-sm space-y-1 max-h-64 overflow-y-auto overflow-x-hidden pe-1">
+          <li
+            *ngFor="let c of catalog.categories"
+            class="flex items-center gap-2 py-2 border-b border-base-200 last:border-0 hover:bg-base-200/40 transition-colors rounded-lg px-2 -mx-2"
+          >
+            <i
+              class="fa-solid fa-circle-check text-sm text-success shrink-0"
+              aria-hidden="true"
+            ></i>
+            <span class="truncate font-medium">{{ c.name }}</span>
           </li>
         </ul>
 
-        <div *ngIf="catalog.categories.length === 0" class="flex flex-col items-center py-6 gap-2 opacity-60">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-          </svg>
-          <span class="text-xs italic">Sin categorías registradas</span>
+        <div
+          *ngIf="catalog.categories.length === 0"
+          class="flex flex-col items-center py-8 gap-2 opacity-60"
+        >
+          <div class="p-3 rounded-full bg-base-200 text-base-content/40">
+            <i class="fa-solid fa-tag text-2xl" aria-hidden="true"></i>
+          </div>
+          <span class="text-sm font-medium">Sin categorías registradas</span>
+          <span class="text-xs opacity-70">Crea la primera categoría para empezar</span>
         </div>
 
-        <div class="card-actions justify-end mt-3">
+        <div class="card-actions justify-end mt-4 pt-3 border-t border-base-200">
           <a routerLink="/admin/categories" class="btn btn-xs btn-ghost gap-1">
             Ver todas
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
+            <i class="fa-solid fa-chevron-right text-[10px]" aria-hidden="true"></i>
           </a>
         </div>
       </div>
     </div>
 
-    <!-- Políticas SLA -->
-    <div class="card bg-base-100 shadow-md border border-base-200 hover:shadow-lg transition-all duration-200">
+    <!-- ============ SLA ============ -->
+    <div
+      class="card bg-base-100 shadow-md hover:shadow-lg transition duration-200 border border-base-200 border-t-4 border-t-warning rounded-[0.5rem] overflow-hidden"
+    >
       <div class="card-body">
-        <div class="flex items-center justify-between gap-2 mb-3">
+        <div class="flex items-center justify-between gap-2 mb-4">
           <div class="flex items-center gap-2">
-            <div class="p-1.5 rounded-lg bg-warning/10 text-warning" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+            <div
+              class="p-2 rounded-lg bg-warning/10 text-warning ring-1 ring-warning/15"
+              aria-hidden="true"
+            >
+              <i class="fa-regular fa-clock text-sm"></i>
             </div>
-            <h2 class="card-title text-base">Políticas SLA</h2>
+            <h2 class="text-base font-semibold">Políticas SLA</h2>
           </div>
-          <span class="badge badge-sm badge-warning">{{ catalog.slaPolicies.length }}</span>
+          <span class="badge badge-sm badge-warning font-semibold min-w-[2rem]">
+            {{ catalog.slaPolicies.length }}
+          </span>
         </div>
 
-        <ul class="text-sm space-y-3 max-h-64 overflow-y-auto">
-          <li *ngFor="let s of catalog.slaPolicies"
-            class="pb-2 border-b border-base-200 last:border-0 hover:bg-base-200/40 transition-colors rounded px-1">
+        <ul class="text-sm space-y-1 max-h-64 overflow-y-auto overflow-x-hidden pe-1">
+          <li
+            *ngFor="let s of catalog.slaPolicies"
+            class="py-2.5 border-b border-base-200 last:border-0 hover:bg-base-200/40 transition-colors rounded-lg px-2 -mx-2"
+          >
             <div class="flex items-center gap-2 font-semibold truncate">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-warning shrink-0" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
+              <i
+                class="fa-solid fa-shield-halved text-sm text-warning shrink-0"
+                aria-hidden="true"
+              ></i>
               {{ s.name }}
             </div>
-            <div class="flex flex-wrap gap-1.5 mt-1.5">
-              <span class="badge badge-sm badge-outline gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-                {{ s.response }} min
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              <span class="badge badge-sm badge-soft gap-1 font-medium">
+                <i class="fa-solid fa-comment text-[10px] text-primary" aria-hidden="true"></i>
+                Respuesta <b class="font-bold">{{ s.response }} min</b>
               </span>
-              <span class="badge badge-sm badge-outline gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {{ s.resolution }} min
+              <span class="badge badge-sm badge-soft gap-1 font-medium">
+                <i class="fa-solid fa-circle-check text-[10px] text-success" aria-hidden="true"></i>
+                Resolución <b class="font-bold">{{ s.resolution }} min</b>
               </span>
             </div>
           </li>
         </ul>
 
-        <div *ngIf="catalog.slaPolicies.length === 0" class="flex flex-col items-center py-6 gap-2 opacity-60">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-xs italic">Sin políticas registradas</span>
+        <div
+          *ngIf="catalog.slaPolicies.length === 0"
+          class="flex flex-col items-center py-8 gap-2 opacity-60"
+        >
+          <div class="p-3 rounded-full bg-base-200 text-base-content/40">
+            <i class="fa-regular fa-clock text-2xl" aria-hidden="true"></i>
+          </div>
+          <span class="text-sm font-medium">Sin políticas registradas</span>
+          <span class="text-xs opacity-70">Configura la primera política SLA</span>
         </div>
 
-        <div class="card-actions justify-end mt-3">
+        <div class="card-actions justify-end mt-4 pt-3 border-t border-base-200">
           <a routerLink="/admin/sla" class="btn btn-xs btn-ghost gap-1">
             Configurar
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
+            <i class="fa-solid fa-chevron-right text-[10px]" aria-hidden="true"></i>
           </a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Accesos directos -->
-  <section aria-label="Accesos directos">
-    <h2 class="text-sm font-semibold opacity-70 uppercase tracking-wide mb-3">Accesos directos</h2>
+  <!-- ============================ ACCESOS DIRECTOS ============================ -->
+  <section aria-label="Accesos directos" *ngIf="isSuperAdmin">
+    <div class="flex items-center gap-2 mb-3">
+      <div
+        class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-bolt text-sm"></i>
+      </div>
+      <h2 class="text-sm font-bold uppercase tracking-wider opacity-70">
+        Accesos directos
+      </h2>
+    </div>
+
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-      <a routerLink="/admin/users"
-        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+      <a
+        routerLink="/admin/users"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-primary/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
         <div class="card-body p-4 items-center text-center gap-2">
-          <div class="p-2 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
+          <div
+            class="p-2.5 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 group-hover:bg-primary group-hover:text-white group-hover:ring-primary transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-users text-lg"></i>
           </div>
           <span class="text-sm font-medium">Usuarios</span>
         </div>
       </a>
 
-      <a routerLink="/admin/areas"
-        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+      <a
+        routerLink="/admin/areas"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-primary/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
         <div class="card-body p-4 items-center text-center gap-2">
-          <div class="p-2 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
+          <div
+            class="p-2.5 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 group-hover:bg-primary group-hover:text-white group-hover:ring-primary transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-building text-lg"></i>
           </div>
           <span class="text-sm font-medium">Áreas</span>
         </div>
       </a>
 
-      <a routerLink="/admin/categories"
-        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+      <a
+        routerLink="/admin/categories"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-success/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
         <div class="card-body p-4 items-center text-center gap-2">
-          <div class="p-2 rounded-lg bg-success/10 text-success" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-            </svg>
+          <div
+            class="p-2.5 rounded-xl bg-success/10 text-success ring-1 ring-success/15 group-hover:bg-success group-hover:text-white group-hover:ring-success transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-tag text-lg"></i>
           </div>
           <span class="text-sm font-medium">Categorías</span>
         </div>
       </a>
 
-      <a routerLink="/admin/teams"
-        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+      <a
+        routerLink="/admin/teams"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-info/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
         <div class="card-body p-4 items-center text-center gap-2">
-          <div class="p-2 rounded-lg bg-info/10 text-info" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+          <div
+            class="p-2.5 rounded-xl bg-info/10 text-info ring-1 ring-info/15 group-hover:bg-info group-hover:text-white group-hover:ring-info transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-user-group text-lg"></i>
           </div>
           <span class="text-sm font-medium">Equipos</span>
         </div>
       </a>
 
-      <a routerLink="/admin/sla"
-        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+      <a
+        routerLink="/admin/sla"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-warning/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
         <div class="card-body p-4 items-center text-center gap-2">
-          <div class="p-2 rounded-lg bg-warning/10 text-warning" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+          <div
+            class="p-2.5 rounded-xl bg-warning/10 text-warning ring-1 ring-warning/15 group-hover:bg-warning group-hover:text-white group-hover:ring-warning transition"
+            aria-hidden="true"
+          >
+            <i class="fa-regular fa-clock text-lg"></i>
           </div>
           <span class="text-sm font-medium">SLA</span>
         </div>
       </a>
 
-      <a routerLink="/admin/escalations"
-        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+      <a
+        routerLink="/admin/escalations"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-error/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
         <div class="card-body p-4 items-center text-center gap-2">
-          <div class="p-2 rounded-lg bg-error/10 text-error" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
+          <div
+            class="p-2.5 rounded-xl bg-error/10 text-error ring-1 ring-error/15 group-hover:bg-error group-hover:text-white group-hover:ring-error transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-arrow-trend-up text-lg"></i>
           </div>
           <span class="text-sm font-medium">Escalaciones</span>
         </div>
       </a>
 
-      <a routerLink="/admin/templates"
-        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+      <a
+        routerLink="/admin/templates"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-primary/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
         <div class="card-body p-4 items-center text-center gap-2">
-          <div class="p-2 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+          <div
+            class="p-2.5 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 group-hover:bg-primary group-hover:text-white group-hover:ring-primary transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-envelope text-lg"></i>
           </div>
           <span class="text-sm font-medium">Plantillas</span>
         </div>
       </a>
 
-      <a routerLink="/admin/branding"
-        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+      <a
+        routerLink="/admin/branding"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-secondary/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
         <div class="card-body p-4 items-center text-center gap-2">
-          <div class="p-2 rounded-lg bg-secondary/10 text-secondary" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-            </svg>
+          <div
+            class="p-2.5 rounded-xl bg-secondary/10 text-secondary ring-1 ring-secondary/15 group-hover:bg-secondary group-hover:text-white group-hover:ring-secondary transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-paintbrush text-lg"></i>
           </div>
           <span class="text-sm font-medium">Marca</span>
         </div>
       </a>
 
-      <a *ngIf="isSuperAdmin" routerLink="/admin/ai-config"
-        class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/30 transition-all">
+      <a
+        *ngIf="isSuperAdmin"
+        routerLink="/admin/ai-config"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-accent/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
         <div class="card-body p-4 items-center text-center gap-2">
-          <div class="p-2 rounded-lg bg-accent/10 text-accent" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5" />
-            </svg>
+          <div
+            class="p-2.5 rounded-xl bg-accent/10 text-accent ring-1 ring-accent/15 group-hover:bg-accent group-hover:text-white group-hover:ring-accent transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
           </div>
           <span class="text-sm font-medium">Inteligencia Artificial</span>
+        </div>
+      </a>
+
+      <a
+        routerLink="/admin/ticket-types"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-secondary/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div
+            class="p-2.5 rounded-xl bg-secondary/10 text-secondary ring-1 ring-secondary/15 group-hover:bg-secondary group-hover:text-white group-hover:ring-secondary transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-ticket text-lg"></i>
+          </div>
+          <span class="text-sm font-medium">Tipos de Ticket</span>
+        </div>
+      </a>
+
+      <a
+        *ngIf="isSuperAdmin"
+        routerLink="/admin/microsoft-graph"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-info/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div
+            class="p-2.5 rounded-xl bg-info/10 text-info ring-1 ring-info/15 group-hover:bg-info group-hover:text-white group-hover:ring-info transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-share-nodes text-lg"></i>
+          </div>
+          <span class="text-sm font-medium">Graph y Correo</span>
+        </div>
+      </a>
+
+      <a
+        *ngIf="isSuperAdmin"
+        routerLink="/admin/reports"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-success/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div
+            class="p-2.5 rounded-xl bg-success/10 text-success ring-1 ring-success/15 group-hover:bg-success group-hover:text-white group-hover:ring-success transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-flask text-lg"></i>
+          </div>
+          <span class="text-sm font-medium">Reportes</span>
+        </div>
+      </a>
+
+      <a
+        *ngIf="isSuperAdmin"
+        routerLink="/workflows"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-primary/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div
+            class="p-2.5 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 group-hover:bg-primary group-hover:text-white group-hover:ring-primary transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-diagram-project text-lg"></i>
+          </div>
+          <span class="text-sm font-medium">Automatizaciones</span>
+        </div>
+      </a>
+
+      <!--
+        Seguridad de sesion y acuses de lectura se anadieron despues y no tenian
+        tarjeta aqui, aunque si aparecian en el menu lateral. Con ellas el
+        bloque de accesos queda completo.
+      -->
+      <a
+        *ngIf="isSuperAdmin"
+        routerLink="/admin/session-config"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-primary/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div
+            class="p-2.5 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 group-hover:bg-primary group-hover:text-white group-hover:ring-primary transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-shield-halved text-lg"></i>
+          </div>
+<span class="text-sm font-medium">Seguridad de Sesión</span>
+          </div>
+        </a>
+
+        <!--
+          El doble factor tiene su propia tarjeta porque no es un ajuste más de
+          seguridad: activarlo cambia el acceso de todo el mundo a la vez, y el
+          super administrador tiene que ver a cuántos les afecta antes de
+          mover el interruptor.
+        -->
+        <a
+          *ngIf="isSuperAdmin"
+          routerLink="/admin/mfa"
+          class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-primary/40 rounded-2xl overflow-hidden transition duration-200 group"
+        >
+          <div class="card-body p-4 items-center text-center gap-2">
+            <div
+              class="p-2.5 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 group-hover:bg-primary group-hover:text-white group-hover:ring-primary transition"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-mobile-screen-button text-lg"></i>
+            </div>
+            <span class="text-sm font-medium">Doble Factor (MFA)</span>
+          </div>
+        </a>
+
+        <a
+          *ngIf="isSuperAdmin"
+          routerLink="/admin/chat-config"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-primary/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div
+            class="p-2.5 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 group-hover:bg-primary group-hover:text-white group-hover:ring-primary transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-check-double text-lg"></i>
+          </div>
+          <span class="text-sm font-medium">Acuses de Lectura</span>
         </div>
       </a>
     </div>
   </section>
 </div>
 
-<!-- Estado de carga -->
-<div *ngIf="!catalog" class="flex flex-col items-center justify-center py-20 gap-3" role="status" aria-live="polite">
-  <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+<!-- ============================ ESTADO DE CARGA ============================ -->
+<div
+  *ngIf="!catalog"
+  class="flex flex-col items-center justify-center py-20 gap-3"
+  role="status"
+  aria-live="polite"
+>
+  <span
+    class="loading loading-spinner loading-lg text-primary"
+    aria-hidden="true"
+  ></span>
   <span class="text-sm opacity-70">Cargando panel de administración...</span>
 </div>

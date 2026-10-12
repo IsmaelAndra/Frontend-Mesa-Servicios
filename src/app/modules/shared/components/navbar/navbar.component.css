@@ -1,0 +1,145 @@
+/* ============================================================================
+   Barra superior azul, del mismo color que el menú lateral (--primary-color,
+   el de la marca), con el logo del sistema en el centro.
+
+   Tres columnas: menú y búsqueda | logo | controles. Las laterales reparten
+   el sitio por igual (1fr), así el logo queda centrado, pero nunca miden menos
+   que su contenido (max-content): en pantallas medianas los controles se
+   montaban encima del logo.
+   ============================================================================ */
+.nav {
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  height: 4rem;
+  padding: 0 1rem;
+  background-color: var(--primary-color, #062e86);
+  background-image: linear-gradient(90deg, rgb(255 255 255 / 0.03) 0%, rgb(0 0 0 / 0.1) 100%);
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  box-shadow: 0 6px 18px -14px rgb(2 6 23 / 0.6);
+  color: #ffffff;
+}
+.nav > :last-child {
+  justify-self: end;
+}
+@media (min-width: 640px) {
+  .nav {
+    padding: 0 1.5rem;
+  }
+}
+
+/* ---------- Logo del centro ---------- */
+.nav__marca {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.6rem;
+  /* Se encoge con la pantalla para dejar sitio a los controles. */
+  max-width: clamp(6.5rem, 20vw, 15rem);
+  border-radius: 0.6rem;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.nav__marca:hover {
+  opacity: 0.9;
+}
+.nav__logo {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+.nav__marca-texto {
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+/* En un móvil no caben logo, búsqueda y controles: manda la funcionalidad. */
+@media (max-width: 520px) {
+  .nav__marca {
+    display: none;
+  }
+  .nav {
+    grid-template-columns: minmax(max-content, 1fr) minmax(max-content, 1fr);
+  }
+}
+
+/* ---------- Botones ---------- */
+.nav__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.8rem;
+  color: rgb(255 255 255 / 0.85);
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  flex-shrink: 0;
+}
+.nav__btn:hover {
+  background: rgb(255 255 255 / 0.12);
+  color: #ffffff;
+}
+.nav__btn:active,
+.nav__avatar:active,
+.nav__buscar:active {
+  scale: 0.97;
+}
+
+/* ---------- Búsqueda ---------- */
+.nav__buscar {
+  display: none;
+  min-width: 0;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 22rem;
+  height: 2.5rem;
+  padding: 0 0.6rem 0 0.9rem;
+  border-radius: 0.85rem;
+  font-size: 0.82rem;
+  color: rgb(255 255 255 / 0.7);
+  background: rgb(255 255 255 / 0.1);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+/* El buscador solo se muestra completo cuando hay sitio; en pantallas
+   medianas queda la lupa, para no apretar los controles de la derecha. */
+@media (min-width: 1100px) {
+  .nav__buscar {
+    display: flex;
+  }
+}
+.nav__buscar:hover {
+  border-color: rgb(255 255 255 / 0.3);
+  background: rgb(255 255 255 / 0.16);
+}
+.nav__kbd {
+  font-family: inherit;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  background: rgb(255 255 255 / 0.1);
+  color: rgb(255 255 255 / 0.8);
+}
+
+/* ---------- Avatar ---------- */
+.nav__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem;
+  border-radius: 0.9rem;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.nav__avatar:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+
+@media (min-width: 1100px) {
+  .nav__lupa {
+    display: none;
+  }
+}

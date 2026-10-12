@@ -1,0 +1,398 @@
+<!-- ============ Fondo del login ============ -->
+<div
+  class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+>
+  <div class="card-body">
+    <div class="flex items-start gap-4 mb-4">
+      <div
+        class="p-2 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-mountain-sun text-lg"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h2 class="text-base font-semibold">Fondo del login</h2>
+        <p class="text-xs opacity-60 mt-0.5">
+          Pantalla de inicio de sesión · PNG, JPG · 1920×1080px
+        </p>
+      </div>
+      <span
+        *ngIf="b.backgroundPreview"
+        class="badge badge-sm badge-success text-success-content gap-1 shrink-0 font-medium"
+      >
+        <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
+        Configurado
+      </span>
+    </div>
+
+    <div class="flex flex-col lg:flex-row items-center gap-5">
+      <div class="shrink-0 w-full lg:w-72">
+        <div
+          *ngIf="b.backgroundPreview"
+          class="w-full h-40 rounded-xl overflow-hidden ring-1 ring-base-300"
+        >
+          <img
+            [src]="b.backgroundPreview"
+            alt="Fondo actual"
+            class="w-full h-full object-cover"
+          />
+        </div>
+        <div
+          *ngIf="!b.backgroundPreview"
+          class="w-full h-40 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-base-300 text-base-content/40 gap-1 bg-base-200/40"
+        >
+          <i
+            class="fa-solid fa-mountain-sun text-3xl"
+            aria-hidden="true"
+          ></i>
+          <span class="text-[10px]">Sin imagen de fondo</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2.5 w-full lg:flex-1">
+        <div class="flex flex-wrap gap-2">
+          <label class="btn btn-outline btn-sm gap-2 cursor-pointer">
+            <i
+              class="fa-solid fa-upload text-[15px]"
+              aria-hidden="true"
+            ></i>
+            Seleccionar
+            <input
+              type="file"
+              accept="image/png,image/jpeg"
+              (change)="b.onBackgroundSelected($event)"
+              class="hidden"
+            />
+          </label>
+
+          <button
+            class="btn btn-primary btn-sm gap-2"
+            (click)="b.uploadBackground()"
+            [disabled]="b.loading || !b.backgroundFile"
+          >
+            <span
+              *ngIf="b.loading"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="!b.loading"
+              class="fa-solid fa-check text-[15px]"
+              aria-hidden="true"
+            ></i>
+            {{ b.loading ? "Subiendo..." : "Subir" }}
+          </button>
+        </div>
+
+        <div
+          *ngIf="b.backgroundFile"
+          class="inline-flex items-center gap-2 self-start px-2.5 py-1 rounded-lg bg-primary/5 border border-primary/20 text-xs"
+        >
+          <i
+            class="fa-solid fa-file-image text-primary text-[10px]"
+            aria-hidden="true"
+          ></i>
+          <span
+            class="font-mono truncate max-w-[280px]"
+            [title]="b.backgroundFile.name"
+          >
+            {{ b.backgroundFile.name }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Portada del perfil ============ -->
+<div
+  class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+>
+  <div class="card-body">
+    <div class="flex items-start gap-4 mb-4">
+      <div
+        class="p-2 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-id-card text-lg"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h2 class="text-base font-semibold">Portada del perfil</h2>
+        <p class="text-xs opacity-60 mt-0.5">
+          Cabecera de "Mi Perfil" · PNG, JPG · 1200×300px
+        </p>
+      </div>
+      <span
+        *ngIf="b.profileCoverPreview"
+        class="badge badge-sm badge-success text-success-content gap-1 shrink-0 font-medium"
+      >
+        <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
+        Configurado
+      </span>
+    </div>
+
+    <div class="flex flex-col lg:flex-row items-center gap-5">
+      <div class="shrink-0 w-full lg:w-72">
+        <div
+          *ngIf="b.profileCoverPreview"
+          class="w-full h-28 rounded-xl overflow-hidden ring-1 ring-base-300"
+        >
+          <img
+            [src]="b.profileCoverPreview"
+            alt="Portada actual"
+            class="w-full h-full object-cover"
+          />
+        </div>
+        <div
+          *ngIf="!b.profileCoverPreview"
+          class="w-full h-28 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-base-300 text-base-content/40 gap-1 bg-base-200/40"
+        >
+          <i class="fa-solid fa-id-card text-3xl" aria-hidden="true"></i>
+          <span class="text-[10px]">Sin portada</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2.5 w-full lg:flex-1">
+        <div class="flex flex-wrap gap-2">
+          <label class="btn btn-outline btn-sm gap-2 cursor-pointer">
+            <i
+              class="fa-solid fa-upload text-[15px]"
+              aria-hidden="true"
+            ></i>
+            Seleccionar
+            <input
+              type="file"
+              accept="image/png,image/jpeg"
+              (change)="b.onProfileCoverSelected($event)"
+              class="hidden"
+            />
+          </label>
+
+          <button
+            class="btn btn-primary btn-sm gap-2"
+            (click)="b.uploadProfileCover()"
+            [disabled]="b.loading || !b.profileCoverFile"
+          >
+            <span
+              *ngIf="b.loading"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="!b.loading"
+              class="fa-solid fa-check text-[15px]"
+              aria-hidden="true"
+            ></i>
+            {{ b.loading ? "Subiendo..." : "Subir" }}
+          </button>
+        </div>
+
+        <div
+          *ngIf="b.profileCoverFile"
+          class="inline-flex items-center gap-2 self-start px-2.5 py-1 rounded-lg bg-primary/5 border border-primary/20 text-xs"
+        >
+          <i
+            class="fa-solid fa-file-image text-primary text-[10px]"
+            aria-hidden="true"
+          ></i>
+          <span
+            class="font-mono truncate max-w-[280px]"
+            [title]="b.profileCoverFile.name"
+          >
+            {{ b.profileCoverFile.name }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Fondos de los chats ============ -->
+<div
+  class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+>
+  <div class="card-body">
+    <div class="flex items-start gap-4 mb-4">
+      <div
+        class="p-2 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-comments text-lg"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h2 class="text-base font-semibold">Fondos de los chats</h2>
+        <p class="text-xs opacity-60 mt-0.5">
+          Tickets y asistente IA · PNG, JPG · 800×700px
+        </p>
+      </div>
+    </div>
+
+    <p class="text-xs opacity-70 mb-4 leading-relaxed">
+      Configura por separado los modos claro y oscuro. Si no configuras el
+      fondo oscuro, se usará el claro como respaldo.
+    </p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Modo claro -->
+      <div class="p-4 rounded-xl border border-base-200 bg-base-200/30">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div
+              class="p-1.5 rounded-lg bg-warning/15 text-warning ring-1 ring-warning/15"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-sun text-sm"></i>
+            </div>
+            <h3 class="font-semibold text-sm">Modo claro</h3>
+          </div>
+          <span
+            *ngIf="b.chatBackgroundLightPreview"
+            class="badge badge-xs badge-success text-success-content gap-1"
+          >
+            <i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>
+            OK
+          </span>
+        </div>
+
+        <div
+          *ngIf="b.chatBackgroundLightPreview"
+          class="w-full h-32 rounded-xl flex items-center justify-center overflow-hidden ring-1 ring-base-300"
+          [style.background-color]="'#182234'"
+        >
+          <img
+            [src]="b.chatBackgroundLightPreview"
+            alt="Fondo claro"
+            class="w-full h-full object-cover"
+          />
+        </div>
+        <div
+          *ngIf="!b.chatBackgroundLightPreview"
+          class="w-full h-32 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-base-300 gap-1"
+          [style.background-color]="'#182234'"
+          [style.color]="'#94A3B8'"
+        >
+          <i class="fa-regular fa-image text-2xl" aria-hidden="true"></i>
+          <span class="text-[10px]">Sin fondo claro</span>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mt-3">
+          <label class="btn btn-outline btn-xs gap-1.5 cursor-pointer">
+            <i
+              class="fa-solid fa-upload text-[11px]"
+              aria-hidden="true"
+            ></i>
+            Seleccionar
+            <input
+              type="file"
+              accept="image/png,image/jpeg"
+              (change)="b.onChatBackgroundLightSelected($event)"
+              class="hidden"
+            />
+          </label>
+          <button
+            class="btn btn-primary btn-xs gap-1.5"
+            (click)="b.uploadChatBackground('light')"
+            [disabled]="b.loading || !b.chatBackgroundLightFile"
+          >
+            <span
+              *ngIf="b.loading"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="!b.loading"
+              class="fa-solid fa-check text-[11px]"
+              aria-hidden="true"
+            ></i>
+            Subir
+          </button>
+        </div>
+      </div>
+
+      <!-- Modo oscuro -->
+      <div class="p-4 rounded-xl border border-base-200 bg-base-200/30">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div
+              class="p-1.5 rounded-lg bg-info/15 text-info ring-1 ring-info/15"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-moon text-sm"></i>
+            </div>
+            <h3 class="font-semibold text-sm">Modo oscuro</h3>
+          </div>
+          <span
+            *ngIf="b.chatBackgroundDarkPreview"
+            class="badge badge-xs badge-success text-success-content gap-1"
+          >
+            <i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>
+            OK
+          </span>
+        </div>
+
+        <div
+          *ngIf="b.chatBackgroundDarkPreview"
+          class="w-full h-32 rounded-xl flex items-center justify-center overflow-hidden ring-1 ring-base-300"
+          [style.background-color]="'#fafbfb'"
+        >
+          <img
+            [src]="b.chatBackgroundDarkPreview"
+            alt="Fondo oscuro"
+            class="w-full h-full object-cover"
+          />
+        </div>
+        <div
+          *ngIf="!b.chatBackgroundDarkPreview && b.chatBackgroundLightPreview"
+          class="w-full h-32 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-base-300 gap-1"
+          [style.background-color]="'#fafbfb'"
+          [style.color]="'#64748B'"
+        >
+          <i class="fa-solid fa-arrow-down text-2xl" aria-hidden="true"></i>
+          <span class="text-[10px]">Usará el fondo claro</span>
+        </div>
+        <div
+          *ngIf="!b.chatBackgroundDarkPreview && !b.chatBackgroundLightPreview"
+          class="w-full h-32 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-base-300 gap-1"
+          [style.background-color]="'#fafbfb'"
+          [style.color]="'#64748B'"
+        >
+          <i class="fa-regular fa-image text-2xl" aria-hidden="true"></i>
+          <span class="text-[10px]">Sin fondo oscuro</span>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mt-3">
+          <label class="btn btn-outline btn-xs gap-1.5 cursor-pointer">
+            <i
+              class="fa-solid fa-upload text-[11px]"
+              aria-hidden="true"
+            ></i>
+            Seleccionar
+            <input
+              type="file"
+              accept="image/png,image/jpeg"
+              (change)="b.onChatBackgroundDarkSelected($event)"
+              class="hidden"
+            />
+          </label>
+          <button
+            class="btn btn-primary btn-xs gap-1.5"
+            (click)="b.uploadChatBackground('dark')"
+            [disabled]="b.loading || !b.chatBackgroundDarkFile"
+          >
+            <span
+              *ngIf="b.loading"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="!b.loading"
+              class="fa-solid fa-check text-[11px]"
+              aria-hidden="true"
+            ></i>
+            Subir
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,1051 @@
+<aside
+  class="overflow-y-auto card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+>
+  <div class="card-body p-3 gap-3 text-sm">
+    <ng-container *ngIf="editor.nodoActual() as nodo; else nadaSeleccionado">
+      <!-- Header del panel -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <span
+            class="w-7 h-7 rounded-md flex items-center justify-center text-white text-xs shrink-0"
+            [style.backgroundColor]="editor.colorDe(nodo.type)"
+            aria-hidden="true"
+          >
+            <i [class]="editor.iconos[nodo.type]"></i>
+          </span>
+          <h3 class="font-semibold text-sm truncate">
+            {{ editor.etiquetaTipo(nodo.type) }}
+          </h3>
+        </div>
+        <div class="flex gap-1 shrink-0">
+          <button
+            *ngIf="nodo.type !== 'INICIO'"
+            type="button"
+            class="btn btn-ghost btn-xs"
+            title="Duplicar"
+            (click)="editor.duplicarNodo(nodo.id)"
+          >
+            <i class="fa-solid fa-copy text-xs" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs text-error hover:bg-error/10"
+            title="Eliminar"
+            (click)="editor.eliminarNodo(nodo.id)"
+          >
+            <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Nombre -->
+      <div>
+        <label class="label pt-0 pb-1">
+          <span class="label-text text-xs font-medium">Nombre</span>
+        </label>
+        <input
+          class="input input-bordered input-sm w-full"
+          [value]="nodo.name"
+          (input)="editor.renombrarNodo(nodo.id, $any($event.target).value)"
+        />
+        <p class="text-[10px] opacity-50 mt-1">
+          id: <code class="bg-base-200 px-1 rounded">{{ nodo.id }}</code>
+          · sus resultados:
+          <code class="bg-base-200 px-1 rounded"
+            >nodos.{{ nodo.id }}.*</code
+          >
+        </p>
+      </div>
+
+      <!-- Errores del nodo -->
+      <div
+        *ngIf="editor.erroresPorNodo().get(nodo.id) as errs"
+        class="flex items-start gap-2 p-2 rounded-lg bg-error/10 border border-error/30 text-xs"
+      >
+        <i
+          class="fa-solid fa-circle-exclamation text-error mt-0.5 shrink-0"
+          aria-hidden="true"
+        ></i>
+        <div *ngFor="let e of errs" class="leading-relaxed">{{ e }}</div>
+      </div>
+
+      <!-- Selector de variables -->
+      <div
+        *ngIf="campoVariable()"
+        class="border border-base-200 rounded-xl bg-base-200/40 overflow-hidden"
+      >
+        <div
+          class="flex justify-between items-center px-2 py-1.5 border-b border-base-200 bg-base-100"
+        >
+          <span class="text-xs font-semibold">
+            Insertar variable en «{{ campoVariable() }}»
+          </span>
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs btn-square"
+            (click)="campoVariable.set(null)"
+            aria-label="Cerrar"
+          >
+            <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="max-h-56 overflow-y-auto">
+          <button
+            *ngFor="let v of variables()"
+            type="button"
+            class="w-full text-left px-2 py-1.5 text-xs hover:bg-primary/5 border-b border-base-200 last:border-0 transition-colors"
+            (click)="insertarVariable(v.clave)"
+          >
+            <code class="text-primary font-medium">{{ v.clave }}</code>
+            <span class="block opacity-60 mt-0.5">{{ v.descripcion }}</span>
+          </button>
+          <p
+            *ngIf="variables().length === 0"
+            class="p-3 text-xs opacity-50 text-center"
+          >
+            No hay variables disponibles.
+          </p>
+        </div>
+      </div>
+
+      <ng-template #botonVar let-campo>
+        <button
+          type="button"
+          class="text-[10px] text-primary hover:underline font-medium"
+          (click)="campoVariable.set(campo)"
+        >
+          + variable
+        </button>
+      </ng-template>
+
+      <!-- Configuracion por tipo -->
+      <div class="space-y-2.5" [ngSwitch]="nodo.type">
+        <!-- IF -->
+        <ng-container *ngSwitchCase="'IF'">
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">Campo</label>
+            <ng-container
+              *ngTemplateOutlet="botonVar; context: { $implicit: 'campo' }"
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full font-mono text-xs"
+            [value]="configDe('campo')"
+            (input)="setConfig('campo', $any($event.target).value)"
+            placeholder="ticket.prioridad"
+          />
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70"
+              >Operador</span
+            >
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('operador')"
+            (change)="setConfig('operador', $any($event.target).value)"
+          >
+            <option
+              *ngFor="let op of editor.catalogo()?.operadores ?? []"
+              [value]="op"
+              [selected]="'' + configDe('operador') === '' + op"
+            >
+              {{ op }}
+            </option>
+          </select>
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">Valor</label>
+            <ng-container
+              *ngTemplateOutlet="botonVar; context: { $implicit: 'valor' }"
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full"
+            [value]="configDe('valor')"
+            (input)="setConfig('valor', $any($event.target).value)"
+          />
+          <p class="text-[10px] opacity-50 leading-relaxed">
+            Salidas: <b>SI</b> y <b>NO</b>. Texto sin distinguir mayusculas;
+            numeros como numeros.
+          </p>
+        </ng-container>
+
+        <!-- SWITCH -->
+        <ng-container *ngSwitchCase="'SWITCH'">
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">Campo</label>
+            <ng-container
+              *ngTemplateOutlet="botonVar; context: { $implicit: 'campo' }"
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full font-mono text-xs"
+            [value]="configDe('campo')"
+            (input)="setConfig('campo', $any($event.target).value)"
+          />
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              Casos (valor → salida)
+            </span>
+          </label>
+          <div
+            *ngFor="let caso of editor.casosDe(nodo); let i = index"
+            class="flex gap-1 items-center"
+          >
+            <input
+              class="input input-bordered input-xs flex-1 min-w-0"
+              placeholder="valor"
+              [value]="caso.valor"
+              (input)="
+                actualizarCaso(i, 'valor', $any($event.target).value)
+              "
+            />
+            <input
+              class="input input-bordered input-xs flex-1 min-w-0 font-mono"
+              placeholder="SALIDA"
+              [value]="caso.salida"
+              (input)="
+                actualizarCaso(i, 'salida', $any($event.target).value)
+              "
+            />
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs text-error hover:bg-error/10"
+              (click)="quitarCaso(i)"
+              aria-label="Quitar caso"
+            >
+              <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+            </button>
+          </div>
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs text-primary gap-1"
+            (click)="agregarCaso()"
+          >
+            <i class="fa-solid fa-plus text-[10px]" aria-hidden="true"></i>
+            caso
+          </button>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              Salida por defecto
+            </span>
+          </label>
+          <input
+            class="input input-bordered input-sm w-full font-mono text-xs"
+            [value]="configDe('por_defecto')"
+            (input)="
+              setConfig(
+                'por_defecto',
+                $any($event.target).value.toUpperCase()
+              )
+            "
+          />
+        </ng-container>
+
+        <!-- WAIT -->
+        <ng-container *ngSwitchCase="'WAIT'">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              Minutos de espera
+            </span>
+          </label>
+          <input
+            type="number"
+            min="0"
+            class="input input-bordered input-sm w-full"
+            [value]="configDe('minutos')"
+            (input)="setConfig('minutos', +$any($event.target).value || '')"
+          />
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">
+              o hasta una fecha
+            </label>
+            <ng-container
+              *ngTemplateOutlet="botonVar; context: { $implicit: 'hasta' }"
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full text-xs font-mono"
+            [value]="configDe('hasta')"
+            placeholder="2026-10-10T08:00:00-05:00"
+            (input)="setConfig('hasta', $any($event.target).value)"
+          />
+          <p class="text-[10px] opacity-50 leading-relaxed">
+            La espera no ocupa el motor: la ejecución se guarda y se retoma
+            al vencer.
+          </p>
+        </ng-container>
+
+        <!-- APPROVAL -->
+        <ng-container *ngSwitchCase="'APPROVAL'">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              Rol que aprueba (o superior)
+            </span>
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('rol')"
+            (change)="setConfig('rol', $any($event.target).value)"
+          >
+            <option
+              *ngFor="let r of roles"
+              [value]="r"
+              [selected]="'' + configDe('rol') === '' + r"
+            >
+              {{ r }}
+            </option>
+          </select>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              Aprobador concreto (opcional)
+            </span>
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('usuarioId')"
+            (change)="setConfig('usuarioId', $any($event.target).value)"
+          >
+            <option value="">— cualquiera con el rol —</option>
+            <option
+              *ngFor="let a of editor.agentes()"
+              [value]="a.idUser"
+              [selected]="'' + configDe('usuarioId') === '' + a.idUser"
+            >
+              {{ a.displayName || a.corporateEmailUser }}
+            </option>
+          </select>
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70"
+              >Que se pide</label
+            >
+            <ng-container
+              *ngTemplateOutlet="
+                botonVar;
+                context: { $implicit: 'mensaje' }
+              "
+            ></ng-container>
+          </div>
+          <textarea
+            class="textarea textarea-bordered textarea-sm w-full"
+            rows="2"
+            [value]="configDe('mensaje')"
+            (input)="setConfig('mensaje', $any($event.target).value)"
+          ></textarea>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              Horas limite (opcional)
+            </span>
+          </label>
+          <input
+            type="number"
+            min="0"
+            class="input input-bordered input-sm w-full"
+            [value]="configDe('horas_limite')"
+            (input)="
+              setConfig('horas_limite', +$any($event.target).value || '')
+            "
+          />
+          <p class="text-[10px] opacity-50 leading-relaxed">
+            Salidas: <b>APROBADO</b>, <b>RECHAZADO</b> y <b>VENCIDO</b>. Una
+            rama sin conectar termina el proceso.
+          </p>
+        </ng-container>
+
+        <!-- NEXA -->
+        <ng-container *ngSwitchCase="'NEXA'">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              Que hace NEXA
+            </span>
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('accion')"
+            (change)="setConfig('accion', $any($event.target).value)"
+          >
+            <option value="CLASIFICAR">
+              Clasificar (prioridad, categoría, equipo)
+            </option>
+            <option value="RESUMIR">Resumir el ticket</option>
+            <option value="RESPONDER">Proponer respuesta</option>
+          </select>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              Criterios o instrucciones
+            </span>
+          </label>
+          <textarea
+            class="textarea textarea-bordered textarea-sm w-full"
+            rows="3"
+            [value]="configDe('instrucciones')"
+            (input)="setConfig('instrucciones', $any($event.target).value)"
+          ></textarea>
+          <p class="text-[10px] opacity-50 leading-relaxed">
+            NEXA no cambia nada por si sola: deja sus resultados en
+            <code class="bg-base-200 px-1 rounded"
+              >nodos.{{ nodo.id }}.*</code
+            >
+            (prioridad, categoria, equipo, resumen...) para que los usen los
+            nodos siguientes.
+          </p>
+        </ng-container>
+
+        <!-- NOTIFY -->
+        <ng-container *ngSwitchCase="'NOTIFY'">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              Destinatario del ticket
+            </span>
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('destino')"
+            (change)="setConfig('destino', $any($event.target).value)"
+          >
+            <option value="">—</option>
+            <option value="AGENTE">Agente asignado</option>
+            <option value="SOLICITANTE">Solicitante</option>
+          </select>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              y/o todas las cuentas del rol
+            </span>
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('rol')"
+            (change)="setConfig('rol', $any($event.target).value)"
+          >
+            <option value="">—</option>
+            <option
+              *ngFor="let r of roles"
+              [value]="r"
+              [selected]="'' + configDe('rol') === '' + r"
+            >
+              {{ r }}
+            </option>
+          </select>
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">
+              y/o un correo de la mesa
+            </label>
+            <ng-container
+              *ngTemplateOutlet="botonVar; context: { $implicit: 'correo' }"
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full"
+            [value]="configDe('correo')"
+            (input)="setConfig('correo', $any($event.target).value)"
+          />
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              Titulo (si no hay ticket)
+            </span>
+          </label>
+          <input
+            class="input input-bordered input-sm w-full"
+            [value]="configDe('titulo')"
+            (input)="setConfig('titulo', $any($event.target).value)"
+          />
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">Mensaje</label>
+            <ng-container
+              *ngTemplateOutlet="
+                botonVar;
+                context: { $implicit: 'mensaje' }
+              "
+            ></ng-container>
+          </div>
+          <textarea
+            class="textarea textarea-bordered textarea-sm w-full"
+            rows="3"
+            [value]="configDe('mensaje')"
+            (input)="setConfig('mensaje', $any($event.target).value)"
+          ></textarea>
+        </ng-container>
+
+        <!-- EMAIL -->
+        <ng-container *ngSwitchCase="'EMAIL'">
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">Para</label>
+            <ng-container
+              *ngTemplateOutlet="botonVar; context: { $implicit: 'para' }"
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full"
+            [value]="configDe('para')"
+            (input)="setConfig('para', $any($event.target).value)"
+          />
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">Asunto</label>
+            <ng-container
+              *ngTemplateOutlet="botonVar; context: { $implicit: 'asunto' }"
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full"
+            [value]="configDe('asunto')"
+            (input)="setConfig('asunto', $any($event.target).value)"
+          />
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70"
+              >Cuerpo (HTML)</label
+            >
+            <ng-container
+              *ngTemplateOutlet="botonVar; context: { $implicit: 'cuerpo' }"
+            ></ng-container>
+          </div>
+          <textarea
+            class="textarea textarea-bordered textarea-sm w-full font-mono text-xs"
+            rows="4"
+            [value]="configDe('cuerpo')"
+            (input)="setConfig('cuerpo', $any($event.target).value)"
+          ></textarea>
+          <p class="text-[10px] opacity-50 leading-relaxed">
+            Sale por Microsoft Graph. Los valores de las variables se
+            escapan.
+          </p>
+        </ng-container>
+
+        <!-- TICKET_CREATE -->
+        <ng-container *ngSwitchCase="'TICKET_CREATE'">
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">Titulo</label>
+            <ng-container
+              *ngTemplateOutlet="botonVar; context: { $implicit: 'titulo' }"
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full"
+            [value]="configDe('titulo')"
+            (input)="setConfig('titulo', $any($event.target).value)"
+          />
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70"
+              >Descripcion</label
+            >
+            <ng-container
+              *ngTemplateOutlet="
+                botonVar;
+                context: { $implicit: 'descripcion' }
+              "
+            ></ng-container>
+          </div>
+          <textarea
+            class="textarea textarea-bordered textarea-sm w-full"
+            rows="3"
+            [value]="configDe('descripcion')"
+            (input)="setConfig('descripcion', $any($event.target).value)"
+          ></textarea>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70"
+              >Categoria</span
+            >
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('categoriaId')"
+            (change)="setConfig('categoriaId', $any($event.target).value)"
+          >
+            <option value="">— por defecto —</option>
+            <option
+              *ngFor="let c of editor.lookups()?.categories ?? []"
+              [value]="c.id"
+              [selected]="'' + configDe('categoriaId') === '' + c.id"
+            >
+              {{ c.name }}
+            </option>
+          </select>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70"
+              >Prioridad</span
+            >
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('prioridadId')"
+            (change)="setConfig('prioridadId', $any($event.target).value)"
+          >
+            <option value="">— por defecto —</option>
+            <option
+              *ngFor="let p of editor.lookups()?.priorities ?? []"
+              [value]="p.id"
+              [selected]="'' + configDe('prioridadId') === '' + p.id"
+            >
+              {{ p.name }}
+            </option>
+          </select>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70"
+              >Tipo</span
+            >
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('tipoId')"
+            (change)="setConfig('tipoId', $any($event.target).value)"
+          >
+            <option value="">— por defecto —</option>
+            <option
+              *ngFor="let t of editor.lookups()?.ticketTypes ?? []"
+              [value]="t.id"
+              [selected]="'' + configDe('tipoId') === '' + t.id"
+            >
+              {{ t.name }}
+            </option>
+          </select>
+          <p class="text-[10px] opacity-50 leading-relaxed">
+            El ticket nace a nombre del autor del workflow. Su id queda en
+            <code class="bg-base-200 px-1 rounded"
+              >nodos.{{ nodo.id }}.ticketId</code
+            >.
+          </p>
+        </ng-container>
+
+        <!-- TICKET_ASSIGN -->
+        <ng-container *ngSwitchCase="'TICKET_ASSIGN'">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70"
+              >Agente</span
+            >
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('agenteId')"
+            (change)="setConfig('agenteId', $any($event.target).value)"
+          >
+            <option value="">—</option>
+            <option
+              *ngFor="let a of editor.agentes()"
+              [value]="a.idUser"
+              [selected]="'' + configDe('agenteId') === '' + a.idUser"
+            >
+              {{ a.displayName || a.corporateEmailUser }}
+            </option>
+          </select>
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">o variable</label>
+            <ng-container
+              *ngTemplateOutlet="
+                botonVar;
+                context: { $implicit: 'agenteId' }
+              "
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full text-xs font-mono"
+            [value]="configDe('agenteId')"
+            (input)="setConfig('agenteId', $any($event.target).value)"
+          />
+        </ng-container>
+
+        <!-- TICKET_ASSIGN_TEAM -->
+        <ng-container *ngSwitchCase="'TICKET_ASSIGN_TEAM'">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70"
+              >Equipo</span
+            >
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('equipoId')"
+            (change)="setConfig('equipoId', $any($event.target).value)"
+          >
+            <option value="">—</option>
+            <option
+              *ngFor="let t of editor.lookups()?.teams ?? []"
+              [value]="t.id"
+              [selected]="'' + configDe('equipoId') === '' + t.id"
+            >
+              {{ t.name }}
+            </option>
+          </select>
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">
+              o variable (p. ej. la sugerencia de NEXA)
+            </label>
+            <ng-container
+              *ngTemplateOutlet="
+                botonVar;
+                context: { $implicit: 'equipoId' }
+              "
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full text-xs font-mono"
+            [value]="configDe('equipoId')"
+            (input)="setConfig('equipoId', $any($event.target).value)"
+          />
+          <p class="text-[10px] opacity-50 leading-relaxed">
+            El agente lo elige el equipo con su metodo (rotacion, menos
+            asignado o manual).
+          </p>
+        </ng-container>
+
+        <!-- TICKET_STATUS -->
+        <ng-container *ngSwitchCase="'TICKET_STATUS'">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70"
+              >Estado</span
+            >
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('estado')"
+            (change)="setConfig('estado', $any($event.target).value)"
+          >
+            <option
+              *ngFor="let e of editor.lookups()?.statuses ?? []"
+              [value]="e.name"
+              [selected]="'' + configDe('estado') === '' + e.name"
+            >
+              {{ e.name }}
+            </option>
+          </select>
+        </ng-container>
+
+        <!-- TICKET_PRIORITY -->
+        <ng-container *ngSwitchCase="'TICKET_PRIORITY'">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70"
+              >Prioridad</span
+            >
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('prioridadId')"
+            (change)="setConfig('prioridadId', $any($event.target).value)"
+          >
+            <option value="">—</option>
+            <option
+              *ngFor="let p of editor.lookups()?.priorities ?? []"
+              [value]="p.id"
+              [selected]="'' + configDe('prioridadId') === '' + p.id"
+            >
+              {{ p.name }}
+            </option>
+          </select>
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">o variable</label>
+            <ng-container
+              *ngTemplateOutlet="
+                botonVar;
+                context: { $implicit: 'prioridadId' }
+              "
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full text-xs font-mono"
+            [value]="configDe('prioridadId')"
+            (input)="setConfig('prioridadId', $any($event.target).value)"
+          />
+        </ng-container>
+
+        <!-- TICKET_CATEGORY -->
+        <ng-container *ngSwitchCase="'TICKET_CATEGORY'">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70"
+              >Categoria</span
+            >
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('categoriaId')"
+            (change)="setConfig('categoriaId', $any($event.target).value)"
+          >
+            <option value="">—</option>
+            <option
+              *ngFor="let c of editor.lookups()?.categories ?? []"
+              [value]="c.id"
+              [selected]="'' + configDe('categoriaId') === '' + c.id"
+            >
+              {{ c.name }}
+            </option>
+          </select>
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">o variable</label>
+            <ng-container
+              *ngTemplateOutlet="
+                botonVar;
+                context: { $implicit: 'categoriaId' }
+              "
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full text-xs font-mono"
+            [value]="configDe('categoriaId')"
+            (input)="setConfig('categoriaId', $any($event.target).value)"
+          />
+        </ng-container>
+
+        <!-- TICKET_COMMENT -->
+        <ng-container *ngSwitchCase="'TICKET_COMMENT'">
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">Mensaje</label>
+            <ng-container
+              *ngTemplateOutlet="
+                botonVar;
+                context: { $implicit: 'mensaje' }
+              "
+            ></ng-container>
+          </div>
+          <textarea
+            class="textarea textarea-bordered textarea-sm w-full"
+            rows="3"
+            [value]="configDe('mensaje')"
+            (input)="setConfig('mensaje', $any($event.target).value)"
+          ></textarea>
+          <label class="label cursor-pointer justify-start gap-2 py-1">
+            <input
+              type="checkbox"
+              class="checkbox checkbox-sm checkbox-primary"
+              [checked]="nodo.config['interno'] === true"
+              (change)="setConfig('interno', $any($event.target).checked)"
+            />
+            <span class="label-text text-xs">
+              Nota interna (no la ve el solicitante)
+            </span>
+          </label>
+        </ng-container>
+
+        <!-- SLA_APPLY -->
+        <ng-container *ngSwitchCase="'SLA_APPLY'">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70"
+              >Politica</span
+            >
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('politicaId')"
+            (change)="setConfig('politicaId', $any($event.target).value)"
+          >
+            <option value="">Recalcular segun las reglas de SLA</option>
+            <option
+              *ngFor="let p of editor.lookups()?.slaPolicies ?? []"
+              [value]="p.id"
+              [selected]="'' + configDe('politicaId') === '' + p.id"
+            >
+              {{ p.name }}
+            </option>
+          </select>
+          <p class="text-[10px] opacity-50 leading-relaxed">
+            Los plazos cuentan desde la creacion del ticket.
+          </p>
+        </ng-container>
+
+        <!-- TASK_CREATE -->
+        <ng-container *ngSwitchCase="'TASK_CREATE'">
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">Titulo</label>
+            <ng-container
+              *ngTemplateOutlet="botonVar; context: { $implicit: 'titulo' }"
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full"
+            [value]="configDe('titulo')"
+            (input)="setConfig('titulo', $any($event.target).value)"
+          />
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70"
+              >Descripcion</label
+            >
+            <ng-container
+              *ngTemplateOutlet="
+                botonVar;
+                context: { $implicit: 'descripcion' }
+              "
+            ></ng-container>
+          </div>
+          <textarea
+            class="textarea textarea-bordered textarea-sm w-full"
+            rows="2"
+            [value]="configDe('descripcion')"
+            (input)="setConfig('descripcion', $any($event.target).value)"
+          ></textarea>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              Asignada a
+            </span>
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [value]="configDe('asignadoId')"
+            (change)="setConfig('asignadoId', $any($event.target).value)"
+          >
+            <option value="">— el agente del ticket —</option>
+            <option
+              *ngFor="let a of editor.agentes()"
+              [value]="a.idUser"
+              [selected]="'' + configDe('asignadoId') === '' + a.idUser"
+            >
+              {{ a.displayName || a.corporateEmailUser }}
+            </option>
+          </select>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              Duracion (minutos)
+            </span>
+          </label>
+          <input
+            type="number"
+            min="0"
+            class="input input-bordered input-sm w-full"
+            [value]="configDe('duracionMinutos')"
+            (input)="
+              setConfig('duracionMinutos', +$any($event.target).value || '')
+            "
+          />
+        </ng-container>
+
+        <!-- AUDIT -->
+        <ng-container *ngSwitchCase="'AUDIT'">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">
+              Accion (siempre empieza por WORKFLOW_)
+            </span>
+          </label>
+          <input
+            class="input input-bordered input-sm w-full font-mono text-xs"
+            [value]="configDe('accion')"
+            (input)="
+              setConfig('accion', $any($event.target).value.toUpperCase())
+            "
+          />
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">Detalle</label>
+            <ng-container
+              *ngTemplateOutlet="
+                botonVar;
+                context: { $implicit: 'detalle' }
+              "
+            ></ng-container>
+          </div>
+          <textarea
+            class="textarea textarea-bordered textarea-sm w-full"
+            rows="2"
+            [value]="configDe('detalle')"
+            (input)="setConfig('detalle', $any($event.target).value)"
+          ></textarea>
+        </ng-container>
+
+        <p *ngSwitchDefault class="text-xs opacity-50 italic">
+          Este nodo no necesita configuracion.
+        </p>
+      </div>
+
+      <!-- Ticket explicito -->
+      <div
+        *ngIf="necesitaTicketId(nodo)"
+        class="pt-3 border-t border-base-200"
+      >
+        <div class="flex justify-between items-center">
+          <label class="text-xs font-medium opacity-70">
+            Ticket sobre el que actuar
+          </label>
+          <ng-container
+            *ngTemplateOutlet="botonVar; context: { $implicit: 'ticketId' }"
+          ></ng-container>
+        </div>
+        <input
+          class="input input-bordered input-sm w-full text-xs font-mono"
+          [value]="configDe('ticketId')"
+          [placeholder]="placeholderTicketId"
+          (input)="setConfig('ticketId', $any($event.target).value)"
+        />
+        <p class="text-[10px] text-warning flex items-center gap-1 mt-1">
+          <i
+            class="fa-solid fa-triangle-exclamation"
+            aria-hidden="true"
+          ></i>
+          Este disparador no trae ticket: indique cual.
+        </p>
+      </div>
+
+      <!-- Salidas manuales -->
+      <div
+        *ngIf="editor.puertosDe(nodo).length > 0"
+        class="pt-3 border-t border-base-200"
+      >
+        <p class="text-xs font-medium opacity-70 mb-1.5">Salidas</p>
+        <div
+          *ngFor="let puerto of editor.puertosDe(nodo)"
+          class="flex items-center gap-2 mb-1.5"
+        >
+          <span
+            class="text-[10px] font-mono w-20 shrink-0 bg-base-200 px-1.5 py-0.5 rounded text-center truncate"
+            [title]="puerto"
+          >
+            {{ puerto }}
+          </span>
+          <select
+            class="select select-bordered select-xs flex-1 min-w-0"
+            [value]="editor.destinoDe(nodo, puerto)"
+            (change)="
+              editor.conectarDesdeLista(nodo, puerto, $any($event.target).value)
+            "
+          >
+            <option value="">— sin conectar —</option>
+            <ng-container *ngFor="let d of editor.grafo().nodes">
+              <option
+                *ngIf="d.id !== nodo.id && d.type !== 'INICIO'"
+                [value]="d.id"
+                [selected]="'' + editor.destinoDe(nodo, puerto) === '' + d.id"
+              >
+                {{ d.name }}
+              </option>
+            </ng-container>
+          </select>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Nada seleccionado -->
+    <ng-template #nadaSeleccionado>
+      <div class="flex items-center gap-2 mb-1">
+        <div
+          class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+          aria-hidden="true"
+        >
+          <i class="fa-solid fa-circle-info text-sm"></i>
+        </div>
+        <h3 class="text-sm font-bold">Variables disponibles</h3>
+      </div>
+      <p class="text-[11px] opacity-60 leading-relaxed">
+        Selecciona un nodo del lienzo para ver sus opciones. Mientras tanto,
+        aqui estan las variables que puedes usar en los textos como
+        <code class="bg-base-200 px-1 rounded">{{ "{{variable}}" }}</code>.
+      </p>
+
+      <div *ngIf="editor.disparadorActual() as d" class="space-y-2">
+        <p class="text-xs font-semibold opacity-70">
+          De «{{ d.descripcion }}»
+        </p>
+        <p class="text-[10px] opacity-50 leading-relaxed">
+          <code class="bg-base-200 px-1 rounded">ticket.*</code> y
+          <code class="bg-base-200 px-1 rounded">usuario.*</code> se leen al
+          dia; <code class="bg-base-200 px-1 rounded">evento.*</code> es la
+          foto del momento del disparo.
+        </p>
+        <div
+          *ngFor="let v of variables()"
+          class="flex flex-col gap-0.5 py-1.5 border-b border-base-200 last:border-0"
+        >
+          <code class="text-primary text-[11px] font-medium">{{
+            v.clave
+          }}</code>
+          <span class="text-[10px] opacity-60">{{ v.descripcion }}</span>
+        </div>
+        <p
+          *ngIf="variables().length === 0"
+          class="text-xs opacity-50 text-center py-4"
+        >
+          No hay variables disponibles todavía.
+        </p>
+      </div>
+    </ng-template>
+  </div>
+</aside>

@@ -1,0 +1,218 @@
+<!--
+  Buscador global. Modal sobre toda la app: vive en la raiz para no depender de
+  la ruta. El fondo oscuro cierra al hacer clic; el cuadro interior no propaga
+  el clic, asi que pulsar dentro no cierra sin querer.
+-->
+<div
+  *ngIf="abierto"
+  class="fixed inset-0 z-[100] flex items-start justify-center pt-[14vh] px-4"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Buscar en la plataforma"
+>
+  <!-- Fondo: clic cierra -->
+  <div
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm"
+    (click)="cerrar()"
+    aria-hidden="true"
+  ></div>
+
+  <div
+    class="relative w-full max-w-2xl bg-base-100 rounded-2xl shadow-2xl border border-base-300 overflow-hidden"
+  >
+    <!-- Cabecera con el campo de búsqueda -->
+    <div class="flex items-center gap-3 px-4 py-3 border-b border-base-200">
+      <i
+        class="fa-solid fa-magnifying-glass text-base-content/40 text-lg"
+        aria-hidden="true"
+      ></i>
+      <input
+        #searchInput
+        [value]="termino"
+        (input)="onTermino($event)"
+        (keydown)="onInputKeydown($event)"
+        type="text"
+        class="flex-1 bg-transparent outline-none text-base placeholder:text-base-content/40 min-w-0"
+        placeholder="Buscar tickets, personas, equipos..."
+        aria-label="Término de búsqueda"
+      />
+      <button
+        *ngIf="termino"
+        type="button"
+        class="btn btn-ghost btn-xs btn-circle text-base-content/50 hover:text-base-content"
+        (click)="limpiar()"
+        title="Limpiar"
+        aria-label="Limpiar búsqueda"
+      >
+        <i class="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
+      </button>
+      <span
+        class="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-md bg-base-200 text-base-content/50 border border-base-300 text-[10px] font-medium"
+      >
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        Ctrl K
+      </span>
+    </div>
+
+    <!-- Cuerpo: estados y grupos -->
+    <div class="max-h-[55vh] overflow-y-auto">
+      <!-- Cargando -->
+      <div
+        *ngIf="cargando"
+        class="flex items-center justify-center gap-3 py-10 text-base-content/60"
+      >
+        <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+        <span class="text-sm">Buscando...</span>
+      </div>
+
+      <!-- Sin término todavía -->
+      <div
+        *ngIf="!cargando && !respuesta"
+        class="flex flex-col items-center gap-2 py-10 text-base-content/50"
+      >
+        <i
+          class="fa-regular fa-keyboard text-2xl"
+          aria-hidden="true"
+        ></i>
+        <p class="text-sm">
+          Escribe al menos 2 caracteres para empezar a buscar
+        </p>
+      </div>
+
+      <!-- Sin resultados -->
+      <div
+        *ngIf="!cargando && respuesta && vacio"
+        class="flex flex-col items-center gap-2 py-10 text-base-content/50"
+      >
+        <i
+          class="fa-regular fa-face-frown-open text-2xl"
+          aria-hidden="true"
+        ></i>
+        <p class="text-sm font-medium">Sin resultados para "{{ termino }}"</p>
+        <p class="text-xs opacity-60">
+          Revisa la ortografía o prueba con otro término
+        </p>
+      </div>
+
+      <!-- Grupos con resultados -->
+      <ng-container *ngIf="!cargando && respuesta && !vacio">
+        <ng-container *ngFor="let grupo of grupos">
+          <ng-container *ngIf="filasDelGrupo(grupo.clave).length > 0">
+            <!-- Cabecera del grupo -->
+            <div
+              class="sticky top-0 z-10 flex items-center gap-2 px-4 py-1.5 bg-base-200/90 backdrop-blur-sm border-b border-base-200"
+            >
+              <i
+                [class]="grupo.icono"
+                class="text-xs"
+                [ngClass]="grupo.color"
+                aria-hidden="true"
+              ></i>
+              <span
+                class="text-[10px] font-bold uppercase tracking-wider opacity-60"
+              >
+                {{ grupo.etiqueta }}
+              </span>
+              <span class="flex-1"></span>
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs gap-1 text-primary hover:bg-primary/10"
+                (click)="verTodos(grupo.clave)"
+                title="Ver todos los resultados de este grupo"
+              >
+                Ver todos
+                <i
+                  class="fa-solid fa-arrow-right text-[10px]"
+                  aria-hidden="true"
+                ></i>
+              </button>
+            </div>
+
+            <!-- Filas del grupo -->
+            <div class="divide-y divide-base-200">
+              <button
+                *ngFor="let fila of filasDelGrupo(grupo.clave)"
+                type="button"
+                [attr.data-search-row]="fila.pos"
+                class="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors"
+                [ngClass]="
+                  indiceSeleccionado === fila.pos
+                    ? 'bg-primary/10'
+                    : 'hover:bg-base-200/60'
+                "
+                (click)="alHacerClic(fila, $event)"
+                [attr.aria-selected]="indiceSeleccionado === fila.pos"
+              >
+                <!-- Avatar de persona o icono genérico -->
+                <span
+                  *ngIf="fila.foto"
+                  class="w-9 h-9 rounded-full shrink-0 overflow-hidden ring-1 ring-base-300"
+                >
+                  <img
+                    [src]="fila.foto"
+                    [alt]="fila.titulo"
+                    class="w-full h-full object-cover"
+                  />
+                </span>
+                <span
+                  *ngIf="!fila.foto"
+                  class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center bg-base-200 text-base-content/50"
+                  aria-hidden="true"
+                >
+                  <i
+                    [class]="iconoDe(grupo.clave)"
+                    class="text-sm"
+                  ></i>
+                </span>
+
+                <!-- Textos -->
+                <span class="flex-1 min-w-0">
+                  <span class="block text-sm font-medium truncate">
+                    {{ fila.titulo }}
+                  </span>
+                  <span
+                    *ngIf="fila.detalle"
+                    class="block text-xs opacity-60 truncate"
+                  >
+                    {{ fila.detalle }}
+                  </span>
+                </span>
+
+                <!-- Acción de abrir -->
+                <i
+                  class="fa-solid fa-chevron-right text-[10px] opacity-40 shrink-0"
+                  aria-hidden="true"
+                ></i>
+              </button>
+            </div>
+          </ng-container>
+        </ng-container>
+      </ng-container>
+    </div>
+
+    <!-- Pie: ayuda de teclado -->
+    <div
+      class="flex items-center gap-4 px-4 py-2 border-t border-base-200 bg-base-200/30 text-[11px] text-base-content/50"
+    >
+      <span class="flex items-center gap-1">
+        <span class="kbd kbd-xs">↑</span>
+        <span class="kbd kbd-xs">↓</span>
+        Navegar
+      </span>
+      <span class="hidden sm:flex items-center gap-1">
+        <span class="kbd kbd-xs">Enter</span>
+        Abrir
+      </span>
+      <span class="hidden sm:flex items-center gap-1">
+        <span class="kbd kbd-xs">Esc</span>
+        Cerrar
+      </span>
+      <span class="flex-1"></span>
+      <span class="flex items-center gap-1">
+        <span class="kbd kbd-xs">Ctrl</span>
+        <span class="kbd kbd-xs">K</span>
+        Buscar
+      </span>
+    </div>
+  </div>
+</div>

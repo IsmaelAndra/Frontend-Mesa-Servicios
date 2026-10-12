@@ -16,7 +16,7 @@ export class TaskService {
     return this.http.get<TaskItem[]>(this.url, { params });
   }
 
-  getById(id: number): Observable<TaskItem> {
+  getById(id: string): Observable<TaskItem> {
     return this.http.get<TaskItem>(`${this.url}/${id}`);
   }
 
@@ -24,15 +24,15 @@ export class TaskService {
     return this.http.post<TaskItem>(this.url, data);
   }
 
-  update(id: number, data: TaskRequest): Observable<TaskItem> {
+  update(id: string, data: TaskRequest): Observable<TaskItem> {
     return this.http.put<TaskItem>(`${this.url}/${id}`, data);
   }
 
-  changeStatus(id: number, statusName: TaskStatus): Observable<TaskItem> {
+  changeStatus(id: string, statusName: TaskStatus): Observable<TaskItem> {
     return this.http.patch<TaskItem>(`${this.url}/${id}/status`, { statusName });
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.url}/${id}`);
   }
 }

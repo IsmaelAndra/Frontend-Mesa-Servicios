@@ -1,0 +1,103 @@
+<div class="min-h-screen bg-base-200 px-4 py-10">
+  <div class="mx-auto w-full max-w-3xl space-y-5">
+
+    <!-- Encabezado -->
+    <div class="card bg-base-100 shadow border border-base-200 rounded-[1.5rem]">
+      <div class="card-body p-6 sm:p-8 gap-4">
+        <div class="flex items-start gap-4">
+          <img
+            *ngIf="logo"
+            [src]="logo"
+            alt=""
+            class="w-12 h-12 object-contain shrink-0 opacity-90"
+          />
+          <div class="min-w-0">
+            <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">
+              {{ titulo }}
+            </h1>
+            <div class="flex flex-wrap items-center gap-2 mt-2">
+              <span *ngIf="version" class="badge badge-sm badge-ghost font-mono">
+                Versión {{ version }}
+              </span>
+              <span *ngIf="vigente" class="badge badge-sm badge-ghost gap-1.5">
+                <i class="fa-regular fa-calendar text-[11px]" aria-hidden="true"></i>
+                Vigente desde {{ vigente }}
+              </span>
+              <span
+                *ngIf="esBorrador"
+                class="badge badge-sm gap-1.5 border"
+                style="background: #D977061F; color: #D97706; border-color: #D97706"
+              >
+                <i class="fa-solid fa-triangle-exclamation text-[11px]" aria-hidden="true"></i>
+                Borrador
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!--
+          Aviso de borrador. El seed deja una plantilla con la estructura que suele
+          exigirse, pero no es el documento aprobado: decirlo evita que alguien
+          cite esta pagina como texto vigente de la institucion.
+        -->
+        <div
+          *ngIf="esBorrador && !cargando"
+          class="alert gap-3 rounded-xl border"
+          style="background: #D9770614; border-color: #D9770655; color: #92400E"
+          role="status"
+        >
+          <i class="fa-solid fa-circle-info shrink-0" aria-hidden="true"></i>
+          <p class="text-sm">
+            Este texto es una plantilla de trabajo. La política oficial de la
+            institución aún no ha sido publicada aquí.
+          </p>
+        </div>
+
+        <!-- Estado de carga -->
+        <div *ngIf="cargando" class="flex items-center gap-3 py-6 justify-center">
+          <span class="loading loading-spinner loading-md text-primary" aria-hidden="true"></span>
+          <span class="text-sm opacity-60">Cargando la política de privacidad...</span>
+        </div>
+
+        <!-- El backend no respondio: se explica, no se deja un hueco en blanco -->
+        <div *ngIf="!cargando && !disponible" class="alert alert-warning rounded-xl" role="alert">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <p class="text-sm">
+            No se pudo cargar la política de privacidad. Intenta de nuevo en unos minutos.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      Cuerpo. [innerHTML] con el HTML ya sanitizado: el texto llega en markdown
+      desde el panel y lo convierte markdownToHtml, que escapa el HTML del
+      contenido antes de aplicar el formato.
+    -->
+    <div
+      *ngIf="!cargando && disponible && html"
+      class="card bg-base-100 shadow border border-base-200 rounded-[1.5rem]"
+    >
+      <div class="card-body p-6 sm:p-8">
+        <article class="privacy-body" [innerHTML]="html"></article>
+
+        <div *ngIf="contacto" class="mt-6 pt-5 border-t border-base-200 flex items-start gap-3">
+          <i class="fa-solid fa-envelope text-primary mt-1 shrink-0" aria-hidden="true"></i>
+          <div class="min-w-0">
+            <p class="text-xs font-semibold uppercase tracking-wide opacity-60">
+              Consultas sobre el tratamiento de datos
+            </p>
+            <p class="text-sm break-words">{{ contacto }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-center pt-1">
+      <button type="button" class="btn btn-outline btn-sm gap-2" (click)="volver()">
+        <i class="fa-solid fa-arrow-left text-[14px]" aria-hidden="true"></i>
+        Volver
+      </button>
+    </div>
+  </div>
+</div>

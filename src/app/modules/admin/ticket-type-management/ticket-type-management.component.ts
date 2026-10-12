@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import Swal from 'sweetalert2';
 import { AdminService, TicketTypeConfig } from '../../../core/services/admin.service';
+import { Paginacion } from '../../../core/utils/pagination.util';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-ticket-type-management',
@@ -8,12 +10,14 @@ import { AdminService, TicketTypeConfig } from '../../../core/services/admin.ser
 })
 export class TicketTypeManagementComponent implements OnInit {
   types: TicketTypeConfig[] = [];
+  /** Paginacion en cliente: el endpoint devuelve la lista completa. */
+  readonly pagTipos = new Paginacion<TicketTypeConfig>(() => this.types);
   loading = false;
-  newType: Partial<TicketTypeConfig> = {};
+  newType: Partial<TicketTypeConfig> = { icon: 'fa-solid fa-tag', color: '#062e86' };
   editType: TicketTypeConfig | null = null;
   showCreate = false;
 
-  constructor(private adminService: AdminService) {}
+  constructor(private adminService: AdminService, private toastService: ToastService) {}
 
   ngOnInit(): void { this.load(); }
 
@@ -21,7 +25,7 @@ export class TicketTypeManagementComponent implements OnInit {
     this.loading = true;
     this.adminService.getTicketTypes().subscribe({
       next: (c) => { this.types = c; this.loading = false; },
-      error: () => { this.loading = false; Swal.fire('Error', 'No se pudieron cargar los tipos de ticket', 'error'); }
+      error: () => { this.loading = false; this.toastService.error('No se pudieron cargar los tipos de ticket'); }
     });
   }
 
@@ -30,11 +34,11 @@ export class TicketTypeManagementComponent implements OnInit {
     this.adminService.createTicketType(this.newType).subscribe({
       next: () => {
         this.load();
-        this.newType = {};
+        this.newType = { icon: 'fa-solid fa-tag', color: '#062e86' };
         this.showCreate = false;
-        Swal.fire('Éxito', 'Tipo de ticket creado', 'success');
+        this.toastService.success('Tipo de ticket creado');
       },
-      error: (e) => Swal.fire('Error', e?.error?.message, 'error')
+      error: (e) => this.toastService.error(e?.error?.message || 'No se pudo crear')
     });
   }
 
@@ -45,10 +49,12 @@ export class TicketTypeManagementComponent implements OnInit {
     if (!this.editType || !this.editType.name?.trim()) return;
     this.adminService.updateTicketType(this.editType.id, {
       name: this.editType.name,
-      description: this.editType.description
+      description: this.editType.description,
+      icon: this.editType.icon || '',
+      color: this.editType.color || ''
     }).subscribe({
-      next: () => { this.load(); this.editType = null; Swal.fire('Éxito', 'Tipo de ticket actualizado', 'success'); },
-      error: (e) => Swal.fire('Error', e?.error?.message, 'error')
+      next: () => { this.load(); this.editType = null; this.toastService.success('Tipo de ticket actualizado'); },
+      error: (e) => this.toastService.error(e?.error?.message || 'No se pudo actualizar')
     });
   }
 
@@ -57,8 +63,8 @@ export class TicketTypeManagementComponent implements OnInit {
       .then((r) => {
         if (r.isConfirmed) {
           this.adminService.deleteTicketType(t.id).subscribe({
-            next: () => this.load(),
-            error: (e) => Swal.fire('Error', e?.error?.message, 'error')
+            next: () => { this.load(); this.toastService.success('Tipo de ticket eliminado'); },
+            error: (e) => this.toastService.error(e?.error?.message || 'No se pudo eliminar')
           });
         }
       });

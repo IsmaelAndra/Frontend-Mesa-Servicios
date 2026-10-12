@@ -1,12 +1,15 @@
+import { markdownToHtml } from '../../../core/utils/markdown.util';
 import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import Quill from 'quill';
-import Swal from 'sweetalert2';
 import { AdminService } from '../../../core/services/admin.service';
 import { TicketService } from '../../../core/services/ticket.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { Catalog } from '../../../models/user.model';
+import { AiTicketFill } from '../../shared/components/ai-float-button/ai-float-button.component';
+import { MasterOption } from '../../shared/components/master-select/master-select.component';
 
 @Component({
   selector: 'app-ticket-new',
@@ -15,19 +18,23 @@ import { Catalog } from '../../../models/user.model';
 export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
   form: FormGroup;
   loading = false;
-  categories: { id: number; name: string; teamId: number | null }[] = [];
-  ticketTypes: { id: number; name: string }[] = [];
-  priorities: { id: number; name: string; level: number }[] = [];
+  categories: { id: string; name: string; teamId: string | null; icon?: string; color?: string }[] = [];
+  ticketTypes: { id: string; name: string; icon?: string; color?: string }[] = [];
+  priorities: { id: string; name: string; level: number; icon?: string; color?: string }[] = [];
+  /** Sede donde se reporta el problema. Opcional: si no se elige, el backend
+   * hereda la del solicitante. */
+  sucursales: { id: string; code: string; name: string; icon?: string; color?: string }[] = [];
   files: File[] = [];
   userRole = '';
-  quill: any;
+  quill: Quill | null = null;
 
   constructor(
     private fb: FormBuilder,
     private adminService: AdminService,
     private ticketService: TicketService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private toastService: ToastService
   ) {
     this.userRole = this.authService.getRole();
     const controls: Record<string, unknown> = {
@@ -35,7 +42,8 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
       description: ['', Validators.required],
       categoryId: [null],
       typeId: [null],
-      priorityId: [null]
+      priorityId: [null],
+      sucursalId: [null]
     };
     if (!this.isUser) {
       controls['categoryId'] = [null, Validators.required];
@@ -47,19 +55,93 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.userRole === 'USER';
   }
 
+  /**
+   * Contexto para el asistente IA flotante: el usuario explica el problema en el
+   * chat y la IA responde con la información del ticket (JSON) para prellenar el
+   * formulario; el usuario solo revisa y presiona Enviar.
+   */
+  get aiContext(): string {
+    return 'Estás ayudando a crear un NUEVO ticket de la mesa de servicios COAC. '
+      + 'Haz al usuario preguntas cortas para reunir: título breve del problema, descripción '
+      + 'detallada (qué pasó, qué se intentó, impacto), categoría y prioridad. '
+      + 'Cuando tengas la información suficiente, confirma en español que el formulario quedó '
+      + 'prellenado y que el usuario debe revisar y presionar ENVIAR para crear el ticket. '
+      + 'Además, al final de tu respuesta añade un bloque JSON entre ```json y ``` con la forma: '
+      + '{"titulo": "texto breve", "descripcion": "descripción completa en markdown", '
+      + '"categoria": "nombre de la categoría", "prioridad": "BAJA, MEDIA, ALTA o CRITICA"}. '
+      + 'No inventes datos que el usuario no haya confirmado. El JSON debe ser válido, de una sola '
+      + 'línea, y la descripción no debe contener llaves ni comillas dobles literales.';
+  }
+
+  /** Pinta en el formulario los datos sugeridos por la IA. */
+  fillFromAi(d: AiTicketFill): void {
+    if (d.titulo) {
+      this.form.patchValue({ title: d.titulo });
+    }
+    if (d.descripcion) {
+      // La descripción la redacta la IA a partir de lo que escribió el usuario, así
+      // que puede traer HTML inyectado. markdownToHtml escapa antes de convertir;
+      // el conversor local que había aquí no lo hacía y el resultado iba directo
+      // al innerHTML del editor.
+      const html = markdownToHtml(d.descripcion);
+      this.form.patchValue({ description: html });
+      if (this.quill) {
+        this.quill.root.innerHTML = html;
+      }
+    }
+    this.matchSelect(d.categoria, this.categories, 'categoryId');
+    this.matchSelect(d.prioridad, this.priorities, 'priorityId');
+    if (d.titulo || d.descripcion) {
+      this.toastService.info(
+        'Ticket prellenado',
+        'Revisa la información y presiona Enviar para crear el ticket.'
+      );
+    }
+  }
+
+  private matchSelect(value: string | undefined, options: { id: string; name: string }[], control: string): void {
+    if (!value) return;
+    const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const target = norm(value);
+    const opt = options.find((o) => norm(o.name) === target)
+      || options.find((o) => norm(o.name).includes(target) || target.includes(norm(o.name)));
+    if (opt) {
+      this.form.patchValue({ [control]: opt.id });
+    }
+  }
+
   ngOnInit(): void {
     this.adminService.catalog().subscribe({
       next: (c: Catalog) => {
         this.categories = c.categories;
         this.ticketTypes = c.ticketTypes || [];
         this.priorities = c.priorities || [];
+          this.sucursales = c.sucursales || [];
       },
-      error: () => Swal.fire('Aviso', 'No se pudieron cargar los catálogos', 'warning')
+      error: () => this.toastService.warn('No se pudieron cargar los catálogos')
     });
   }
 
+  /**
+   * Convierte un maestro de la BD en opciones de app-master-select.
+   *
+   * El componente pide {value,label,icon,color} y los maestros traen
+   * {id,name,icon,color}, asi que se traduce una vez aqui en vez de repetir el
+   * mapeo en cada plantilla.
+   */
+  masterOptions(
+    list: { id: string; name: string; icon?: string; color?: string }[] | undefined
+  ): MasterOption[] {
+    return (list || []).map((x) => ({
+      value: x.id,
+      label: x.name,
+      icon: x.icon,
+      color: x.color
+    }));
+  }
+
   ngAfterViewInit(): void {
-    this.quill = new Quill('#quillEditorNew', {
+    const quill = new Quill('#quillEditorNew', {
       theme: 'snow',
       placeholder: 'Describa el problema detalladamente. Puede adjuntar imágenes aquí mismo.',
       modules: {
@@ -78,8 +160,9 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       }
     });
-    this.quill.on('text-change', () => {
-      this.form.get('description')?.setValue(this.quill.root.innerHTML);
+    this.quill = quill;
+    quill.on('text-change', () => {
+      this.form.get('description')?.setValue(quill.root.innerHTML);
     });
   }
 
@@ -92,10 +175,12 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (e) => {
-        const range = this.quill.getSelection(true);
-        const index = range ? range.index : this.quill.getLength();
-        this.quill.insertEmbed(index, 'image', e.target?.result, 'user');
-        this.quill.setSelection(index + 1, 0);
+        const quill = this.quill;
+        if (!quill) return;
+        const range = quill.getSelection(true);
+        const index = range ? range.index : quill.getLength();
+        quill.insertEmbed(index, 'image', e.target?.result, 'user');
+        quill.setSelection(index + 1, 0);
       };
       reader.readAsDataURL(file);
     };
@@ -104,8 +189,10 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy(): void {
     if (this.quill) {
-      if (typeof this.quill.destroy === 'function') {
-        this.quill.destroy();
+      // Quill 2 no declara destroy en sus tipos; algunas builds lo traen.
+      const conDestroy = this.quill as unknown as { destroy?: () => void };
+      if (typeof conDestroy.destroy === 'function') {
+        conDestroy.destroy();
       }
       this.quill = null;
     }
@@ -123,12 +210,12 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
 
   submit(): void {
     if (this.form.invalid) {
-      Swal.fire('Atención', 'Complete los campos obligatorios', 'warning');
+      this.toastService.warn('Complete los campos obligatorios');
       return;
     }
     const description = this.form.value.description;
     if (!description || !String(description).replace(/<\/?[^>]+(>|$)/g, '').trim()) {
-      Swal.fire('Atención', 'Complete la descripción del problema', 'warning');
+      this.toastService.warn('Complete la descripción del problema');
       return;
     }
     this.loading = true;
@@ -137,26 +224,27 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
       description,
       categoryId: this.form.value.categoryId ?? undefined,
       typeId: this.form.value.typeId ?? undefined,
-      priorityId: this.form.value.priorityId ?? undefined
+      priorityId: this.form.value.priorityId ?? undefined,
+      sucursalId: this.form.value.sucursalId ?? undefined
     };
     this.ticketService.create(payload).subscribe({
       next: (t) => {
         this.uploadFilesAfterCreate(t.idTicket);
-        Swal.fire({ icon: 'success', title: 'Ticket creado', text: `Ticket #${t.idTicket}`, timer: 1500, showConfirmButton: false });
+        this.toastService.success('Ticket creado', `Ticket #${t.numberTicket ?? ""}`);
         this.router.navigate(['/tickets', t.idTicket]);
       },
       error: (err) => {
         this.loading = false;
-        Swal.fire('Error', err?.error?.message || 'No se pudo crear el ticket', 'error');
+        this.toastService.error(err?.error?.message || 'No se pudo crear el ticket');
       }
     });
   }
 
-  private uploadFilesAfterCreate(ticketId: number): void {
+  private uploadFilesAfterCreate(ticketId: string): void {
     this.files.forEach((f, i) => {
       setTimeout(() => {
         this.ticketService.uploadAttachment(ticketId, f).subscribe({
-          error: () => Swal.fire('Aviso', `No se pudo subir ${f.name}`, 'warning')
+          error: () => this.toastService.warn(`No se pudo subir ${f.name}`)
         });
       }, i * 300 + 500);
     });

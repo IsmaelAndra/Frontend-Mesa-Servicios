@@ -1,22 +1,18 @@
 <div class="space-y-6">
   <!-- Encabezado -->
-  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div class="flex items-center gap-3">
-      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-envelope text-2xl"></i>
       </div>
       <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Plantillas de Notificación</h1>
-        <p class="text-sm opacity-70">Administra las plantillas de correo del sistema</p>
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">Plantillas de Notificación</h1>
+        <p class="text-sm opacity-70">Administra plantillas, el momento de envío y a quién llega cada correo</p>
       </div>
     </div>
 
     <button class="btn btn-primary btn-sm gap-2" (click)="showNew = !showNew">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-      </svg>
+      <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
       {{ showNew ? 'Cerrar' : 'Nueva Plantilla' }}
     </button>
   </header>
@@ -26,29 +22,38 @@
     <div class="card-body">
       <div class="flex items-center gap-2 mb-2">
         <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
+<i class="fa-solid fa-plus text-[15px]"></i>
         </div>
         <h3 class="card-title text-base">Nueva Plantilla</h3>
       </div>
 
       <form class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2" (ngSubmit)="create()">
-        <!-- Nombre -->
-        <label class="form-control w-full">
+        <!-- Evento que dispara el envío -->
+        <div class="form-control w-full md:col-span-2">
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">
-              Nombre <span class="text-error">*</span>
+              Evento del sistema <span class="text-error">*</span>
             </span>
           </div>
-          <input
+          <select
             [(ngModel)]="newTemplate.nameTemplate"
+            (ngModelChange)="onEventChange()"
             name="nameTemplate"
-            class="input input-bordered input-sm w-full font-mono"
+            class="select select-bordered select-sm w-full"
             required
-            placeholder="Ej. TICKET_CREADO"
-          />
-        </label>
+          >
+            <option [ngValue]="null" disabled>Seleccione el evento</option>
+            <option *ngFor="let e of systemEvents" [ngValue]="e">
+              {{ triggerLabels[e] }} ({{ e }})
+            </option>
+          </select>
+          <div class="label pt-1">
+            <span class="label-text-alt text-xs opacity-60">
+              El evento es la clave que dispara el envío: solo hay una plantilla por evento,
+              así que al elegir uno ya existente se sobrescribe su texto.
+            </span>
+          </div>
+        </div>
 
         <!-- Tipo -->
         <label class="form-control w-full">
@@ -66,6 +71,79 @@
             <option [ngValue]="null" disabled>Seleccione tipo</option>
             <option *ngFor="let t of types" [ngValue]="t">{{ t }}</option>
           </select>
+        </label>
+
+        <!-- Icono -->
+        <div class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Icono (Font Awesome)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span
+              class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
+              [style.background-color]="(newTemplate.colorTemplate || '#64748B') + '22'"
+              [style.color]="newTemplate.colorTemplate || '#64748B'"
+              aria-hidden="true"
+            >
+              <i [class]="newTemplate.iconTemplate || 'fa-regular fa-envelope'" class="text-[15px]"></i>
+            </span>
+            <input
+              [(ngModel)]="newTemplate.iconTemplate"
+              name="iconTemplate"
+              class="input input-bordered input-sm w-full font-mono"
+              placeholder="fa-solid fa-ticket"
+            />
+          </div>
+        </div>
+
+        <!-- Color -->
+        <div class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Color</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input
+              type="color"
+              [(ngModel)]="newTemplate.colorTemplate"
+              name="colorTemplate"
+              class="w-10 h-9 shrink-0 cursor-pointer rounded-lg border border-base-300 p-0.5"
+              aria-label="Color de la plantilla"
+            />
+            <input
+              [(ngModel)]="newTemplate.colorTemplate"
+              name="colorTemplateHex"
+              class="input input-bordered input-sm w-full font-mono"
+              placeholder="#2563EB"
+            />
+          </div>
+        </div>
+
+        <!-- Destinatario -->
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Destinatario del correo</span>
+          </div>
+          <select
+            [(ngModel)]="newTemplate.recipientRule"
+            name="recipientRule"
+            class="select select-bordered select-sm w-full"
+          >
+            <option *ngFor="let r of recipientRules" [ngValue]="r.value">{{ r.label }}</option>
+          </select>
+        </label>
+
+        <!-- Correo personalizado -->
+        <label class="form-control w-full" *ngIf="newTemplate.recipientRule === 'CUSTOM'">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Correo de destino</span>
+          </div>
+          <input
+            [(ngModel)]="newTemplate.recipientEmail"
+            name="recipientEmail"
+            type="email"
+            class="input input-bordered input-sm w-full"
+            placeholder="destino@coacmagisterio.fin.ec"
+          />
         </label>
 
         <!-- Asunto -->
@@ -92,34 +170,116 @@
             </span>
           </div>
           <textarea
-            [(ngModel)]="newTemplate.bodyTemplate"
-            name="bodyTemplate"
+              [(ngModel)]="newTemplate.bodyTemplate"
+              #nuevoBody
+              name="bodyTemplate"
             class="textarea textarea-bordered textarea-sm w-full font-mono text-xs"
             rows="6"
             required
             placeholder="Cuerpo del email con variables [id], [nombre], [titulo], [estado], [prioridad], [agente]"
           ></textarea>
-          <div class="label pt-1">
+          <div class="label pt-1 flex-col gap-1">
             <span class="label-text-alt text-xs opacity-60">
-              Variables disponibles:
-              <code class="badge badge-sm badge-ghost">[id]</code>
-              <code class="badge badge-sm badge-ghost">[nombre]</code>
-              <code class="badge badge-sm badge-ghost">[titulo]</code>
-              <code class="badge badge-sm badge-ghost">[estado]</code>
-              <code class="badge badge-sm badge-ghost">[prioridad]</code>
-              <code class="badge badge-sm badge-ghost">[agente]</code>
+              Variables de este tipo de plantilla — tocá una para copiarla:
+            </span>
+            <span class="flex flex-wrap gap-1">
+              <code
+                *ngFor="let v of variablesDe(newTemplate.typeTemplate)"
+                class="badge badge-sm badge-neutral cursor-pointer hover:badge-primary"
+                (click)="insertarVariable(v, 'nuevo')"
+                >{{ v }}</code
+              >
+            </span>
+            <span class="text-[11px] opacity-50">
+              Siempre disponibles: [logo] [appName] [fecha] [hora]
             </span>
           </div>
         </label>
+
+        <!-- Imagen de la plantilla nueva -->
+        <div class="md:col-span-2">
+          <label class="flex items-start gap-3 p-3 rounded-lg border border-base-200 cursor-pointer">
+            <div class="w-14 h-14 rounded-lg border border-base-300 bg-base-200/40 flex items-center justify-center overflow-hidden shrink-0">
+              <img
+                *ngIf="nuevoImageUrl; else sinImagenNueva"
+                [src]="nuevoImageUrl"
+                alt="Imagen de la plantilla"
+                class="w-full h-full object-contain p-1"
+              />
+              <ng-template #sinImagenNueva>
+                <i class="fa-solid fa-image text-base-content/40" aria-hidden="true"></i>
+              </ng-template>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium">Imagen para el correo</p>
+              <p class="text-xs opacity-60 mb-2">
+                Se sube antes de guardar la plantilla y queda disponible como
+                [imagen] y [imagenUrl] en el cuerpo.
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <label class="btn btn-outline btn-xs gap-1.5 cursor-pointer">
+                  <i class="fa-solid fa-upload text-[11px]" aria-hidden="true"></i>
+                  Seleccionar
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/gif,image/webp"
+                    (change)="onImageSelected($event)"
+                    class="hidden"
+                  />
+                </label>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-xs gap-1.5"
+                  (click)="uploadImage('nuevo')"
+                  [disabled]="uploadingImage || !imagenSeleccionada"
+                >
+                  <span
+                    *ngIf="uploadingImage"
+                    class="loading loading-spinner loading-xs"
+                    aria-hidden="true"
+                  ></span>
+                  {{ uploadingImage ? 'Subiendo...' : 'Subir' }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline btn-xs gap-1.5"
+                  (click)="insertarImagen('nuevo')"
+                  [disabled]="!nuevoImageUrl"
+                  title="Inserta una etiqueta img con la imagen de la plantilla"
+                >
+                  <i class="fa-solid fa-code text-[11px]" aria-hidden="true"></i>
+                  Insertar en el cuerpo
+                </button>
+              </div>
+              <p
+                *ngIf="nuevoImageUrl"
+                class="text-[10px] opacity-60 mt-2 font-mono break-all"
+              >
+                {{ nuevoImageUrl }}
+              </p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Avisos sobre el HTML escrito -->
+        <div
+          *ngIf="avisosNuevo().length"
+          class="md:col-span-2 alert alert-warning rounded-2xl py-2.5 flex flex-col gap-1"
+        >
+          <div class="flex items-center gap-2 font-medium text-xs">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            Revisa el HTML del cuerpo
+          </div>
+          <ul class="list-disc list-inside text-[11px] space-y-0.5">
+            <li *ngFor="let aviso of avisosNuevo()">{{ aviso }}</li>
+          </ul>
+        </div>
 
         <!-- Vista previa en vivo -->
         <div class="md:col-span-2" *ngIf="newTemplate.bodyTemplate">
           <div class="rounded-xl border border-base-200 overflow-hidden">
             <div class="px-3 py-2 bg-base-200/60 border-b border-base-200 flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
+<i class="fa-solid fa-eye text-[15px] opacity-60" aria-hidden="true"></i>
               <span class="text-xs font-medium">Vista previa</span>
             </div>
             <div class="p-4">
@@ -128,7 +288,8 @@
               </p>
               <iframe
                 class="w-full h-80 border-0 rounded-lg bg-white"
-                [srcdoc]="previewHtml(newTemplate.bodyTemplate)"
+                [srcdoc]="safePreviewHtml(newTemplate.bodyTemplate, nuevoImageUrl)"
+                sandbox
                 title="Vista previa de la plantilla"
               ></iframe>
             </div>
@@ -145,10 +306,291 @@
             class="btn btn-sm btn-primary gap-2"
             [disabled]="!newTemplate.nameTemplate || !newTemplate.typeTemplate || !newTemplate.subjectTemplate || !newTemplate.bodyTemplate"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
+            <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
             Crear plantilla
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Formulario de edición -->
+  <div class="card bg-base-100 shadow-md border border-base-200" *ngIf="showEdit">
+    <div class="card-body">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+<i class="fa-solid fa-pen text-[15px]"></i>
+          </div>
+          <h3 class="card-title text-base">
+            Editar plantilla: <code class="font-mono text-sm">{{ editingTemplate.nameTemplate }}</code>
+          </h3>
+        </div>
+        <button class="btn btn-ghost btn-xs btn-circle" (click)="showEdit = false" aria-label="Cerrar edición">
+          <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <form class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2" (ngSubmit)="saveEdit()">
+        <!-- Icono -->
+        <div class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Icono (Font Awesome)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span
+              class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
+              [style.background-color]="(editingTemplate.colorTemplate || '#64748B') + '22'"
+              [style.color]="editingTemplate.colorTemplate || '#64748B'"
+              aria-hidden="true"
+            >
+              <i [class]="editingTemplate.iconTemplate || 'fa-regular fa-envelope'" class="text-[15px]"></i>
+            </span>
+            <input
+              [(ngModel)]="editingTemplate.iconTemplate"
+              name="editIconTemplate"
+              class="input input-bordered input-sm w-full font-mono"
+              placeholder="fa-solid fa-ticket"
+            />
+          </div>
+        </div>
+
+        <!-- Color -->
+        <div class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Color</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input
+              type="color"
+              [(ngModel)]="editingTemplate.colorTemplate"
+              name="editColorTemplate"
+              class="w-10 h-9 shrink-0 cursor-pointer rounded-lg border border-base-300 p-0.5"
+              aria-label="Color de la plantilla"
+            />
+            <input
+              [(ngModel)]="editingTemplate.colorTemplate"
+              name="editColorTemplateHex"
+              class="input input-bordered input-sm w-full font-mono"
+              placeholder="#2563EB"
+            />
+          </div>
+        </div>
+
+        <!-- Asunto -->
+        <label class="form-control w-full md:col-span-2">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Asunto</span>
+          </div>
+          <input
+            [(ngModel)]="editingTemplate.subjectTemplate"
+            name="editSubjectTemplate"
+            class="input input-bordered input-sm w-full"
+            required
+          />
+        </label>
+
+        <!-- Cuerpo -->
+        <label class="form-control w-full md:col-span-2">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Cuerpo (HTML / texto) <span class="text-error">*</span>
+            </span>
+          </div>
+          <textarea
+              [(ngModel)]="editingTemplate.bodyTemplate"
+              #editBody
+              name="editBodyTemplate"
+            class="textarea textarea-bordered textarea-sm w-full font-mono text-xs"
+            rows="6"
+            required
+          ></textarea>
+          <div class="label pt-1 flex-col gap-1">
+            <span class="label-text-alt text-xs opacity-60">
+              Variables de esta plantilla — tocá una para copiarla:
+            </span>
+            <span class="flex flex-wrap gap-1">
+              <code
+                *ngFor="let v of variablesDe(editingTemplate.typeTemplate)"
+                class="badge badge-sm badge-neutral cursor-pointer hover:badge-primary"
+                (click)="insertarVariable(v, 'cuerpo')"
+                >{{ v }}</code
+              >
+            </span>
+            <span class="text-[11px] opacity-50">
+              Siempre disponibles: [logo] [appName] [fecha] [hora]
+            </span>
+          </div>
+        </label>
+
+        <!-- Destinatario -->
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Destinatario del correo</span>
+          </div>
+          <select
+            [(ngModel)]="editingTemplate.recipientRule"
+            name="editRecipientRule"
+            class="select select-bordered select-sm w-full"
+          >
+            <option *ngFor="let r of recipientRules" [ngValue]="r.value">{{ r.label }}</option>
+          </select>
+          <div class="label pt-1">
+            <span class="label-text-alt text-xs opacity-60">
+              Momento de envío: {{ triggerLabel($any(editingTemplate)) }}
+            </span>
+          </div>
+        </label>
+
+        <!-- Correo personalizado -->
+        <label class="form-control w-full" *ngIf="editingTemplate.recipientRule === 'CUSTOM'">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Correo de destino</span>
+          </div>
+          <input
+            [(ngModel)]="editingTemplate.recipientEmail"
+            name="editRecipientEmail"
+            type="email"
+            class="input input-bordered input-sm w-full"
+            placeholder="destino@coacmagisterio.fin.ec"
+          />
+        </label>
+
+        <!-- Activación -->
+        <label class="flex items-center gap-3 p-3 rounded-lg border border-base-200 cursor-pointer md:col-span-2">
+          <input
+            [(ngModel)]="editingTemplate.activeTemplate"
+            name="editActiveTemplate"
+            type="checkbox"
+            class="checkbox checkbox-primary checkbox-sm"
+          />
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium">Plantilla activa</p>
+            <p class="text-xs opacity-60">Si está inactiva, se usa un texto por defecto para el evento</p>
+          </div>
+        </label>
+
+        <!-- Imagen de la plantilla -->
+        <div class="md:col-span-2">
+          <label class="flex items-start gap-3 p-3 rounded-lg border border-base-200 cursor-pointer">
+            <div class="w-14 h-14 rounded-lg border border-base-300 bg-base-200/40 flex items-center justify-center overflow-hidden shrink-0">
+              <img
+                *ngIf="editImageUrl; else sinImagenPlantilla"
+                [src]="editImageUrl"
+                alt="Imagen de la plantilla"
+                class="w-full h-full object-contain p-1"
+              />
+              <ng-template #sinImagenPlantilla>
+                <i class="fa-solid fa-image text-base-content/40" aria-hidden="true"></i>
+              </ng-template>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium">Imagen para el correo</p>
+              <p class="text-xs opacity-60 mb-2">
+                Queda disponible como [imagen] (ya en HTML) y [imagenUrl] (solo la
+                dirección) dentro del cuerpo. Sin imagen, ambos tokens se vacían.
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <label class="btn btn-outline btn-xs gap-1.5 cursor-pointer">
+                  <i class="fa-solid fa-upload text-[11px]" aria-hidden="true"></i>
+                  Seleccionar
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/gif,image/webp"
+                    (change)="onImageSelected($event)"
+                    class="hidden"
+                  />
+                </label>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-xs gap-1.5"
+                  (click)="uploadImage('editar')"
+                  [disabled]="uploadingImage || !imagenSeleccionada"
+                >
+                  <span
+                    *ngIf="uploadingImage"
+                    class="loading loading-spinner loading-xs"
+                    aria-hidden="true"
+                  ></span>
+                  {{ uploadingImage ? 'Subiendo...' : 'Subir' }}
+                </button>
+                <button
+                  *ngIf="editImageUrl"
+                  type="button"
+                  class="btn btn-ghost btn-xs gap-1.5 text-error"
+                  (click)="clearEditImage()"
+                >
+                  <i class="fa-solid fa-trash text-[11px]" aria-hidden="true"></i>
+                  Quitar
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline btn-xs gap-1.5"
+                  (click)="insertarImagen('cuerpo')"
+                  [disabled]="!editImageUrl"
+                  title="Inserta una etiqueta img con la imagen de la plantilla"
+                >
+                  <i class="fa-solid fa-code text-[11px]" aria-hidden="true"></i>
+                  Insertar en el cuerpo
+                </button>
+              </div>
+              <p
+                *ngIf="editImageUrl"
+                class="text-[10px] opacity-60 mt-2 font-mono break-all"
+              >
+                {{ editImageUrl }}
+              </p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Avisos sobre el HTML escrito -->
+        <div
+          *ngIf="avisosEditando().length"
+          class="md:col-span-2 alert alert-warning rounded-2xl py-2.5 flex flex-col gap-1"
+        >
+          <div class="flex items-center gap-2 font-medium text-xs">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            Revisa el HTML del cuerpo
+          </div>
+          <ul class="list-disc list-inside text-[11px] space-y-0.5">
+            <li *ngFor="let aviso of avisosEditando()">{{ aviso }}</li>
+          </ul>
+        </div>
+
+        <!-- Vista previa -->
+        <div class="md:col-span-2" *ngIf="editingTemplate.bodyTemplate">
+          <div class="rounded-xl border border-base-200 overflow-hidden">
+            <div class="px-3 py-2 bg-base-200/60 border-b border-base-200 flex items-center gap-2">
+              <i class="fa-solid fa-eye text-[15px] opacity-60" aria-hidden="true"></i>
+              <span class="text-xs font-medium">Vista previa</span>
+            </div>
+            <div class="p-4">
+              <p class="text-sm font-semibold mb-2 border-b border-base-200 pb-2">
+                {{ editingTemplate.subjectTemplate || '(sin asunto)' }}
+              </p>
+              <iframe
+                class="w-full h-64 border-0 rounded-lg bg-white"
+                [srcdoc]="safePreviewHtml(editingTemplate.bodyTemplate, editingTemplate.imageUrl || editImageUrl)"
+                sandbox
+                title="Vista previa de la plantilla"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="md:col-span-2 flex justify-end gap-2 pt-2 border-t border-base-200">
+          <button type="button" class="btn btn-sm btn-ghost" (click)="showEdit = false">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="btn btn-sm btn-primary gap-2"
+            [disabled]="!editingTemplate.subjectTemplate || !editingTemplate.bodyTemplate"
+          >
+            <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
+            Guardar cambios
           </button>
         </div>
       </form>
@@ -161,19 +603,14 @@
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
           <div class="p-1.5 rounded-lg bg-info/10 text-info" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
+            <i class="fa-solid fa-eye text-[15px]"></i>
           </div>
           <h3 class="card-title text-base">
             Vista previa: <code class="font-mono text-sm">{{ previewTemplate.nameTemplate }}</code>
           </h3>
         </div>
         <button class="btn btn-ghost btn-xs btn-circle" (click)="previewTemplate = null" aria-label="Cerrar vista previa">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i>
         </button>
       </div>
       <div class="rounded-xl border border-base-200 p-4">
@@ -182,8 +619,9 @@
         </p>
         <iframe
           class="w-full h-80 border-0 rounded-lg bg-white"
-          [srcdoc]="previewHtml(previewTemplate.bodyTemplate)"
-          title="Vista previa de la plantilla"
+                [srcdoc]="safePreviewHtml(previewTemplate.bodyTemplate, previewTemplate.imageUrl)"
+                sandbox
+                title="Vista previa de la plantilla"
         ></iframe>
       </div>
     </div>
@@ -196,9 +634,7 @@
       <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
         <div class="flex items-center gap-2">
           <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+<i class="fa-solid fa-envelope text-[15px]"></i>
           </div>
           <h3 class="card-title text-base">Plantillas registradas</h3>
           <span class="badge badge-sm badge-ghost">{{ templates.length || 0 }}</span>
@@ -212,27 +648,72 @@
             <thead class="bg-primary text-primary-content">
               <tr>
                 <th class="text-center">Nombre</th>
+                <th class="text-center">Disparo</th>
                 <th class="text-center">Tipo</th>
                 <th class="text-center">Asunto</th>
+                <th class="text-center">Destinatario del correo</th>
                 <th class="text-center">Estado</th>
                 <th class="text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
               <!-- Filas -->
-              <tr *ngFor="let t of templates" class="hover:bg-base-200/50 transition-colors">
+              <tr *ngFor="let t of pagTemplates.vista" class="hover:bg-base-200/50 transition-colors">
                 <!-- Nombre -->
                 <td>
                   <div class="flex items-center gap-2">
-                    <div class="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0" aria-hidden="true">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
+                    <div
+                      class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
+                      [style.background-color]="eventColor(t) + '22'"
+                      [style.color]="eventColor(t)"
+                      aria-hidden="true"
+                    >
+                      <i [class]="eventIcon(t)" class="text-[15px]"></i>
                     </div>
-                    <code class="font-mono text-xs bg-base-200 px-2 py-0.5 rounded">
-                      {{ t.nameTemplate }}
-                    </code>
+                    <div class="min-w-0">
+                      <span
+                        class="badge badge-sm gap-1.5 font-medium min-w-0 uppercase"
+                        [style.background-color]="eventColor(t) + '22'"
+                        [style.color]="eventColor(t) + '!important'"
+                        [title]="t.nameTemplate"
+                      >
+                        <!--
+                          El icono va dentro del badge, como en el detalle del
+                          ticket. Antes el color estaba puesto pero el glifo
+                          quedaba en el cuadrado de al lado, sin conectar.
+                        -->
+                        <i
+                          [class]="eventIcon(t)"
+                          class="text-[10px] shrink-0"
+                          aria-hidden="true"
+                        ></i>
+                        <span class="truncate font-mono">{{ t.nameTemplate }}</span>
+                      </span>
+                      <div class="mt-1">
+                        <span
+                          *ngIf="isSystemEvent(t); else sinEvento"
+                          class="badge badge-xs badge-success gap-1"
+                        >
+                          <i class="fa-solid fa-paper-plane text-[10px]" aria-hidden="true"></i>
+                          Enviada
+                        </span>
+                        <ng-template #sinEvento>
+                          <span
+                            class="badge badge-xs badge-ghost gap-1"
+                            title="El sistema no envía esta plantilla: ningún evento la dispara"
+                          >
+                            <i class="fa-solid fa-ban text-[10px]" aria-hidden="true"></i>
+                            No se envía
+                          </span>
+                        </ng-template>
+                      </div>
+                    </div>
                   </div>
+                </td>
+
+                <!-- Disparo -->
+                <td class="text-xs opacity-80 whitespace-nowrap">
+                  {{ triggerLabel(t) }}
                 </td>
 
                 <!-- Tipo -->
@@ -245,33 +726,49 @@
                   {{ t.subjectTemplate }}
                 </td>
 
+                <!-- Destinatario -->
+                <td class="max-w-xs">
+                  <span class="badge badge-sm gap-1 badge-outline">
+                    {{ recipientLabel(t) }}
+                  </span>
+                </td>
+
                 <!-- Estado -->
                 <td>
                   <span
                     class="badge badge-sm gap-1"
                     [ngClass]="t.activeTemplate ? 'badge-success' : 'badge-error'"
                   >
-                    <svg *ngIf="t.activeTemplate" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <svg *ngIf="!t.activeTemplate" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <i *ngIf="t.activeTemplate" class="fa-solid fa-check text-xs" aria-hidden="true"></i>
+                    <i *ngIf="!t.activeTemplate" class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
                     {{ t.activeTemplate ? 'Activa' : 'Inactiva' }}
                   </span>
                 </td>
 
                 <!-- Acciones -->
-                <td class="text-right">
+                <td class="text-right whitespace-nowrap">
+                  <button
+                    class="btn btn-xs btn-ghost gap-1"
+                    (click)="startEdit(t)"
+                    aria-label="Editar plantilla"
+                  >
+                    <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
+                    Editar
+                  </button>
+                  <button
+                    class="btn btn-xs btn-ghost gap-1"
+                    (click)="abrirVisor(t)"
+                    aria-label="Ver la plantilla en el visor"
+                  >
+                    <i class="fa-solid fa-up-right-from-square text-sm" aria-hidden="true"></i>
+                    Abrir visor
+                  </button>
                   <button
                     class="btn btn-xs btn-ghost gap-1"
                     (click)="preview(t)"
                     aria-label="Ver vista previa"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
+                    <i class="fa-solid fa-eye text-sm" aria-hidden="true"></i>
                     Vista previa
                   </button>
                   <button
@@ -279,9 +776,7 @@
                     (click)="delete(t)"
                     aria-label="Eliminar plantilla"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+<i class="fa-solid fa-trash text-sm" aria-hidden="true"></i>
                     Eliminar
                   </button>
                 </td>
@@ -289,11 +784,9 @@
 
               <!-- Estado vacío -->
               <tr *ngIf="!templates || templates.length === 0">
-                <td colspan="5">
+                <td colspan="7">
                   <div class="flex flex-col items-center justify-center py-10 gap-2 opacity-70">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
+<i class="fa-solid fa-envelope text-3xl" aria-hidden="true"></i>
                     <span class="text-sm">No hay plantillas registradas</span>
                   </div>
                 </td>
@@ -302,6 +795,105 @@
           </table>
         </div>
       </div>
+    </div>
+  </div>
+    <app-paginator
+    estilo="numeros"
+    [total]="templates.length"
+    [page]="pagTemplates.page"
+    [pageSize]="pagTemplates.pageSize"
+    [mostrarResumen]="false"
+    (pageChange)="pagTemplates.cambiarPagina($event)"
+    (pageSizeChange)="pagTemplates.cambiarTamano($event)"
+    ></app-paginator>
+</div>
+
+<!-- ============ VISOR DE PLANTILLAS ============ -->
+<!--
+  Panel lateral con la plantilla renderizada. Sirve para revisar el correo sin
+  que el formulario tape la mitad de la pantalla, y se puede maximizar para verlo
+  a pantalla completa. El iframe lleva sandbox sin allow-scripts: es el mismo
+  aislamiento que usa la vista previa del formulario.
+-->
+<div
+  *ngIf="viewerTemplate"
+  class="overlay-backdrop fixed inset-0 z-[9998] flex justify-end bg-black/40"
+  (click)="cerrarVisor()"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Visor de plantillas"
+>
+  <div
+    class="overlay-drawer bg-base-100 h-full flex flex-col shadow-2xl border-l border-base-300"
+    [class.w-full]="viewerFullScreen"
+    [class.max-w-2xl]="!viewerFullScreen"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="px-4 py-3 border-b border-base-200 flex items-center gap-3">
+      <div class="flex-1 min-w-0">
+        <p class="font-semibold text-sm truncate">
+          {{ viewerTemplate.nameTemplate }}
+        </p>
+        <p class="text-xs opacity-60 truncate">
+          {{ viewerTemplate.subjectTemplate }}
+        </p>
+      </div>
+      <span
+        *ngIf="viewerTemplate.imageUrl"
+        class="badge badge-sm badge-neutral gap-1 shrink-0"
+        title="Esta plantilla lleva imagen propia"
+      >
+        <i class="fa-solid fa-image text-[10px]" aria-hidden="true"></i>
+        con imagen
+      </span>
+      <button
+        type="button"
+        class="btn btn-xs btn-ghost gap-1"
+        (click)="viewerFullScreen = !viewerFullScreen"
+        [attr.aria-label]="viewerFullScreen ? 'Restaurar' : 'Pantalla completa'"
+      >
+        <i
+          [class]="viewerFullScreen
+            ? 'fa-solid fa-compress text-sm'
+            : 'fa-solid fa-expand text-sm'"
+          aria-hidden="true"
+        ></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-xs btn-ghost gap-1"
+        (click)="cerrarVisor()"
+        aria-label="Cerrar el visor"
+      >
+        <i class="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto bg-base-200/40 p-4" style="height: 100%;">
+      <div class="bg-white rounded-xl shadow-sm overflow-hidden" style="height: 100%;">
+        <iframe
+          class="w-full border-0 bg-white"
+          style="height: 100%;"
+          [srcdoc]="safePreviewHtml(viewerTemplate.bodyTemplate, viewerTemplate.imageUrl)"
+          sandbox
+          title="Plantilla renderizada"
+        ></iframe>
+      </div>
+    </div>
+
+    <div class="px-4 py-3 border-t border-base-200 flex items-center justify-between gap-2">
+      <p class="text-[11px] opacity-60">
+        Así se verá el correo. Las imágenes salen del servidor, así que
+        necesitas la API encendida para verlas.
+      </p>
+      <button
+        type="button"
+        class="btn btn-xs btn-primary gap-1"
+        (click)="startEdit(viewerTemplate); cerrarVisor()"
+      >
+        <i class="fa-solid fa-pen text-[11px]" aria-hidden="true"></i>
+        Editar
+      </button>
     </div>
   </div>
 </div>

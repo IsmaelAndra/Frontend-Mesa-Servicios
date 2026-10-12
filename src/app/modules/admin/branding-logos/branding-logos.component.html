@@ -1,0 +1,429 @@
+<!-- ============ Icono del sistema ============ -->
+<div
+  class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+>
+  <div class="card-body">
+    <div class="flex items-start gap-4 mb-4">
+      <div
+        class="p-2 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-bars text-lg"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h2 class="text-base font-semibold">Icono del sistema</h2>
+        <p class="text-xs opacity-60 mt-0.5">
+          Aparece en el sidebar y en la pestaña del navegador · PNG, JPG,
+          GIF o WebP · 32×32 o 64×64px
+        </p>
+      </div>
+      <span
+        *ngIf="b.systemIconPreview"
+        class="badge badge-sm badge-success text-success-content gap-1 shrink-0 font-medium"
+      >
+        <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
+        Configurado
+      </span>
+    </div>
+
+    <div class="flex flex-col sm:flex-row items-center gap-5">
+      <!-- Preview -->
+      <div class="shrink-0">
+        <div
+          *ngIf="b.systemIconPreview"
+          class="w-24 h-24 app-chrome rounded-xl flex items-center justify-center overflow-hidden ring-1 ring-white/20"
+        >
+          <img
+            [src]="b.systemIconPreview"
+            alt="Icono del sistema"
+            class="w-full h-full object-contain p-2"
+          />
+        </div>
+        <div
+          *ngIf="!b.systemIconPreview"
+          class="w-24 h-24 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-base-300 text-base-content/40 gap-1 bg-base-200/40"
+        >
+          <i class="fa-solid fa-bars text-2xl" aria-hidden="true"></i>
+          <span class="text-[10px]">Sin icono</span>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="flex flex-col gap-2.5 w-full">
+        <div class="flex flex-wrap gap-2">
+          <label class="btn btn-outline btn-sm gap-2 cursor-pointer">
+            <i
+              class="fa-solid fa-upload text-[15px]"
+              aria-hidden="true"
+            ></i>
+            Seleccionar
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/gif,image/webp"
+              (change)="b.onSystemIconSelected($event)"
+              class="hidden"
+            />
+          </label>
+
+          <button
+            class="btn btn-primary btn-sm gap-2"
+            (click)="b.uploadSystemIcon()"
+            [disabled]="b.loading || !b.systemIconFile"
+          >
+            <span
+              *ngIf="b.loading"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="!b.loading"
+              class="fa-solid fa-check text-[15px]"
+              aria-hidden="true"
+            ></i>
+            {{ b.loading ? "Subiendo..." : "Subir" }}
+          </button>
+        </div>
+
+        <!-- Chip del archivo seleccionado -->
+        <div
+          *ngIf="b.systemIconFile"
+          class="inline-flex items-center gap-2 self-start px-2.5 py-1 rounded-lg bg-primary/5 border border-primary/20 text-xs"
+        >
+          <i
+            class="fa-solid fa-file-image text-primary text-[10px]"
+            aria-hidden="true"
+          ></i>
+          <span
+            class="font-mono truncate max-w-[240px]"
+            [title]="b.systemIconFile.name"
+          >
+            {{ b.systemIconFile.name }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Logo del sistema ============ -->
+<div
+  class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+>
+  <div class="card-body">
+    <div class="flex items-start gap-4 mb-4">
+      <div
+        class="p-2 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-image text-lg"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h2 class="text-base font-semibold">Logo del sistema</h2>
+        <p class="text-xs opacity-60 mt-0.5">
+          Barra superior y sidebar · PNG, JPG, GIF o WebP · 200×80px
+        </p>
+      </div>
+      <span
+        *ngIf="b.logoPreview"
+        class="badge badge-sm badge-success text-success-content gap-1 shrink-0 font-medium"
+      >
+        <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
+        Configurado
+      </span>
+    </div>
+
+    <div class="flex flex-col sm:flex-row items-center gap-5">
+      <div class="shrink-0">
+        <div
+          *ngIf="b.logoPreview"
+          class="w-48 h-28 app-chrome rounded-xl flex items-center justify-center overflow-hidden ring-1 ring-white/20"
+        >
+          <img
+            [src]="b.logoPreview"
+            alt="Logo actual"
+            class="w-full h-full object-contain p-3"
+          />
+        </div>
+        <div
+          *ngIf="!b.logoPreview"
+          class="w-48 h-28 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-base-300 text-base-content/40 gap-1 bg-base-200/40"
+        >
+          <i class="fa-solid fa-image text-3xl" aria-hidden="true"></i>
+          <span class="text-[10px]">Sin logo</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2.5 w-full">
+        <div class="flex flex-wrap gap-2">
+          <label class="btn btn-outline btn-sm gap-2 cursor-pointer">
+            <i
+              class="fa-solid fa-upload text-[15px]"
+              aria-hidden="true"
+            ></i>
+            Seleccionar
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/gif,image/webp"
+              (change)="b.onLogoSelected($event)"
+              class="hidden"
+            />
+          </label>
+
+          <button
+            class="btn btn-primary btn-sm gap-2"
+            (click)="b.uploadLogo()"
+            [disabled]="b.loading || !b.logoFile"
+          >
+            <span
+              *ngIf="b.loading"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="!b.loading"
+              class="fa-solid fa-check text-[15px]"
+              aria-hidden="true"
+            ></i>
+            {{ b.loading ? "Subiendo..." : "Subir" }}
+          </button>
+        </div>
+
+        <div
+          *ngIf="b.logoFile"
+          class="inline-flex items-center gap-2 self-start px-2.5 py-1 rounded-lg bg-primary/5 border border-primary/20 text-xs"
+        >
+          <i
+            class="fa-solid fa-file-image text-primary text-[10px]"
+            aria-hidden="true"
+          ></i>
+          <span
+            class="font-mono truncate max-w-[240px]"
+            [title]="b.logoFile.name"
+          >
+            {{ b.logoFile.name }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Logo del login ============ -->
+<div
+  class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+>
+  <div class="card-body">
+    <div class="flex items-start gap-4 mb-4">
+      <div
+        class="p-2 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+        aria-hidden="true"
+      >
+        <i class="fa-regular fa-user text-lg"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h2 class="text-base font-semibold">Logo del login</h2>
+        <p class="text-xs opacity-60 mt-0.5">
+          Pantalla de inicio de sesión · PNG, JPG, GIF o WebP · 200×80px
+        </p>
+      </div>
+      <span
+        *ngIf="b.logoLoginPreview"
+        class="badge badge-sm badge-success text-success-content gap-1 shrink-0 font-medium"
+      >
+        <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
+        Configurado
+      </span>
+    </div>
+
+    <div class="flex flex-col sm:flex-row items-center gap-5">
+      <div class="shrink-0">
+        <div
+          *ngIf="b.logoLoginPreview"
+          class="w-48 h-28 app-chrome rounded-xl flex items-center justify-center overflow-hidden ring-1 ring-white/20"
+        >
+          <img
+            [src]="b.logoLoginPreview"
+            alt="Logo del login"
+            class="w-full h-full object-contain p-3"
+          />
+        </div>
+        <div
+          *ngIf="!b.logoLoginPreview"
+          class="w-48 h-28 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-base-300 text-base-content/40 gap-1 bg-base-200/40"
+        >
+          <i class="fa-regular fa-user text-3xl" aria-hidden="true"></i>
+          <span class="text-[10px]">Sin logo</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2.5 w-full">
+        <div class="flex flex-wrap gap-2">
+          <label class="btn btn-outline btn-sm gap-2 cursor-pointer">
+            <i
+              class="fa-solid fa-upload text-[15px]"
+              aria-hidden="true"
+            ></i>
+            Seleccionar
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/gif,image/webp"
+              (change)="b.onLogoLoginSelected($event)"
+              class="hidden"
+            />
+          </label>
+
+          <button
+            class="btn btn-primary btn-sm gap-2"
+            (click)="b.uploadLogoLogin()"
+            [disabled]="b.loading || !b.logoLoginFile"
+          >
+            <span
+              *ngIf="b.loading"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="!b.loading"
+              class="fa-solid fa-check text-[15px]"
+              aria-hidden="true"
+            ></i>
+            {{ b.loading ? "Subiendo..." : "Subir" }}
+          </button>
+        </div>
+
+        <div
+          *ngIf="b.logoLoginFile"
+          class="inline-flex items-center gap-2 self-start px-2.5 py-1 rounded-lg bg-primary/5 border border-primary/20 text-xs"
+        >
+          <i
+            class="fa-solid fa-file-image text-primary text-[10px]"
+            aria-hidden="true"
+          ></i>
+          <span
+            class="font-mono truncate max-w-[240px]"
+            [title]="b.logoLoginFile.name"
+          >
+            {{ b.logoLoginFile.name }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Icono de los reportes ============ -->
+<div
+  class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+>
+  <div class="card-body">
+    <div class="flex items-start gap-4 mb-4">
+      <div
+        class="p-2 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-file-pdf text-lg"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h2 class="text-base font-semibold">Icono de los reportes PDF</h2>
+        <p class="text-xs opacity-60 mt-0.5">
+          Cabecera de los reportes · PNG o JPG · cuadrada, 120×120px
+        </p>
+      </div>
+      <span
+        *ngIf="b.reportLogoPreview"
+        class="badge badge-sm badge-success text-success-content gap-1 shrink-0 font-medium"
+      >
+        <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
+        Configurado
+      </span>
+    </div>
+
+    <div
+      class="flex items-start gap-2 p-3 rounded-xl bg-info/5 border border-info/20 text-xs mb-4"
+    >
+      <i
+        class="fa-solid fa-circle-info text-info text-sm shrink-0 mt-0.5"
+        aria-hidden="true"
+      ></i>
+      <p class="opacity-80 leading-relaxed">
+        JasperReports no dibuja SVG, así que aquí solo se admiten
+        <strong>PNG o JPG</strong>. Si no subes ninguna, se usará el logo
+        del sistema como respaldo.
+      </p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row items-center gap-5">
+      <div class="shrink-0">
+        <div
+          *ngIf="b.reportLogoPreview"
+          class="w-48 h-32 bg-[#fafbfb] rounded-xl flex items-center justify-center overflow-hidden ring-1 ring-base-300"
+        >
+          <img
+            [src]="b.reportLogoPreview"
+            alt="Icono de los reportes"
+            class="w-full h-full object-contain p-3"
+          />
+        </div>
+        <div
+          *ngIf="!b.reportLogoPreview"
+          class="w-48 h-32 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-base-300 text-base-content/40 gap-1 bg-base-200/40"
+        >
+          <i class="fa-solid fa-file-lines text-3xl" aria-hidden="true"></i>
+          <span class="text-[10px]">Sin icono</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2.5 w-full">
+        <div class="flex flex-wrap gap-2">
+          <label class="btn btn-outline btn-sm gap-2 cursor-pointer">
+            <i
+              class="fa-solid fa-upload text-[15px]"
+              aria-hidden="true"
+            ></i>
+            Seleccionar
+            <input
+              type="file"
+              accept="image/png,image/jpeg"
+              (change)="b.onReportLogoSelected($event)"
+              class="hidden"
+            />
+          </label>
+
+          <button
+            class="btn btn-primary btn-sm gap-2"
+            (click)="b.uploadReportLogo()"
+            [disabled]="b.loading || !b.reportLogoFile"
+          >
+            <span
+              *ngIf="b.loading"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="!b.loading"
+              class="fa-solid fa-check text-[15px]"
+              aria-hidden="true"
+            ></i>
+            {{ b.loading ? "Subiendo..." : "Subir" }}
+          </button>
+        </div>
+
+        <div
+          *ngIf="b.reportLogoFile"
+          class="inline-flex items-center gap-2 self-start px-2.5 py-1 rounded-lg bg-primary/5 border border-primary/20 text-xs"
+        >
+          <i
+            class="fa-solid fa-file-image text-primary text-[10px]"
+            aria-hidden="true"
+          ></i>
+          <span
+            class="font-mono truncate max-w-[240px]"
+            [title]="b.reportLogoFile.name"
+          >
+            {{ b.reportLogoFile.name }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

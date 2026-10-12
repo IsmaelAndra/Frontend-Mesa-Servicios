@@ -1,171 +1,340 @@
-<div class="min-h-screen flex items-center justify-center p-4"
-  [ngStyle]="{
-    'background-image': backgroundUrl ? 'url(' + backgroundUrl + ')' : '',
-    'background-size': 'cover',
-    'background-position': 'center'
-  }">
-  <div class="w-full max-w-md space-y-6">
-    <!-- Logo + título -->
-    <div class="text-center space-y-3">
-      <!-- Logo (si existe) -->
-      <div class="flex justify-center">
+<div class="relative min-h-screen flex items-stretch overflow-hidden">
+  <!-- ============ Fondo: imagen SIN opacidad ============ -->
+  <div
+    *ngIf="backgroundUrl"
+    class="absolute inset-0 bg-cover bg-center bg-no-repeat"
+    [ngStyle]="{ 'background-image': 'url(' + backgroundUrl + ')' }"
+    aria-hidden="true"
+  ></div>
+
+  <!-- Fallback: gradiente primary si no hay imagen -->
+  <div
+    *ngIf="!backgroundUrl"
+    class="absolute inset-0 bg-gradient-to-br from-primary to-primary/80"
+    aria-hidden="true"
+  ></div>
+
+  <!-- ============ Toggle de tema (light / dark) ============ -->
+  <button
+    type="button"
+    class="absolute top-4 right-4 z-20 btn btn-circle btn-ghost btn-sm text-white hover:bg-white/10"
+    (click)="toggleTheme()"
+    [attr.aria-label]="
+      isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
+    "
+    [title]="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+  >
+    <i *ngIf="isDark" class="fa-solid fa-sun text-lg" aria-hidden="true"></i>
+    <i *ngIf="!isDark" class="fa-solid fa-moon text-lg" aria-hidden="true"></i>
+  </button>
+
+  <!-- ============ Contenido ============ -->
+  <div class="relative z-10 w-full grid lg:grid-cols-3">
+    <!-- ============ Panel izquierdo (branding) ============ -->
+    <div
+      class="hidden lg:flex flex-col justify-center bg-primary/40 backdrop-blur-sm px-8 xl:px-10 py-12 text-white border-r border-white/10"
+    >
+      <!-- Logo -->
+      <a routerLink="/" class="inline-block mb-10 self-center">
         <img
           *ngIf="logoUrl"
           [src]="logoUrl"
           alt="Logo"
-          class="h-14 w-auto object-contain"
+          class="h-24 xl:h-28 w-auto object-contain drop-shadow-2xl"
         />
         <div
           *ngIf="!logoUrl"
-          class="w-14 h-14 rounded-xl bg-primary flex items-center justify-center text-primary-content font-bold text-xl shadow-md"
-          aria-hidden="true"
+          class="w-20 h-20 rounded-2xl bg-white flex items-center justify-center text-primary font-bold text-3xl shadow-2xl"
         >
-          COAC
+          C
+        </div>
+      </a>
+
+      <!-- Título -->
+      <h2
+        class="text-3xl xl:text-4xl font-bold leading-tight text-white text-center"
+      >
+        Bienvenido a tu
+        <span class="block text-white mt-1">Mesa de Servicios</span>
+      </h2>
+
+      <p class="text-md mt-6 text-white/85 leading-relaxed text-center">
+        Accede a tu cuenta para gestionar tickets, dar seguimiento a tus
+        solicitudes y recibir soporte del equipo de TI.
+      </p>
+
+      <!-- Features -->
+      <div class="mt-10 space-y-4">
+        <div class="flex items-start gap-3 text-white">
+          <div class="p-2 rounded-lg bg-white/10 backdrop-blur-sm shrink-0">
+            <i class="fa-solid fa-circle-check text-3xl" aria-hidden="true"></i>
+          </div>
+          <div>
+            <p class="font-medium text-md">Gestión centralizada</p>
+            <p class="text-md text-white/70 mt-0.5">
+              Todos tus tickets en un solo lugar
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3 text-white">
+          <div class="p-2 rounded-lg bg-white/10 backdrop-blur-sm shrink-0">
+            <i class="fa-regular fa-clock text-3xl" aria-hidden="true"></i>
+          </div>
+          <div>
+            <p class="font-medium text-md">Seguimiento en tiempo real</p>
+            <p class="text-md text-white/70 mt-0.5">
+              Conoce el estado de tus solicitudes
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3 text-white">
+          <div class="p-2 rounded-lg bg-white/10 backdrop-blur-sm shrink-0">
+            <i class="fa-solid fa-envelope text-3xl" aria-hidden="true"></i>
+          </div>
+          <div>
+            <p class="font-medium text-md">Notificaciones automáticas</p>
+            <p class="text-md text-white/70 mt-0.5">Recibe avisos por correo</p>
+          </div>
         </div>
       </div>
 
-      <div>
-        <h1 class="text-2xl font-bold text-primary">Mesa de Ayuda COAC</h1>
-        <p class="text-sm opacity-70 mt-1">Ingresa a tu cuenta para continuar</p>
-      </div>
+      <!-- Footer del panel -->
+      <p class="text-center text-md text-white/70 mt-12">
+        © {{ currentYear }} COAC Magisterio de Pichincha. Todos los derechos
+        reservados.
+      </p>
     </div>
 
-    <!-- Card del formulario -->
-    <div class="card bg-base-100 shadow-xl border border-base-200">
-      <div class="card-body p-6 sm:p-8">
-        <h2 class="card-title justify-center text-xl mb-2">Iniciar sesión</h2>
+    <!-- ============ Panel derecho (formulario) ============ -->
+    <div
+      class="lg:col-span-2 flex items-center justify-center px-4 py-10 sm:px-8 lg:px-12"
+    >
+      <div class="w-full max-w-md">
+        <!-- Logo (solo móvil) -->
+        <div class="lg:hidden flex justify-center mb-6">
+          <img
+            *ngIf="logoUrl"
+            [src]="logoUrl"
+            alt="Logo"
+            class="h-14 w-auto object-contain drop-shadow-lg"
+          />
+          <div
+            *ngIf="!logoUrl"
+            class="w-14 h-14 rounded-xl bg-primary flex items-center justify-center text-primary-content font-bold text-xl shadow-lg"
+          >
+            C
+          </div>
+        </div>
 
-        <form [formGroup]="form" (ngSubmit)="login()" class="space-y-4">
-          <!-- Correo -->
-          <label class="form-control w-full">
-            <div class="label pt-0 pb-1">
-              <span class="label-text text-xs font-medium">
-                Correo corporativo <span class="text-error">*</span>
-              </span>
-            </div>
-            <div class="relative">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-50 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              <input
-                type="email"
-                formControlName="email"
-                class="input input-bordered w-full pl-9"
-                placeholder="usuario@coacmagisterio.fin.ec"
-                autocomplete="email"
-                [ngClass]="{
-                  'input-error': form.get('email')?.invalid && form.get('email')?.touched
-                }"
-              />
-            </div>
-            <div
-              *ngIf="form.get('email')?.invalid && form.get('email')?.touched"
-              class="label pt-1 pb-0"
-            >
-              <span class="label-text-alt text-error text-xs flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <span *ngIf="form.get('email')?.errors?.['required']">El correo es obligatorio</span>
-                <span *ngIf="form.get('email')?.errors?.['email']">Formato de correo inválido</span>
-              </span>
-            </div>
-          </label>
+        <!-- ============ Card del formulario (con [ngClass] condicional) ============ -->
+        <div
+          class="backdrop-blur-md rounded-2xl px-6 py-8 sm:px-8 shadow-2xl border transition-colors"
+          [ngClass]="
+            isDark
+              ? 'bg-slate-800/80 border-slate-700/60'
+              : 'bg-white/80 border-white/50'
+          "
+        >
+          <h1
+            class="text-2xl sm:text-3xl font-bold mb-2 text-center transition-colors"
+            [ngClass]="isDark ? 'text-slate-50' : 'text-slate-900'"
+          >
+            Iniciar sesión
+          </h1>
+          <p
+            class="text-md mb-6 text-center transition-colors"
+            [ngClass]="isDark ? 'text-slate-300' : 'text-slate-600'"
+          >
+            Ingresa tus credenciales para acceder al sistema
+          </p>
 
-          <!-- Contraseña -->
-          <label class="form-control w-full">
-            <div class="label pt-0 pb-1">
-              <span class="label-text text-xs font-medium">
-                Contraseña <span class="text-error">*</span>
-              </span>
-            </div>
-            <div class="relative">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-50 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <input
-                [type]="showPassword ? 'text' : 'password'"
-                formControlName="password"
-                class="input input-bordered w-full pl-9 pr-10"
-                placeholder="••••••••"
-                autocomplete="current-password"
-                [ngClass]="{
-                  'input-error': form.get('password')?.invalid && form.get('password')?.touched
-                }"
-              />
-              <button
-                type="button"
-                class="btn btn-ghost btn-xs btn-circle absolute right-1 top-1/2 -translate-y-1/2 z-10"
-                (click)="showPassword = !showPassword"
-                [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          <form [formGroup]="form" (ngSubmit)="login()" class="space-y-5">
+            <!-- Correo -->
+            <div>
+              <label
+                for="email"
+                class="mb-2 font-medium text-md inline-block transition-colors"
+                [ngClass]="isDark ? 'text-slate-200' : 'text-slate-700'"
               >
-                <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                </svg>
-              </button>
-            </div>
-            <div
-              *ngIf="form.get('password')?.invalid && form.get('password')?.touched"
-              class="label pt-1 pb-0"
-            >
-              <span class="label-text-alt text-error text-xs flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                La contraseña es obligatoria
-              </span>
-            </div>
-          </label>
+                Correo corporativo <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <i
+                  class="fa-solid fa-envelope text-[15px] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 transition-colors"
+                  [ngClass]="isDark ? 'text-slate-400' : 'text-slate-500'"
+                  aria-hidden="true"
+                ></i>
+                <input
+                  id="email"
+                  type="email"
+                  formControlName="email"
+                  class="w-full pl-9 pr-3 py-2.5 text-md rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
+                  [ngClass]="[
+                    isDark
+                      ? 'bg-slate-700 text-slate-50 placeholder:text-slate-500'
+                      : 'bg-white text-slate-900 placeholder:text-slate-400',
+                    form.get('email')?.invalid && form.get('email')?.touched
+                      ? 'border-red-400 focus:ring-red-500 focus:border-red-500'
+                      : isDark
+                        ? 'border-slate-600'
+                        : 'border-slate-300',
+                  ]"
+                  placeholder="usuario@coacmagisterio.fin.ec"
+                  autocomplete="email"
+                />
+              </div>
+              <p
+                *ngIf="form.get('email')?.invalid && form.get('email')?.touched"
+                class="mt-1.5 text-xs flex items-center gap-1"
+                [ngClass]="isDark ? 'text-red-400' : 'text-red-600'"
+              >
+                <i
+                  class="fa-solid fa-triangle-exclamation text-xs shrink-0"
+                  aria-hidden="true"
+                ></i>
 
-          <!-- Botón login -->
-          <div class="pt-2">
+                <span *ngIf="form.get('email')?.errors?.['required']">
+                  El correo es obligatorio
+                </span>
+
+                <span *ngIf="form.get('email')?.errors?.['email']">
+                  Formato de correo inválido
+                </span>
+              </p>
+            </div>
+
+            <!-- Contraseña -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label
+                  for="password"
+                  class="font-medium text-md transition-colors"
+                  [ngClass]="isDark ? 'text-slate-200' : 'text-slate-700'"
+                >
+                  Contraseña <span class="text-red-500">*</span>
+                </label>
+                <button
+                  type="button"
+                  class="text-md font-medium text-primary hover:text-primary/80 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+                  (click)="forgotPassword()"
+                >
+                  ¿Olvidó su contraseña?
+                </button>
+              </div>
+              <div class="relative">
+                <i
+                  class="fa-solid fa-lock text-[15px] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 transition-colors"
+                  [ngClass]="isDark ? 'text-slate-400' : 'text-slate-500'"
+                  aria-hidden="true"
+                ></i>
+                <input
+                  id="password"
+                  [type]="showPassword ? 'text' : 'password'"
+                  formControlName="password"
+                  class="w-full pl-9 pr-10 py-2.5 text-md rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
+                  [ngClass]="[
+                    isDark
+                      ? 'bg-slate-700 text-slate-50 placeholder:text-slate-500'
+                      : 'bg-white text-slate-900 placeholder:text-slate-400',
+                    form.get('password')?.invalid &&
+                    form.get('password')?.touched
+                      ? 'border-red-400 focus:ring-red-500 focus:border-red-500'
+                      : isDark
+                        ? 'border-slate-600'
+                        : 'border-slate-300',
+                  ]"
+                  placeholder="••••••••••••••••••"
+                  autocomplete="current-password"
+                />
+                <button
+                  type="button"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  [ngClass]="
+                    isDark
+                      ? 'text-slate-400 hover:text-slate-200'
+                      : 'text-slate-500 hover:text-slate-700'
+                  "
+                  (click)="showPassword = !showPassword"
+                  [attr.aria-label]="
+                    showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
+                  "
+                  [attr.aria-pressed]="showPassword"
+                >
+                  <i
+                    *ngIf="!showPassword"
+                    class="fa-solid fa-eye text-lg"
+                    aria-hidden="true"
+                  ></i>
+                  <i
+                    *ngIf="showPassword"
+                    class="fa-solid fa-eye-slash text-lg"
+                    aria-hidden="true"
+                  ></i>
+                </button>
+              </div>
+              <p
+                *ngIf="
+                  form.get('password')?.invalid && form.get('password')?.touched
+                "
+                class="mt-1.5 text-xs flex items-center gap-1"
+                [ngClass]="isDark ? 'text-red-400' : 'text-red-600'"
+              >
+                <i
+                  class="fa-solid fa-triangle-exclamation text-xs shrink-0"
+                  aria-hidden="true"
+                ></i>
+                La contraseña es obligatoria
+              </p>
+            </div>
+
+            <!-- Recordarme -->
+            <label
+              class="inline-flex items-center gap-3 cursor-pointer select-none"
+            >
+              <input type="checkbox" class="sr-only peer" />
+
+              <div
+                class="relative w-11 h-6 rounded-full peer-checked:bg-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-focus-visible:ring-offset-2 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-transform peer-checked:after:translate-x-5"
+                [ngClass]="isDark ? 'bg-slate-600' : 'bg-slate-300'"
+              ></div>
+
+              <span
+                class="text-base font-medium transition-colors"
+                [ngClass]="isDark ? 'text-slate-200' : 'text-slate-700'"
+              >
+                Recordarme
+              </span>
+            </label>
+
+            <!-- Botón login -->
             <button
               type="submit"
-              class="btn btn-primary w-full gap-2"
+              class="w-full py-2.5 px-4 text-md font-semibold rounded-lg text-white bg-primary hover:bg-primary/90 active:bg-primary/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               [disabled]="loading || form.invalid"
             >
-              <span *ngIf="loading" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
-              <svg *ngIf="!loading" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              {{ loading ? 'Ingresando...' : 'Ingresar' }}
+              <span
+                *ngIf="loading"
+                class="loading loading-spinner loading-xs"
+                aria-hidden="true"
+              ></span>
+              <i
+                *ngIf="!loading"
+                class="fa-solid fa-arrow-right text-[15px]"
+                aria-hidden="true"
+              ></i>
+              {{ loading ? "Ingresando..." : "Ingresar" }}
             </button>
-          </div>
+          </form>
+        </div>
 
-          <!-- ¿Olvidaste tu contraseña? -->
-          <div class="text-center -mt-1">
-            <button
-              type="button"
-              class="btn btn-link btn-sm text-xs"
-              (click)="forgotPassword()"
-            >
-              ¿Olvidó su contraseña?
-            </button>
-          </div>
-        </form>
-
-        <!-- Link registro -->
-        <!-- <div class="divider text-xs opacity-60 my-4">¿No tienes cuenta?</div>
-
-        <a
-          routerLink="/auth/register"
-          class="btn btn-outline btn-sm w-full gap-2"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-          </svg>
-          Registrarse
-        </a> -->
+        <!-- Footer (solo móvil) -->
+        <p class="lg:hidden text-center text-md text-white mt-6 drop-shadow">
+          © {{ currentYear }} COAC Magisterio de Pichincha. Todos los derechos
+          reservados.
+        </p>
       </div>
     </div>
-
-    <!-- Footer -->
-    <!-- <p class="text-center text-xs opacity-60">
-      © {{ currentYear }} COAC. Todos los derechos reservados.
-    </p> -->
   </div>
 </div>

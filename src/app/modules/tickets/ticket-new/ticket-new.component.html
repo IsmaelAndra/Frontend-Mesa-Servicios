@@ -1,22 +1,18 @@
 <div class="space-y-6 max-w-3xl mx-auto">
   <!-- Encabezado -->
-  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div class="flex items-center gap-3">
-      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-plus text-2xl" aria-hidden="true"></i>
       </div>
       <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Nuevo ticket</h1>
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">Nuevo ticket</h1>
         <p class="text-sm opacity-70">Completa la información para crear un nuevo ticket de soporte</p>
       </div>
     </div>
 
     <a routerLink="/tickets" class="btn btn-ghost btn-sm gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-      </svg>
+      <i class="fa-solid fa-arrow-left text-[15px]" aria-hidden="true"></i>
       Volver a tickets
     </a>
   </header>
@@ -46,9 +42,7 @@
             class="label pt-1 pb-0"
           >
             <span class="label-text-alt text-error text-xs flex items-center gap-1">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+              <i class="fa-solid fa-triangle-exclamation text-xs" aria-hidden="true"></i>
               El título es obligatorio
             </span>
           </div>
@@ -56,43 +50,74 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <!-- Tipo de ticket -->
-          <label class="form-control w-full">
+          <div class="form-control w-full">
             <div class="label pt-0 pb-1">
               <span class="label-text text-xs font-medium">Tipo de ticket</span>
             </div>
-            <select formControlName="typeId" class="select select-bordered select-sm w-full">
-              <option [ngValue]="null">Sin especificar</option>
-              <option *ngFor="let t of ticketTypes" [ngValue]="t.id">{{ t.name }}</option>
-            </select>
-          </label>
+            <!--
+              app-master-select sustituye al <select> nativo porque este ultimo
+              no admite nada dentro de las opciones: solo texto. Con el componente
+              propio cada fila muestra el icono del maestro en su color.
+              El chip de debajo ya no hace falta: el icono esta ahora en el boton.
+            -->
+            <app-master-select
+              formControlName="typeId"
+              [options]="masterOptions(ticketTypes)"
+              [allowEmpty]="true"
+              emptyLabel="Sin especificar"
+              placeholder="Sin especificar"
+              label="Tipo de ticket"
+            ></app-master-select>
+          </div>
 
           <!-- Prioridad -->
-          <label class="form-control w-full">
+          <div class="form-control w-full">
             <div class="label pt-0 pb-1">
               <span class="label-text text-xs font-medium">Prioridad</span>
             </div>
-            <select formControlName="priorityId" class="select select-bordered select-sm w-full">
-              <option [ngValue]="null">Automática</option>
-              <option *ngFor="let p of priorities" [ngValue]="p.id">{{ p.name }}</option>
-            </select>
-          </label>
+            <app-master-select
+              formControlName="priorityId"
+              [options]="masterOptions(priorities)"
+              [allowEmpty]="true"
+              emptyLabel="Automática"
+              placeholder="Automática"
+              label="Prioridad"
+            ></app-master-select>
+          </div>
+
+          <!-- Sede donde ocurre el problema. Opcional: si se deja vacía, el backend
+               hereda la del solicitante. Un ticket puede atender una sede distinta
+               a la del solicitante (por ejemplo, un problema en otra oficina). -->
+          <div class="form-control w-full">
+            <div class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Sede</span>
+            </div>
+            <app-master-select
+              formControlName="sucursalId"
+              [options]="masterOptions(sucursales)"
+              [allowEmpty]="true"
+              emptyLabel="La del solicitante"
+              placeholder="La del solicitante"
+              label="Sede"
+            ></app-master-select>
+          </div>
 
           <!-- Categoría (solo agentes/admin; el usuario final se asigna a la categoría por defecto) -->
-          <label class="form-control w-full">
+          <div class="form-control w-full">
             <div class="label pt-0 pb-1">
               <span class="label-text text-xs font-medium">
                 Categoría
                 <span class="text-error" *ngIf="!isUser">*</span>
               </span>
             </div>
-            <select
+            <app-master-select
               *ngIf="!isUser"
               formControlName="categoryId"
-              class="select select-bordered select-sm w-full"
-            >
-              <option [ngValue]="null" disabled>Seleccione la categoría</option>
-              <option *ngFor="let c of categories" [ngValue]="c.id">{{ c.name }}</option>
-            </select>
+              [options]="masterOptions(categories)"
+              [allowEmpty]="false"
+              placeholder="Seleccione la categoría"
+              label="Categoría"
+            ></app-master-select>
             <div *ngIf="isUser" class="text-xs opacity-70 p-2 bg-base-200/60 rounded-lg">
               Su categoría y equipo se asignarán automáticamente.
             </div>
@@ -102,7 +127,7 @@
             >
               <span class="label-text-alt text-error text-xs">Debe seleccionar una categoría</span>
             </div>
-          </label>
+          </div>
         </div>
 
         <!-- Descripción con Quill -->
@@ -117,18 +142,14 @@
 
           <div class="label pt-1 pb-0 flex justify-between items-start gap-2">
             <span class="label-text-alt text-xs opacity-60 flex items-center gap-1">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+              <i class="fa-solid fa-image text-xs" aria-hidden="true"></i>
               Puede pegar o subir imágenes directamente en el editor.
             </span>
             <span
               *ngIf="form.get('description')?.invalid && form.get('description')?.touched"
               class="label-text-alt text-error text-xs flex items-center gap-1"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+              <i class="fa-solid fa-triangle-exclamation text-xs" aria-hidden="true"></i>
               La descripción es obligatoria
             </span>
           </div>
@@ -142,6 +163,7 @@
           <input
             type="file"
             multiple
+            accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"
             class="file-input file-input-bordered file-input-sm w-full"
             (change)="onFilesSelected($event)"
           />
@@ -152,9 +174,7 @@
             >
               {{ f.name }}
               <button type="button" class="btn btn-ghost btn-xs btn-circle" (click)="removeFile(i)" aria-label="Quitar archivo">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
               </button>
             </span>
           </div>
@@ -171,9 +191,7 @@
             [disabled]="loading || form.invalid"
           >
             <span *ngIf="loading" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
-            <svg *ngIf="!loading" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
+            <i *ngIf="!loading" class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
             {{ loading ? 'Creando...' : 'Crear ticket' }}
           </button>
         </div>
@@ -185,9 +203,7 @@
   <div class="card bg-info/5 border border-info/20">
     <div class="card-body p-4 flex-row items-start gap-3">
       <div class="p-2 rounded-lg bg-info/10 text-info shrink-0" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+        <i class="fa-solid fa-circle-info text-lg" aria-hidden="true"></i>
       </div>
       <div class="text-sm">
         <p class="font-semibold text-info mb-1">Consejos para un buen ticket</p>
@@ -201,3 +217,9 @@
     </div>
   </div>
 </div>
+
+<app-ai-float-button
+  [context]="aiContext"
+  session="nuevo"
+  (fill)="fillFromAi($event)"
+></app-ai-float-button>

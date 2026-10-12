@@ -1,199 +1,1052 @@
 <div *ngIf="ticket" class="space-y-6">
   <!-- Encabezado -->
-  <header class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+  <header
+    class="page-head flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3"
+  >
     <div class="flex items-start gap-3 min-w-0">
-      <div class="p-2.5 rounded-xl bg-primary/10 text-primary shrink-0" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-        </svg>
+      <div
+        class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary shrink-0"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-ticket text-2xl" aria-hidden="true"></i>
       </div>
       <div class="min-w-0">
-        <h1 class="text-2xl sm:text-3xl font-bold text-primary flex items-center gap-2 flex-wrap">
+        <h1
+          class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary flex items-center gap-2 flex-wrap"
+        >
           Ticket
-          <span class="font-mono text-lg opacity-70">#{{ ticket.idTicket }}</span>
+          <span class="font-mono text-lg opacity-70"
+            >#{{ ticket.numberTicket }}</span
+          >
         </h1>
-        <p class="text-sm opacity-70 truncate" [title]="ticket.titleTicket">{{ ticket.titleTicket }}</p>
+        <p class="text-sm opacity-70 truncate" [title]="ticket.titleTicket">
+          {{ ticket.titleTicket }}
+        </p>
       </div>
     </div>
 
     <!-- Acciones -->
     <div class="flex flex-wrap gap-2 shrink-0">
       <!-- Cambiar estado -->
-      <div class="relative" *ngIf="canManage">
-        <svg xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4 opacity-60 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" fill="none"
-          viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        <select class="select select-bordered select-sm w-full pl-9 min-w-[180px]"
-          (change)="changeStatus($any($event.target).value)" aria-label="Cambiar estado del ticket">
-          <option value="">Cambiar estado...</option>
-          <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
-        </select>
+      <!-- Cambiar estado: muestra el estado actual con icono y color -->
+      <div class="dropdown dropdown-end" *ngIf="canManage">
+        <div
+          tabindex="0"
+          role="button"
+          class="btn btn-sm gap-2 border"
+          [style.background-color]="
+            (statusMeta(ticket.status).color || '#059669') + '1F'
+          "
+          [style.border-color]="statusMeta(ticket.status).color || '#059669'"
+          [style.color]="statusMeta(ticket.status).color || '#059669'"
+          aria-label="Cambiar estado del ticket"
+        >
+          <i
+            [class]="
+              statusMeta(ticket.status).icon || 'fa-solid fa-circle-check'
+            "
+            class="text-sm"
+            aria-hidden="true"
+          ></i>
+          <span class="font-medium">{{ ticket.status }}</span>
+          <i
+            class="fa-solid fa-chevron-down text-[10px] opacity-70"
+            aria-hidden="true"
+          ></i>
+        </div>
+
+        <ul
+          tabindex="0"
+          class="dropdown-content menu menu-sm p-1 mt-1 z-[1] bg-base-100 rounded-xl w-56 shadow-lg border border-base-200 max-h-80 overflow-y-auto"
+        >
+          <li *ngFor="let s of statuses">
+            <a
+              (click)="changeStatus(s)"
+              [class.active]="s === ticket.status"
+              class="gap-2.5"
+            >
+              <span
+                class="inline-flex items-center justify-center w-6 h-6 rounded-lg shrink-0"
+                [style.background-color]="
+                  (statusMeta(s).color || '#059669') + '22'
+                "
+                [style.color]="statusMeta(s).color || '#059669'"
+                aria-hidden="true"
+              >
+                <i
+                  [class]="statusMeta(s).icon || 'fa-solid fa-circle-check'"
+                  class="text-[11px]"
+                ></i>
+              </span>
+              <span
+                class="flex-1 font-medium"
+                [style.color]="
+                  s === ticket.status ? statusMeta(s).color || '#059669' : null
+                "
+              >
+                {{ s }}
+              </span>
+              <i
+                *ngIf="s === ticket.status"
+                class="fa-solid fa-check text-[11px]"
+                [style.color]="statusMeta(s).color || '#059669'"
+                aria-hidden="true"
+              ></i>
+            </a>
+          </li>
+        </ul>
       </div>
 
       <!-- Asignar a -->
       <div class="relative" *ngIf="canManage">
-        <svg xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4 opacity-60 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" fill="none"
-          viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-        <select class="select select-bordered select-sm w-full pl-9 min-w-[180px]"
-          (change)="assign($any($event.target).value)" aria-label="Asignar ticket a un agente">
-          <option value="">Asignar a...</option>
-          <option *ngFor="let a of agents" [value]="a.idUser">{{ a.corporateEmailUser }}</option>
-        </select>
+        <i
+          class="fa-regular fa-circle-user text-[15px] opacity-50 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+          aria-hidden="true"
+        ></i>
+        <div class="dropdown dropdown-end w-full">
+          <div
+            tabindex="0"
+            role="button"
+            class="flex items-center gap-2 w-full pl-9 pr-3 min-w-[180px] h-9 rounded-lg border border-base-300 bg-base-100 hover:border-primary/40 hover:bg-base-200/40 transition text-sm cursor-pointer select-none"
+            aria-label="Asignar ticket a un agente"
+          >
+            <!-- Foto del agente -->
+            <img
+              *ngIf="agentPhoto(assignedAgent())"
+              [src]="agentPhoto(assignedAgent())"
+              alt=""
+              class="w-6 h-6 rounded-full object-cover ring-1 ring-base-300 shrink-0"
+            />
+
+            <!-- Inicial si no hay foto -->
+            <span
+              *ngIf="!agentPhoto(assignedAgent()) && assignedAgent()"
+              class="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold shrink-0"
+            >
+              {{ agentInitial(assignedAgent()) }}
+            </span>
+
+            <!-- Placeholder cuando no hay agente -->
+            <span
+              *ngIf="!assignedAgent()"
+              class="w-6 h-6 rounded-full bg-base-200 text-base-content/50 flex items-center justify-center text-xs shrink-0"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-minus text-[10px]"></i>
+            </span>
+
+            <span
+              class="flex-1 text-left truncate"
+              [class.opacity-60]="!assignedAgent()"
+            >
+              {{
+                assignedAgent() ? agentLabel(assignedAgent()) : "Asignar a..."
+              }}
+            </span>
+
+            <!-- Único chevron (ya no hay flecha nativa del .select) -->
+            <i
+              class="fa-solid fa-chevron-down text-[10px] shrink-0 opacity-60"
+              aria-hidden="true"
+            ></i>
+          </div>
+
+          <ul
+            tabindex="0"
+            class="dropdown-content z-[1] menu menu-sm p-1 mt-1 shadow-lg bg-base-100 rounded-xl border border-base-200 w-full max-h-72 overflow-y-auto"
+          >
+            <!-- Sin asignar -->
+            <li>
+              <a
+                (click)="assignAgent('', $event)"
+                [class.active]="!assignedAgent()"
+                class="gap-2.5"
+              >
+                <span
+                  class="w-6 h-6 rounded-full bg-base-200 text-base-content/50 flex items-center justify-center text-xs font-bold shrink-0"
+                  >–</span
+                >
+                <span class="font-medium">Sin asignar</span>
+              </a>
+            </li>
+
+            <!-- Agentes -->
+            <li *ngFor="let a of agents">
+              <a
+                (click)="assignAgent(a.idUser, $event)"
+                [class.active]="assignedAgent()?.idUser === a.idUser"
+                class="gap-2.5"
+              >
+                <img
+                  *ngIf="agentPhoto(a)"
+                  [src]="agentPhoto(a)"
+                  alt=""
+                  class="w-6 h-6 rounded-full object-cover ring-1 ring-base-300 shrink-0"
+                />
+                <span
+                  *ngIf="!agentPhoto(a)"
+                  class="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold shrink-0"
+                  >{{ agentInitial(a) }}</span
+                >
+                <span class="truncate">{{ agentLabel(a) }}</span>
+                <i
+                  *ngIf="assignedAgent()?.idUser === a.idUser"
+                  class="fa-solid fa-check text-[11px] text-primary ms-auto"
+                  aria-hidden="true"
+                ></i>
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
 
-      <button *ngIf="canRate" class="btn btn-sm btn-warning gap-2" (click)="rateTicket()">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-          aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-        </svg>
+      <button
+        *ngIf="canManage && ticket.userId != null"
+        class="btn btn-sm btn-primary gap-2 text-white"
+        (click)="toggleFicha()"
+        [attr.aria-expanded]="fichaAbierta"
+      >
+        <i class="fa-solid fa-user-plus text-[15px]" aria-hidden="true"></i>
+        {{ fichaAbierta ? "Ocultar ficha 360°" : "Ficha 360° del solicitante" }}
+      </button>
+
+      <button
+        *ngIf="canRate"
+        class="btn btn-sm btn-warning gap-2"
+        (click)="rateTicket()"
+      >
+        <i class="fa-solid fa-star text-[15px]" aria-hidden="true"></i>
         Calificar
       </button>
     </div>
   </header>
 
+  <!-- Ficha 360° del solicitante -->
+  <section
+    *ngIf="fichaAbierta"
+    class="card bg-base-100 shadow-md border border-primary/20 rounded-[1.5rem] overflow-hidden"
+  >
+    <div class="card-body">
+      <!-- ============================ HEADER ============================ -->
+      <div class="flex flex-wrap items-center gap-2 mb-4">
+        <h2 class="card-title text-base gap-2 m-0">
+          <span
+            class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+            aria-hidden="true"
+          >
+            <i class="fa-regular fa-user text-[15px]"></i>
+          </span>
+          Ficha 360°
+        </h2>
+
+        <div class="flex flex-wrap items-center gap-2 ms-auto">
+          <!-- Badge: Solicitante (kanban-tag, color primary) -->
+          <span
+            class="badge badge-sm kanban-tag min-w-0 shrink border"
+            style="
+              background-color: #062e861f;
+              --bc: #062e86;
+              border-color: #062e86;
+              color: #062e86;
+            "
+            title="Rol en el ticket"
+          >
+            <i
+              class="fa-regular fa-user text-[10px] shrink-0"
+              aria-hidden="true"
+            ></i>
+            <span class="font-medium truncate">Solicitante</span>
+          </span>
+
+          <!-- Badge: Estado de la cuenta (kanban-tag) -->
+          <span
+            *ngIf="solicitanteTieneEstado()"
+            class="badge badge-sm kanban-tag min-w-0 shrink border"
+            [style.background-color]="
+              solicitanteActivo() ? '#0596691F' : '#DC26261F'
+            "
+            [style.--bc]="solicitanteActivo() ? '#059669' : '#DC2626'"
+            [style.border-color]="solicitanteActivo() ? '#059669' : '#DC2626'"
+            [style.color]="solicitanteActivo() ? '#059669' : '#DC2626'"
+            [title]="
+              solicitanteActivo() ? 'Cuenta habilitada' : 'Cuenta deshabilitada'
+            "
+          >
+            <i
+              class="fa-solid text-[10px] shrink-0"
+              [ngClass]="
+                solicitanteActivo() ? 'fa-circle-check' : 'fa-circle-xmark'
+              "
+              aria-hidden="true"
+            ></i>
+            <span class="font-medium truncate">{{
+              solicitanteEstadoLabel()
+            }}</span>
+          </span>
+
+          <!-- Badge: Estado de sesión (kanban-tag) -->
+          <span
+            class="badge badge-sm kanban-tag min-w-0 shrink border"
+            [style.background-color]="sesionSolicitanteColor() + '1F'"
+            [style.--bc]="sesionSolicitanteColor()"
+            [style.border-color]="sesionSolicitanteColor()"
+            [style.color]="sesionSolicitanteColor()"
+            [title]="'Sesión: ' + sesionSolicitanteLabel()"
+          >
+            <i
+              class="fa-solid text-[10px] shrink-0"
+              [ngClass]="sesionSolicitanteIcon()"
+              aria-hidden="true"
+            ></i>
+            <span class="font-medium truncate">{{
+              sesionSolicitanteLabel()
+            }}</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- ============================ LOADING ============================ -->
+      <div
+        *ngIf="fichaCargando"
+        class="flex flex-col items-center justify-center py-10 gap-3"
+        role="status"
+        aria-live="polite"
+      >
+        <span class="loading loading-spinner loading-md text-primary"></span>
+        <span class="text-sm opacity-60"
+          >Cargando ficha del solicitante...</span
+        >
+      </div>
+
+      <!-- ============================ CONTENIDO ============================ -->
+      <div
+        *ngIf="ficha && !fichaCargando"
+        class="grid grid-cols-1 lg:grid-cols-3 gap-6"
+      >
+        <!-- ============================ Columna: Perfil ============================ -->
+        <div class="space-y-4">
+          <!-- Avatar + nombre -->
+          <div
+            class="flex items-center gap-3 p-3 rounded-xl bg-base-200/40 border border-base-200"
+          >
+            <div class="avatar relative shrink-0">
+              <div
+                class="w-14 rounded-full ring-2 ring-offset-2 ring-offset-base-100 bg-primary/15 overflow-hidden"
+                [ngClass]="{
+                  'ring-success/40': sesionSolicitante() === 'EN_LINEA',
+                  'ring-warning/40': sesionSolicitante() === 'RECIENTE',
+                  'ring-base-300': sesionSolicitante() === 'DESCONECTADO',
+                }"
+              >
+                <img
+                  *ngIf="solicitantePhoto()"
+                  [src]="solicitantePhoto()"
+                  alt="Foto del solicitante"
+                  class="w-full h-full object-cover"
+                />
+                <div
+                  *ngIf="!solicitantePhoto()"
+                  class="w-full h-full flex items-center justify-center text-xl font-bold text-primary"
+                >
+                  {{ solicitanteInicial() }}
+                </div>
+              </div>
+              <app-presence-dot
+                class="absolute -bottom-0.5 -right-0.5 pointer-events-none"
+                [state]="sesionSolicitante()"
+              />
+            </div>
+            <div class="min-w-0 flex-1">
+              <p
+                class="font-bold truncate leading-tight"
+                [title]="solicitanteNombre()"
+              >
+                {{ solicitanteNombre() }}
+              </p>
+              <p
+                class="text-xs opacity-70 truncate"
+                [title]="ficha.solicitante.corporateEmailUser"
+              >
+                {{ ficha.solicitante.corporateEmailUser }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Datos del perfil -->
+          <dl class="text-sm space-y-2">
+            <div
+              class="flex items-center justify-between gap-2 py-1.5 border-b border-base-200"
+            >
+              <dt class="opacity-60 flex items-center gap-1.5">
+                <i
+                  class="fa-solid fa-building text-[10px] opacity-60"
+                  aria-hidden="true"
+                ></i>
+                Área
+              </dt>
+              <dd
+                class="font-medium text-right truncate"
+                [title]="ficha.solicitante.area || ''"
+              >
+                {{ ficha.solicitante.area || "—" }}
+              </dd>
+            </div>
+
+            <div
+              class="flex items-center justify-between gap-2 py-1.5 border-b border-base-200"
+            >
+              <dt class="opacity-60 flex items-center gap-1.5">
+                <i
+                  class="fa-solid fa-shield-halved text-[10px] opacity-60"
+                  aria-hidden="true"
+                ></i>
+                Rol
+              </dt>
+              <dd>
+                <span class="badge badge-sm badge-ghost gap-1 font-medium">
+                  <i
+                    class="fa-regular fa-user text-[10px]"
+                    aria-hidden="true"
+                  ></i>
+                  {{ ficha.solicitante.role }}
+                </span>
+              </dd>
+            </div>
+
+            <div
+              class="flex items-center justify-between gap-2 py-1.5 border-b border-base-200"
+            >
+              <dt class="opacity-60 flex items-center gap-1.5">
+                <i
+                  class="fa-solid fa-phone text-[10px] opacity-60"
+                  aria-hidden="true"
+                ></i>
+                Teléfono
+              </dt>
+              <dd
+                class="font-medium text-right truncate"
+                [class.italic]="!ficha.solicitante.phoneUser"
+                [class.opacity-60]="!ficha.solicitante.phoneUser"
+              >
+                {{ ficha.solicitante.phoneUser || "No registrado" }}
+              </dd>
+            </div>
+
+            <div class="flex items-center justify-between gap-2 py-1.5">
+              <dt class="opacity-60 flex items-center gap-1.5">
+                <i
+                  class="fa-regular fa-calendar text-[10px] opacity-60"
+                  aria-hidden="true"
+                ></i>
+                Usuario desde
+              </dt>
+              <dd class="font-medium text-right">
+                {{
+                  ficha.solicitante.createdAtUser
+                    ? (ficha.solicitante.createdAtUser | date: "dd/MM/yyyy")
+                    : "—"
+                }}
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <!-- ============================ Columna: Métricas ============================ -->
+        <div class="space-y-4">
+          <!-- KPIs -->
+          <div class="grid grid-cols-2 gap-2">
+            <div
+              class="bg-primary/5 border border-primary/10 rounded-xl p-3 text-center"
+            >
+              <p class="text-2xl font-bold text-primary leading-none">
+                {{ ficha.totalTickets }}
+              </p>
+              <p class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
+                Total
+              </p>
+            </div>
+
+            <div
+              class="bg-info/5 border border-info/10 rounded-xl p-3 text-center"
+            >
+              <p class="text-2xl font-bold text-info leading-none">
+                {{ ficha.openTickets }}
+              </p>
+              <p class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
+                Abiertos
+              </p>
+            </div>
+
+            <div
+              class="bg-success/5 border border-success/10 rounded-xl p-3 text-center"
+            >
+              <p class="text-2xl font-bold text-success leading-none">
+                {{ ficha.resolvedTickets }}
+              </p>
+              <p class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
+                Resueltos
+              </p>
+            </div>
+
+            <div
+              class="bg-warning/5 border border-warning/10 rounded-xl p-3 text-center"
+              title="Satisfacción promedio"
+            >
+              <p class="text-2xl font-bold text-warning leading-none">
+                {{
+                  ficha.avgSatisfaction != null
+                    ? (ficha.avgSatisfaction | number: "1.1-1")
+                    : "—"
+                }}
+              </p>
+              <p class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
+                Satisfacción
+              </p>
+            </div>
+
+            <div
+              class="bg-secondary/5 border border-secondary/10 rounded-xl p-3 text-center"
+              title="Tiempo promedio de resolución"
+            >
+              <p class="text-2xl font-bold text-secondary leading-none">
+                {{
+                  ficha.avgResolutionHours != null
+                    ? (ficha.avgResolutionHours | number: "1.0-1") + "h"
+                    : "—"
+                }}
+              </p>
+              <p class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
+                Resolución
+              </p>
+            </div>
+
+            <div
+              class="bg-base-200/60 border border-base-200 rounded-xl p-3 text-center"
+              title="Abiertos / total"
+            >
+              <p class="text-2xl font-bold leading-none">
+                {{ ficha.openTickets
+                }}<span class="text-sm opacity-60"
+                  >/{{ ficha.totalTickets }}</span
+                >
+              </p>
+              <p class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
+                Pendientes
+              </p>
+            </div>
+          </div>
+
+          <!-- Distribución por estado -->
+          <div
+            *ngIf="
+              ficha.ticketsPorEstado &&
+              (ficha.ticketsPorEstado | keyvalue)?.length
+            "
+          >
+            <p
+              class="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-2"
+            >
+              Distribución por estado
+            </p>
+            <div class="space-y-1.5">
+              <ng-container
+                *ngFor="let kv of ficha.ticketsPorEstado | keyvalue"
+              >
+                <div class="flex items-center gap-2 text-xs">
+                  <span class="w-20 truncate font-medium" [title]="kv.key">
+                    {{ kv.key }}
+                  </span>
+                  <div
+                    class="flex-1 bg-base-200 rounded-full h-2 overflow-hidden"
+                  >
+                    <div
+                      class="h-2 rounded-full transition-[width] duration-300 ease-out-fluid {{
+                        estadoColorEstado(kv.key)
+                      }}"
+                      [ngStyle]="{
+                        width: (kv.value / anchoEstado()) * 100 + '%',
+                      }"
+                    ></div>
+                  </div>
+                  <span class="font-bold w-6 text-right tabular-nums">
+                    {{ kv.value }}
+                  </span>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+
+          <!-- Tendencia -->
+          <div *ngIf="ficha.ticketsUltimos6Meses.length">
+            <p
+              class="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-2"
+            >
+              Tendencia últimos 6 meses
+            </p>
+            <div class="flex items-end gap-1.5 h-24">
+              <div
+                *ngFor="let v of ficha.ticketsUltimos6Meses; let i = index"
+                class="flex-1 flex flex-col gap-1"
+              >
+                <span class="text-[10px] font-bold text-center tabular-nums">
+                  {{ v || "" }}
+                </span>
+                <div class="flex-1 flex items-end justify-center">
+                  <div
+                    class="w-full max-w-[18px] rounded-t bg-primary/70 hover:bg-primary transition-colors cursor-help"
+                    [ngStyle]="estiloBarra(v)"
+                    [title]="fichaMeses()[i] + ': ' + v + ' ticket(s)'"
+                  ></div>
+                </div>
+                <span class="text-[10px] text-center opacity-60">
+                  {{ fichaMeses()[i] }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================ Columna: Historial ============================ -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <p
+              class="text-[10px] font-bold uppercase tracking-wider opacity-60"
+            >
+              Historial del solicitante
+            </p>
+            <span
+              *ngIf="ficha.historial.length"
+              class="badge badge-xs badge-ghost font-medium"
+            >
+              {{ ficha.historial.length }}
+            </span>
+          </div>
+
+          <!-- Estado vacío -->
+          <div
+            *ngIf="!ficha.historial.length"
+            class="flex flex-col items-center justify-center py-8 gap-2 opacity-60"
+          >
+            <i
+              class="fa-regular fa-folder-open text-2xl"
+              aria-hidden="true"
+            ></i>
+            <span class="text-xs italic">Sin tickets previos</span>
+          </div>
+
+          <!-- Lista -->
+          <ul class="space-y-2 max-h-80 overflow-y-auto overflow-x-hidden pe-1">
+            <li *ngFor="let t of ficha.historial">
+              <a
+                class="block p-2.5 rounded-xl border border-base-200 hover:border-primary/40 hover:bg-base-200/40 transition"
+                [routerLink]="['/tickets', t.idTicket]"
+              >
+                <!-- Header: ID + estado -->
+                <div class="flex items-center justify-between gap-2 mb-1">
+                  <span class="font-mono text-xs opacity-60 font-medium">
+                    #{{ t.numberTicket }}
+                  </span>
+
+                  <!-- Estado kanban-tag: color en la letra, fondo translúcido -->
+                  <span
+                    class="badge badge-sm kanban-tag min-w-0 shrink border"
+                    [style.background-color]="
+                      (statusMeta(t.status).color || '#059669') + '1F'
+                    "
+                    [style.--bc]="statusMeta(t.status).color || '#059669'"
+                    [style.border-color]="
+                      statusMeta(t.status).color || '#059669'
+                    "
+                    [style.color]="statusMeta(t.status).color || '#059669'"
+                    [title]="t.status"
+                  >
+                    <i
+                      [class]="
+                        statusMeta(t.status).icon || 'fa-solid fa-circle-check'
+                      "
+                      class="text-[10px] shrink-0"
+                      aria-hidden="true"
+                    ></i>
+                    <span class="font-medium truncate">{{ t.status }}</span>
+                  </span>
+                </div>
+
+                <!-- Título -->
+                <p class="text-sm font-medium truncate" [title]="t.titleTicket">
+                  {{ t.titleTicket }}
+                </p>
+
+                <!-- Footer: prioridad + fecha (sin icono) -->
+                <div class="flex items-center justify-between gap-2 mt-1.5">
+                  <span
+                    class="badge badge-xs kanban-tag min-w-0 shrink border"
+                    *ngIf="priorityMeta(t.priority).color"
+                    [style.background-color]="
+                      priorityMeta(t.priority).color + '1F'
+                    "
+                    [style.--bc]="priorityMeta(t.priority).color"
+                    [style.border-color]="priorityMeta(t.priority).color"
+                    [style.color]="priorityMeta(t.priority).color"
+                    [title]="'Prioridad: ' + t.priority"
+                  >
+                    <i
+                      [class]="priorityMeta(t.priority).icon"
+                      class="text-[10px] shrink-0"
+                      aria-hidden="true"
+                    ></i>
+                    <span class="font-medium truncate">{{ t.priority }}</span>
+                  </span>
+
+                  <span class="text-xs opacity-60 tabular-nums">
+                    {{ t.createdAtTicket | date: "dd/MM/yyyy" }}
+                  </span>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Información -->
-    <div class="card bg-base-100 shadow-md border border-base-200 lg:col-span-1">
+    <div
+      class="card bg-base-100 shadow-md border border-base-200 lg:col-span-1"
+    >
       <div class="card-body text-sm space-y-3">
         <div class="flex items-center gap-2">
-          <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+          <div
+            class="p-1.5 rounded-lg bg-primary/10 text-primary"
+            aria-hidden="true"
+          >
+            <i
+              class="fa-solid fa-circle-info text-[15px]"
+              aria-hidden="true"
+            ></i>
           </div>
           <h2 class="card-title text-base">Información</h2>
         </div>
 
-        <div class="space-y-2">
+        <div class="ticket-info space-y-2">
           <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-50 shrink-0" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+            <span
+              class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+              style="background: #4f46e51f; color: #4f46e5"
+              aria-hidden="true"
+            >
+              <i class="fa-regular fa-user text-sm"></i>
+            </span>
             <span class="opacity-60">Solicitante:</span>
-            <span class="font-medium truncate">{{ ticket.user }}</span>
+
+            <!--
+              Avatar con punto de presencia. El punto ya dice si la persona esta
+              en linea, asi que se quitan los badges de "Activo" y "Desconectado"
+              que estaban al lado y decian lo mismo en texto.
+            -->
+            <span class="relative inline-flex shrink-0">
+              <img
+                *ngIf="ticket.userPhotoUrl"
+                [src]="ticket.userPhotoUrl"
+                [alt]="'Foto de ' + (ticket.userDisplayName || ticket.user)"
+                class="w-7 h-7 rounded-full object-cover"
+              />
+              <span
+                *ngIf="!ticket.userPhotoUrl"
+                class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold"
+                style="background: #4f46e51f; color: #4f46e5"
+                aria-hidden="true"
+              >
+                {{
+                  (ticket.userDisplayName || ticket.user || "?")
+                    .charAt(0)
+                    .toUpperCase()
+                }}
+              </span>
+              <span
+                class="absolute -bottom-0.5 -right-0.5 block w-3 h-3 rounded-full border-2 border-base-100"
+                [style.background-color]="sesionPunto(ticket.userSessionState)"
+                [title]="'Sesión: ' + sesionTicketLabel()"
+                role="img"
+                [attr.aria-label]="'Sesión: ' + sesionTicketLabel()"
+              ></span>
+            </span>
+
+            <span class="font-medium truncate">
+              {{ ticket.userDisplayName || ticket.user }}
+            </span>
           </div>
 
           <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-50 shrink-0" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
+            <span
+              class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+              style="background: #0e74901f; color: #0e7490"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-shield-halved text-sm"></i>
+            </span>
             <span class="opacity-60">Agente:</span>
-            <span class="font-medium truncate" [ngClass]="!ticket.agent ? 'italic opacity-60' : ''">
-              {{ ticket.agent || 'Sin asignar' }}
+
+            <!-- Avatar con punto, igual que el solicitante -->
+            <span class="relative inline-flex shrink-0">
+              <img
+                *ngIf="agentAssignedPhoto()"
+                [src]="agentAssignedPhoto()"
+                alt=""
+                class="w-7 h-7 rounded-full object-cover"
+              />
+              <span
+                *ngIf="!agentAssignedPhoto() && ticket.agent"
+                class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold"
+                style="background: #0e74901f; color: #0e7490"
+                aria-hidden="true"
+              >
+                {{ ticket.agent.charAt(0).toUpperCase() }}
+              </span>
+              <span
+                *ngIf="ticket.agent"
+                class="absolute -bottom-0.5 -right-0.5 block w-3 h-3 rounded-full border-2 border-base-100"
+                [style.background-color]="sesionPunto(sesionAgente())"
+                [title]="'Sesión del agente'"
+                role="img"
+                aria-label="Sesión del agente"
+              ></span>
+            </span>
+
+            <span
+              class="font-medium truncate"
+              [class.italic]="!ticket.agent"
+              [class.opacity-60]="!ticket.agent"
+            >
+              {{ ticket.agent || "Sin asignar" }}
             </span>
           </div>
 
           <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-50 shrink-0" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
+            <span
+              class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+              [style.background]="
+                (areaMeta(ticket.area).color || '#062e86') + '22'
+              "
+              [style.color]="areaMeta(ticket.area).color || '#062e86'"
+              aria-hidden="true"
+            >
+              <i
+                [class]="areaMeta(ticket.area).icon || 'fa-solid fa-building'"
+                class="text-sm"
+              ></i>
+            </span>
             <span class="opacity-60">Área:</span>
-            <span class="font-medium truncate">{{ ticket.area }}</span>
+            <span
+              class="badge badge-sm kanban-tag min-w-0 shrink border"
+              [style.background-color]="
+                (areaMeta(ticket.area).color || '#062e86') + '1F'
+              "
+              [style.--bc]="areaMeta(ticket.area).color || '#062e86'"
+              [style.border-color]="areaMeta(ticket.area).color || '#062e86'"
+              [style.color]="areaMeta(ticket.area).color || '#062e86'"
+              [title]="ticket.area"
+            >
+              <i
+                [class]="areaMeta(ticket.area).icon || 'fa-solid fa-building'"
+                class="shrink-0"
+                aria-hidden="true"
+              ></i>
+              <span class="truncate">{{ ticket.area }}</span>
+            </span>
           </div>
 
           <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-50 shrink-0" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-            </svg>
+            <span
+              class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+              [style.background]="
+                (categoryMeta(ticket.category).color || '#0891b2') + '22'
+              "
+              [style.color]="categoryMeta(ticket.category).color || '#0891b2'"
+              aria-hidden="true"
+            >
+              <i
+                [class]="
+                  categoryMeta(ticket.category).icon || 'fa-solid fa-tag'
+                "
+                class="text-sm"
+              ></i>
+            </span>
             <span class="opacity-60">Categoría:</span>
-            <span class="font-medium truncate">{{ ticket.category }}</span>
+            <span
+              class="badge badge-sm kanban-tag min-w-0 shrink border"
+              [style.background-color]="
+                (categoryMeta(ticket.category).color || '#0891b2') + '1F'
+              "
+              [style.--bc]="categoryMeta(ticket.category).color || '#0891b2'"
+              [style.border-color]="
+                categoryMeta(ticket.category).color || '#0891b2'
+              "
+              [style.color]="categoryMeta(ticket.category).color || '#0891b2'"
+              [title]="ticket.category"
+            >
+              <i
+                [class]="
+                  categoryMeta(ticket.category).icon || 'fa-solid fa-tag'
+                "
+                class="shrink-0"
+                aria-hidden="true"
+              ></i>
+              <span class="truncate">{{ ticket.category }}</span>
+            </span>
           </div>
 
           <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-50 shrink-0" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-            </svg>
+            <span
+              class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+              [style.background]="
+                (priorityMeta(ticket.priority).color || '#D97706') + '22'
+              "
+              [style.color]="priorityMeta(ticket.priority).color || '#D97706'"
+              aria-hidden="true"
+            >
+              <i
+                [class]="
+                  priorityMeta(ticket.priority).icon || 'fa-solid fa-flag'
+                "
+                class="text-sm"
+              ></i>
+            </span>
             <span class="opacity-60">Prioridad:</span>
-            <span class="badge badge-sm badge-error gap-1" *ngIf="ticket.priority === 'CRITICA'">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              CRÍTICA
-            </span>
-            <span class="badge badge-sm badge-warning gap-1" *ngIf="ticket.priority === 'ALTA'">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
-              ALTA
-            </span>
-            <span class="badge badge-sm badge-info gap-1" *ngIf="ticket.priority === 'MEDIA'">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14" />
-              </svg>
-              MEDIA
-            </span>
-            <span class="badge badge-sm badge-success gap-1" *ngIf="ticket.priority === 'BAJA'">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-              BAJA
+            <span
+              class="badge badge-sm kanban-tag min-w-0 shrink border"
+              [ngClass]="
+                priorityMeta(ticket.priority).color ? '' : 'badge-neutral'
+              "
+              [style.background-color]="
+                priorityMeta(ticket.priority).color
+                  ? priorityMeta(ticket.priority).color + '1F'
+                  : ''
+              "
+              [style.--bc]="priorityMeta(ticket.priority).color || null"
+              [style.border-color]="priorityMeta(ticket.priority).color || ''"
+              [style.color]="priorityMeta(ticket.priority).color || null"
+              [title]="ticket.priority"
+            >
+              <i
+                [class]="
+                  priorityMeta(ticket.priority).icon || 'fa-solid fa-flag'
+                "
+                class="shrink-0"
+                aria-hidden="true"
+              ></i>
+              <span class="truncate">{{ ticket.priority }}</span>
             </span>
           </div>
 
           <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-50 shrink-0" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <span
+              class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+              [style.background]="
+                (statusMeta(ticket.status).color || '#16A34A') + '22'
+              "
+              [style.color]="statusMeta(ticket.status).color || '#16A34A'"
+              aria-hidden="true"
+            >
+              <i
+                [class]="
+                  statusMeta(ticket.status).icon || 'fa-solid fa-circle-check'
+                "
+                class="text-sm"
+              ></i>
+            </span>
             <span class="opacity-60">Estado:</span>
-            <app-status-badge [status]="ticket.status"></app-status-badge>
+            <span
+              class="badge badge-sm kanban-tag min-w-0 shrink border"
+              [style.background-color]="
+                (statusMeta(ticket.status).color || '#059669') + '1F'
+              "
+              [style.--bc]="statusMeta(ticket.status).color || '#059669'"
+              [style.border-color]="
+                statusMeta(ticket.status).color || '#059669'
+              "
+              [style.color]="statusMeta(ticket.status).color || '#059669'"
+              [title]="ticket.status"
+            >
+              <i
+                [class]="
+                  statusMeta(ticket.status).icon || 'fa-solid fa-circle-check'
+                "
+                class="shrink-0"
+                aria-hidden="true"
+              ></i>
+              <span
+                class="font-medium truncate"
+                [style.color]="statusMeta(ticket.status).color"
+              >
+                {{ ticket.status }}
+              </span>
+            </span>
           </div>
 
           <div class="flex items-center gap-2" *ngIf="ticket.type">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-50 shrink-0" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-            </svg>
+            <span
+              class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+              [style.background]="
+                (typeMeta(ticket.type).color || '#062e86') + '22'
+              "
+              [style.color]="typeMeta(ticket.type).color || '#062e86'"
+              aria-hidden="true"
+            >
+              <i
+                [class]="typeMeta(ticket.type).icon || 'fa-solid fa-tag'"
+                class="text-sm"
+              ></i>
+            </span>
             <span class="opacity-60">Tipo:</span>
-            <span class="badge badge-sm badge-outline">{{ ticket.type }}</span>
+            <span
+              class="badge badge-sm kanban-tag min-w-0 shrink border"
+              [style.background-color]="
+                (typeMeta(ticket.type).color || '#062e86') + '1F'
+              "
+              [style.--bc]="typeMeta(ticket.type).color || '#062e86'"
+              [style.border-color]="typeMeta(ticket.type).color || '#062e86'"
+              [style.color]="typeMeta(ticket.type).color || '#062e86'"
+              [title]="ticket.type"
+            >
+              <i
+                [class]="typeMeta(ticket.type).icon || 'fa-solid fa-tag'"
+                class="shrink-0"
+                aria-hidden="true"
+              ></i>
+              <span class="truncate">{{ ticket.type }}</span>
+            </span>
           </div>
 
           <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-50 shrink-0" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+            <span
+              class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+              style="background: #4755691f; color: #475569"
+              aria-hidden="true"
+            >
+              <i class="fa-regular fa-calendar text-sm"></i>
+            </span>
             <span class="opacity-60">Creado:</span>
-            <span class="font-medium">{{ ticket.createdAtTicket | date:'dd/MM/yyyy HH:mm' }}</span>
+            <!-- Una fecha es un dato, no una etiqueta: va como texto. -->
+            <span class="ticket-info__fecha">
+              {{ ticket.createdAtTicket | date: "dd/MM/yyyy" }}
+              <span class="opacity-50">· {{ ticket.createdAtTicket | date: "HH:mm" }}</span>
+            </span>
           </div>
 
           <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-50 shrink-0" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+            <span
+              class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+              style="background: #64748b1f; color: #64748b"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-rotate-right text-sm"></i>
+            </span>
             <span class="opacity-60">Actualizado:</span>
-            <span class="font-medium">{{ ticket.updatedAtTicket | date:'dd/MM/yyyy HH:mm' }}</span>
+            <span class="ticket-info__fecha">
+              {{ ticket.updatedAtTicket | date: "dd/MM/yyyy" }}
+              <span class="opacity-50">· {{ ticket.updatedAtTicket | date: "HH:mm" }}</span>
+            </span>
           </div>
         </div>
 
@@ -201,266 +1054,811 @@
 
         <div>
           <div class="flex items-center gap-2 mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-60" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
-            </svg>
+            <i
+              class="fa-solid fa-bars text-[15px] opacity-60"
+              aria-hidden="true"
+            ></i>
             <h3 class="font-bold text-sm">Descripción</h3>
           </div>
-          <div class="prose prose-sm max-w-none bg-base-200/40 rounded-lg p-3" [innerHTML]="ticket.descriptionTicket">
-          </div>
+          <div
+            class="prose prose-sm max-w-none bg-base-200/40 rounded-lg p-3"
+            [innerHTML]="ticket.descriptionTicket"
+          ></div>
         </div>
 
         <div class="divider my-2"></div>
 
         <div>
           <div class="flex items-center gap-2 mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-60" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-            </svg>
+            <i
+              class="fa-solid fa-paperclip text-[15px] opacity-60"
+              aria-hidden="true"
+            ></i>
             <h3 class="font-bold text-sm">Adjuntos</h3>
-            <span class="badge badge-sm badge-ghost">{{ ticketFiles.length || 0 }}</span>
+            <span class="badge badge-sm badge-ghost">{{
+              ticketFiles.length || 0
+            }}</span>
           </div>
 
-          <div class="flex flex-wrap gap-1.5 mb-2" *ngIf="ticketFiles.length">
-            <a *ngFor="let a of ticketFiles" class="badge badge-outline badge-sm gap-1 hover:badge-primary"
-              [href]="attachUrl(a)" target="_blank" [title]="a.fileNameAttach">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
-              {{ a.fileNameAttach }}
-            </a>
+          <div class="space-y-1.5 mb-2" *ngIf="ticketFiles.length">
+            <!-- Boton y no enlace: la descarga exige sesion, y un href plano
+                   no lleva el token que anade el interceptor. -->
+            <button
+              *ngFor="let at of ticketFiles"
+              type="button"
+              (click)="descargarAdjunto(at)"
+              [disabled]="estaDescargando(at)"
+              class="w-full text-left flex items-center gap-2.5 rounded-lg border border-base-300 bg-base-200/30 p-2 hover:bg-base-200/70 transition-colors disabled:opacity-60 disabled:cursor-wait"
+              [title]="at.fileNameAttach"
+            >
+              <span
+                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary shrink-0"
+              >
+                <i [class]="fileIcon(at.fileNameAttach)" class="text-sm"></i>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-xs font-semibold truncate">{{
+                  at.fileNameAttach
+                }}</span>
+                <span class="block text-[10px] opacity-60"
+                  >{{ fileExt(at.fileNameAttach) }} ·
+                  {{ fileSize(at.sizeFileAttach) }}</span
+                >
+              </span>
+              <span
+                class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-primary hover:bg-primary/10 transition-colors"
+                aria-hidden="true"
+              >
+                <i
+                  class="text-sm"
+                  [class.fa-solid]="!estaDescargando(at)"
+                  [class.fa-download]="!estaDescargando(at)"
+                  [class.fa-spinner]="estaDescargando(at)"
+                  [class.fa-spin]="estaDescargando(at)"
+                ></i>
+              </span>
+            </button>
           </div>
 
-          <label class="btn btn-outline btn-sm w-full gap-2 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            Seleccionar archivo
-            <input type="file" class="hidden" (change)="onFileSelected($event)" />
+          <label
+            class="btn btn-sm btn-outline gap-2 w-full cursor-pointer"
+            [class.btn-disabled]="!file"
+          >
+            <i
+              class="fa-solid fa-folder-open text-[15px]"
+              aria-hidden="true"
+            ></i>
+            {{ file ? file.name : "Seleccionar archivo" }}
+            <input
+              type="file"
+              class="hidden"
+              accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"
+              (change)="onFileSelected($event)"
+              [disabled]="!file"
+            />
           </label>
-          <button class="btn btn-sm btn-primary w-full mt-2 gap-2" (click)="upload()" [disabled]="!file">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            {{ file ? 'Subir ' + file.name : 'Subir archivo' }}
+
+          <button
+            *ngIf="file"
+            class="btn btn-sm btn-primary gap-2 w-full mt-2"
+            (click)="upload()"
+          >
+            <i class="fa-solid fa-upload text-[15px]" aria-hidden="true"></i>
+            Subir {{ file.name }}
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Conversación -->
-    <div class="card bg-base-100 shadow-md border border-base-200 lg:col-span-2">
+    <!-- Conversación (también acepta archivos arrastrados) -->
+    <div
+      class="card bg-base-100 shadow-md border border-base-200 lg:col-span-2 relative"
+      (dragenter)="alArrastrarEntra($event)"
+      (dragover)="alArrastrarSobre($event)"
+      (dragleave)="alArrastrarSale()"
+      (drop)="alSoltar($event)"
+    >
+      <div *ngIf="arrastrando" class="chat-soltar" aria-hidden="true">
+        <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
+        <span class="font-semibold">Suelta los archivos para adjuntarlos</span>
+        <span class="text-xs opacity-70">Imágenes, PDF, Office, TXT, CSV o ZIP</span>
+      </div>
       <div class="card-body">
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-2">
-            <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+            <div
+              class="p-1.5 rounded-lg bg-primary/10 text-primary"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-comments w-4"></i>
             </div>
             <h2 class="card-title text-base">Conversación</h2>
-            <span class="badge badge-sm badge-ghost">{{ answers.length || 0 }}</span>
+            <span class="badge badge-sm badge-ghost">{{
+              totalRespuestas || answers.length || 0
+            }}</span>
           </div>
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm btn-square"
+            [class.btn-active]="busquedaAbierta"
+            (click)="alternarBusqueda()"
+            [attr.aria-expanded]="busquedaAbierta"
+            aria-controls="chat-buscar"
+            title="Buscar en la conversación"
+            aria-label="Buscar en la conversación"
+          >
+            <i class="fa-solid fa-magnifying-glass text-[13px]" aria-hidden="true"></i>
+          </button>
         </div>
 
-        <!-- Mensajes -->
-        <div class="space-y-3 max-h-96 overflow-y-auto p-2 rounded-lg bg-base-200/30">
-          <div *ngFor="let a of answers" class="chat" [ngClass]="isMine(a) ? 'chat-end' : 'chat-start'">
-            <div class="chat-header flex items-center gap-2 text-xs opacity-70">
-              <div class="avatar placeholder" aria-hidden="true">
-                <div class="rounded-full w-5"
-                  [ngClass]="isMine(a) ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'">
-                  <span class="text-[10px] font-bold">
-                    {{ (a.user || '?').toString().charAt(0) }}
-                  </span>
-                </div>
-              </div>
-              <span class="font-medium">{{ authorLabel(a) }}</span>
-              <time class="opacity-60">{{ a.createdAtAnswer | date:'dd/MM/yyyy HH:mm' }}</time>
-            </div>
-            <div class="chat-bubble prose prose-sm max-w-none"
-              [ngClass]="a.internalAnswer ? 'chat-bubble-warning' : 'chat-bubble-primary'">
-              <div [innerHTML]="a.messageAnswer" class="message-html"></div>
-              <span *ngIf="a.internalAnswer" class="badge badge-xs badge-neutral gap-1 ml-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                Interna
-              </span>
+        <!-- Buscar dentro de la conversación -->
+        <div *ngIf="busquedaAbierta" class="chat-buscador" role="search">
+          <i class="fa-solid fa-magnifying-glass text-[12px] opacity-50" aria-hidden="true"></i>
+          <input
+            id="chat-buscar"
+            type="search"
+            class="flex-1 min-w-0 bg-transparent outline-none text-sm"
+            placeholder="Buscar en los mensajes…"
+            [value]="busqueda"
+            (input)="buscarEnChat($any($event.target).value)"
+            (keydown.enter)="moverCoincidencia($any($event).shiftKey ? -1 : 1)"
+            (keydown.escape)="alternarBusqueda()"
+            autocomplete="off"
+          />
+          <span *ngIf="buscandoTodo" class="loading loading-spinner loading-xs opacity-60"></span>
+          <span
+            *ngIf="!buscandoTodo && busqueda.length >= 2"
+            class="text-xs opacity-60 tabular-nums whitespace-nowrap"
+            aria-live="polite"
+          >
+            {{ coincidencias.length ? coincidenciaActual + 1 + " de " + coincidencias.length : "Sin resultados" }}
+          </span>
+          <button type="button" class="btn btn-ghost btn-xs btn-square" (click)="moverCoincidencia(-1)"
+            [disabled]="!coincidencias.length" title="Anterior" aria-label="Coincidencia anterior">
+            <i class="fa-solid fa-chevron-up text-[11px]" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="btn btn-ghost btn-xs btn-square" (click)="moverCoincidencia(1)"
+            [disabled]="!coincidencias.length" title="Siguiente" aria-label="Coincidencia siguiente">
+            <i class="fa-solid fa-chevron-down text-[11px]" aria-hidden="true"></i>
+          </button>
+        </div>
 
-              <div *ngIf="messageFilesOf(a.idAnswer).length" class="flex flex-wrap gap-1.5 mt-2 not-prose">
-                <a *ngFor="let at of messageFilesOf(a.idAnswer)"
-                  class="badge badge-outline badge-sm gap-1 bg-base-100/80 hover:badge-primary" [href]="attachUrl(at)"
-                  target="_blank" [title]="at.fileNameAttach">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  {{ at.fileNameAttach }}
-                </a>
+        <!-- Mensajes. Sin paginador: se sube el scroll y entra la tanda anterior -->
+        <div class="relative">
+        <div
+          #chatScroll
+          class="ticket-chat-scroll chat-wa-bg space-y-4 p-3 rounded-lg h-[440px] overflow-y-auto"
+          (scroll)="alDesplazarChat()"
+          (click)="alPulsarEnChat($event)"
+        >
+          <div class="chat-watermark" aria-hidden="true"></div>
+
+          <!--
+            Aviso de que hay mensajes más antiguos arriba. Se muestra al
+            principio del hilo y desaparece en cuanto se llega al final, para
+            no dejar un texto fijo encima de la conversación.
+          -->
+          <div
+            *ngIf="tienePaginasAnteriores && !cargandoAnteriores"
+            class="chat-carga-mas"
+            role="status"
+          >
+            <i class="fa-solid fa-arrow-up text-[10px]"></i>
+            Sube para ver {{ totalRespuestas - answers.length }} mensajes
+            anteriores
+          </div>
+
+          <!-- Al pedir la tanda anterior se avisa en lugar de saltar la vista -->
+          <div *ngIf="cargandoAnteriores" class="chat-carga-mas" role="status">
+            <span class="loading loading-spinner loading-xs"></span>
+            Cargando mensajes anteriores
+          </div>
+
+          <!-- Skeleton mientras llega la primera tanda -->
+          <div
+            *ngIf="cargandoMensajesIniciales && !answers.length"
+            class="space-y-4"
+            aria-hidden="true"
+          >
+            <div class="flex items-start gap-2.5">
+              <div class="skeleton w-8 h-8 rounded-full shrink-0"></div>
+              <div class="flex flex-col gap-2">
+                <div class="skeleton h-3 w-24"></div>
+                <div class="skeleton h-12 w-64 rounded-2xl"></div>
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5 flex-row-reverse">
+              <div class="skeleton w-8 h-8 rounded-full shrink-0"></div>
+              <div class="flex flex-col gap-2 items-end">
+                <div class="skeleton h-3 w-20"></div>
+                <div class="skeleton h-16 w-56 rounded-2xl"></div>
               </div>
             </div>
           </div>
 
-          <div *ngIf="answers.length === 0" class="flex flex-col items-center justify-center py-8 gap-2 opacity-60">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
+          <ng-container *ngFor="let a of answers; let i = index; trackBy: trackAnswer">
+          <!--
+            Separador de día: se sabe de cuándo es lo que se lee sin repetir la
+            fecha en cada mensaje (que ahora solo lleva la hora).
+          -->
+          <div *ngIf="separadorFecha(i) as dia" class="chat-dia" role="separator">
+            <span>{{ dia }}</span>
+          </div>
+          <!-- Donde empieza lo que no se había leído al abrir el hilo -->
+          <div
+            *ngIf="a.idAnswer === primerSinLeer"
+            id="chat-sin-leer"
+            class="chat-sin-leer"
+            role="separator"
+          >
+            <span>Mensajes no leídos</span>
+          </div>
+          <div
+            [attr.id]="'msg-' + a.idAnswer"
+            class="flex items-start gap-2.5"
+            [class.chat-coincide]="coincidenciasSet.has(a.idAnswer)"
+            [class.chat-coincide--actual]="coincidencias[coincidenciaActual] === a.idAnswer"
+            [class.chat-continua]="esContinuacion(i)"
+            [class.chat-entra]="recienLlegados.has(a.idAnswer)"
+            [class.chat-entra--propio]="recienLlegados.has(a.idAnswer) && isMine(a)"
+            [class.chat-entra--ajeno]="recienLlegados.has(a.idAnswer) && !isMine(a)"
+            [ngClass]="isMine(a) ? 'flex-row-reverse' : ''"
+          >
+            <!-- Avatar con punto de presencia (no se repite en mensajes seguidos) -->
+            <div class="shrink-0 relative w-8 h-8" [class.invisible]="esContinuacion(i)">
+              <img
+                *ngIf="avatarSrc(a)"
+                [src]="avatarSrc(a)"
+                [alt]="authorLabel(a)"
+                class="w-8 h-8 rounded-full object-cover ring-2 ring-base-100 block"
+              />
+              <div
+                *ngIf="!avatarSrc(a)"
+                class="w-8 h-8 rounded-full flex items-center justify-center"
+                [ngClass]="
+                  isMine(a)
+                    ? 'bg-success/10 text-success avatar-fallback-own'
+                    : 'bg-primary/10 text-primary avatar-fallback-other'
+                "
+              >
+                <span class="text-xs font-bold">
+                  {{ avatarInitial(a) }}
+                </span>
+              </div>
+              <!--
+                El punto va anclado al contenedor del avatar, no al <div> interno:
+                antes cada avatar era su propio contenedor y el punto se
+                desplazaba segun hubiera foto o no.
+              -->
+              <app-presence-dot
+                class="absolute -bottom-0.5 -right-0.5"
+                [state]="sesionAutor(a)"
+              />
+            </div>
+
+            <!-- Contenido -->
+            <div
+              class="flex flex-col gap-1 max-w-[75%] min-w-0"
+              [ngClass]="isMine(a) ? 'items-end' : 'items-start'"
+            >
+              <div
+                class="flex items-baseline gap-2 text-xs opacity-70"
+                [class.sr-only]="esContinuacion(i)"
+              >
+                <span class="font-semibold opacity-100" [title]="a.user">{{
+                  authorLabel(a)
+                }}</span>
+                <time
+                  [attr.datetime]="a.createdAtAnswer"
+                  [title]="a.createdAtAnswer | date: 'dd/MM/yyyy HH:mm'"
+                  >{{ a.createdAtAnswer | date: "HH:mm" }}</time
+                >
+                <!--
+                  Enviándose: un check, no un reloj. El reloj se asociaba a
+                  "todavía no enviado" y daba la sensación de que el mensaje se
+                  había perdido.
+                -->
+                <i
+                  *ngIf="a.state === 'enviando' || a.state === 'fallido'"
+                  class="fa-solid text-[10px]"
+                  [ngClass]="
+                    a.state === 'enviando'
+                      ? 'fa-check opacity-50'
+                      : 'fa-triangle-exclamation text-error'
+                  "
+                  [attr.aria-label]="
+                    a.state === 'enviando' ? 'Enviando' : 'No se pudo enviar'
+                  "
+                  aria-hidden="true"
+                ></i>
+              </div>
+
+              <!--
+                Burbuja. Sin la clase "prose" de Tailwind Typography: esa
+                utilidad fija su propio color de texto y dejaba el mensaje de
+                otra persona en blanco, ilegible.
+              -->
+              <div
+                class="chat-burbuja px-4 py-3 rounded-2xl shadow-sm max-w-none break-words"
+                [ngClass]="bubbleClass(a)"
+              >
+                <!-- Acciones del mensaje: aparecen al pasar el ratón o con el teclado -->
+                <div
+                  *ngIf="!a.state"
+                  class="chat-acciones"
+                  [class.chat-acciones--propio]="isMine(a)"
+                >
+                  <button type="button" (click)="responder(a)" title="Responder" aria-label="Responder a este mensaje">
+                    <i class="fa-solid fa-reply" aria-hidden="true"></i>
+                  </button>
+                  <ng-container *ngIf="puedeEditar(a)">
+                    <button type="button" (click)="editar(a)" title="Editar" aria-label="Editar mensaje">
+                      <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="chat-acciones__peligro" (click)="eliminarMensaje(a)"
+                      title="Eliminar" aria-label="Eliminar mensaje">
+                      <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                    </button>
+                  </ng-container>
+                </div>
+                <div
+                  [innerHTML]="a.messageAnswer"
+                  class="message-html not-prose"
+                ></div>
+                <span
+                  *ngIf="a.editedAtAnswer"
+                  class="chat-editado"
+                  [title]="'Editado el ' + (a.editedAtAnswer | date: 'dd/MM/yyyy HH:mm')"
+                >editado</span>
+
+                <span
+                  *ngIf="a.internalAnswer"
+                  class="inline-flex items-center justify-center mt-2 p-2 rounded-full bg-neutral text-neutral-content shadow-sm"
+                  title="Nota interna"
+                >
+                  <i
+                    class="fa-solid fa-user-lock text-xs leading-none"
+                    aria-hidden="true"
+                  ></i>
+                </span>
+
+                <!-- Estado del mensaje propio -->
+                <div
+                  *ngIf="a.state === 'enviando' || a.state === 'fallido'"
+                  class="mt-1 flex items-center gap-1 text-[11px]"
+                  role="status"
+                >
+                  <span
+                    *ngIf="a.state === 'enviando'"
+                    class="loading loading-spinner loading-xs opacity-60"
+                    aria-hidden="true"
+                  ></span>
+                  <span *ngIf="a.state === 'enviando'" class="opacity-60"
+                    >Enviando…</span
+                  >
+
+                  <ng-container *ngIf="a.state === 'fallido'">
+                    <i
+                      class="fa-solid fa-triangle-exclamation text-error"
+                      aria-hidden="true"
+                    ></i>
+                    <span class="text-error">No se envió</span>
+                    <button
+                      class="btn btn-xs btn-ghost"
+                      (click)="reintentar(a)"
+                    >
+                      <i
+                        class="fa-solid fa-rotate-right text-[11px]"
+                        aria-hidden="true"
+                      ></i>
+                      Reintentar
+                    </button>
+                    <button class="btn btn-xs btn-ghost" (click)="descartar(a)">
+                      Descartar
+                    </button>
+                  </ng-container>
+                </div>
+
+                <!--
+                  Estado de lectura. Se muestra en todos los mensajes, no solo en
+                  los propios: en los ajenos sirve para saber si la respuesta llego
+                  a leerse. Con la doble palomita es "lo ha leido mas de una
+                  persona" (tipico de WhatsApp).
+                -->
+                <!--
+                  Estado de entrega y lectura.
+                  Se calcula una sola vez con "as e" y se reutiliza: antes se
+                  llamaba al metodo seis veces por mensaje, una por cada dato que
+                  se pintaba, y se reevaluaba en cada deteccion de cambios.
+                  Cuando estadoMensaje devuelve null no se pinta pastilla: pasa
+                  en los mensajes ajenos que el usuario ya ha abierto cuando no
+                  tiene permiso para ver los acuses, donde no hay nada que decir
+                  porque ya no cabe duda de si los ha leido o no.
+                -->
+                <div
+                  *ngIf="estadoVisible(i) as e"
+                  class="mt-1 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] not-prose"
+                  [ngClass]="e.clase"
+                  [attr.aria-label]="e.titulo"
+                  [title]="e.titulo"
+                >
+                  <i
+                    class="text-[10px]"
+                    [ngClass]="e.icono"
+                    aria-hidden="true"
+                  ></i>
+                  <span>{{ e.texto }}</span>
+                </div>
+
+                <!-- Adjuntos como tarjetas de archivo -->
+                <div
+                  *ngIf="messageFilesOf(a.idAnswer).length"
+                  class="mt-2 space-y-1.5 not-prose"
+                >
+                  <button
+                    *ngFor="let at of messageFilesOf(a.idAnswer)"
+                    type="button"
+                    (click)="descargarAdjunto(at)"
+                    [disabled]="estaDescargando(at)"
+                    class="w-full text-left flex items-center gap-3 rounded-xl border border-base-300 bg-base-100/80 p-2 hover:bg-base-200/60 transition-colors disabled:opacity-60 disabled:cursor-wait"
+                    [title]="at.fileNameAttach"
+                  >
+                    <span
+                      class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0"
+                    >
+                      <i
+                        [class]="fileIcon(at.fileNameAttach)"
+                        class="text-sm"
+                      ></i>
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block text-xs font-semibold truncate">{{
+                        at.fileNameAttach
+                      }}</span>
+                      <span class="block text-[10px] opacity-60"
+                        >{{ fileExt(at.fileNameAttach) }} ·
+                        {{ fileSize(at.sizeFileAttach) }}</span
+                      >
+                    </span>
+                    <span
+                      class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+                      style="background: #2563eb1f; color: #2563eb"
+                      aria-hidden="true"
+                    >
+                      <i
+                        class="text-sm"
+                        [class.fa-solid]="!estaDescargando(at)"
+                        [class.fa-download]="!estaDescargando(at)"
+                        [class.fa-spinner]="estaDescargando(at)"
+                        [class.fa-spin]="estaDescargando(at)"
+                      ></i>
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          </ng-container>
+
+          <div
+            *ngIf="answers.length === 0"
+            class="flex flex-col items-center justify-center py-10 gap-2 opacity-60"
+          >
+            <i class="fa-regular fa-comment-dots text-3xl"></i>
             <span class="text-sm">Sin respuestas aún</span>
             <span class="text-xs">Sé el primero en responder este ticket</span>
           </div>
+
+          <!--
+            Burbuja de "escribiendo" al final del hilo. Va aqui y no solo sobre el
+            editor porque es donde se lee la conversacion: se ve que llega una
+            respuesta aunque todavia no exista.
+          -->
+          <div
+            *ngIf="typingName"
+            class="flex items-end gap-2.5 pt-1 chat-entra chat-entra--ajeno"
+            role="status"
+            aria-live="polite"
+          >
+            <div class="shrink-0 w-8"></div>
+            <div
+              class="flex items-center gap-2 px-3.5 py-3 rounded-2xl rounded-bl-md bg-base-200 border border-base-300 shadow-sm"
+            >
+              <span
+                class="flex items-center gap-1 typing-puntos"
+                aria-hidden="true"
+              >
+                <span class="typing-punto"></span>
+                <span class="typing-punto"></span>
+                <span class="typing-punto"></span>
+              </span>
+              <span class="sr-only">{{ typingName }} está escribiendo</span>
+            </div>
+          </div>
+        </div>
+
+        <!--
+          Llegaron mensajes mientras se leía más arriba: en vez de arrastrar la
+          vista (o no avisar), una píldora dice cuántos hay y baja al pulsarla.
+        -->
+        <button
+          *ngIf="nuevosSinVer > 0"
+          type="button"
+          class="chat-nuevos"
+          (click)="irAlFinalDelChat()"
+        >
+          <i class="fa-solid fa-arrow-down text-[11px]" aria-hidden="true"></i>
+          {{ nuevosSinVer }} {{ nuevosSinVer === 1 ? "mensaje nuevo" : "mensajes nuevos" }}
+        </button>
         </div>
 
         <!-- Editor -->
-        <div class="mt-4 flex flex-col gap-2">
-          <div id="quillEditorDetail" class="rich-editor rounded-lg border border-base-300 overflow-hidden"></div>
+        <div
+          class="mt-4 ticket-editor-wrap relative"
+          [ngClass]="toolbarOpen ? 'toolbar-open' : ''"
+        >
+          <!-- Respondiendo a / Editando: lo que va a pasar al enviar -->
+          <div *ngIf="citando || editando" class="chat-contexto" [class.chat-contexto--edicion]="editando">
+            <i
+              class="fa-solid text-[12px]"
+              [ngClass]="editando ? 'fa-pen' : 'fa-reply'"
+              aria-hidden="true"
+            ></i>
+            <div class="min-w-0 flex-1">
+              <p class="text-[11px] font-semibold">
+                {{ editando ? "Editando tu mensaje" : "Respondiendo a " + authorLabel(citando!) }}
+              </p>
+              <p class="text-xs opacity-70 truncate">{{ extracto(editando || citando!) }}</p>
+            </div>
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs btn-square"
+              (click)="editando ? cancelarEdicion() : cancelarCita()"
+              [attr.aria-label]="editando ? 'Cancelar la edición' : 'Quitar la cita'"
+              title="Cancelar"
+            >
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </div>
 
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex flex-wrap items-center gap-2">
-              <label class="btn btn-sm btn-ghost btn-outline gap-1.5 cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                </svg>
-                Adjuntar archivos
-                <input type="file" multiple class="hidden" (change)="onMessageFilesSelected($event)" />
-              </label>
-              <span *ngIf="messageFiles.length" class="badge badge-primary badge-sm">
-                {{ messageFiles.length }} archivo{{ messageFiles.length === 1 ? '' : 's' }}
-              </span>
-              <span *ngFor="let f of messageFiles; let i = index" class="badge badge-outline badge-sm gap-1 pr-1">
-                {{ f.name }}
-                <button type="button" class="btn btn-ghost btn-xs btn-circle" (click)="removeMessageFile(i)"
-                  aria-label="Quitar archivo">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+          <!-- Respuestas rápidas: botón del rayo o "/" al principio del mensaje -->
+          <div *ngIf="panelRapidas && esPersonal" class="chat-rapidas" role="dialog" aria-label="Respuestas rápidas">
+            <div class="chat-rapidas__cabecera">
+              <i class="fa-solid fa-bolt text-warning" aria-hidden="true"></i>
+              <input
+                type="search"
+                class="flex-1 min-w-0 bg-transparent outline-none text-sm"
+                placeholder="Buscar respuesta rápida…"
+                [value]="filtroRapidas"
+                (input)="filtroRapidas = $any($event.target).value"
+                (keydown.escape)="panelRapidas = false"
+                autocomplete="off"
+              />
+              <button type="button" class="btn btn-ghost btn-xs btn-square" (click)="panelRapidas = false" aria-label="Cerrar">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="chat-rapidas__lista">
+              <div
+                *ngFor="let r of rapidasFiltradas; let primero = first"
+                class="chat-rapidas__item"
+              >
+                <button type="button" class="chat-rapidas__usar" (click)="insertarRapida(r)">
+                  <span class="flex items-center gap-1.5 text-sm font-semibold">
+                    {{ r.title }}
+                    <span *ngIf="r.shared" class="badge badge-xs badge-info text-info-content" title="Compartida con todo el personal">Equipo</span>
+                  </span>
+                  <span class="block text-xs opacity-60 truncate">{{ r.content }}</span>
                 </button>
-              </span>
-
-              <label *ngIf="canManage" class="label cursor-pointer gap-2 py-0"
-                title="La nota interna solo la ven agentes y administradores">
-                <input type="checkbox" class="toggle toggle-warning toggle-sm" [checked]="internalMessage"
-                  (change)="internalMessage = $any($event.target).checked" />
-                <span class="label-text text-xs flex items-center gap-1 font-medium">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                  Mensaje interno
+                <div *ngIf="r.editable" class="flex shrink-0">
+                  <button type="button" class="btn btn-ghost btn-xs btn-square" (click)="formularioRapida(r)" aria-label="Editar respuesta rápida" title="Editar">
+                    <i class="fa-solid fa-pen text-[11px]" aria-hidden="true"></i>
+                  </button>
+                  <button type="button" class="btn btn-ghost btn-xs btn-square hover:text-error" (click)="eliminarRapida(r)" aria-label="Eliminar respuesta rápida" title="Eliminar">
+                    <i class="fa-solid fa-trash-can text-[11px]" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+              <p *ngIf="!rapidasFiltradas.length" class="px-3 py-4 text-center text-xs opacity-60">
+                {{ respuestasRapidas.length ? "Ninguna coincide." : "Todavía no tienes respuestas rápidas." }}
+              </p>
+            </div>
+            <div class="chat-rapidas__pie">
+              <span class="text-[11px] opacity-60">Escribe <kbd class="kbd kbd-xs">/</kbd> en el mensaje para buscar</span>
+              <button type="button" class="btn btn-primary btn-xs gap-1" (click)="formularioRapida()">
+                <i class="fa-solid fa-plus text-[10px]" aria-hidden="true"></i>
+                Nueva
+              </button>
+            </div>
+          </div>
+          <div
+            class="ticket-editor flex items-end gap-1.5 px-2 py-1.5 rounded-xl border bg-base-200/50 transition"
+            [ngClass]="
+              internalMessage
+                ? 'border-secondary focus-within:ring-2 focus-within:ring-secondary/25'
+                : 'border-primary focus-within:ring-2 focus-within:ring-primary/25'
+            "
+          >
+            <!-- ============ Grupo 1: Herramientas ============ -->
+            <div class="flex items-center gap-0.5 shrink-0 pb-0.5">
+              <!-- Botón "Aa" para mostrar/ocultar la toolbar de Quill -->
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm btn-square p-0 shrink-0"
+                [ngClass]="toolbarOpen ? 'btn-primary' : 'btn-ghost'"
+                (click)="toolbarOpen = !toolbarOpen"
+                [title]="toolbarOpen ? 'Ocultar formato' : 'Mostrar formato'"
+                aria-label="Alternar barra de formato"
+                [attr.aria-pressed]="toolbarOpen"
+              >
+                <span class="flex items-center justify-center w-full h-full">
+                  <i class="fa-solid fa-font text-sm leading-none"></i>
                 </span>
+              </button>
+
+              <!-- Respuestas rápidas (solo personal) -->
+              <button
+                *ngIf="esPersonal"
+                type="button"
+                class="btn btn-ghost btn-sm btn-square p-0 shrink-0"
+                [class.text-warning]="panelRapidas"
+                (click)="alternarRapidas()"
+                title="Respuestas rápidas (o escribe /)"
+                aria-label="Respuestas rápidas"
+                [attr.aria-expanded]="panelRapidas"
+              >
+                <span class="flex items-center justify-center w-full h-full">
+                  <i class="fa-solid fa-bolt text-sm leading-none"></i>
+                </span>
+              </button>
+
+              <!-- Adjuntar archivos -->
+              <label
+                class="btn btn-ghost btn-sm btn-square p-0 shrink-0 cursor-pointer"
+                title="Adjuntar archivos"
+                aria-label="Adjuntar archivos"
+              >
+                <span class="flex items-center justify-center w-full h-full">
+                  <i class="fa-solid fa-paperclip text-sm leading-none"></i>
+                </span>
+                <input
+                  type="file"
+                  multiple
+                  class="hidden"
+                  accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"
+                  (change)="onMessageFilesSelected($event)"
+                />
               </label>
+
+              <!-- Nota interna -->
+              <button
+                *ngIf="canManage"
+                type="button"
+                class="btn btn-sm btn-square p-0 shrink-0"
+                [ngClass]="internalMessage ? 'btn-warning' : 'btn-ghost'"
+                (click)="internalMessage = !internalMessage"
+                [title]="
+                  internalMessage
+                    ? 'Desmarcar nota interna'
+                    : 'Marcar como nota interna'
+                "
+                aria-label="Alternar nota interna"
+                [attr.aria-pressed]="internalMessage"
+              >
+                <span class="flex items-center justify-center w-full h-full">
+                  <i class="fa-solid fa-user-lock text-sm leading-none"></i>
+                </span>
+              </button>
             </div>
 
-            <button class="btn btn-sm gap-2" [ngClass]="internalMessage ? 'btn-warning' : 'btn-primary'"
-              (click)="sendAnswer()" [disabled]="!hasMessage">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-              {{ internalMessage ? 'Enviar nota interna' : 'Enviar respuesta' }}
+            <!-- ============ Grupo 2: Editor (ocupa el espacio restante) ============ -->
+            <div class="flex-1 min-w-0">
+              <!-- Indicador de "escribiendo" que llega por SSE -->
+              <div
+                *ngIf="typingName"
+                class="flex items-center gap-2 px-1 pb-1 text-xs opacity-70"
+                role="status"
+                aria-live="polite"
+              >
+                <span>{{ typingName }} está escribiendo</span>
+                <span
+                  class="flex items-center gap-1 typing-puntos"
+                  aria-hidden="true"
+                >
+                  <span class="typing-punto"></span>
+                  <span class="typing-punto"></span>
+                  <span class="typing-punto"></span>
+                </span>
+              </div>
+              <!-- Contenedor del editor Quill: la toolbar se oculta/muestra aquí -->
+              <div id="quillEditorDetail" class="rich-editor-single-line"></div>
+            </div>
+
+            <!-- ============ Grupo 3: Enviar ============ -->
+            <button
+              type="button"
+              class="btn btn-sm btn-square p-0 shrink-0"
+              [ngClass]="internalMessage ? 'btn-warning' : 'btn-primary'"
+              (click)="sendAnswer()"
+              [disabled]="!hasMessage || sending"
+              [attr.aria-busy]="sending"
+              [attr.aria-label]="
+                internalMessage ? 'Enviar nota interna' : 'Enviar respuesta'
+              "
+            >
+              <span class="flex items-center justify-center w-full h-full">
+                <span
+                  *ngIf="sending"
+                  class="loading loading-spinner loading-xs"
+                  aria-hidden="true"
+                ></span>
+                <i
+                  *ngIf="!sending"
+                  class="fa-solid fa-paper-plane text-sm leading-none"
+                ></i>
+              </span>
             </button>
+          </div>
+
+          <!-- ============ Archivos seleccionados para el mensaje ============ -->
+          <div
+            *ngIf="messageFiles.length"
+            class="mt-2 rounded-xl border border-base-300 bg-base-100 p-2 space-y-1.5 animate-[slideDown_200ms_ease]"
+          >
+            <div class="flex items-center gap-1.5 px-1">
+              <i class="fa-solid fa-paperclip text-[11px] opacity-60"></i>
+              <span class="text-xs font-semibold opacity-80">
+                {{ messageFiles.length }} archivo{{
+                  messageFiles.length === 1
+                    ? " seleccionado"
+                    : "s seleccionados"
+                }}
+              </span>
+            </div>
+
+            <div
+              *ngFor="let f of messageFiles; let i = index"
+              class="flex items-center gap-2.5 rounded-lg border border-base-300 bg-base-200/30 p-2 hover:bg-base-200/60 transition-colors"
+              [title]="f.name"
+            >
+              <span
+                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary shrink-0"
+              >
+                <i [class]="fileIcon(f.name)" class="text-sm"></i>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-xs font-semibold truncate">{{
+                  f.name
+                }}</span>
+                <span class="block text-[10px] opacity-60"
+                  >{{ fileExt(f.name) }} · {{ fileSize(f.size) }}</span
+                >
+              </span>
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs btn-square p-0 shrink-0 hover:bg-error/20 hover:text-error"
+                (click)="removeMessageFile(i)"
+                aria-label="Quitar archivo"
+              >
+                <span class="flex items-center justify-center w-full h-full">
+                  <i class="fa-solid fa-xmark text-xs leading-none"></i>
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Auditoría -->
-  <div class="card bg-base-100 shadow-md border border-base-200" *ngIf="canManage">
-    <div class="card-body">
-      <div class="flex items-center gap-2 mb-3">
-        <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-          </svg>
-        </div>
-        <h2 class="card-title text-base">Auditoría</h2>
-        <span class="badge badge-sm badge-ghost">{{ audit.length || 0 }}</span>
-      </div>
-
-      <div class="rounded-xl border border-base-200 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="table table-sm table-zebra">
-            <thead class="bg-primary text-primary-content">
-              <tr>
-                <th class="text-center">Fecha</th>
-                <th class="text-center">Acción</th>
-                <th class="text-center">Usuario</th>
-                <th class="text-center">Anterior</th>
-                <th class="text-center">Nuevo</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let a of audit" class="hover:bg-base-200/50 transition-colors">
-                <td class="text-center font-mono text-xs whitespace-nowrap">
-                  {{ a.createdAtAudit | date:'dd/MM/yyyy HH:mm' }}
-                </td>
-                <td class="text-center">
-                  <span class="badge badge-sm badge-outline">{{ a.actionType }}</span>
-                </td>
-                <td class="text-center">
-                  <div class="flex items-center justify-center gap-2">
-                    <div class="avatar placeholder" aria-hidden="true">
-                      <div class="bg-primary/10 text-primary rounded-full w-6">
-                        <span class="text-[10px] font-bold">
-                          {{ (a.user || '?').toString().charAt(0) }}
-                        </span>
-                      </div>
-                    </div>
-                    <span class="truncate">{{ a.user }}</span>
-                  </div>
-                </td>
-                <td class="text-center opacity-70 max-w-xs truncate" [title]="a.oldValue">
-                  {{ a.oldValue || '—' }}
-                </td>
-                <td class="text-center opacity-70 max-w-xs truncate" [title]="a.newValue">
-                  {{ a.newValue || '—' }}
-                </td>
-              </tr>
-
-              <tr *ngIf="!audit || audit.length === 0">
-                <td colspan="5">
-                  <div class="flex flex-col items-center justify-center py-8 gap-2 opacity-60">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                    </svg>
-                    <span class="text-sm">Sin registros de auditoría</span>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- ============ Auditoría / Timeline ============ -->
+  <app-ticket-historial *ngIf="canManage" [audit]="audit"></app-ticket-historial>
 </div>
 
 <!-- Estado de carga -->
-<div *ngIf="!ticket" class="flex flex-col items-center justify-center py-20 gap-3" role="status" aria-live="polite">
-  <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
-  <span class="text-sm opacity-70">Cargando ticket...</span>
-</div>
+<app-skeleton *ngIf="!ticket" tipo="panel" [cantidad]="8" etiqueta="Cargando ticket..."></app-skeleton>
+
+<app-ai-float-button
+  [context]="aiContext"
+  [session]="'detalle-' + (ticket?.idTicket || '')"
+></app-ai-float-button>

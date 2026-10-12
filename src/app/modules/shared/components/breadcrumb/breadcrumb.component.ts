@@ -2,11 +2,22 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRouteSnapshot, NavigationEnd, Router, UrlSegment } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { navIcon } from '../../../../core/constants/nav-icons';
 
 export interface Crumb {
   label: string;
   url: string;
+  icon: string;
+  /**
+   * Si la url es navegable como ruta intermedia. Los ids numericos no lo son
+   * salvo en tickets: /workflows/5 no existe como ruta (sus hijos son editar y
+   * ejecuciones), y el clic no debe caer en el 404.
+   */
+  enlazable: boolean;
 }
+
+/** Las claves son uuid desde la migración de ids (V3__ids_uuid.sql). */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const LABELS: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -19,33 +30,93 @@ const LABELS: Record<string, string> = {
   users: 'Usuarios',
   teams: 'Equipos',
   areas: 'Áreas',
+  sucursales: 'Sedes',
   categories: 'Categorías',
   sla: 'SLA',
+  'sla-config': 'Evaluaciones mensuales',
+  'report-templates': 'Reportes personalizados',
   escalations: 'Escalaciones',
   templates: 'Plantillas',
   branding: 'Marca',
+  'pages-system': 'Páginas del Sistema',
+  mfa: 'Autenticación MFA',
+  'ai-config': 'Inteligencia Artificial',
+  'microsoft-graph': 'Microsoft Graph y Correo',
+  'session-config': 'Seguridad de Sesión',
+  'chat-config': 'Acuses de Lectura',
   'ticket-types': 'Tipos de ticket',
+  'audit-sistema': 'Auditoría del sistema',
   reports: 'Reportes',
+  workflows: 'Automatizaciones',
+  ejecuciones: 'Ejecuciones',
+  aprobaciones: 'Aprobaciones',
+  editar: 'Editar',
+  mantenimiento: 'Mantenimiento',
   activities: 'Tablero de tareas',
   calendar: 'Calendario',
   settings: 'Configuración',
   profile: 'Perfil',
-  password: 'Cambiar contraseña'
+  password: 'Cambiar contraseña',
+  sounds: 'Sonidos de Notificaciones',
+  notifications: 'Notificaciones',
+  privacidad: 'Privacidad',
+  '404': 'Página no encontrada',
+  '403': 'Acceso no autorizado',
+  '500': 'Error interno del servidor',
+  '503': 'Servicio no disponible'
 };
 
 @Component({
   selector: 'app-breadcrumb',
   template: `
-    <nav *ngIf="crumbs.length" class="breadcrumbs text-sm mb-4" aria-label="Miga de pan">
-      <ul>
-        <li *ngFor="let c of crumbs; let last = last">
-          <ng-container *ngIf="!last">
-            <a [routerLink]="c.url">{{ c.label }}</a>
-          </ng-container>
-          <ng-container *ngIf="last">
-            <span class="font-semibold text-primary">{{ c.label }}</span>
-          </ng-container>
-        </li>
+    <nav *ngIf="crumbs.length" aria-label="Breadcrumb" class="mt-4 mb-4">
+      <ul class="flex items-center gap-3 flex-wrap">
+
+        <!-- Crumbs intermedios (clickeables si la ruta existe) -->
+        <ng-container *ngFor="let c of crumbs; let last = last">
+          <li *ngIf="!last">
+            <div class="flex items-center gap-3">
+              <a
+                *ngIf="c.enlazable"
+                [routerLink]="c.url"
+                class="text-base-content/70 font-medium text-sm leading-snug flex items-center gap-2
+                       hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded
+                       transition-colors"
+              >
+                <i [class]="c.icon" class="text-sm leading-none" aria-hidden="true"></i>
+                {{ c.label }}
+              </a>
+
+              <!-- Segmento intermedio sin ruta propia (ej. /workflows/5): se muestra, pero no se enlaza. -->
+              <span
+                *ngIf="!c.enlazable"
+                class="text-base-content/50 font-medium text-sm leading-snug flex items-center gap-2"
+              >
+                <i [class]="c.icon" class="text-sm leading-none" aria-hidden="true"></i>
+                {{ c.label }}
+              </span>
+
+              <!-- Chevron separador -->
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   class="fill-base-content/30 size-2.5 overflow-visible"
+                   viewBox="0 0 451.846 451.847" aria-hidden="true">
+                <path d="M345.441 248.292 151.154 442.573c-12.359 12.365-32.397 12.365-44.75 0-12.354-12.354-12.354-32.391 0-44.744L278.318 225.92 106.409 54.017c-12.354-12.359-12.354-32.394 0-44.748 12.354-12.359 32.391-12.359 44.75 0l194.287 194.284c6.177 6.18 9.262 14.271 9.262 22.366 0 8.099-3.091 16.196-9.267 22.373"
+                      data-original="#000000" />
+              </svg>
+            </div>
+          </li>
+
+          <!-- Último crumb (actual) -->
+          <li *ngIf="last" aria-current="page">
+            <div class="flex items-center">
+              <span class="text-primary text-sm leading-snug flex items-center gap-2 font-semibold">
+                <i [class]="c.icon" class="text-sm leading-none" aria-hidden="true"></i>
+                {{ c.label }}
+              </span>
+            </div>
+          </li>
+        </ng-container>
+
       </ul>
     </nav>
   `
@@ -59,7 +130,9 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.build();
-    this.sub = this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => this.build());
+    this.sub = this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe(() => this.build());
   }
 
   ngOnDestroy(): void {
@@ -70,20 +143,43 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
     const deepest = this.deepest(this.router.routerState.snapshot.root);
     const crumbs: Crumb[] = [];
     let url = '';
+    let previo = '';
 
     deepest.pathFromRoot.forEach((sn: ActivatedRouteSnapshot) => {
       sn.url.forEach((seg: UrlSegment) => {
         url += '/' + seg.path;
         if (url === '/dashboard') {
           crumbs.length = 0;
+          previo = seg.path;
           return;
         }
-        crumbs.push({ label: this.segmentLabel(seg), url });
+        const esId = this.esId(seg, previo);
+        crumbs.push({
+          label: this.segmentLabel(seg, previo),
+          url,
+          icon: this.segmentIcon(seg, previo),
+          // Solo se enlaza lo que existe como ruta: /workflows/5 no la es.
+          enlazable: !esId || previo === 'tickets',
+        });
+        previo = seg.path;
       });
     });
 
     if (crumbs.length && crumbs[0].url !== '/dashboard') {
-      crumbs.unshift({ label: 'Inicio', url: '/dashboard' });
+      crumbs.unshift({ label: 'Inicio', url: '/dashboard', icon: 'fa-solid fa-house', enlazable: true });
+    }
+
+    // Automatizaciones cuelga del grupo "Administración" del menú lateral,
+    // aunque su ruta sea top-level (/workflows). El breadcrumb lo refleja
+    // insertando el nivel /admin delante para que la ruta no se pierda.
+    const workflows = crumbs.findIndex((c) => c.url === '/workflows');
+    if (workflows > 0) {
+      crumbs.splice(workflows, 0, {
+        label: 'Administración',
+        url: '/admin',
+        icon: navIcon('admin'),
+        enlazable: true,
+      });
     }
 
     this.crumbs = crumbs;
@@ -97,11 +193,35 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
     return current;
   }
 
-  private segmentLabel(seg: UrlSegment): string {
-    if (Object.keys(seg.parameters).length > 0) {
-      return seg.path && /^\d+$/.test(seg.path) ? `Ticket #${seg.path}` : this.titleCase(seg.path);
+  /**
+   * Un segmento es "id" solo bajo las rutas que llevan parametro:
+   * /tickets/:id y /workflows/:id, y solo si es un uuid. Sin contexto, un
+   * numero es una ruta propia (las pantallas de error son /404, /403…).
+   */
+  private esId(seg: UrlSegment, previo: string): boolean {
+    return (previo === 'tickets' || previo === 'workflows') && UUID_RE.test(seg.path);
+  }
+
+  /**
+   * Label de un segmento. El segmento anterior da el contexto: un id suelto es
+   * "Detalle del ticket" o "Proceso" segun de que ruta venga (el uuid no se
+   * muestra: no dice nada a quien lo lee), y "reports" bajo
+   * "/admin" es la gestion de plantillas, no la pantalla de reportes.
+   */
+  private segmentLabel(seg: UrlSegment, previo: string): string {
+    if (this.esId(seg, previo)) {
+      return previo === 'tickets' ? 'Detalle del ticket' : 'Proceso';
     }
+    if (seg.path === 'reports' && previo === 'admin') return 'Reportes personalizados';
     return LABELS[seg.path] ?? this.titleCase(seg.path);
+  }
+
+  private segmentIcon(seg: UrlSegment, previo: string): string {
+    if (this.esId(seg, previo)) {
+      return previo === 'tickets' ? 'fa-solid fa-ticket' : 'fa-solid fa-diagram-project';
+    }
+    if (seg.path === 'reports' && previo === 'admin') return navIcon('report-templates');
+    return navIcon(seg.path);
   }
 
   private titleCase(value: string): string {

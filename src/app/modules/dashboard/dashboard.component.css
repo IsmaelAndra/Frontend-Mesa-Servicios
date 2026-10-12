@@ -1,0 +1,341 @@
+/* ============================ Encabezado ============================ */
+/* Degradado con el color institucional y un halo suave: le da al tablero una
+   entrada propia sin competir con las cifras de debajo. */
+.dash-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 140% at 100% 0%, oklch(var(--a) / 0.35) 0%, transparent 45%),
+    linear-gradient(135deg, oklch(var(--p)) 0%, oklch(var(--p) / 0.82) 100%);
+}
+.dash-hero::after {
+  content: '';
+  position: absolute;
+  right: -4rem;
+  bottom: -6rem;
+  width: 18rem;
+  height: 18rem;
+  border-radius: 9999px;
+  border: 2.5rem solid rgb(255 255 255 / 0.06);
+  pointer-events: none;
+}
+
+.dash-periodos {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.12);
+  backdrop-filter: blur(6px);
+}
+.dash-periodo {
+  padding: 0.3rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(255 255 255 / 0.85);
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.dash-periodo:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+.dash-periodo:active {
+  scale: 0.97;
+}
+.dash-periodo--activo,
+.dash-periodo--activo:hover {
+  background: #fff;
+  color: oklch(var(--p));
+}
+.dash-fecha {
+  background: rgb(255 255 255 / 0.95);
+  color: #0f172a;
+  border: 0;
+}
+
+/* ============================ Tarjetas de indicadores ============================ */
+.dash-kpi {
+  position: relative;
+  padding: 1.1rem 1.2rem;
+  border-radius: 1.25rem;
+  background: oklch(var(--b1));
+  border: 1px solid oklch(var(--bc) / 0.08);
+  box-shadow: 0 6px 20px -14px rgb(15 23 42 / 0.4);
+  transition: box-shadow var(--dur-base) var(--ease-out), translate var(--dur-base) var(--ease-out);
+}
+.dash-kpi:hover {
+  box-shadow: 0 14px 30px -16px rgb(15 23 42 / 0.45);
+  translate: 0 -2px;
+}
+.dash-kpi__titulo {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: oklch(var(--bc) / 0.6);
+}
+.dash-kpi__valor {
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-top: 0.15rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.dash-kpi__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.9rem;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* Tendencia frente al periodo anterior */
+.tendencia {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tendencia--buena {
+  color: oklch(var(--su));
+  background: oklch(var(--su) / 0.12);
+}
+.tendencia--mala {
+  color: oklch(var(--er));
+  background: oklch(var(--er) / 0.12);
+}
+/* Más tickets no es ni bueno ni malo: solo se informa. */
+.tendencia--informativa,
+.tendencia--neutra {
+  color: oklch(var(--bc) / 0.7);
+  background: oklch(var(--bc) / 0.07);
+}
+
+/* ============================ Anillo del SLA ============================ */
+.anillo {
+  --angulo: 0deg;
+  --color: oklch(var(--bc) / 0.3);
+  position: relative;
+  width: 5.25rem;
+  height: 5.25rem;
+  border-radius: 9999px;
+  background: conic-gradient(var(--color) var(--angulo), oklch(var(--bc) / 0.08) 0);
+  transition: --angulo 900ms var(--ease-out);
+}
+.anillo::before {
+  content: '';
+  position: absolute;
+  inset: 0.55rem;
+  border-radius: inherit;
+  background: oklch(var(--b1));
+}
+.anillo__valor {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+.anillo--bueno { --color: oklch(var(--su)); }
+.anillo--medio { --color: oklch(var(--wa)); }
+.anillo--malo { --color: oklch(var(--er)); }
+.anillo--neutro { --color: oklch(var(--bc) / 0.25); }
+
+/* El ángulo se puede animar (crece al cargar) si el navegador conoce la propiedad. */
+@property --angulo {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* ============================ Paneles ============================ */
+/* min-width: 0 para que el panel pueda encogerse dentro de la rejilla: sin él,
+   el lienzo de Chart.js fija su ancho y al estrechar la ventana sale una barra
+   de desplazamiento horizontal. */
+.dash-panel {
+  min-width: 0;
+  padding: 1.25rem;
+  border-radius: 1.5rem;
+  background: oklch(var(--b1));
+  border: 1px solid oklch(var(--bc) / 0.08);
+  box-shadow: 0 6px 20px -16px rgb(15 23 42 / 0.4);
+}
+.dash-panel__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.dash-panel__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.8rem;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.dash-panel__titulo {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.dash-panel__sub {
+  font-size: 0.75rem;
+  color: oklch(var(--bc) / 0.55);
+}
+
+/* Tickets que requieren atención */
+.dash-atencion {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid oklch(var(--bc) / 0.08);
+  transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.dash-atencion:hover {
+  border-color: oklch(var(--p) / 0.35);
+  background: oklch(var(--p) / 0.04);
+}
+.dash-atencion--vencido {
+  border-color: oklch(var(--er) / 0.3);
+  background: oklch(var(--er) / 0.04);
+}
+
+/* Barras que crecen al cargar: de 0 a su ancho, una sola vez. */
+.dash-barra,
+.dash-barra-tramo {
+  transform-origin: left center;
+  animation: dash-crecer 700ms var(--ease-out) both;
+}
+@keyframes dash-crecer {
+  from { transform: scaleX(0); }
+  to { transform: none; }
+}
+
+/* Cifras compactas (operación de hoy, evaluación) */
+.dash-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 1rem;
+  border: 1px solid oklch(var(--bc) / 0.08);
+  background: oklch(var(--b2) / 0.4);
+}
+.dash-mini--columna {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+.dash-mini__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.65rem;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.dash-mini__txt {
+  flex: 1;
+  font-size: 0.75rem;
+  color: oklch(var(--bc) / 0.65);
+}
+.dash-mini__num {
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Línea de tiempo de la actividad */
+.dash-linea {
+  position: relative;
+}
+.dash-linea::before {
+  content: '';
+  position: absolute;
+  left: 0.95rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  background: oklch(var(--bc) / 0.08);
+}
+.dash-linea__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+}
+.dash-linea__punto {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px oklch(var(--b1));
+}
+
+/* ============================ Mapa de calor ============================ */
+.calor {
+  display: grid;
+  grid-template-columns: 2.25rem repeat(24, minmax(0, 1fr));
+  gap: 3px;
+  align-items: center;
+}
+.calor__hora {
+  font-size: 9px;
+  text-align: center;
+  color: oklch(var(--bc) / 0.45);
+}
+.calor__dia {
+  font-size: 10px;
+  font-weight: 600;
+  color: oklch(var(--bc) / 0.55);
+}
+.calor__celda {
+  display: inline-block;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: oklch(var(--bc) / 0.06);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.calor__celda:hover {
+  transform: scale(1.25);
+}
+.calor__celda--1 { background: oklch(var(--p) / 0.2); }
+.calor__celda--2 { background: oklch(var(--p) / 0.42); }
+.calor__celda--3 { background: oklch(var(--p) / 0.66); }
+.calor__celda--4 { background: oklch(var(--p) / 0.95); }
+
+/* ============================ Movimiento reducido ============================ */
+@media (prefers-reduced-motion: reduce) {
+  .dash-kpi:hover { translate: none; }
+  .dash-barra,
+  .dash-barra-tramo { animation: none; }
+  .anillo { transition: none; }
+  .calor__celda:hover { transform: none; }
+}
+
+/* Chart.js necesita un contenedor relativo para medir al redimensionar. */
+.dash-panel canvas {
+  max-width: 100%;
+}

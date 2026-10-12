@@ -1,0 +1,515 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <header
+    class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+  >
+    <div class="flex items-center gap-3">
+      <div
+        class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-city text-2xl"></i>
+      </div>
+      <div>
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">
+          Gestión de Sedes
+        </h1>
+        <p class="text-sm opacity-70">
+          Las oficinas de la institución. Cada persona y cada ticket guardan la
+          suya
+        </p>
+      </div>
+    </div>
+
+    <button
+      class="btn btn-primary btn-sm gap-2"
+      (click)="showCreate = !showCreate"
+    >
+      <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
+      {{ showCreate ? "Cerrar" : "Nueva Sede" }}
+    </button>
+  </header>
+
+  <!-- Aviso -->
+  <div
+    class="alert bg-info/10 border-info/25 text-info text-xs flex items-start gap-2.5 rounded-2xl"
+  >
+    <i class="fa-solid fa-circle-info mt-0.5 shrink-0" aria-hidden="true"></i>
+    <span>
+      El <b>código</b> es la clave corta que se ve en los reportes
+      (<code class="font-mono">MAT</code>, <code class="font-mono">QUI</code>).
+      Al crear un ticket, si no eliges sede, se toma la del solicitante.
+    </span>
+  </div>
+
+  <!-- Formulario de creacion -->
+  <div
+    class="card bg-base-100 shadow-md border border-base-200"
+    *ngIf="showCreate"
+  >
+    <div class="card-body">
+      <div class="flex items-center gap-2 mb-2">
+        <div
+          class="p-1.5 rounded-lg bg-primary/10 text-primary"
+          aria-hidden="true"
+        >
+          <i class="fa-solid fa-plus text-[15px]"></i>
+        </div>
+        <h3 class="card-title text-base">Nueva Sede</h3>
+      </div>
+
+      <form
+        class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2"
+        (ngSubmit)="create()"
+      >
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Código <span class="text-error">*</span>
+            </span>
+          </div>
+          <input
+            [(ngModel)]="newSucursal.codeSucursal"
+            name="codeSucursal"
+            class="input input-bordered input-sm w-full font-mono uppercase"
+            required
+            maxlength="20"
+            placeholder="Ej. MAT"
+          />
+        </label>
+
+        <label class="form-control w-full md:col-span-2">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Nombre <span class="text-error">*</span>
+            </span>
+          </div>
+          <input
+            [(ngModel)]="newSucursal.nameSucursal"
+            name="nameSucursal"
+            class="input input-bordered input-sm w-full"
+            required
+            placeholder="Ej. Matriz Pichincha"
+          />
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Teléfono</span>
+          </div>
+          <input
+            [(ngModel)]="newSucursal.phoneSucursal"
+            name="phoneSucursal"
+            class="input input-bordered input-sm w-full"
+            placeholder="02 2xxxxxxx"
+          />
+        </label>
+
+        <label class="form-control w-full md:col-span-2">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Dirección</span>
+          </div>
+          <input
+            [(ngModel)]="newSucursal.addressSucursal"
+            name="addressSucursal"
+            class="input input-bordered input-sm w-full"
+            placeholder="Av. Principal s/n"
+          />
+        </label>
+
+        <label class="form-control w-full md:col-span-2">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Descripción</span>
+          </div>
+          <input
+            [(ngModel)]="newSucursal.descriptionSucursal"
+            name="descriptionSucursal"
+            class="input input-bordered input-sm w-full"
+            placeholder="Oficina central"
+          />
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Icono</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span
+              class="p-1.5 rounded-lg bg-base-200 shrink-0"
+              aria-hidden="true"
+            >
+              <i
+                [class]="newSucursal.iconSucursal || 'fa-solid fa-city'"
+                class="text-base"
+              ></i>
+            </span>
+            <input
+              [(ngModel)]="newSucursal.iconSucursal"
+              name="iconSucursal"
+              class="input input-bordered input-sm w-full font-mono text-xs"
+              placeholder="fa-solid fa-city"
+            />
+          </div>
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Color</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input
+              type="color"
+              [(ngModel)]="newSucursal.colorSucursal"
+              name="colorSucursal"
+              class="input input-bordered input-sm w-14 h-9 p-1 cursor-pointer shrink-0"
+            />
+            <span class="text-xs opacity-70 font-mono">
+              {{ newSucursal.colorSucursal || "#062e86" }}
+            </span>
+          </div>
+        </label>
+
+        <label
+          class="form-control w-full md:col-span-3 flex-row items-center gap-2"
+        >
+          <input
+            type="checkbox"
+            [(ngModel)]="newSucursal.statusSucursal"
+            name="statusSucursal"
+            class="checkbox checkbox-sm checkbox-primary"
+          />
+          <span class="label-text text-xs">Sede activa</span>
+        </label>
+
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm"
+            (click)="showCreate = false"
+          >
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary btn-sm gap-2">
+            <i class="fa-solid fa-check text-[13px]" aria-hidden="true"></i>
+            Crear sede
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div
+    class="card bg-base-100 shadow-md border border-base-200 overflow-hidden"
+  >
+    <div class="overflow-x-auto">
+      <table class="table table-sm table-zebra">
+        <thead class="bg-primary text-primary-content">
+          <tr>
+            <th class="text-center">Sede</th>
+            <th class="text-center">Código</th>
+            <th class="text-center">Dirección</th>
+            <th class="text-center">Teléfono</th>
+            <th class="text-center">Estado</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Cargando -->
+          <tr *ngIf="loading">
+            <td colspan="6">
+              <app-skeleton tipo="filas" etiqueta="Cargando sedes..."></app-skeleton>
+            </td>
+          </tr>
+
+          <!-- Filas -->
+          <ng-container *ngFor="let sucursal of pagSucursales.vista">
+            <!-- Modo visualizacion -->
+            <tr
+              *ngIf="!editSucursal || editSucursal.idSucursal !== sucursal.idSucursal"
+              class="hover:bg-base-200/50 transition-colors"
+            >
+              <!-- Sede (icono + badge + descripcion) -->
+              <td>
+                <div class="flex items-center gap-2">
+                  <div
+                    class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
+                    [style.background-color]="
+                      (sucursal.colorSucursal || '#062e86') + '22'
+                    "
+                    [style.color]="sucursal.colorSucursal || '#062e86'"
+                    aria-hidden="true"
+                  >
+                    <i [class]="iconoDe(sucursal)" class="text-[15px]"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <span
+                      class="badge badge-sm gap-1.5 font-medium min-w-0 uppercase"
+                      [style.background-color]="
+                        (sucursal.colorSucursal || '#062e86') + '22'
+                      "
+                      [style.color]="
+                        (sucursal.colorSucursal || '#062e86') + '!important'
+                      "
+                      [title]="sucursal.nameSucursal"
+                    >
+                      <span class="truncate">{{
+                        sucursal.nameSucursal
+                      }}</span>
+                    </span>
+                    <p
+                      class="text-[11px] opacity-60 mt-0.5 truncate max-w-[220px]"
+                      [title]="sucursal.descriptionSucursal"
+                    >
+                      {{ sucursal.descriptionSucursal || "—" }}
+                    </p>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Codigo -->
+              <td>
+                <code
+                  class="text-xs bg-base-200 px-2 py-0.5 rounded font-mono"
+                >
+                  {{ sucursal.codeSucursal || "—" }}
+                </code>
+              </td>
+
+              <!-- Direccion -->
+              <td class="opacity-80 max-w-xs truncate" [title]="sucursal.addressSucursal">
+                {{ sucursal.addressSucursal || "—" }}
+              </td>
+
+              <!-- Telefono -->
+              <td class="text-xs opacity-80 whitespace-nowrap tabular-nums">
+                {{ sucursal.phoneSucursal || "—" }}
+              </td>
+
+              <!-- Estado -->
+              <td>
+                <span
+                  class="badge badge-sm gap-1.5 font-medium"
+                  [ngClass]="
+                    sucursal.statusSucursal
+                      ? 'badge-success text-success-content'
+                      : 'badge-error text-error-content'
+                  "
+                >
+                  <span
+                    class="w-1.5 h-1.5 rounded-full"
+                    [ngClass]="
+                      sucursal.statusSucursal
+                        ? 'bg-success-content'
+                        : 'bg-error-content'
+                    "
+                  ></span>
+                  {{ sucursal.statusSucursal ? "Activa" : "Inactiva" }}
+                </span>
+              </td>
+
+              <!-- Acciones -->
+              <td class="text-right">
+                <div class="flex justify-end gap-1 whitespace-nowrap">
+                  <button
+                    class="btn btn-xs btn-ghost gap-1"
+                    (click)="edit(sucursal)"
+                    aria-label="Editar sede"
+                  >
+                    <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
+                    Editar
+                  </button>
+
+                  <button
+                    class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
+                    (click)="delete(sucursal)"
+                    aria-label="Eliminar sede"
+                  >
+                    <i class="fa-solid fa-trash text-sm" aria-hidden="true"></i>
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Modo edicion -->
+            <tr
+              *ngIf="editSucursal && editSucursal.idSucursal === sucursal.idSucursal"
+              class="bg-base-200/50"
+            >
+              <td colspan="6">
+                <div class="flex flex-wrap items-end gap-2 p-2">
+                  <!-- Nombre -->
+                  <label class="form-control flex-1 min-w-[180px]">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Nombre</span>
+                    </div>
+                    <input
+                      [(ngModel)]="editSucursal.nameSucursal"
+                      class="input input-bordered input-sm w-full"
+                      required
+                    />
+                  </label>
+
+                  <!-- Codigo -->
+                  <label class="form-control w-full sm:w-auto">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Código</span>
+                    </div>
+                    <input
+                      [(ngModel)]="editSucursal.codeSucursal"
+                      class="input input-bordered input-sm w-28 font-mono uppercase"
+                      maxlength="20"
+                    />
+                  </label>
+
+                  <!-- Telefono -->
+                  <label class="form-control w-full sm:w-auto">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium"
+                        >Teléfono</span
+                      >
+                    </div>
+                    <input
+                      [(ngModel)]="editSucursal.phoneSucursal"
+                      class="input input-bordered input-sm w-40"
+                    />
+                  </label>
+
+                  <!-- Icono -->
+                  <label class="form-control w-full sm:w-auto">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Icono</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="p-1.5 rounded-lg bg-base-200 shrink-0"
+                        aria-hidden="true"
+                      >
+                        <i
+                          [class]="editSucursal.iconSucursal || 'fa-solid fa-city'"
+                          class="text-base"
+                        ></i>
+                      </span>
+                      <input
+                        [(ngModel)]="editSucursal.iconSucursal"
+                        class="input input-bordered input-sm w-32 font-mono text-xs"
+                        placeholder="fa-solid fa-city"
+                      />
+                    </div>
+                  </label>
+
+                  <!-- Color -->
+                  <label class="form-control w-full sm:w-auto">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Color</span>
+                    </div>
+                    <input
+                      [(ngModel)]="editSucursal.colorSucursal"
+                      type="color"
+                      class="input input-bordered input-sm w-14 h-9 p-1 cursor-pointer"
+                    />
+                  </label>
+
+                  <!-- Direccion -->
+                  <label class="form-control flex-1 min-w-[200px]">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium"
+                        >Dirección</span
+                      >
+                    </div>
+                    <input
+                      [(ngModel)]="editSucursal.addressSucursal"
+                      class="input input-bordered input-sm w-full"
+                    />
+                  </label>
+
+                  <!-- Descripcion -->
+                  <label class="form-control flex-1 min-w-[200px]">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium"
+                        >Descripción</span
+                      >
+                    </div>
+                    <input
+                      [(ngModel)]="editSucursal.descriptionSucursal"
+                      class="input input-bordered input-sm w-full"
+                    />
+                  </label>
+
+                  <!-- Activa -->
+                  <label
+                    class="form-control w-full sm:w-auto flex-row items-center gap-2 h-9"
+                  >
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="editSucursal.statusSucursal"
+                      class="checkbox checkbox-sm checkbox-primary"
+                    />
+                    <span class="label-text text-xs">Activa</span>
+                  </label>
+
+                  <!-- Acciones -->
+                  <div class="flex gap-2 ml-auto">
+                    <button
+                      class="btn btn-sm btn-ghost gap-1"
+                      (click)="cancelEdit()"
+                    >
+                      <i
+                        class="fa-solid fa-xmark text-[15px]"
+                        aria-hidden="true"
+                      ></i>
+                      Cancelar
+                    </button>
+                    <button
+                      class="btn btn-sm btn-primary gap-1"
+                      (click)="saveEdit()"
+                    >
+                      <i
+                        class="fa-solid fa-check text-[15px]"
+                        aria-hidden="true"
+                      ></i>
+                      Guardar
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <!-- Estado vacio -->
+          <tr *ngIf="!loading && sucursales.length === 0">
+            <td colspan="6">
+              <div
+                class="flex flex-col items-center justify-center py-12 gap-3 opacity-70"
+              >
+                <i class="fa-solid fa-city text-4xl" aria-hidden="true"></i>
+                <span class="text-sm">No hay sedes registradas</span>
+                <p class="text-xs opacity-70">
+                  Crea la primera para poder asignarla a personas y tickets
+                </p>
+                <button
+                  class="btn btn-sm btn-primary gap-2 mt-1"
+                  (click)="showCreate = true"
+                >
+                  <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
+                  Crear la primera
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-paginator
+    estilo="numeros"
+    [total]="pagSucursales.total"
+    [page]="pagSucursales.page"
+    [pageSize]="pagSucursales.pageSize"
+    [mostrarResumen]="false"
+    (pageChange)="pagSucursales.cambiarPagina($event)"
+    (pageSizeChange)="pagSucursales.cambiarTamano($event)"
+  ></app-paginator>
+</div>

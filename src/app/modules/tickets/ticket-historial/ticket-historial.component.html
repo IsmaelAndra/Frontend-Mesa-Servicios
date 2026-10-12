@@ -1,0 +1,134 @@
+<div class="card bg-base-100 shadow-md border border-base-200">
+  <div class="card-body">
+    <!-- Header de la sección -->
+    <div class="flex items-center gap-2 mb-4">
+      <div
+        class="p-1.5 rounded-lg bg-primary/10 text-primary"
+        aria-hidden="true"
+      >
+        <i
+          class="fa-solid fa-clipboard-list text-[15px]"
+          aria-hidden="true"
+        ></i>
+      </div>
+      <div>
+        <h2 class="card-title text-base">Historial</h2>
+        <p class="text-xs opacity-60">Línea de tiempo del ticket</p>
+      </div>
+      <span class="badge badge-sm badge-ghost ml-auto">{{
+        audit.length || 0
+      }}</span>
+    </div>
+
+    <!-- Timeline -->
+    <ol
+      class="relative ms-3 border-s border-base-300 space-y-6 ps-6"
+      *ngIf="audit && audit.length; else sinAuditoria"
+    >
+      <li *ngFor="let a of pagAudit.vista" class="relative">
+        <!-- Icono circular sobre la línea -->
+        <span
+          class="absolute flex items-center justify-center w-9 h-9 rounded-full -start-[42px] ring-4 ring-base-100 shadow-sm"
+          [ngClass]="timelineIconBg(a.actionType)"
+          aria-hidden="true"
+          style="top: -6px"
+        >
+          <i [class]="timelineIcon(a.actionType)" class="text-xs"></i>
+        </span>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <time
+            class="inline-flex items-center gap-1 bg-base-200 border border-base-300 text-xs font-medium px-1.5 py-0.5 rounded"
+          >
+            <i class="fa-regular fa-clock"></i>
+            {{ a.createdAtAudit | date: "dd/MM/yyyy HH:mm" }}
+          </time>
+        </div>
+
+        <h3
+          class="my-1.5 flex items-center gap-2 text-sm font-semibold leading-tight"
+          [ngClass]="timelineTextColor(a.actionType)"
+        >
+          {{ timelineLabel(a.actionType) }}
+        </h3>
+
+        <div class="flex items-center gap-1.5 text-xs opacity-70 mb-1.5">
+          <span class="avatar placeholder shrink-0" aria-hidden="true">
+            <div
+              class="bg-base-200 text-base-content/70 rounded-full w-5 h-5 flex items-center justify-center"
+            >
+              <span class="text-[10px] font-bold">{{
+                timelineInitial(a)
+              }}</span>
+            </div>
+          </span>
+          <span class="truncate" [title]="a.user || 'SISTEMA'">{{
+            a.user || "SISTEMA"
+          }}</span>
+        </div>
+
+        <!-- Detalle de cambio (old → new) -->
+        <div
+          *ngIf="a.oldValue || a.newValue"
+          class="flex flex-wrap items-center gap-1.5 text-xs"
+        >
+          <span
+            *ngIf="a.oldValue"
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-error/10 text-error border border-error/20 max-w-[45%]"
+            [title]="timelineText(a.oldValue)"
+          >
+            <i
+              class="fa-solid fa-arrow-right-to-bracket text-[10px] shrink-0"
+            ></i>
+            <span class="truncate line-through">{{
+              timelineText(a.oldValue)
+            }}</span>
+          </span>
+
+          <i
+            *ngIf="a.oldValue && a.newValue"
+            class="fa-solid fa-angle-right text-xs opacity-40 shrink-0"
+          ></i>
+
+          <span
+            *ngIf="a.newValue"
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-success/10 text-success border border-success/20 max-w-[45%] font-semibold"
+            [title]="timelineText(a.newValue)"
+          >
+            <i
+              class="fa-solid fa-arrow-right-from-bracket text-[10px] shrink-0"
+            ></i>
+            <span class="truncate">{{ timelineText(a.newValue) }}</span>
+          </span>
+        </div>
+
+        <!-- Detalle alterno -->
+        <p
+          *ngIf="!a.oldValue && !a.newValue && timelineDetail(a)"
+          class="text-xs opacity-70 break-words leading-relaxed"
+        >
+          {{ timelineDetail(a) }}
+        </p>
+      </li>
+    </ol>
+
+    <app-paginator
+      *ngIf="audit && audit.length > pagAudit.pageSize"
+      [total]="audit.length"
+      [page]="pagAudit.page"
+      [pageSize]="pagAudit.pageSize"
+      (pageChange)="pagAudit.cambiarPagina($event)"
+      (pageSizeChange)="pagAudit.cambiarTamano($event)"
+    ></app-paginator>
+
+    <!-- Estado vacío -->
+    <ng-template #sinAuditoria>
+      <div
+        class="flex flex-col items-center justify-center py-10 gap-2 opacity-60"
+      >
+        <i class="fa-solid fa-clipboard-list text-4xl" aria-hidden="true"></i>
+        <span class="text-sm">Sin registros de auditoría</span>
+      </div>
+    </ng-template>
+  </div>
+</div>

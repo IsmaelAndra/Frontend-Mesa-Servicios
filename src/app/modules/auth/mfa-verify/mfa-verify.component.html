@@ -1,0 +1,164 @@
+<div class="min-h-screen flex items-center justify-center bg-base-200 px-4 py-10">
+  <div class="w-full max-w-md">
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <!-- ============ Códigos de recuperación: paso único ============ -->
+        <ng-container *ngIf="codigosRecuperacion">
+          <h1 class="card-title text-xl">Guarde estos códigos</h1>
+          <div class="alert alert-warning mt-2">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span>
+              Es la única vez que se muestran. Si pierde el móvil y no los tiene,
+              no podrá entrar: pida ayuda a soporte para resetting su cuenta.
+            </span>
+          </div>
+
+          <ul class="mt-4 grid grid-cols-2 gap-2 font-mono text-sm">
+            <li *ngFor="let codigo of codigosRecuperacion"
+                class="px-3 py-2 bg-base-200 rounded text-center tracking-wider">
+              {{ codigo }}
+            </li>
+          </ul>
+
+          <p class="text-xs opacity-70 mt-3">
+            Cada código sirve una sola vez. Anótelos y guárdelos fuera del sistema.
+          </p>
+
+          <button type="button" class="btn btn-primary mt-4" (click)="continuar()">
+            Los he guardado, continuar
+          </button>
+        </ng-container>
+
+        <!-- ============ Alta: escanear y luego código ============ -->
+        <ng-container *ngIf="!codigosRecuperacion && esAlta">
+          <h1 class="card-title text-xl">Configure su doble factor</h1>
+          <p class="text-sm opacity-70 mt-1">
+            Escanee el código con
+            <b>Microsoft Authenticator</b> o <b>Passbolt</b>.
+          </p>
+
+          <div class="flex justify-center my-4">
+            <img
+              *ngIf="qrDataUrl"
+              [src]="qrDataUrl"
+              alt="Código QR para configurar el doble factor"
+              class="w-56 h-56 bg-white p-2 rounded-lg"
+            />
+            <div *ngIf="!qrDataUrl && !qrError" class="w-56 h-56 flex items-center justify-center">
+              <span class="loading loading-spinner loading-lg"></span>
+            </div>
+          </div>
+
+          <div *ngIf="qrError" class="alert alert-warning text-sm">
+            <span>{{ qrError }}</span>
+          </div>
+
+          <div class="bg-base-200 rounded-lg p-3 mt-2">
+            <p class="text-xs opacity-70 mb-1">
+              ¿No lee el QR? Teclee esta clave a mano en la app:
+            </p>
+            <p class="font-mono text-sm tracking-wider break-all select-all">
+              {{ challenge?.claveManual }}
+            </p>
+            <button type="button" class="btn btn-ghost btn-xs mt-2" (click)="copiarClaveManual()">
+              <i class="fa-solid fa-copy" aria-hidden="true"></i>
+              Copiar
+            </button>
+          </div>
+
+          <div class="divider my-4 text-xs">Luego, el código de 6 dígitos</div>
+
+          <ng-container *ngTemplateOutlet="casillas"></ng-container>
+
+          <div class="mt-4 flex gap-2">
+            <button type="button" class="btn btn-ghost btn-sm flex-1"
+                    [disabled]="loading"
+                    (click)="volverAlAcceso()">
+              Atrás
+            </button>
+            <button type="button" class="btn btn-primary flex-1"
+                    [disabled]="!puedeConfirmar"
+                    (click)="confirmar()">
+              <span *ngIf="loading" class="loading loading-spinner loading-sm"></span>
+              Activar
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- ============ Verificación ============ -->
+        <ng-container *ngIf="!codigosRecuperacion && !esAlta">
+          <h1 class="card-title text-xl">Verificación en dos pasos</h1>
+          <p class="text-sm opacity-70 mt-1">
+            Introduzca el código de 6 dígitos de su app de autenticación para
+            <b>{{ challenge?.emisor || 'su cuenta' }}</b>.
+          </p>
+
+          <ng-container *ngIf="!usandoRecuperacion">
+            <ng-container *ngTemplateOutlet="casillas"></ng-container>
+          </ng-container>
+
+          <div *ngIf="usandoRecuperacion" class="form-control mt-4">
+            <div class="label">
+              <span class="label-text">Código de recuperación</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered font-mono tracking-wider"
+              [ngModel]="codigoRecuperacion"
+              (ngModelChange)="codigoRecuperacion = $event"
+              placeholder="XXXXX-XXXXX"
+              maxlength="11"
+              autocomplete="off"
+            />
+          </div>
+
+          <button type="button" class="btn btn-primary mt-4 w-full"
+                  [disabled]="!puedeConfirmar"
+                  (click)="confirmar()">
+            <span *ngIf="loading" class="loading loading-spinner loading-sm"></span>
+            Verificar
+          </button>
+
+          <button type="button" class="btn btn-ghost btn-sm mt-2 w-full"
+                  (click)="alternarRecuperacion()">
+            {{ usandoRecuperacion ? 'Usar el código de la app' : 'No tengo mi móvil: usar un código de recuperación' }}
+          </button>
+
+          <button type="button" class="btn btn-ghost btn-xs mt-1 w-full"
+                  [disabled]="loading"
+                  (click)="volverAlAcceso()">
+            Volver al acceso
+          </button>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
+  Las seis casillas están en un ng-template porque aparecen en dos sitios
+  (alta y verificación) y no tiene sentido duplicar el marcado: si mañana hay que
+  cambiar el teclado o el pegado, se toca una vez.
+-->
+<ng-template #casillas>
+  <div class="flex justify-between gap-2 mt-4" (paste)="onPaste($event)">
+    <input
+      #digito
+      *ngFor="let i of posiciones; let pos = index"
+      type="text"
+      inputmode="numeric"
+      autocomplete="one-time-code"
+      pattern="[0-9]*"
+      maxlength="1"
+      [id]="'code-' + (i + 1)"
+      [value]="digitos[i]"
+      [disabled]="loading || usandoRecuperacion"
+      [attr.data-focus-input-next]="i < 5 ? 'code-' + (i + 2) : null"
+      [attr.data-focus-input-prev]="i > 0 ? 'code-' + i : null"
+      class="input input-bordered w-12 h-14 text-center text-2xl font-mono px-0"
+      [attr.aria-label]="'Dígito ' + (i + 1) + ' de 6'"
+      (input)="onInput(i, $event)"
+      (keydown)="onKeydown(i, $event)"
+    />
+  </div>
+</ng-template>

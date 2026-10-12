@@ -1,0 +1,971 @@
+/* Imágenes embebidas en la conversación (filtrar/imprimir HTML del editor)
+   Elemento file-selector-button: estilos por tipo de contenido,
+   sin resaltar para no estorbar la lectura. */
+.message-html img {
+  border-radius: 0.5rem;
+  max-width: 100%;
+  max-height: 224px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+/* Varias imágenes: se acomodan en fila envolviendo */
+.message-html:has(img ~ img),
+.message-html:has(img + img) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.message-html:has(img ~ img) img,
+.message-html:has(img + img) img {
+  flex: 1 1 128px;
+  min-width: 96px;
+  max-width: 128px;
+}
+
+.message-html img {
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.message-html img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Contenedor de mensajes con altura fija */
+.ticket-chat-scroll {
+  position: relative;
+  isolation: isolate;
+  /* El scroll llega a unos 50px del final al usar la rueda: con 20px de margen
+     hay que arrastrar de más para ver los últimos mensajes. */
+  scroll-padding-bottom: 24px;
+  overscroll-behavior: contain;
+}
+
+/* Aviso de carga al llegar arriba del hilo */
+.chat-carga-mas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  margin: 0 auto 0.5rem;
+  width: fit-content;
+  border-radius: 9999px;
+  font-size: 11px;
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(15, 23, 42, 0.7);
+}
+
+/* Estado de entrega y lectura del mensaje */
+.chat-estado {
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.chat-estado-enviado {
+  background: color-mix(in oklch, var(--bc) 10%, transparent);
+  color: var(--bc);
+}
+
+:root[data-theme='dark'] .chat-estado-enviado {
+  background: color-mix(in oklch, var(--bc) 14%, transparent);
+  color: var(--bc);
+}
+
+/*
+ * "Leído": azul de WhatsApp. Se nota mas que el gris de "Enviado" porque el azul
+ * es el que el usuario asocia a "ya lo ha visto", y porque el gris de las de
+ * arriba queda casi indistinguible del fondo translucido de la burbuja.
+ */
+.chat-estado-leido {
+  background: color-mix(in oklch, var(--p) 22%, transparent);
+  color: color-mix(in oklch, var(--p) 55%, white);
+  font-weight: 600;
+}
+
+:root[data-theme='dark'] .chat-estado-leido {
+  background: color-mix(in oklch, var(--p) 35%, transparent);
+  color: color-mix(in oklch, var(--p) 70%, white);
+}
+
+.chat-estado-enviando {
+  background: color-mix(in oklch, var(--bc) 8%, transparent);
+  color: var(--bc);
+}
+
+:root[data-theme='dark'] .chat-estado-enviando {
+  background: color-mix(in oklch, var(--bc) 12%, transparent);
+  color: var(--bc);
+}
+
+.chat-estado-fallido {
+  background: rgba(220, 38, 38, 0.12);
+  color: rgb(185, 28, 28);
+}
+
+:root[data-theme='dark'] .chat-estado-fallido {
+  background: rgba(220, 38, 38, 0.18);
+  color: rgb(248, 113, 113);
+}
+
+/*
+ * "Sin leer": ámbar en vez del gris de "Enviado". Antes reutilizaba el estilo de
+ * "Enviado" y se pintaba con un check, que se lee como "entregado"; como estado
+ * transitorio y avisado, el ámbar con un sobre lo distingue de un vistazo. Es
+ * temporal: en cuanto el usuario abre el hilo, la pastilla desaparece.
+ */
+.chat-estado-sin-leer {
+  background: rgba(217, 119, 6, 0.14);
+  color: rgb(180, 83, 9);
+  font-weight: 600;
+}
+
+:root[data-theme='dark'] .chat-estado-sin-leer {
+  background: rgba(217, 119, 6, 0.2);
+  color: rgb(252, 211, 77);
+}
+
+.chat-watermark {
+  position: absolute;
+  inset: 0;
+  z-index: 0; /* o -1, da igual mientras el contenido tenga z-index >= 1 */
+  pointer-events: none;
+  background-image: url("/assets/chat-bg.png");
+  background-repeat: repeat;
+  background-size: 260px;
+  opacity: 0.04;
+  border-radius: inherit;
+}
+
+/* El contenido real debe estar por encima */
+.ticket-chat-scroll > *:not(.chat-watermark) {
+  position: relative;
+  z-index: 1;
+}
+
+.ticket-chat-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ticket-chat-scroll::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.ticket-chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Barra del editor Quill */
+.rich-editor .ql-toolbar {
+  border-bottom: 1px solid var(--fallback-bc, oklch(var(--bc) / 0.2));
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* ============ Editor de ticket ============ */
+.ticket-editor {
+  position: relative;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: oklch(var(--b1));
+}
+
+/* Contenedor del editor */
+.ticket-editor .ql-container {
+  border: none !important;
+  font-size: 0.875rem !important;
+  font-family: inherit !important;
+  background: oklch(var(--b1)) !important;
+}
+
+/* Área de edición con altura mínima */
+.ticket-editor .ql-editor {
+  min-height: 120px !important;
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  padding: 1rem !important;
+  color: oklch(var(--bc)) !important;
+}
+
+.ticket-editor .ql-editor.ql-blank::before {
+  color: oklch(var(--bc) / 0.4) !important;
+  font-style: normal !important;
+}
+
+/* ============================================================
+   TOOLBAR DE QUILL (::ng-deep obligatorio: Quill la crea por JS
+   y no lleva el atributo _ngcontent de Angular, por lo que los
+   estilos scoped normales no la alcanzan).
+   Se muestra como panel independiente debajo de la línea de
+   entrada; oculta por defecto, solo se despliega con el botón "Aa".
+   ============================================================ */
+.ticket-editor-wrap ::ng-deep .ql-toolbar.ql-snow {
+  display: none !important;
+  border: none !important;
+}
+
+/* Toolbar visible cuando el contenedor tiene la clase .toolbar-open */
+.ticket-editor-wrap.toolbar-open ::ng-deep .ql-toolbar.ql-snow {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.5rem !important;
+  margin-top: 0.5rem !important;
+  align-items: center !important;
+  border: 1px solid oklch(var(--p) / 0.5) !important;
+  border-radius: 0.75rem !important;
+  padding: 0.4rem 0.75rem !important;
+  background: oklch(var(--b2) / 0.5) !important;
+  box-shadow: 0 0 0 3px oklch(var(--p) / 0.1) !important;
+  animation: slideDown 0.2s ease;
+}
+
+/* Separador entre grupos de la toolbar */
+.ticket-editor-wrap.toolbar-open ::ng-deep .ql-toolbar.ql-snow .ql-formats {
+  margin-right: 0.35rem !important;
+  padding-right: 0.5rem !important;
+  border-right: 1px solid oklch(var(--bc) / 0.15) !important;
+}
+.ticket-editor-wrap.toolbar-open
+  ::ng-deep
+  .ql-toolbar.ql-snow
+  .ql-formats:last-child {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  border-right: none !important;
+}
+
+/* Iconos de la toolbar en color del tema */
+.ticket-editor-wrap ::ng-deep .ql-toolbar .ql-stroke {
+  stroke: oklch(var(--bc) / 0.7) !important;
+}
+
+.ticket-editor-wrap ::ng-deep .ql-toolbar .ql-fill {
+  fill: oklch(var(--bc) / 0.7) !important;
+}
+
+.ticket-editor-wrap ::ng-deep .ql-toolbar .ql-picker-label {
+  color: oklch(var(--bc) / 0.7) !important;
+}
+
+/* Hover de los botones */
+.ticket-editor-wrap ::ng-deep .ql-toolbar button:hover .ql-stroke,
+.ticket-editor-wrap ::ng-deep .ql-toolbar button.ql-active .ql-stroke {
+  stroke: oklch(var(--p)) !important;
+}
+
+.ticket-editor-wrap ::ng-deep .ql-toolbar button:hover .ql-fill,
+.ticket-editor-wrap ::ng-deep .ql-toolbar button.ql-active .ql-fill {
+  fill: oklch(var(--p)) !important;
+}
+
+.ticket-editor-wrap ::ng-deep .ql-toolbar button:hover,
+.ticket-editor-wrap ::ng-deep .ql-toolbar button.ql-active {
+  background: oklch(var(--p) / 0.1) !important;
+  border-radius: 0.375rem;
+}
+
+/* ============================================================
+   ICONOS FONT AWESOME DE LA TOOLBAR
+   (los SVG de Quill se reemplazan por <i> en replaceQuillIcons)
+   ============================================================ */
+
+/* Botones cuadrados más grandes para alojar el icono FA */
+.ticket-editor-wrap ::ng-deep .ql-toolbar button {
+  height: 28px !important;
+  width: 28px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Iconos Font Awesome */
+.ticket-editor-wrap ::ng-deep .ql-toolbar .fa-solid {
+  color: oklch(var(--bc) / 0.8);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.ticket-editor-wrap ::ng-deep .ql-toolbar button:hover .fa-solid,
+.ticket-editor-wrap ::ng-deep .ql-toolbar button.ql-active .fa-solid,
+.ticket-editor-wrap ::ng-deep .ql-toolbar .ql-picker-label:hover .fa-solid {
+  color: oklch(var(--p));
+}
+
+/* Picker de encabezado (H1/H2/H3): ancho ajustado, sin texto ni flecha
+   de Quill (el icono <i> ya reemplazó a ambos) */
+.ticket-editor-wrap ::ng-deep .ql-toolbar .ql-header.ql-picker {
+  width: auto !important;
+}
+
+.ticket-editor-wrap ::ng-deep .ql-toolbar .ql-picker-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 28px !important;
+  padding: 0 0.35rem !important;
+}
+
+.ticket-editor-wrap ::ng-deep .ql-toolbar .ql-header .ql-picker-label::before,
+.ticket-editor-wrap ::ng-deep .ql-toolbar .ql-header .ql-picker-label::after {
+  display: none !important;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   EDITOR EN UNA SOLA LÍNEA
+   ============================================================ */
+
+/* Contenedor del editor: sin bordes, altura automática */
+.rich-editor-single-line .ql-container {
+  border: none !important;
+  font-size: 0.875rem !important;
+  font-family: inherit !important;
+  background: transparent !important;
+}
+
+.rich-editor-single-line ::ng-deep .ql-editor {
+  min-height: 36px !important;
+  max-height: 120px !important;
+  overflow-y: auto !important;
+  padding: 0.375rem 0.5rem !important;
+  color: oklch(var(--bc)) !important;
+  line-height: 1.5 !important;
+}
+
+/* Placeholder alineado y sin cursiva */
+.rich-editor-single-line ::ng-deep .ql-editor.ql-blank::before {
+  color: oklch(var(--bc) / 0.4) !important;
+  font-style: normal !important;
+  left: 0.5rem !important;
+  right: 0.5rem !important;
+}
+
+/* ============================================================
+   EDITOR DE TICKET
+   ============================================================ */
+
+/* Contenedor raíz del editor */
+.ticket-editor {
+  position: relative;
+  border-radius: 0.75rem;
+  overflow: visible; /* importante: la toolbar flotante debe poder salir */
+  background: transparent;
+}
+
+/* Contenedor del editor (el área de escritura) */
+.ticket-editor ::ng-deep .ql-container.ql-snow {
+  border: none !important;
+  font-size: 0.875rem !important;
+  font-family: inherit !important;
+  background: transparent !important;
+}
+
+/* Área de escritura */
+.ticket-editor ::ng-deep .ql-editor {
+  min-height: 34px !important;
+  max-height: 140px !important;
+  overflow-y: auto !important;
+  padding: 0.4rem 0.5rem !important;
+  color: oklch(var(--bc)) !important;
+  line-height: 1.5 !important;
+  background: transparent !important;
+}
+
+/* ============================================================
+   PLACEHOLDER — visible en light y dark
+   ============================================================ */
+.ticket-editor ::ng-deep .ql-editor.ql-blank::before {
+  color: oklch(var(--bc) / 0.5) !important; /* 50% de opacidad */
+  font-style: normal !important;
+  font-weight: 400 !important;
+  left: 0.5rem !important;
+  right: 0.5rem !important;
+  pointer-events: none !important;
+}
+
+/* En dark mode, un poco más claro para que se lea */
+[data-theme="dark"] .ticket-editor ::ng-deep .ql-editor.ql-blank::before {
+  color: oklch(var(--bc) / 0.6) !important;
+}
+
+/* Scrollbar del editor */
+.ticket-editor ::ng-deep .ql-editor::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ticket-editor ::ng-deep .ql-editor::-webkit-scrollbar-thumb {
+  background: oklch(var(--bc) / 0.15);
+  border-radius: 3px;
+}
+
+/* ============================================================
+   TOOLBAR DE QUILL — oculta por defecto, se muestra con .toolbar-open
+   ============================================================ */
+
+/* Ocultar la toolbar cuando el wrapper no tiene .toolbar-open */
+.ticket-editor-wrap:not(.toolbar-open) .ql-toolbar.ql-snow {
+  display: none !important;
+}
+
+/* Mostrar la toolbar solo cuando el wrapper tiene .toolbar-open */
+.ticket-editor-wrap.toolbar-open .ql-toolbar.ql-snow {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 0.25rem !important;
+  margin-top: 0.5rem !important;
+  padding: 0.4rem 0.75rem !important;
+  border: 1px solid oklch(var(--b3)) !important;
+  border-radius: 0.75rem !important;
+  background: oklch(var(--b2)) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  animation: slideDown 0.2s ease;
+  width: 100% !important;
+}
+
+/* Separador entre grupos de la toolbar */
+.ticket-editor-wrap.toolbar-open .ql-toolbar.ql-snow .ql-formats {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin-right: 0.35rem !important;
+  padding-right: 0.5rem !important;
+  border-right: 1px solid oklch(var(--bc) / 0.15) !important;
+}
+
+.ticket-editor-wrap.toolbar-open .ql-toolbar.ql-snow .ql-formats:last-child {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  border-right: none !important;
+}
+
+/* Botones de la toolbar */
+.ticket-editor-wrap .ql-toolbar.ql-snow button {
+  width: 30px !important;
+  height: 30px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 0.375rem !important;
+  background: transparent !important;
+  border: none !important;
+  color: oklch(var(--bc) / 0.75) !important;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+  cursor: pointer;
+}
+
+/* Iconos Font Awesome dentro de los botones */
+.ticket-editor-wrap .ql-toolbar.ql-snow button i {
+  font-size: 13px !important;
+  line-height: 1 !important;
+  color: inherit !important;
+}
+
+/* Hover de los botones */
+.ticket-editor-wrap .ql-toolbar.ql-snow button:hover {
+  background: oklch(var(--p) / 0.1) !important;
+  color: oklch(var(--p)) !important;
+}
+
+/* Estado activo (cuando el formato está aplicado) */
+.ticket-editor-wrap .ql-toolbar.ql-snow button.ql-active {
+  background: oklch(var(--p) / 0.15) !important;
+  color: oklch(var(--p)) !important;
+}
+
+/* Selector de header (H1, H2, H3) */
+.ticket-editor-wrap .ql-toolbar.ql-snow .ql-picker {
+  height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  color: oklch(var(--bc) / 0.75) !important;
+}
+
+.ticket-editor-wrap .ql-toolbar.ql-snow .ql-picker-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  padding: 0 6px !important;
+  color: inherit !important;
+  cursor: pointer !important;
+  border-radius: 0.375rem !important;
+}
+
+.ticket-editor-wrap .ql-toolbar.ql-snow .ql-picker-label:hover {
+  background: oklch(var(--p) / 0.1) !important;
+  color: oklch(var(--p)) !important;
+}
+
+.ticket-editor-wrap .ql-toolbar.ql-snow .ql-picker-label i {
+  color: inherit !important;
+}
+
+/* Ocultar el SVG del picker (ya lo reemplazamos por FA) */
+.ticket-editor-wrap .ql-toolbar.ql-snow .ql-picker-label svg {
+  display: none !important;
+}
+
+/* Opciones del picker */
+.ticket-editor-wrap .ql-toolbar.ql-snow .ql-picker-options {
+  border: 1px solid oklch(var(--b3)) !important;
+  border-radius: 0.5rem !important;
+  background: oklch(var(--b1)) !important;
+  padding: 0.25rem !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.ticket-editor-wrap .ql-toolbar.ql-snow .ql-picker-item {
+  color: oklch(var(--bc)) !important;
+  padding: 0.35rem 0.75rem !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.8rem !important;
+}
+
+.ticket-editor-wrap .ql-toolbar.ql-snow .ql-picker-item:hover {
+  background: oklch(var(--p) / 0.1) !important;
+  color: oklch(var(--p)) !important;
+}
+
+/* ============================================================
+   ANIMACIÓN
+   ============================================================ */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ============================================================
+   INDICADOR DE "ESCRIBIENDO"
+   ============================================================
+   Tres puntos que suben y bajan en cascada, como el indicador
+   de escritura de un chat.
+
+   Se anima con transform y opacity y no con top, margin o
+   height: esas propiedades recalculan la disposicion en cada
+   fotograma y en el chat, que ya scrollea solo, se nota como un
+   tirón. Con transform el navegador solo compone en la GPU y la
+   lista no se mueve.
+
+   El retardo se aplica por nth-child en vez de por style en linea
+   para que los tres puntos de los dos indicadores compartan el
+   mismo ritmo y no haya que duplicar el retardo en el HTML. */
+.typing-punto {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+  background-color: currentColor;
+  animation: typing-subir 1.2s ease-in-out infinite;
+}
+
+.typing-puntos .typing-punto:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing-puntos .typing-punto:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes typing-subir {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+/* Quien tenga el efecto reducido activado ve los tres puntos fijos:
+   un texto que parpadea sin parar es molesto para algunas personas
+   con trastornos del equilibrio o de la atencion. */
+@media (prefers-reduced-motion: reduce) {
+  .typing-punto {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+
+/* ============ Ficha de información ============ */
+/* Las etiquetas del kanban son de 10px para caber en una tarjeta; aquí hay
+   sitio y se leen mal. Se agrandan solo dentro de la ficha. */
+.ticket-info .kanban-tag {
+  min-height: 22px !important;
+  padding: 2px 8px !important;
+  font-size: 12px !important;
+  gap: 5px !important;
+}
+
+/* La columna de rótulos con ancho fijo alinea los valores uno bajo otro. */
+.ticket-info > div > span.opacity-60:not(.font-medium) {
+  width: 5.75rem;
+  flex-shrink: 0;
+}
+
+.ticket-info__fecha {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* ============ Chat: llegada de mensajes ============ */
+/* El mensaje sube un poco y crece desde su esquina: el propio desde la derecha,
+   el ajeno desde la izquierda. 320 ms con salida rápida: se nota que llega
+   algo, pero no retrasa la lectura. Solo los que llegan en vivo, no la carga. */
+.chat-entra {
+  animation: chat-entra 320ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.chat-entra--propio {
+  transform-origin: bottom right;
+}
+.chat-entra--ajeno {
+  transform-origin: bottom left;
+}
+@keyframes chat-entra {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+}
+
+/* Mensajes seguidos de la misma persona: más juntos y sin repetir cabecera. */
+.ticket-chat-scroll.space-y-4 > .chat-continua {
+  margin-top: 0.3rem;
+}
+
+/* ============ Chat: separador de día ============ */
+/* En línea con el hilo, no fijo: con todos los mensajes en el mismo
+   contenedor, los separadores fijos se apilaban arriba unos sobre otros. */
+.ticket-chat-scroll > .chat-dia {
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.chat-dia span {
+  padding: 0.2rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: oklch(var(--bc) / 0.7);
+  background: oklch(var(--b1) / 0.92);
+  border: 1px solid oklch(var(--bc) / 0.08);
+  box-shadow: 0 2px 8px -4px rgb(2 6 23 / 0.25);
+  backdrop-filter: blur(6px);
+}
+
+/* ============ Chat: píldora de mensajes nuevos ============ */
+.chat-nuevos {
+  position: absolute;
+  left: 50%;
+  bottom: 0.9rem;
+  z-index: 3;
+  translate: -50% 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: oklch(var(--pc));
+  background: oklch(var(--p));
+  box-shadow: 0 10px 24px -10px oklch(var(--p) / 0.8);
+  animation: chat-nuevos-entra 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  transition: scale 160ms ease-out;
+}
+.chat-nuevos:active {
+  scale: 0.97;
+}
+@keyframes chat-nuevos-entra {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-entra,
+  .chat-nuevos {
+    animation: chat-funde 150ms linear both;
+  }
+}
+@keyframes chat-funde {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ============ Chat: acciones de cada mensaje ============ */
+.chat-burbuja {
+  position: relative;
+}
+.chat-acciones {
+  position: absolute;
+  top: -0.85rem;
+  right: 0.6rem;
+  z-index: 4;
+  display: flex;
+  gap: 0.1rem;
+  padding: 0.15rem;
+  border-radius: 9999px;
+  background: oklch(var(--b1));
+  border: 1px solid oklch(var(--bc) / 0.1);
+  box-shadow: 0 6px 16px -8px rgb(2 6 23 / 0.35);
+  opacity: 0;
+  transform: translateY(3px);
+  pointer-events: none;
+  transition: opacity 140ms ease-out, transform 140ms ease-out;
+}
+.chat-acciones--propio {
+  right: auto;
+  left: 0.6rem;
+}
+.chat-burbuja:hover .chat-acciones,
+.chat-acciones:focus-within {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+/* En pantallas táctiles no hay "pasar el ratón": se ven siempre, discretas. */
+@media (hover: none) {
+  .chat-acciones {
+    opacity: 0.85;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+.chat-acciones button {
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: oklch(var(--bc) / 0.7);
+  transition: background-color 120ms ease-out, color 120ms ease-out;
+}
+.chat-acciones button:hover {
+  background: oklch(var(--bc) / 0.08);
+  color: oklch(var(--bc));
+}
+.chat-acciones .chat-acciones__peligro:hover {
+  background: oklch(var(--er) / 0.12);
+  color: oklch(var(--er));
+}
+.chat-editado {
+  display: inline-block;
+  margin-top: 0.2rem;
+  font-size: 0.68rem;
+  font-style: italic;
+  opacity: 0.55;
+}
+
+/* ============ Chat: cita dentro de un mensaje ============ */
+.message-html ::ng-deep blockquote {
+  margin: 0 0 0.45rem;
+  padding: 0.35rem 0.6rem;
+  border-left: 3px solid oklch(var(--p));
+  border-radius: 0.5rem;
+  background: oklch(var(--bc) / 0.05);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: oklch(var(--bc) / 0.75);
+}
+.message-html ::ng-deep blockquote a {
+  font-weight: 700;
+  color: oklch(var(--p));
+  text-decoration: none;
+}
+.message-html ::ng-deep blockquote a:hover {
+  text-decoration: underline;
+}
+
+/* Al saltar a un mensaje (desde una cita o la búsqueda) se ilumina un momento. */
+.chat-destello .chat-burbuja {
+  animation: chat-destello 1.5s ease-out;
+}
+@keyframes chat-destello {
+  0%,
+  35% {
+    box-shadow: 0 0 0 3px oklch(var(--wa) / 0.85);
+  }
+  100% {
+    box-shadow: 0 0 0 3px oklch(var(--wa) / 0);
+  }
+}
+
+/* ============ Chat: búsqueda ============ */
+.chat-buscador {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+  padding: 0.35rem 0.4rem 0.35rem 0.75rem;
+  border-radius: 0.8rem;
+  border: 1px solid oklch(var(--bc) / 0.12);
+  background: oklch(var(--b2) / 0.6);
+  animation: chat-nuevos-entra 180ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.chat-buscador:focus-within {
+  border-color: oklch(var(--p) / 0.5);
+}
+.chat-coincide .chat-burbuja {
+  outline: 2px dashed oklch(var(--wa) / 0.6);
+  outline-offset: 2px;
+}
+.chat-coincide--actual .chat-burbuja {
+  outline: 2px solid oklch(var(--wa));
+}
+
+/* ============ Chat: separador de no leídos ============ */
+.ticket-chat-scroll > .chat-sin-leer {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: oklch(var(--er));
+}
+.chat-sin-leer::before,
+.chat-sin-leer::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: oklch(var(--er) / 0.4);
+}
+
+/* ============ Chat: soltar archivos ============ */
+.chat-soltar {
+  position: absolute;
+  inset: 0.5rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 1rem;
+  border: 2px dashed oklch(var(--p) / 0.6);
+  background: oklch(var(--b1) / 0.92);
+  color: oklch(var(--p));
+  pointer-events: none;
+  animation: chat-funde 120ms linear both;
+}
+
+/* ============ Chat: barra de "respondiendo / editando" ============ */
+.chat-contexto {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+  padding: 0.45rem 0.5rem 0.45rem 0.75rem;
+  border-radius: 0.75rem;
+  border-left: 3px solid oklch(var(--p));
+  background: oklch(var(--p) / 0.07);
+  color: oklch(var(--bc));
+  animation: chat-nuevos-entra 180ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.chat-contexto > i {
+  color: oklch(var(--p));
+}
+.chat-contexto--edicion {
+  border-left-color: oklch(var(--wa));
+  background: oklch(var(--wa) / 0.1);
+}
+.chat-contexto--edicion > i {
+  color: oklch(var(--wa));
+}
+
+/* ============ Chat: respuestas rápidas ============ */
+.chat-rapidas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 0.4rem);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  max-height: 20rem;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: oklch(var(--b1));
+  border: 1px solid oklch(var(--bc) / 0.1);
+  box-shadow: 0 18px 40px -18px rgb(2 6 23 / 0.45);
+  transform-origin: bottom left;
+  animation: chat-entra 200ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.chat-rapidas__cabecera,
+.chat-rapidas__pie {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem 0.5rem 0.8rem;
+}
+.chat-rapidas__cabecera {
+  border-bottom: 1px solid oklch(var(--bc) / 0.08);
+}
+.chat-rapidas__pie {
+  justify-content: space-between;
+  border-top: 1px solid oklch(var(--bc) / 0.08);
+}
+.chat-rapidas__lista {
+  overflow-y: auto;
+  padding: 0.3rem;
+}
+.chat-rapidas__item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.65rem;
+  transition: background-color 120ms ease-out;
+}
+.chat-rapidas__item:hover {
+  background: oklch(var(--bc) / 0.05);
+}
+.chat-rapidas__usar {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-acciones,
+  .chat-buscador,
+  .chat-contexto,
+  .chat-rapidas,
+  .chat-destello .chat-burbuja {
+    animation: none;
+    transition: none;
+  }
+}

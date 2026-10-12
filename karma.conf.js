@@ -25,10 +25,12 @@ module.exports = function (config) {
       reporters: [{ type: 'html' }, { type: 'text-summary' }]
     },
     reporters: ['progress', 'kjhtml'],
-    browsers: ['ChromeHeadless'],
+    // El lanzador se llamaba ChromeHeadless pero partía de 'Chrome' sin
+    // --headless: abría una ventana de verdad y en CI (sin pantalla) no arrancaba.
+    browsers: ['ChromeHeadlessSinSandbox'],
     customLaunchers: {
-      ChromeHeadless: {
-        base: 'Chrome',
+      ChromeHeadlessSinSandbox: {
+        base: 'ChromeHeadless',
         flags: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
       }
     },

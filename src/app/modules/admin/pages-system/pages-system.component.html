@@ -1,0 +1,966 @@
+<div class="space-y-6 max-w-7xl mx-auto">
+  <!-- ============================ HEADER ============================ -->
+  <header
+    class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+  >
+    <div class="flex items-center gap-3 min-w-0">
+      <div
+        class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-file-shield text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">
+          Páginas del sistema
+        </h1>
+        <p class="text-sm opacity-70">
+          Lo que ve el usuario cuando algo falla, está en mantenimiento o
+          necesita la política de privacidad
+        </p>
+      </div>
+    </div>
+
+    <span
+      *ngIf="!loading && config"
+      class="badge badge-lg gap-2 font-semibold self-start sm:self-center shrink-0 py-3 px-4"
+      [ngClass]="
+        config.maintenanceMode
+          ? 'badge-warning text-warning-content'
+          : 'badge-success text-success-content'
+      "
+    >
+      <span
+        class="w-2 h-2 rounded-full animate-pulse"
+        [ngClass]="
+          config.maintenanceMode ? 'bg-warning-content' : 'bg-success-content'
+        "
+      ></span>
+      {{ config.maintenanceMode ? "En mantenimiento" : "Sistema operativo" }}
+    </span>
+  </header>
+
+  <!-- ============================ TABS ============================ -->
+  <div class="tabs tabs-boxed bg-base-200 p-1 overflow-x-auto">
+    <button
+      type="button"
+      class="tab gap-2"
+      [class.tab-active]="tab === 'mantenimiento'"
+      (click)="cambiarTab('mantenimiento')"
+    >
+      <i class="fa-solid fa-screwdriver-wrench text-xs" aria-hidden="true"></i>
+      Mantenimiento
+    </button>
+
+    <button
+      *ngFor="let e of estados"
+      type="button"
+      class="tab gap-2"
+      [class.tab-active]="tab === e.etiqueta"
+      (click)="cambiarTab(e.etiqueta)"
+    >
+      <i class="text-xs" [ngClass]="iconoDe(e)" aria-hidden="true"></i>
+      {{ e.etiqueta }}
+    </button>
+
+    <button
+      type="button"
+      class="tab gap-2"
+      [class.tab-active]="tab === 'privacidad'"
+      (click)="cambiarTab('privacidad')"
+    >
+      <i class="fa-solid fa-shield-halved text-xs" aria-hidden="true"></i>
+      Privacidad
+    </button>
+  </div>
+
+  <!-- ============================ LOADING ============================ -->
+  <div
+    *ngIf="loading"
+    class="flex justify-center py-12"
+    role="status"
+    aria-live="polite"
+  >
+    <span
+      class="loading loading-spinner loading-lg text-primary"
+      aria-hidden="true"
+    ></span>
+  </div>
+
+  <!-- ============================ CONTENIDO ============================ -->
+  <div
+    *ngIf="!loading && config"
+    class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+  >
+    <!-- ====================================================== -->
+    <!-- COLUMNA IZQUIERDA (7/12)                               -->
+    <!-- ====================================================== -->
+    <div class="lg:col-span-7 space-y-5">
+      <!-- ==================== TAB MANTENIMIENTO ==================== -->
+      <ng-container *ngIf="tabActivoEsMantenimiento">
+        <!-- Toggle + aviso -->
+        <div
+          class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+          [ngClass]="
+            config.maintenanceMode
+              ? 'border-t-4 border-t-warning'
+              : 'border-t-4 border-t-success'
+          "
+        >
+          <div class="card-body space-y-5">
+            <label
+              class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
+              [ngClass]="
+                config.maintenanceMode
+                  ? 'border-warning/40 bg-warning/5 hover:bg-warning/10'
+                  : 'border-base-200 bg-base-100 hover:border-warning/30 hover:bg-base-200/40'
+              "
+            >
+              <input
+                type="checkbox"
+                class="toggle toggle-warning mt-0.5 shrink-0"
+                [(ngModel)]="config.maintenanceMode"
+              />
+              <div class="flex-1 min-w-0">
+                <span class="text-sm font-semibold flex items-center gap-2">
+                  <i
+                    class="fa-solid fa-power-off text-xs"
+                    [ngClass]="
+                      config.maintenanceMode ? 'text-warning' : 'opacity-60'
+                    "
+                    aria-hidden="true"
+                  ></i>
+                  Activar modo mantenimiento
+                </span>
+                <p class="text-xs opacity-60 mt-1 leading-relaxed">
+                  Mientras esté activo, cualquiera que abra la aplicación verá
+                  solo la pantalla de aviso. Esta pantalla sigue accesible para
+                  poder apagarlo.
+                </p>
+              </div>
+            </label>
+
+            <div
+              *ngIf="config.maintenanceMode"
+              class="flex items-start gap-3 p-3 rounded-xl bg-warning/10 border border-warning/30"
+            >
+              <div
+                class="p-1.5 rounded-lg bg-warning text-warning-content shrink-0"
+                aria-hidden="true"
+              >
+                <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+              </div>
+              <div class="text-xs">
+                <p class="font-semibold text-warning">Atención</p>
+                <p class="opacity-70 mt-0.5 leading-relaxed">
+                  Al guardar, todos los usuarios (excepto administradores)
+                  quedaran bloqueados hasta que desactives este modo.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Titulo / mensaje / ETA -->
+        <div
+          class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+        >
+          <div class="card-body space-y-4">
+            <div class="flex items-center gap-2">
+              <div
+                class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+                aria-hidden="true"
+              >
+                <i class="fa-solid fa-message text-sm"></i>
+              </div>
+              <h3 class="text-sm font-bold">Texto del aviso</h3>
+            </div>
+
+            <div>
+              <label class="label pt-0 pb-1">
+                <span class="label-text text-xs font-medium">Título</span>
+              </label>
+              <div class="relative">
+                <i
+                  class="fa-solid fa-heading text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                  aria-hidden="true"
+                ></i>
+                <input
+                  [(ngModel)]="config.maintenanceTitle"
+                  class="input input-bordered input-sm w-full pl-9 focus:ring-2 focus:ring-warning/25"
+                  placeholder="Sistema en mantenimiento"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="label pt-0 pb-1 flex justify-between items-center">
+                <span class="label-text text-xs font-medium">Mensaje</span>
+                <span
+                  class="label-text-alt text-[10px] opacity-50"
+                  [class.text-error]="
+                    (config.maintenanceMessage?.length ?? 0) > 200
+                  "
+                >
+                  {{ config.maintenanceMessage?.length ?? 0 }} / 200
+                </span>
+              </label>
+              <textarea
+                [(ngModel)]="config.maintenanceMessage"
+                class="textarea textarea-bordered w-full focus:ring-2 focus:ring-warning/25 leading-relaxed"
+                rows="3"
+                maxlength="200"
+                placeholder="Estamos realizando mejoras en el sistema. Vuelve a intentar en unos minutos."
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="label pt-0 pb-1">
+                <span class="label-text text-xs font-medium">
+                  Tiempo estimado
+                  <span class="opacity-50 font-normal">(opcional)</span>
+                </span>
+              </label>
+              <div class="relative">
+                <i
+                  class="fa-regular fa-clock text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                  aria-hidden="true"
+                ></i>
+                <input
+                  [(ngModel)]="config.maintenanceEta"
+                  class="input input-bordered input-sm w-full pl-9 focus:ring-2 focus:ring-warning/25"
+                  placeholder="Vuelve a las 18:00"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== CARD LOGO (solo en mantenimiento) ==================== -->
+        <div
+          class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+        >
+          <div class="card-body space-y-4">
+            <div class="flex items-center gap-2">
+              <div
+                class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+                aria-hidden="true"
+              >
+                <i class="fa-solid fa-image text-sm"></i>
+              </div>
+              <h3 class="text-sm font-bold">Logo</h3>
+              <span class="badge badge-ghost badge-sm ml-auto"
+                >Todas las páginas</span
+              >
+            </div>
+
+            <p class="text-xs opacity-60 leading-relaxed">
+              Se muestra arriba del título en todas las páginas de aviso
+              (mantenimiento, 404, 403, 500 y 503). Si no eliges ninguno, se
+              usara el logo del sistema.
+            </p>
+
+            <div class="flex items-center gap-3">
+              <div
+                class="w-16 h-16 rounded-xl bg-base-200 border border-base-300 flex items-center justify-center overflow-hidden shrink-0"
+              >
+                <img
+                  *ngIf="logo"
+                  [src]="logo"
+                  alt="Logo"
+                  class="w-full h-full object-contain p-1.5"
+                />
+                <i
+                  *ngIf="!logo"
+                  class="fa-regular fa-image text-2xl opacity-40"
+                  aria-hidden="true"
+                ></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-medium truncate">
+                  {{ logo ? "Logo configurado" : "Sin logo configurado" }}
+                </p>
+                <p class="text-[10px] opacity-60 mt-0.5">
+                  PNG, JPG, GIF o WebP · máx. 5 MB
+                </p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <label class="btn btn-sm btn-primary gap-2 flex-1 cursor-pointer">
+                <span
+                  *ngIf="uploadingLogo"
+                  class="loading loading-spinner loading-xs"
+                  aria-hidden="true"
+                ></span>
+                <i
+                  *ngIf="!uploadingLogo"
+                  class="fa-solid fa-upload text-[15px]"
+                  aria-hidden="true"
+                ></i>
+                {{ uploadingLogo ? "Subiendo..." : "Subir" }}
+                <input
+                  type="file"
+                  class="hidden"
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  (change)="onLogoSelected($event)"
+                />
+              </label>
+              <button
+                *ngIf="logo"
+                type="button"
+                class="btn btn-sm btn-ghost gap-2"
+                (click)="quitarLogo()"
+                aria-label="Quitar logo"
+              >
+                <i class="fa-solid fa-trash text-[15px]" aria-hidden="true"></i>
+                Quitar
+              </button>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ==================== TABS DE ERROR (404/403/500/503) ==================== -->
+      <ng-container *ngIf="tabActivoEsError && estadoActivo as e">
+        <!-- Titulo / mensaje -->
+        <div
+          class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+        >
+          <div class="card-body space-y-4">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ring-1 ring-inset ring-base-300"
+                [style.background]="colorDe(e) + '1F'"
+                [style.color]="colorDe(e)"
+                aria-hidden="true"
+              >
+                <i class="text-lg" [ngClass]="iconoDe(e)"></i>
+              </div>
+              <div class="min-w-0">
+                <h2 class="font-semibold flex items-center gap-2">
+                  Error {{ e.etiqueta }}
+                  <span class="font-mono text-xs opacity-50"
+                    >HTTP {{ e.status }}</span
+                  >
+                </h2>
+                <p class="text-xs opacity-60 leading-snug">{{ e.ayuda }}</p>
+              </div>
+            </div>
+
+            <div>
+              <label class="label pt-0 pb-1">
+                <span class="label-text text-xs font-medium">Título</span>
+              </label>
+              <input
+                type="text"
+                class="input input-bordered input-sm w-full focus:ring-2 focus:ring-warning/25"
+                [(ngModel)]="e.titulo"
+                maxlength="160"
+              />
+            </div>
+
+            <div>
+              <label class="label pt-0 pb-1 flex justify-between items-center">
+                <span class="label-text text-xs font-medium">Mensaje</span>
+                <span
+                  class="label-text-alt text-[10px] opacity-50"
+                  [class.text-error]="e.mensaje.length > 1000"
+                >
+                  {{ e.mensaje.length }} / 1000
+                </span>
+              </label>
+              <textarea
+                class="textarea textarea-bordered w-full focus:ring-2 focus:ring-warning/25 leading-relaxed"
+                rows="3"
+                maxlength="1000"
+                [(ngModel)]="e.mensaje"
+              ></textarea>
+              <p class="text-[11px] opacity-50 mt-1">
+                Es lo unico que leera quien llego aquí. Di que paso y que puede
+                hacer.
+              </p>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ==================== TAB PRIVACIDAD ==================== -->
+      <ng-container *ngIf="tabActivoEsPrivacidad">
+        <div
+          class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+        >
+          <div class="card-body space-y-4">
+            <div
+              class="alert rounded-xl border border-warning/40 bg-warning/10 text-xs"
+              role="status"
+            >
+              <i
+                class="fa-solid fa-circle-info shrink-0"
+                aria-hidden="true"
+              ></i>
+              <div>
+                <p *ngIf="!privacidad.edited">
+                  Este texto es la plantilla que trae el sistema. En cuanto lo
+                  guardes, el repositorio deja de actualizarlo y la política
+                  será tuya.
+                </p>
+                <p *ngIf="privacidad.edited">
+                  Esta política fue editada por un administrador y ya no se
+                  sobrescribe al reiniciar el servidor.
+                </p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="sm:col-span-2">
+                <label class="label pt-0 pb-1">
+                  <span class="label-text text-xs font-medium">Título</span>
+                </label>
+                <input
+                  type="text"
+                  class="input input-bordered input-sm w-full"
+                  [(ngModel)]="privacidad.privacyTitle"
+                  maxlength="160"
+                />
+              </div>
+              <div>
+                <label class="label pt-0 pb-1">
+                  <span class="label-text text-xs font-medium">Versión</span>
+                </label>
+                <input
+                  type="text"
+                  class="input input-bordered input-sm w-full font-mono"
+                  [(ngModel)]="privacidad.privacyVersion"
+                  maxlength="30"
+                  placeholder="1.0"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="label pt-0 pb-1">
+                  <span class="label-text text-xs font-medium"
+                    >Vigente desde</span
+                  >
+                </label>
+                <input
+                  type="text"
+                  class="input input-bordered input-sm w-full"
+                  [(ngModel)]="privacidad.privacyEffective"
+                  maxlength="60"
+                  placeholder="15 de enero de 2026"
+                />
+              </div>
+              <div>
+                <label class="label pt-0 pb-1">
+                  <span class="label-text text-xs font-medium">Contacto</span>
+                </label>
+                <input
+                  type="text"
+                  class="input input-bordered input-sm w-full"
+                  [(ngModel)]="privacidad.privacyContact"
+                  maxlength="160"
+                  placeholder="datos@coac.gob.ec"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="label pt-0 pb-1">
+                <span class="label-text text-xs font-medium"
+                  >Contenido (Markdown)</span
+                >
+              </label>
+              <textarea
+                class="textarea textarea-bordered w-full font-mono text-xs leading-relaxed"
+                rows="18"
+                maxlength="20000"
+                [(ngModel)]="privacidad.privacyContent"
+                (ngModelChange)="actualizarVistaPrevia()"
+                placeholder="## 1. Responsable del tratamiento&#10;&#10;Escribe aquí el texto."
+              ></textarea>
+              <p class="text-[11px] opacity-50 mt-1">
+                Admite <code class="font-mono">#</code> para titulos,
+                <code class="font-mono">-</code> para listas,
+                <code class="font-mono">**negrita**</code>,
+                <code class="font-mono">&gt; cita</code> y
+                <code class="font-mono">`codigo`</code>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ==================== CARD ICONO + COLOR (compartida por avisos) ==================== -->
+      <div
+        *ngIf="!tabActivoEsPrivacidad"
+        class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+      >
+        <div class="card-body space-y-4">
+          <div class="flex items-center gap-2">
+            <div
+              class="p-1.5 rounded-lg bg-warning/10 text-warning ring-1 ring-warning/15"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-icons text-sm"></i>
+            </div>
+            <h3 class="text-sm font-bold">Icono y color</h3>
+          </div>
+
+          <p class="text-xs opacity-60 leading-relaxed">
+            Icono grande que aparece sobre el título. Puedes elegir uno de la
+            lista o pegar una clase de Font Awesome.
+          </p>
+
+          <!-- Chips de iconos (compactos) -->
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              *ngFor="let ic of iconosDisponibles"
+              type="button"
+              class="w-9 h-9 rounded-lg border flex items-center justify-center transition hover:scale-105"
+              [ngClass]="
+                iconoActivo === ic.value
+                  ? 'border-warning bg-warning/10 text-warning shadow-sm'
+                  : 'border-base-200 bg-base-100 text-base-content/60 hover:border-warning/40 hover:bg-warning/5 hover:text-warning'
+              "
+              (click)="setIconoActivo(ic.value)"
+              [attr.aria-label]="'Elegir icono ' + ic.label"
+              [title]="ic.label"
+            >
+              <i [class]="ic.value + ' text-sm'"></i>
+            </button>
+          </div>
+
+          <!-- Input manual -->
+          <div>
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">
+                O pega una clase de Font Awesome
+              </span>
+            </label>
+            <div class="relative">
+              <i
+                class="fa-solid fa-code text-[13px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                aria-hidden="true"
+              ></i>
+              <input
+                [ngModel]="iconoActivo"
+                (ngModelChange)="setIconoActivo($event)"
+                class="input input-bordered input-sm w-full pl-9 pr-10 font-mono text-xs focus:ring-2 focus:ring-warning/25"
+                placeholder="fa-solid fa-gear"
+              />
+              <button
+                *ngIf="iconoActivo"
+                type="button"
+                class="btn btn-ghost btn-xs btn-square absolute right-1 top-1/2 -translate-y-1/2"
+                (click)="setIconoActivo('')"
+                aria-label="Limpiar icono"
+                title="Limpiar"
+              >
+                <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Colores -->
+          <div>
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium"
+                >Color del icono</span
+              >
+            </label>
+            <div class="flex flex-wrap gap-2">
+              <button
+                *ngFor="let c of coloresDisponibles"
+                type="button"
+                class="w-8 h-8 rounded-full border-2 transition hover:scale-105 flex items-center justify-center shrink-0"
+                [ngClass]="
+                  colorActivo === c.value
+                    ? 'border-base-content shadow-md'
+                    : 'border-base-200'
+                "
+                [style.background-color]="c.value"
+                (click)="setColorActivo(c.value)"
+                [attr.aria-label]="'Color ' + c.label"
+                [title]="c.label"
+              >
+                <i
+                  *ngIf="colorActivo === c.value"
+                  class="fa-solid fa-check text-white text-[10px] drop-shadow"
+                  aria-hidden="true"
+                ></i>
+              </button>
+            </div>
+
+            <div class="flex items-center gap-2 mt-3">
+              <input
+                type="color"
+                class="w-9 h-9 rounded-lg border border-base-300 cursor-pointer bg-transparent p-0.5 shrink-0"
+                [value]="colorActivo"
+                (input)="setColorActivo($any($event.target).value)"
+                aria-label="Elegir color personalizado"
+              />
+              <span class="text-xs font-mono opacity-60">{{
+                colorActivo
+              }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== CARD BOTÓN Y DETALLES (comunes a los avisos) ==================== -->
+      <div
+        *ngIf="tabActivoEsError"
+        class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+      >
+        <div class="card-body p-5 gap-4">
+          <div class="flex items-start gap-3">
+            <div class="p-2 rounded-xl bg-primary/10 text-primary shrink-0" aria-hidden="true">
+              <i class="fa-solid fa-sliders"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="font-bold text-sm">Botón y detalles</h3>
+              <p class="text-xs opacity-60">
+                Se aplican a todas las páginas de aviso (404, 403, 500, 503 y mantenimiento).
+              </p>
+            </div>
+          </div>
+
+          <label class="form-control w-full">
+            <div class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Texto del botón principal</span>
+              <span class="label-text-alt text-[10px] opacity-60">{{ comunes.errorButtonText.length }} / 60</span>
+            </div>
+            <input
+              type="text"
+              class="input input-bordered input-sm w-full"
+              maxlength="60"
+              placeholder="Volver al inicio"
+              [(ngModel)]="comunes.errorButtonText"
+              name="errorButtonText"
+            />
+          </label>
+
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              class="toggle toggle-primary toggle-sm mt-0.5"
+              [(ngModel)]="comunes.errorShowCode"
+              name="errorShowCode"
+            />
+            <span>
+              <span class="block text-sm font-medium">Mostrar el código grande</span>
+              <span class="block text-xs opacity-60">El número del error ("404") junto al icono. Ayuda a quien reporta el problema.</span>
+            </span>
+          </label>
+
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              class="toggle toggle-primary toggle-sm mt-0.5"
+              [(ngModel)]="comunes.errorShowPrivacy"
+              name="errorShowPrivacy"
+            />
+            <span>
+              <span class="block text-sm font-medium">Enlace a la política de privacidad</span>
+              <span class="block text-xs opacity-60">Botón secundario junto al principal.</span>
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================== -->
+    <!-- COLUMNA DERECHA (5/12): VISTA PREVIA                    -->
+    <!-- ====================================================== -->
+    <div class="lg:col-span-5 lg:sticky lg:top-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div
+            class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-eye text-sm"></i>
+          </div>
+          <p class="text-xs font-bold uppercase tracking-wider opacity-70">
+            Vista previa
+          </p>
+        </div>
+
+        <span
+          *ngIf="tabActivoEsMantenimiento"
+          class="badge badge-sm gap-1.5 font-medium"
+          [ngClass]="
+            config.maintenanceMode
+              ? 'badge-warning text-warning-content'
+              : 'badge-ghost text-base-content/60'
+          "
+        >
+          <span
+            class="w-1.5 h-1.5 rounded-full"
+            [ngClass]="
+              config.maintenanceMode
+                ? 'bg-warning-content'
+                : 'bg-base-content/40'
+            "
+          ></span>
+          {{ config.maintenanceMode ? "Activo" : "Inactivo" }}
+        </span>
+
+        <span
+          *ngIf="tabActivoEsError"
+          class="badge badge-sm badge-ghost font-mono"
+        >
+          HTTP {{ tab }}
+        </span>
+
+        <span
+          *ngIf="tabActivoEsPrivacidad"
+          class="badge badge-sm badge-ghost font-mono"
+        >
+          {{
+            privacidad.privacyVersion
+              ? "v" + privacidad.privacyVersion
+              : "Sin version"
+          }}
+        </span>
+      </div>
+
+      <!-- Frame tipo navegador -->
+      <div class="relative rounded-2xl border border-base-200 overflow-hidden">
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-base-300/40 via-base-200 to-base-200/60"
+        ></div>
+
+        <!-- Barra superior -->
+        <div
+          class="relative flex items-center gap-2 px-3 py-2 bg-base-300/60 backdrop-blur-sm border-b border-base-300"
+        >
+          <span
+            class="w-2.5 h-2.5 rounded-full bg-error/70"
+            aria-hidden="true"
+          ></span>
+          <span
+            class="w-2.5 h-2.5 rounded-full bg-warning/70"
+            aria-hidden="true"
+          ></span>
+          <span
+            class="w-2.5 h-2.5 rounded-full bg-success/70"
+            aria-hidden="true"
+          ></span>
+          <div
+            class="ms-2 flex-1 bg-base-100/70 rounded-md px-2 py-0.5 text-[10px] opacity-60 truncate"
+          >
+            mesa-servicios.coacmagisterio.fin.ec
+          </div>
+        </div>
+
+        <!-- Contenido de la pantalla -->
+        <div
+          class="relative flex items-center justify-center p-5 min-h-[26rem]"
+        >
+          <div
+            class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(217,119,6,0.1),transparent_60%)]"
+            aria-hidden="true"
+          ></div>
+
+          <!--
+            Vista previa de avisos (mantenimiento + errores). Es la página real
+            en su versión de una columna (la que se ve en un móvil o en un hueco
+            estrecho como este): código grande, icono, logo, textos y botones.
+          -->
+          <div
+            *ngIf="!tabActivoEsPrivacidad"
+            class="aviso-previa w-full relative"
+            [style.--aviso-color]="previewColor"
+          >
+            <div class="aviso-previa__visual" aria-hidden="true">
+              <span class="aviso-previa__halo"></span>
+              <p *ngIf="tabActivoEsError && comunes.errorShowCode" class="aviso-previa__codigo">{{ tab }}</p>
+              <div class="aviso-previa__icono">
+                <i [class]="previewIcono"></i>
+              </div>
+            </div>
+            <div class="aviso-previa__contenido">
+              <img *ngIf="logo" [src]="logo" alt="" class="h-9 max-w-[9rem] object-contain" />
+              <p *ngIf="tabActivoEsError" class="aviso-previa__etiqueta">Error {{ tab }}</p>
+              <h2 class="aviso-previa__titulo">{{ previewTitulo }}</h2>
+              <p class="aviso-previa__mensaje">{{ previewMensaje }}</p>
+              <p *ngIf="previewEta" class="aviso-previa__eta">
+                <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                {{ previewEta }}
+              </p>
+              <div class="flex flex-wrap justify-center gap-1.5 pt-1" aria-hidden="true">
+                <span class="btn btn-primary btn-xs gap-1.5 pointer-events-none">
+                  <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                  {{ comunes.errorButtonText || "Volver al inicio" }}
+                </span>
+                <span *ngIf="comunes.errorShowPrivacy" class="btn btn-ghost btn-xs gap-1.5 pointer-events-none">
+                  <i class="fa-solid fa-shield-halved text-[10px]"></i>
+                  Política de privacidad
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vista previa de privacidad -->
+          <div
+            *ngIf="tabActivoEsPrivacidad"
+            class="card bg-base-100 shadow-2xl border border-base-200 ring-1 ring-base-content/5 rounded-[1.75rem] w-full relative"
+          >
+            <div class="card-body space-y-4 p-6">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-sm font-bold">
+                  {{ privacidad.privacyTitle || "Sin titulo" }}
+                </span>
+                <span
+                  *ngIf="privacidad.privacyVersion"
+                  class="badge badge-sm badge-ghost font-mono"
+                >
+                  v{{ privacidad.privacyVersion }}
+                </span>
+                <span
+                  *ngIf="!privacidad.edited"
+                  class="badge badge-sm badge-warning gap-1"
+                >
+                  <i
+                    class="fa-solid fa-pen-ruler text-[10px]"
+                    aria-hidden="true"
+                  ></i>
+                  Borrador
+                </span>
+              </div>
+
+              <div
+                *ngIf="vistaPrevia; else sinContenido"
+                class="privacy-body border-t border-base-200 pt-4 text-left text-xs"
+                [innerHTML]="vistaPrevia"
+              ></div>
+
+              <ng-template #sinContenido>
+                <p
+                  class="text-sm opacity-50 italic border-t border-base-200 pt-4"
+                >
+                  Escribe el contenido y aparecerá aquí.
+                </p>
+              </ng-template>
+
+              <p
+                *ngIf="privacidad.privacyContact"
+                class="text-xs opacity-60 border-t border-base-200 pt-3 text-left"
+              >
+                <i class="fa-solid fa-envelope mr-1.5" aria-hidden="true"></i>
+                {{ privacidad.privacyContact }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-xs opacity-60 flex items-start gap-1.5 leading-relaxed">
+        <i
+          class="fa-solid fa-circle-info text-[10px] mt-1 shrink-0"
+          aria-hidden="true"
+        ></i>
+        <span>
+          Asi veran la pantalla los usuarios. Los cambios se reflejan en tiempo
+          real antes de guardar.
+        </span>
+      </p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- BARRA DE ACCIONES STICKY                                     -->
+    <!-- ============================================================ -->
+    <div class="lg:col-span-12 sticky bottom-4 z-20 mt-2">
+      <div
+        class="card bg-base-100/95 backdrop-blur-md shadow-xl border rounded-2xl overflow-hidden transition"
+        [ngClass]="
+          hayCambios()
+            ? 'border-warning/40 ring-2 ring-warning/20'
+            : 'border-base-200'
+        "
+      >
+        <div
+          class="card-body p-3 sm:p-4 flex-row items-center justify-between gap-3"
+        >
+          <div class="flex items-center gap-3 min-w-0">
+            <div
+              class="p-2 rounded-lg shrink-0"
+              [ngClass]="
+                hayCambios()
+                  ? 'bg-warning/15 text-warning'
+                  : 'bg-success/15 text-success'
+              "
+              aria-hidden="true"
+            >
+              <i
+                class="fa-solid text-sm"
+                [ngClass]="
+                  hayCambios()
+                    ? 'fa-circle-exclamation animate-pulse'
+                    : 'fa-circle-check'
+                "
+              ></i>
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold truncate">
+                {{
+                  hayCambios() ? "Tienes cambios sin guardar" : "Todo guardado"
+                }}
+              </p>
+              <p class="text-[11px] opacity-60 truncate">
+                {{
+                  hayCambios()
+                    ? "Los cambios afectan a la pestana activa"
+                    : "No hay cambios pendientes en esta pestana"
+                }}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm gap-2 hidden sm:inline-flex"
+              (click)="volver()"
+              [disabled]="saving || !hayCambios()"
+            >
+              <i
+                class="fa-solid fa-rotate-left text-[15px]"
+                aria-hidden="true"
+              ></i>
+              Descartar
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-sm gap-2 shadow-md hover:shadow-lg transition min-w-[150px]"
+              [ngClass]="
+                config.maintenanceMode
+                  ? 'btn-warning text-warning-content'
+                  : 'btn-primary text-primary-content'
+              "
+              (click)="guardar()"
+              [disabled]="saving || !hayCambios()"
+            >
+              <span
+                *ngIf="saving"
+                class="loading loading-spinner loading-xs"
+                aria-hidden="true"
+              ></span>
+              <i
+                *ngIf="!saving"
+                class="fa-solid fa-check text-[15px]"
+                aria-hidden="true"
+              ></i>
+              {{ saving ? "Guardando..." : "Guardar cambios" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

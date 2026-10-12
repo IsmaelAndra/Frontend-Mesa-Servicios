@@ -1,0 +1,166 @@
+<div class="space-y-6">
+  <header class="page-head flex items-center gap-3">
+    <div class="page-head__icono" aria-hidden="true">
+      <i class="fa-solid fa-shield-halved"></i>
+    </div>
+    <div class="min-w-0">
+      <h1 class="page-head__titulo font-bold">Auditoría del sistema</h1>
+      <p class="text-sm opacity-70">
+        Accesos denegados, cambios de contraseña, intentos fallidos y altas de doble
+        factor. Para encontrar algo raro, empieza por un usuario o una fecha.
+      </p>
+    </div>
+  </header>
+
+  <!-- ============ Filtros ============ -->
+  <div class="card bg-base-100 shadow border border-base-200">
+    <div class="card-body p-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <label class="form-control">
+          <div class="label py-1"><span class="label-text text-xs">Acción</span></div>
+          <select
+            class="select select-bordered select-sm"
+            [(ngModel)]="accion"
+            (change)="cargar()"
+          >
+            <option value="">Todas</option>
+            <option *ngFor="let a of acciones" [value]="a">{{ etiquetaAccion(a) }}</option>
+          </select>
+        </label>
+
+        <label class="form-control">
+          <div class="label py-1"><span class="label-text text-xs">Usuario contiene</span></div>
+          <input
+            type="text"
+            class="input input-bordered input-sm"
+            [(ngModel)]="usuario"
+            placeholder="ana o @coacm…"
+            (keyup.enter)="cargar()"
+          />
+        </label>
+
+        <label class="form-control">
+          <div class="label py-1"><span class="label-text text-xs">Desde</span></div>
+          <input
+            type="date"
+            class="input input-bordered input-sm"
+            [(ngModel)]="desde"
+            (change)="cargar()"
+          />
+        </label>
+
+        <label class="form-control">
+          <div class="label py-1"><span class="label-text text-xs">Hasta</span></div>
+          <input
+            type="date"
+            class="input input-bordered input-sm"
+            [(ngModel)]="hasta"
+            (change)="cargar()"
+          />
+        </label>
+      </div>
+
+      <div class="card-actions justify-end mt-2">
+        <button type="button" class="btn btn-ghost btn-sm" (click)="limpiar()">
+          Limpiar
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" [disabled]="loading"
+                (click)="buscar()">
+          <span *ngIf="loading" class="loading loading-spinner loading-xs"></span>
+          Buscar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Confirmación de rango amplio ============ -->
+  <div *ngIf="avisandoRango" class="alert alert-warning mb-4">
+    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+    <div>
+      <p class="text-sm font-semibold">El rango abarca más de 90 días</p>
+      <p class="text-sm">
+        Puede devolver bastantes miles de filas. Si busca algo concreto, acote las
+        fechas o añada un usuario.
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <button type="button" class="btn btn-ghost btn-sm" (click)="avisandoRango = false">
+        Cancelar
+      </button>
+      <button type="button" class="btn btn-warning btn-sm" (click)="buscar()">
+        Buscar igual
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ Tabla ============ -->
+  <div class="card bg-base-100 shadow">
+    <div class="card-body p-4">
+      <div *ngIf="loading" class="flex justify-center py-10">
+        <span class="loading loading-spinner loading-lg"></span>
+      </div>
+
+      <div *ngIf="!loading && filas.length === 0" class="text-center py-10 opacity-70">
+        <i class="fa-solid fa-inbox text-3xl mb-2" aria-hidden="true"></i>
+        <p>No hay registros con esos filtros.</p>
+      </div>
+
+      <div *ngIf="!loading && filas.length > 0" class="overflow-x-auto">
+        <table class="table table-zebra table-sm">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Acción</th>
+              <th>Usuario</th>
+              <th>Origen</th>
+              <th>Sobre</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let f of filas">
+              <td class="whitespace-nowrap font-mono text-xs">
+                {{ f.fecha | date: 'dd/MM HH:mm:ss' }}
+              </td>
+              <td>
+                <span class="badge badge-sm whitespace-nowrap" [ngClass]="colorAccion(f.accion)" [title]="f.accion">
+                  {{ etiquetaAccion(f.accion) }}
+                </span>
+              </td>
+              <td class="text-xs">{{ f.usuario }}</td>
+              <td class="font-mono text-xs" [title]="f.ip || ''">{{ origen(f.ip) }}</td>
+              <td class="text-xs">
+                <span *ngIf="f.entidad">{{ f.entidad }}<span *ngIf="f.entidadId" class="font-mono" [title]="f.entidadId"> · {{ f.entidadId | slice: 0 : 8 }}</span></span>
+                <span *ngIf="!f.entidad">—</span>
+              </td>
+              <td class="text-xs max-w-md">
+                <span *ngIf="f.detalles">{{ f.detalles }}</span>
+                <span *ngIf="!f.detalles && f.ruta" class="font-mono opacity-70">
+                  {{ f.metodo }} {{ f.ruta }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="!loading && filas.length > 0" class="flex items-center justify-between mt-3">
+        <span class="text-xs opacity-70">
+          Página {{ pagina + 1 }} · {{ filas.length }} registro(s)
+        </span>
+        <div class="join">
+          <button type="button" class="btn btn-sm join-item"
+                  [disabled]="!hayPaginaAnterior()"
+                  (click)="anterior()">
+            Anterior
+          </button>
+          <button type="button" class="btn btn-sm join-item"
+                  [disabled]="!hayPaginaSiguiente()"
+                  (click)="siguiente()">
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

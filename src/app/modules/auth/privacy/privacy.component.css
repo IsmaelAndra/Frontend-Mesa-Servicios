@@ -1,0 +1,4 @@
+/*
+ * Los estilos del cuerpo Markdown (.privacy-body) están en src/styles.css: el
+ * contenido entra por [innerHTML] y una hoja encapsulada no lo alcanza.
+ */

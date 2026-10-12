@@ -1,14 +1,12 @@
 <div class="space-y-6">
   <!-- Encabezado -->
-  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div class="flex items-center gap-3">
-      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-regular fa-calendar text-2xl" aria-hidden="true"></i>
       </div>
       <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Calendario</h1>
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">Calendario</h1>
         <p class="text-sm opacity-70">Tareas propias y tickets asignados</p>
       </div>
     </div>
@@ -18,77 +16,229 @@
       <!-- Selector de vista -->
       <div role="tablist" class="tabs tabs-boxed bg-base-200 p-1">
         <button role="tab" class="tab tab-sm gap-1.5" [class.tab-active]="currentView === 'day'" (click)="setView('day')" aria-label="Ver por día">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
+          <i class="fa-regular fa-calendar text-[15px]" aria-hidden="true"></i>
           <span class="hidden sm:inline">Día</span>
         </button>
 
         <button role="tab" class="tab tab-sm gap-1.5" [class.tab-active]="currentView === 'week'" (click)="setView('week')" aria-label="Ver por semana">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-          </svg>
+          <i class="fa-solid fa-table-columns text-[15px]" aria-hidden="true"></i>
           <span class="hidden sm:inline">Semana</span>
         </button>
 
         <button role="tab" class="tab tab-sm gap-1.5" [class.tab-active]="currentView === 'month'" (click)="setView('month')" aria-label="Ver por mes">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
+          <i class="fa-regular fa-calendar text-[15px]" aria-hidden="true"></i>
           <span class="hidden sm:inline">Mes</span>
         </button>
       </div>
 
       <!-- Hoy -->
-      <button class="btn btn-outline btn-sm gap-2" (click)="today()" aria-label="Ir a hoy">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
+      <button
+        type="button"
+        class="btn btn-outline btn-sm gap-2 border-primary/30 hover:bg-primary/10 hover:text-primary hover:border-primary transition-colors"
+        (click)="today()"
+        aria-label="Ir a hoy"
+      >
+        <i class="fa-regular fa-calendar text-[15px]" aria-hidden="true"></i>
         Hoy
       </button>
 
       <!-- Prev / Next -->
       <div class="join">
-        <button class="btn btn-outline btn-sm join-item" (click)="prev()" aria-label="Anterior">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
+        <button
+          type="button"
+          class="btn btn-outline btn-sm join-item border-primary/30 hover:bg-primary/10 hover:text-primary hover:border-primary transition-colors"
+          (click)="prev()"
+          aria-label="Anterior"
+        >
+          <i class="fa-solid fa-chevron-left text-[15px]" aria-hidden="true"></i>
         </button>
-        <button class="btn btn-outline btn-sm join-item" (click)="next()" aria-label="Siguiente">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
+        <button
+          type="button"
+          class="btn btn-outline btn-sm join-item border-primary/30 hover:bg-primary/10 hover:text-primary hover:border-primary transition-colors"
+          (click)="next()"
+          aria-label="Siguiente"
+        >
+          <i class="fa-solid fa-chevron-right text-[15px]" aria-hidden="true"></i>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Título del rango visible -->
-  <div class="flex items-center justify-center">
+  <!-- Título del rango visible y resumen de hoy -->
+  <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
     <div class="badge badge-lg badge-outline gap-2 px-4 py-3">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
+      <i class="fa-regular fa-calendar text-[15px]" aria-hidden="true"></i>
       <span class="text-sm sm:text-base font-semibold">{{ rangeLabel }}</span>
     </div>
+
+    <!-- Hoy: no depende del rango que se mire, para tener siempre a mano lo urgente. -->
+    <div
+      *ngIf="hoy as h"
+      class="flex flex-wrap items-center gap-1.5 text-xs animate-fade-in"
+      role="status"
+      aria-label="Resumen de hoy"
+    >
+      <span class="badge badge-ghost gap-1.5 font-medium">
+        <i class="fa-solid fa-sun text-[10px] text-warning" aria-hidden="true"></i>
+        Hoy: {{ h.total }} {{ h.total === 1 ? 'evento' : 'eventos' }}
+      </span>
+      <span *ngIf="h.vencidos > 0" class="badge badge-error gap-1.5 font-medium text-error-content">
+        <span class="cal-punto cal-punto--vencido cal-punto--claro" aria-hidden="true"></span>
+        {{ h.vencidos }} {{ h.vencidos === 1 ? 'vencido' : 'vencidos' }}
+      </span>
+      <span *ngIf="h.proximos > 0" class="badge badge-warning gap-1.5 font-medium text-warning-content">
+        <i class="fa-solid fa-hourglass-half text-[10px]" aria-hidden="true"></i>
+        {{ h.proximos }} por vencer
+      </span>
+      <span *ngIf="h.total > 0 && h.vencidos === 0 && h.proximos === 0" class="badge badge-success gap-1.5 font-medium text-success-content">
+        <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
+        Al día
+      </span>
+    </div>
   </div>
 
-  <!-- Calendario -->
-  <div class="card bg-base-100 shadow-md border border-base-200 overflow-hidden">
-    <div class="calendar-wrap" [class.calendar-month]="currentView === 'month'">
-      <div #calendarEl></div>
+  <!-- Calendario + leyenda lateral -->
+  <div class="flex flex-col lg:flex-row gap-4 items-start">
+    <div class="card bg-base-100 shadow-md border border-base-200 overflow-hidden flex-1 min-w-0 w-full relative">
+      <div class="calendar-wrap" [class.calendar-month]="currentView === 'month'">
+        <div #calendarEl></div>
+      </div>
+
+      <!-- Rango sin eventos: aviso discreto encima de la rejilla, sin taparla. -->
+      <div
+        *ngIf="cargado && eventosVisibles === 0"
+        class="pointer-events-none absolute inset-x-0 top-24 flex justify-center px-4"
+      >
+        <div class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-base-100/90 backdrop-blur-sm border border-base-200 shadow-sm animate-rise-in">
+          <span class="w-9 h-9 rounded-full bg-success/10 text-success inline-flex items-center justify-center" aria-hidden="true">
+            <i class="fa-regular fa-calendar-check"></i>
+          </span>
+          <div>
+            <p class="text-sm font-semibold">{{ textoVacio }}</p>
+            <p class="text-xs opacity-60">No hay tareas ni tickets con fecha en este rango.</p>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Leyenda vertical a la derecha. Abajo ocupaba una fila entera y con
+         muchos colores obligaba a desplazarse; en columna cabe siempre. -->
+    <aside
+      class="card bg-base-100 shadow-md border border-base-200 w-full lg:w-56 shrink-0"
+      *ngIf="leyenda.length"
+    >
+      <div class="card-body p-4 gap-3">
+        <h2 class="text-xs font-semibold uppercase tracking-wide opacity-60">
+          Leyenda
+        </h2>
+        <p class="text-xs opacity-60 -mt-1">
+          {{ eventosVisibles }} evento{{ eventosVisibles === 1 ? '' : 's' }} en el
+          rango visible
+        </p>
+        <ul class="space-y-1.5">
+          <li
+            class="flex items-center gap-2 text-xs"
+            *ngFor="let l of leyenda"
+          >
+            <span
+              class="w-3 h-3 rounded-full shrink-0"
+              [style.background-color]="l.color"
+              aria-hidden="true"
+            ></span>
+            <span class="flex-1 min-w-0 truncate" [title]="l.tipo + (l.estado ? ' · ' + l.estado : '')">
+              {{ l.tipo }}<span *ngIf="l.estado" class="opacity-70"> · {{ l.estado }}</span>
+            </span>
+            <span class="opacity-60 tabular-nums shrink-0">{{ l.count }}</span>
+          </li>
+        </ul>
+      </div>
+    </aside>
   </div>
 
-  <!-- Leyenda -->
-  <div class="flex flex-wrap items-center justify-center gap-4 text-xs opacity-70">
-    <div class="flex items-center gap-2">
-      <span class="w-3 h-3 rounded-full" style="background-color: #062e86"></span>
-      <span>Tareas</span>
-    </div>
-    <div class="flex items-center gap-2">
-      <span class="w-3 h-3 rounded-full" style="background-color: #ec9811"></span>
-      <span>Tickets</span>
-    </div>
+  <!-- ============================ DETALLE DEL EVENTO ============================ -->
+  <!-- Panel lateral: entra por la derecha y se cierra con Esc, la X o el fondo. -->
+  <div
+    *ngIf="seleccionado as ev"
+    class="overlay-backdrop fixed inset-0 z-50 flex justify-end bg-black/30"
+    (click)="cerrarDetalle()"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Detalle de ' + ev.title"
+  >
+    <aside
+      class="overlay-drawer h-full w-full max-w-sm bg-base-100 shadow-2xl border-l border-base-200 flex flex-col"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Franja con el color del evento -->
+      <div class="h-1.5 shrink-0" [style.background-color]="ev.color"></div>
+
+      <header class="flex items-start gap-3 p-5 border-b border-base-200">
+        <span
+          class="shrink-0 w-10 h-10 rounded-xl inline-flex items-center justify-center text-white"
+          [style.background-color]="ev.color"
+          aria-hidden="true"
+        >
+          <i [class]="ev.type === 'TICKET' ? 'fa-solid fa-ticket' : 'fa-solid fa-list-check'"></i>
+        </span>
+        <div class="min-w-0 flex-1">
+          <p class="text-[11px] uppercase tracking-wide font-semibold opacity-60">
+            {{ ev.type === 'TICKET' ? 'Ticket #' + (ev.refNumber ?? '') : 'Tarea' }}
+          </p>
+          <h2 class="font-bold text-base leading-snug break-words">{{ ev.title }}</h2>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm btn-square shrink-0" (click)="cerrarDetalle()" aria-label="Cerrar">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div class="flex-1 overflow-y-auto p-5 space-y-4">
+        <!-- Urgencia -->
+        <div
+          *ngIf="urgencia(ev) as u"
+          class="flex items-center gap-2.5 p-3 rounded-xl border text-sm"
+          [ngClass]="u === 'VENCIDO' ? 'bg-error/10 border-error/30 text-error' : 'bg-warning/10 border-warning/30 text-warning'"
+        >
+          <span *ngIf="u === 'VENCIDO'" class="cal-punto cal-punto--vencido" aria-hidden="true"></span>
+          <i *ngIf="u === 'PROXIMO'" class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+          <span class="font-semibold">{{ u === 'VENCIDO' ? 'Vencido' : 'Por vencer' }}</span>
+          <span class="opacity-80">· {{ plazo(ev) }}</span>
+        </div>
+
+        <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2.5 text-sm">
+          <dt class="opacity-60">Estado</dt>
+          <dd class="capitalize font-medium">{{ estadoLegible(ev.status) || '—' }}</dd>
+          <dt class="opacity-60">{{ ev.allDay ? 'Día' : 'Inicio' }}</dt>
+          <dd>{{ fechaLarga(ev.start) }}</dd>
+          <ng-container *ngIf="!ev.allDay">
+            <dt class="opacity-60">{{ ev.type === 'TICKET' ? 'Vence' : 'Fin' }}</dt>
+            <dd>{{ fechaLarga(ev.end) }}</dd>
+          </ng-container>
+          <ng-container *ngIf="ev.createdAt">
+            <dt class="opacity-60">Creado</dt>
+            <dd>{{ fechaLarga(ev.createdAt) }}</dd>
+          </ng-container>
+        </dl>
+      </div>
+
+      <footer class="p-4 border-t border-base-200 flex gap-2">
+        <a
+          *ngIf="ev.type === 'TICKET'"
+          class="btn btn-primary btn-sm flex-1 gap-2"
+          [routerLink]="['/tickets', ev.refId]"
+        >
+          <i class="fa-solid fa-arrow-up-right-from-square text-xs" aria-hidden="true"></i>
+          Abrir ticket
+        </a>
+        <a
+          *ngIf="ev.type === 'TASK'"
+          class="btn btn-primary btn-sm flex-1 gap-2"
+          routerLink="/activities"
+        >
+          <i class="fa-solid fa-table-columns text-xs" aria-hidden="true"></i>
+          Ver en el tablero
+        </a>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="cerrarDetalle()">Cerrar</button>
+      </footer>
+    </aside>
   </div>
 </div>

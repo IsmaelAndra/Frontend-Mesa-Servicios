@@ -67,3 +67,41 @@
   background-color: rgba(6, 46, 134, 0.03);
   border-radius: 0.75rem;
 }
+
+.kanban-board-dragging .kanban-list {
+  outline: 2px dashed rgba(6, 46, 134, 0.18);
+  outline-offset: -4px;
+  border-radius: 0.75rem;
+  transition: outline-color 0.15s ease, background-color 0.15s ease;
+}
+
+.kanban-list.cdk-drop-list-receiving {
+  outline-color: rgba(6, 46, 134, 0.45);
+  background-color: rgba(6, 46, 134, 0.06);
+}
+
+.kanban-card.saving {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.kanban-handle {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.kanban-card:hover .kanban-handle {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kanban-card,
+  .kanban-list,
+  .kanban-handle {
+    transition: none !important;
+  }
+
+  .kanban-card:hover {
+    transform: none;
+  }
+}

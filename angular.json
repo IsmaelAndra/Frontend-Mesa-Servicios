@@ -23,13 +23,15 @@
             "main": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
-            "allowedCommonJsDependencies": ["sweetalert2", "file-saver", "moment", "quill", "quill-delta"],
+            "allowedCommonJsDependencies": ["sweetalert2", "file-saver", "moment", "quill", "quill-delta", "qrcode", "tui-date-picker"],
             "assets": ["src/favicon.ico", "src/assets"],
             "styles": [
               "node_modules/primeng/resources/primeng.min.css",
               "node_modules/primeicons/primeicons.css",
               "node_modules/@toast-ui/calendar/dist/toastui-calendar.min.css",
               "node_modules/quill/dist/quill.snow.css",
+              "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
+              "node_modules/@fontsource-variable/inter/index.css",
               "src/styles.css"
             ],
             "scripts": []
@@ -37,10 +39,21 @@
           "configurations": {
             "production": {
               "budgets": [
-                { "type": "initial", "maximumWarning": "2mb", "maximumError": "8mb" },
-                { "type": "anyComponentStyle", "maximumWarning": "8kb", "maximumError": "16kb" }
+                { "type": "initial", "maximumWarning": "1.8mb", "maximumError": "2.5mb" },
+                { "type": "anyComponentStyle", "maximumWarning": "12kb", "maximumError": "16kb" }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": { "minify": true, "inlineCritical": false },
+                "fonts": true
+              },
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "buildOptimizer": false,

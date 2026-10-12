@@ -1,0 +1,947 @@
+<div class="space-y-6 max-w-4xl mx-auto">
+  <!-- ============================ HEADER ============================ -->
+  <header
+    class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+  >
+    <div class="flex items-center gap-3 min-w-0">
+      <div
+        class="page-head__icono p-3 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary shrink-0 ring-1 ring-primary/10"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-shield-halved text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">
+          Microsoft Graph
+        </h1>
+        <p class="text-sm opacity-70 truncate">
+          Conexión con Microsoft 365 · OAuth 2.0 y sincronización de usuarios
+        </p>
+      </div>
+    </div>
+
+    <!-- Badge de estado -->
+    <span
+      *ngIf="!isLoading"
+      class="badge badge-lg gap-2 font-semibold self-start sm:self-center shrink-0 py-3 px-4"
+      [ngClass]="statusInfo.className"
+    >
+      <i [class]="statusInfo.icon" aria-hidden="true"></i>
+      {{ statusInfo.label }}
+    </span>
+  </header>
+
+  <!-- ============================ LOADING ============================ -->
+  <app-skeleton *ngIf="isLoading" tipo="panel" [cantidad]="6" etiqueta="Cargando configuración..."></app-skeleton>
+
+  <!-- ============================ TABS ============================ -->
+  <div
+    *ngIf="!isLoading"
+    role="tablist"
+    class="inline-flex items-center gap-1 p-1 bg-base-200/60 rounded-xl border border-base-200"
+  >
+    <button
+      *ngFor="let t of tabs"
+      type="button"
+      role="tab"
+      class="btn btn-sm gap-2 border-0 transition"
+      [ngClass]="
+        tab === t.id
+          ? 'bg-base-100 shadow-sm text-primary font-semibold'
+          : 'btn-ghost text-base-content/70 hover:text-primary'
+      "
+      [attr.aria-selected]="tab === t.id"
+      (click)="tab = t.id"
+    >
+      <i [class]="t.icon" aria-hidden="true"></i>
+      {{ t.label }}
+    </button>
+  </div>
+
+  <!-- ============================ FORMULARIO ============================ -->
+  <form
+    [formGroup]="form"
+    *ngIf="!isLoading"
+    class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+  >
+    <div class="card-body">
+      <!-- ==================================================== -->
+      <!-- ============ PESTAÑA: CONEXIÓN ==================== -->
+      <!-- ==================================================== -->
+      <ng-container *ngIf="tab === 'conexion'">
+        <!-- ============ Credenciales ============ -->
+        <div class="flex items-center gap-2 mb-4">
+          <div
+            class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-key text-sm"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold">
+              Credenciales de la aplicación
+            </h3>
+            <p class="text-xs opacity-60">
+              Datos de la app registrada en Azure AD
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Tenant ID -->
+          <div>
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">
+                Tenant ID <span class="text-error">*</span>
+              </span>
+            </label>
+            <div class="relative">
+              <i
+                class="fa-solid fa-building text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                aria-hidden="true"
+              ></i>
+              <input
+                formControlName="tenantId"
+                type="text"
+                class="input input-bordered input-sm w-full pl-9 font-mono text-xs focus:ring-2 focus:ring-primary/25"
+                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+
+          <!-- Client ID -->
+          <div>
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">
+                Client ID <span class="text-error">*</span>
+              </span>
+            </label>
+            <div class="relative">
+              <i
+                class="fa-solid fa-fingerprint text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                aria-hidden="true"
+              ></i>
+              <input
+                formControlName="clientId"
+                type="text"
+                class="input input-bordered input-sm w-full pl-9 font-mono text-xs focus:ring-2 focus:ring-primary/25"
+                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ Client Secret ============ -->
+        <div class="mt-4">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Client Secret
+              <span *ngIf="!config?.clientSecretConfigured" class="text-error"
+                >*</span
+              >
+            </span>
+          </label>
+
+          <!-- Secreto almacenado -->
+          <div
+            *ngIf="config?.clientSecretConfigured && !replaceSecret"
+            class="flex items-center gap-2"
+          >
+            <div class="relative flex-1">
+              <i
+                class="fa-solid fa-lock text-[15px] opacity-60 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 text-success"
+                aria-hidden="true"
+              ></i>
+              <input
+                type="text"
+                readonly
+                value="••••••••••••••••••••••••••••••••"
+                class="input input-bordered input-sm w-full pl-9 font-mono cursor-not-allowed bg-base-200/50"
+                aria-label="Client secret almacenado"
+              />
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-sm btn-outline gap-2 shrink-0"
+              (click)="toggleReplace(true)"
+            >
+              <i class="fa-solid fa-rotate text-[15px]" aria-hidden="true"></i>
+              Reemplazar
+            </button>
+          </div>
+
+          <!-- Nuevo secreto (input normal) -->
+          <div
+            *ngIf="!config?.clientSecretConfigured || replaceSecret"
+            class="relative"
+          >
+            <i
+              class="fa-solid fa-lock text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+              aria-hidden="true"
+            ></i>
+            <input
+              formControlName="clientSecret"
+              [type]="showSecret ? 'text' : 'password'"
+              class="input input-bordered input-sm w-full pl-9 pr-10 font-mono text-xs focus:ring-2 focus:ring-primary/25"
+              placeholder="Nuevo client secret"
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs btn-square absolute right-1 top-1/2 -translate-y-1/2 z-10"
+              (click)="showSecret = !showSecret"
+              [attr.aria-label]="
+                showSecret ? 'Ocultar client secret' : 'Mostrar client secret'
+              "
+            >
+              <i
+                *ngIf="!showSecret"
+                class="fa-solid fa-eye text-[15px]"
+                aria-hidden="true"
+              ></i>
+              <i
+                *ngIf="showSecret"
+                class="fa-solid fa-eye-slash text-[15px]"
+                aria-hidden="true"
+              ></i>
+            </button>
+          </div>
+
+          <!-- Botón cancelar reemplazo (solo si está reemplazando) -->
+          <div
+            *ngIf="config?.clientSecretConfigured && replaceSecret"
+            class="mt-2 flex items-center gap-2 text-xs"
+          >
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs gap-1.5"
+              (click)="toggleReplace(false)"
+            >
+              <i class="fa-solid fa-xmark text-[10px]" aria-hidden="true"></i>
+              Cancelar reemplazo
+            </button>
+            <span class="opacity-60">
+              Deja vacío para mantener el secreto actual
+            </span>
+          </div>
+        </div>
+
+        <div class="divider my-3"></div>
+
+        <!-- ============ OAuth 2.0 ============ -->
+        <div class="flex items-center gap-2 mb-4">
+          <div
+            class="p-1.5 rounded-lg bg-info/10 text-info ring-1 ring-info/15"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-code text-sm"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold">OAuth 2.0</h3>
+            <p class="text-xs opacity-60">
+              Parámetros del flujo de autenticación
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Scope</span>
+            </label>
+            <div class="relative">
+              <i
+                class="fa-solid fa-scroll text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                aria-hidden="true"
+              ></i>
+              <input
+                formControlName="scope"
+                type="text"
+                class="input input-bordered input-sm w-full pl-9 font-mono text-xs focus:ring-2 focus:ring-primary/25"
+                placeholder="https://graph.microsoft.com/.default"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Grant Type</span>
+            </label>
+            <div class="relative">
+              <i
+                class="fa-solid fa-arrow-right-arrow-left text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                aria-hidden="true"
+              ></i>
+              <input
+                formControlName="grantType"
+                type="text"
+                class="input input-bordered input-sm w-full pl-9 font-mono text-xs focus:ring-2 focus:ring-primary/25"
+                placeholder="client_credentials"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">
+                Expira (fecha de vencimiento)
+              </span>
+            </label>
+            <div class="relative">
+              <i
+                class="fa-regular fa-calendar text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                aria-hidden="true"
+              ></i>
+              <input
+                formControlName="secretExpiresAt"
+                type="date"
+                class="input input-bordered input-sm w-full pl-9 focus:ring-2 focus:ring-primary/25"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">
+                Sincronización de usuarios
+              </span>
+            </label>
+            <div class="relative">
+              <i
+                class="fa-solid fa-arrows-rotate text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                aria-hidden="true"
+              ></i>
+              <select
+                formControlName="syncIntervalMinutes"
+                class="select select-bordered select-sm w-full pl-9 focus:ring-2 focus:ring-primary/25"
+              >
+                <option
+                  *ngFor="let opt of syncIntervalOptions"
+                  [ngValue]="opt.value"
+                >
+                  {{ opt.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ Toggle habilitar ============ -->
+        <label
+          class="flex items-start gap-3 p-4 mt-4 rounded-xl border-2 cursor-pointer transition"
+          [ngClass]="
+            form.get('enabled')?.value
+              ? 'border-success/40 bg-success/5 hover:bg-success/10'
+              : 'border-base-200 bg-base-100 hover:border-primary/30 hover:bg-base-200/40'
+          "
+        >
+          <input
+            formControlName="enabled"
+            type="checkbox"
+            class="toggle toggle-success toggle-sm mt-0.5 shrink-0"
+          />
+          <div class="flex-1 min-w-0">
+            <span class="text-sm font-semibold flex items-center gap-2">
+              <i
+                class="fa-solid fa-plug text-xs"
+                [ngClass]="
+                  form.get('enabled')?.value ? 'text-success' : 'opacity-60'
+                "
+                aria-hidden="true"
+              ></i>
+              Habilitar integración con Microsoft 365
+            </span>
+            <p class="text-xs opacity-60 mt-1 leading-relaxed">
+              Sincroniza nombre, foto y estado de los usuarios desde Microsoft
+              Graph
+            </p>
+          </div>
+        </label>
+
+        <!-- ============ Resultado prueba conexión ============ -->
+        <div *ngIf="testResult" class="mt-4">
+          <div
+            class="flex items-start gap-3 p-4 rounded-xl border"
+            [ngClass]="
+              testResult.success
+                ? 'bg-success/5 border-success/30'
+                : 'bg-error/5 border-error/30'
+            "
+            role="alert"
+          >
+            <div
+              class="p-2 rounded-lg shrink-0"
+              [ngClass]="
+                testResult.success
+                  ? 'bg-success text-success-content'
+                  : 'bg-error text-error-content'
+              "
+              aria-hidden="true"
+            >
+              <i
+                [class]="
+                  testResult.success
+                    ? 'fa-solid fa-circle-check'
+                    : 'fa-solid fa-triangle-exclamation'
+                "
+                class="text-sm"
+              ></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p
+                class="font-semibold text-sm"
+                [ngClass]="testResult.success ? 'text-success' : 'text-error'"
+              >
+                {{
+                  testResult.success ? "Conexión exitosa" : "Error de conexión"
+                }}
+              </p>
+              <p class="text-xs mt-1 opacity-80 leading-relaxed">
+                {{ testResult.message }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ==================================================== -->
+      <!-- ============ PESTAÑA: CORREO ====================== -->
+      <!-- ==================================================== -->
+      <ng-container *ngIf="tab === 'correo'">
+        <div class="flex items-center gap-2 mb-4">
+          <div
+            class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-envelope text-sm"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold">Notificaciones por correo</h3>
+            <p class="text-xs opacity-60">
+              Envío mediante sendMail de Microsoft Graph
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="flex items-start gap-2 p-3 rounded-xl bg-info/5 border border-info/20 text-xs mb-4"
+        >
+          <i
+            class="fa-solid fa-circle-info text-info text-sm shrink-0 mt-0.5"
+            aria-hidden="true"
+          ></i>
+          <p class="opacity-80 leading-relaxed">
+            Los correos se envían con la API
+            <code class="badge badge-sm badge-ghost">sendMail</code> de
+            Microsoft Graph. Define la cuenta de Microsoft 365 que actuará como
+            remitente; el destinatario de cada plantilla se configura en
+            <span class="font-medium">Plantillas de Notificación</span>.
+          </p>
+        </div>
+
+        <!-- Toggle habilitar correo -->
+        <label
+          class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition mb-4"
+          [ngClass]="
+            form.get('mailEnabled')?.value
+              ? 'border-success/40 bg-success/5 hover:bg-success/10'
+              : 'border-base-200 bg-base-100 hover:border-primary/30 hover:bg-base-200/40'
+          "
+        >
+          <input
+            formControlName="mailEnabled"
+            type="checkbox"
+            class="toggle toggle-success toggle-sm mt-0.5 shrink-0"
+          />
+          <div class="flex-1 min-w-0">
+            <span class="text-sm font-semibold flex items-center gap-2">
+              <i
+                class="fa-solid fa-paper-plane text-xs"
+                [ngClass]="
+                  form.get('mailEnabled')?.value ? 'text-success' : 'opacity-60'
+                "
+                aria-hidden="true"
+              ></i>
+              Enviar notificaciones por correo
+            </span>
+            <p class="text-xs opacity-60 mt-1 leading-relaxed">
+              Activa el envío automático de correos (tickets, SLA, evaluaciones
+              y tareas)
+            </p>
+          </div>
+        </label>
+
+        <!-- Cuenta remitente -->
+        <div class="md:max-w-md">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Cuenta remitente</span>
+          </label>
+          <div class="relative">
+            <i
+              class="fa-solid fa-at text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+              aria-hidden="true"
+            ></i>
+            <input
+              formControlName="mailFromAccount"
+              type="email"
+              class="input input-bordered input-sm w-full pl-9 focus:ring-2 focus:ring-primary/25"
+              placeholder="notificaciones@coacmagisterio.fin.ec"
+              autocomplete="off"
+            />
+          </div>
+          <p class="text-[10px] opacity-60 mt-1">
+            Debe tener permiso
+            <code class="bg-base-200 px-1 rounded">Mail.Send</code> en Azure AD
+          </p>
+        </div>
+
+        <!-- Email de prueba -->
+        <div class="md:max-w-md mt-4">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Enviar prueba a</span>
+          </label>
+          <div class="relative">
+            <i
+              class="fa-solid fa-envelope-circle-check text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+              aria-hidden="true"
+            ></i>
+            <input
+              formControlName="emailTestTo"
+              type="email"
+              class="input input-bordered input-sm w-full pl-9 focus:ring-2 focus:ring-primary/25"
+              placeholder="su-correo@coacmagisterio.fin.ec"
+              autocomplete="off"
+            />
+          </div>
+          <p class="text-[10px] opacity-60 mt-1">
+            Si se deja vacío, la prueba se envía a la cuenta remitente
+          </p>
+        </div>
+
+        <div
+          class="flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-4"
+        >
+          <button
+            type="button"
+            class="btn btn-outline btn-sm gap-2"
+            (click)="testEmail()"
+            [disabled]="
+              isEmailTesting || isSaving || form.get('emailTestTo')?.invalid
+            "
+          >
+            <span
+              *ngIf="isEmailTesting"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="!isEmailTesting"
+              class="fa-solid fa-bolt text-[15px]"
+              aria-hidden="true"
+            ></i>
+            {{ isEmailTesting ? "Enviando..." : "Enviar correo de prueba" }}
+          </button>
+          <span class="text-xs opacity-60">
+            <i
+              class="fa-solid fa-circle-info text-[10px]"
+              aria-hidden="true"
+            ></i>
+            Guarda la configuración antes de probar el envío.
+          </span>
+        </div>
+
+        <div *ngIf="emailTestResult" class="mt-4">
+          <div
+            class="flex items-start gap-3 p-4 rounded-xl border"
+            [ngClass]="
+              emailTestResult.success
+                ? 'bg-success/5 border-success/30'
+                : 'bg-error/5 border-error/30'
+            "
+            role="alert"
+          >
+            <div
+              class="p-2 rounded-lg shrink-0"
+              [ngClass]="
+                emailTestResult.success
+                  ? 'bg-success text-success-content'
+                  : 'bg-error text-error-content'
+              "
+              aria-hidden="true"
+            >
+              <i
+                [class]="
+                  emailTestResult.success
+                    ? 'fa-solid fa-circle-check'
+                    : 'fa-solid fa-triangle-exclamation'
+                "
+                class="text-sm"
+              ></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p
+                class="font-semibold text-sm"
+                [ngClass]="
+                  emailTestResult.success ? 'text-success' : 'text-error'
+                "
+              >
+                {{
+                  emailTestResult.success
+                    ? "Correo de prueba enviado"
+                    : "Error al enviar el correo"
+                }}
+              </p>
+              <p class="text-xs mt-1 opacity-80 leading-relaxed">
+                {{ emailTestResult.message }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ Resumen diario ============ -->
+        <div class="divider my-4"></div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <div
+            class="p-1.5 rounded-lg bg-warning/10 text-warning ring-1 ring-warning/15"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-calendar-day text-sm"></i>
+          </div>
+          <h4 class="text-sm font-semibold">Resumen diario por correo</h4>
+        </div>
+
+        <div
+          class="flex flex-col sm:flex-row items-start sm:items-center gap-3"
+        >
+          <div class="flex-1 min-w-0 text-xs opacity-70 leading-relaxed">
+            Indicadores del día y estado de la cola. Se envía automáticamente
+            cada día a las 08:00 a ADMIN / SUPER_ADMIN o a los destinatarios
+            configurados.
+          </div>
+          <button
+            type="button"
+            class="btn btn-outline btn-sm gap-2 shrink-0"
+            (click)="sendDailySummary()"
+            [disabled]="isSummarySending || isSaving || isTesting"
+          >
+            <span
+              *ngIf="isSummarySending"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="!isSummarySending"
+              class="fa-solid fa-envelope text-[15px]"
+              aria-hidden="true"
+            ></i>
+            {{ isSummarySending ? "Enviando..." : "Enviar resumen ahora" }}
+          </button>
+        </div>
+
+        <div *ngIf="summaryResult" class="mt-3">
+          <div
+            class="flex items-start gap-3 p-4 rounded-xl border"
+            [ngClass]="
+              summaryResult.sent > 0
+                ? 'bg-success/5 border-success/30'
+                : 'bg-warning/5 border-warning/30'
+            "
+            role="alert"
+          >
+            <div
+              class="p-2 rounded-lg shrink-0"
+              [ngClass]="
+                summaryResult.sent > 0
+                  ? 'bg-success text-success-content'
+                  : 'bg-warning text-warning-content'
+              "
+              aria-hidden="true"
+            >
+              <i
+                [class]="
+                  summaryResult.sent > 0
+                    ? 'fa-solid fa-circle-check'
+                    : 'fa-solid fa-circle-exclamation'
+                "
+                class="text-sm"
+              ></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p
+                class="font-semibold text-sm"
+                [ngClass]="
+                  summaryResult.sent > 0 ? 'text-success' : 'text-warning'
+                "
+              >
+                {{
+                  summaryResult.sent > 0
+                    ? "Resumen enviado a " +
+                      summaryResult.sent +
+                      " destinatario(s)"
+                    : "Sin destinatarios configurados"
+                }}
+              </p>
+              <p
+                *ngIf="summaryResult.recipients?.length"
+                class="text-xs mt-1 opacity-70"
+              >
+                {{ summaryResult.recipients.join(", ") }}
+              </p>
+
+              <!-- Métricas -->
+              <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-3">
+                <div class="bg-base-200/50 rounded-lg p-2 text-center">
+                  <p class="text-lg font-bold text-primary">
+                    {{ summaryResult.createdToday }}
+                  </p>
+                  <p class="text-[10px] opacity-60">Creados hoy</p>
+                </div>
+                <div class="bg-base-200/50 rounded-lg p-2 text-center">
+                  <p class="text-lg font-bold text-success">
+                    {{ summaryResult.resolvedToday }}
+                  </p>
+                  <p class="text-[10px] opacity-60">Resueltos hoy</p>
+                </div>
+                <div class="bg-base-200/50 rounded-lg p-2 text-center">
+                  <p class="text-lg font-bold text-info">
+                    {{ summaryResult.openTickets }}
+                  </p>
+                  <p class="text-[10px] opacity-60">Abiertos</p>
+                </div>
+                <div class="bg-base-200/50 rounded-lg p-2 text-center">
+                  <p class="text-lg font-bold text-warning">
+                    {{ summaryResult.slaAtRisk }}
+                  </p>
+                  <p class="text-[10px] opacity-60">SLA riesgo</p>
+                </div>
+                <div class="bg-base-200/50 rounded-lg p-2 text-center">
+                  <p class="text-lg font-bold text-error">
+                    {{ summaryResult.slaBreachedOpen }}
+                  </p>
+                  <p class="text-[10px] opacity-60">SLA vencidos</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ==================================================== -->
+      <!-- ============ PESTAÑA: AUDITORÍA =================== -->
+      <!-- ==================================================== -->
+      <ng-container *ngIf="tab === 'auditoria'">
+        <div class="flex items-center gap-2 mb-4">
+          <div
+            class="p-1.5 rounded-lg bg-warning/10 text-warning ring-1 ring-warning/15"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold">Auditoría de cambios</h3>
+            <p class="text-xs opacity-60">
+              Historial de modificaciones en la configuración
+            </p>
+          </div>
+        </div>
+
+        <!-- Estado vacío -->
+        <div
+          *ngIf="audit.length === 0"
+          class="flex flex-col items-center py-10 gap-3 opacity-60"
+        >
+          <div class="p-3 rounded-full bg-base-200">
+            <i
+              class="fa-solid fa-clock-rotate-left text-2xl"
+              aria-hidden="true"
+            ></i>
+          </div>
+          <p class="text-sm">Aún no hay cambios registrados</p>
+        </div>
+
+        <!-- Tabla -->
+        <div
+          *ngIf="audit.length > 0"
+          class="overflow-x-auto rounded-xl border border-base-200"
+        >
+          <table class="table table-sm">
+            <thead class="bg-base-200/50">
+              <tr>
+                <th class="text-xs">Fecha</th>
+                <th class="text-xs">Usuario</th>
+                <th class="text-xs">Acción</th>
+                <th class="text-xs">Campos modificados</th>
+                <th class="text-xs">IP</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let item of pagAudit.vista"
+                class="hover:bg-base-200/30 transition-colors"
+              >
+                <td class="whitespace-nowrap text-xs font-medium">
+                  {{ item.createdAt | date: "dd/MM/yyyy HH:mm" }}
+                </td>
+                <td
+                  class="text-xs truncate max-w-[160px]"
+                  [title]="item.changedByEmail || 'ID ' + item.changedBy"
+                >
+                  {{ item.changedByEmail || "ID " + item.changedBy }}
+                </td>
+                <td>
+                  <span
+                    class="badge badge-sm badge-audit gap-1 font-medium"
+                    [ngClass]="
+                      item.action === 'CREATED' ? 'badge-info' : 'badge-primary'
+                    "
+                  >
+                    <i
+                      class="text-[10px]"
+                      [ngClass]="
+                        item.action === 'CREATED'
+                          ? 'fa-solid fa-plus'
+                          : 'fa-solid fa-pen'
+                      "
+                      aria-hidden="true"
+                    ></i>
+                    {{ item.action }}
+                  </span>
+                </td>
+                <td
+                  class="text-xs max-w-[280px] truncate"
+                  [title]="item.details"
+                >
+                  {{ item.details }}
+                </td>
+                <td class="whitespace-nowrap text-xs font-mono opacity-70">
+                  {{ item.ipAddress || "—" }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginador -->
+        <app-paginator
+          *ngIf="audit.length > 0"
+          [total]="audit.length"
+          [page]="pagAudit.page"
+          [pageSize]="pagAudit.pageSize"
+          (pageChange)="pagAudit.cambiarPagina($event)"
+          (pageSizeChange)="pagAudit.cambiarTamano($event)"
+        ></app-paginator>
+
+        <!-- Card informativa de seguridad -->
+        <div
+          class="flex items-start gap-3 p-4 rounded-xl bg-info/5 border border-info/20 mt-5"
+        >
+          <div
+            class="p-2 rounded-lg bg-info/15 text-info shrink-0 ring-1 ring-info/15"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-shield-halved text-sm"></i>
+          </div>
+          <div class="text-sm flex-1 min-w-0">
+            <p class="font-semibold text-info mb-2">
+              Buenas prácticas de seguridad
+            </p>
+            <ul class="text-xs opacity-80 space-y-1.5">
+              <li class="flex items-start gap-1.5">
+                <i
+                  class="fa-solid fa-circle-check text-success text-[10px] mt-1 shrink-0"
+                  aria-hidden="true"
+                ></i>
+                <span
+                  >El client secret se cifra (AES-256-GCM) con una clave maestra
+                  que <strong>no</strong> se guarda en la base de datos.</span
+                >
+              </li>
+              <li class="flex items-start gap-1.5">
+                <i
+                  class="fa-solid fa-circle-check text-success text-[10px] mt-1 shrink-0"
+                  aria-hidden="true"
+                ></i>
+                <span
+                  >El backend nunca devuelve el client secret al frontend; solo
+                  indica si está configurado.</span
+                >
+              </li>
+              <li class="flex items-start gap-1.5">
+                <i
+                  class="fa-solid fa-circle-check text-success text-[10px] mt-1 shrink-0"
+                  aria-hidden="true"
+                ></i>
+                <span
+                  >Dejar el campo Client Secret vacío conserva el valor
+                  existente.</span
+                >
+              </li>
+              <li class="flex items-start gap-1.5">
+                <i
+                  class="fa-solid fa-circle-check text-success text-[10px] mt-1 shrink-0"
+                  aria-hidden="true"
+                ></i>
+                <span
+                  >El access token se mantiene en memoria y se reutiliza hasta
+                  su expiración; no se persiste ni se registra en logs.</span
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ==================================================== -->
+      <!-- ============ ACCIONES (fijas al fondo) ============ -->
+      <!-- ==================================================== -->
+      <div
+        *ngIf="tab !== 'auditoria'"
+        class="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 mt-4 border-t border-base-200"
+      >
+        <button
+          type="button"
+          class="btn btn-outline btn-sm gap-2"
+          (click)="testConnection()"
+          [disabled]="isTesting || isSaving"
+        >
+          <span
+            *ngIf="isTesting"
+            class="loading loading-spinner loading-xs"
+            aria-hidden="true"
+          ></span>
+          <i
+            *ngIf="!isTesting"
+            class="fa-solid fa-bolt text-[15px]"
+            aria-hidden="true"
+          ></i>
+          {{ isTesting ? "Probando..." : "Probar conexión" }}
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary btn-sm gap-2 shadow-md hover:shadow-lg transition"
+          (click)="onSave()"
+          [disabled]="isTesting || isSaving"
+        >
+          <span
+            *ngIf="isSaving"
+            class="loading loading-spinner loading-xs"
+            aria-hidden="true"
+          ></span>
+          <i
+            *ngIf="!isSaving"
+            class="fa-solid fa-check text-[15px]"
+            aria-hidden="true"
+          ></i>
+          {{ isSaving ? "Guardando..." : "Guardar configuración" }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

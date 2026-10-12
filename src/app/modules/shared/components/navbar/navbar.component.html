@@ -1,119 +1,549 @@
-<header class="navbar bg-base-100 shadow-sm border-b border-base-300 sticky top-0 z-30">
-  <!-- ============ navbar-start ============ -->
-  <div class="navbar-start flex items-center gap-2 sm:gap-3">
-    <!-- Botón toggle sidebar -->
-    <button class="btn btn-ghost btn-sm btn-square" (click)="toggleSidebar.emit()" title="Contraer/Expandir menú"
-      aria-label="Alternar menú lateral">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-        aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-      </svg>
+<header class="nav sticky top-0 z-30">
+  <!-- ============ Izquierda: menú y búsqueda ============ -->
+  <div class="flex items-center gap-2 min-w-0 flex-1">
+    <button
+      type="button"
+      class="nav__btn"
+      (click)="toggleSidebar.emit()"
+      title="Contraer/Expandir menú"
+      aria-label="Alternar menú lateral"
+    >
+      <i class="fa-solid fa-bars-staggered text-[15px]" aria-hidden="true"></i>
     </button>
 
-    <!-- Logo + nombre -->
-    <a routerLink="/" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
-      <img *ngIf="logoUrl" [src]="logoUrl" alt="Logo" class="h-8 w-auto object-contain" />
-      <span class="font-bold text-base sm:text-lg text-primary hidden sm:block whitespace-nowrap">
-        Mesa de Ayuda COAC
+    <!-- Búsqueda global (Ctrl + K): parece un campo, abre el buscador. -->
+    <button
+      type="button"
+      class="nav__buscar"
+      (click)="abrirBusqueda()"
+      aria-label="Buscar en la plataforma (Ctrl + K)"
+    >
+      <i class="fa-solid fa-magnifying-glass text-[13px] opacity-60" aria-hidden="true"></i>
+      <span class="flex-1 text-left truncate">Buscar tickets, personas, equipos…</span>
+      <kbd class="nav__kbd">Ctrl K</kbd>
+    </button>
+    <button
+      type="button"
+      class="nav__btn nav__lupa"
+      (click)="abrirBusqueda()"
+      aria-label="Buscar en la plataforma"
+    >
+      <i class="fa-solid fa-magnifying-glass text-[15px]" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <!-- ============ Centro: logo del sistema ============ -->
+  <a routerLink="/dashboard" class="nav__marca" aria-label="Ir al inicio">
+    <img *ngIf="logoUrl" [src]="logoUrl" alt="Logo del sistema" class="nav__logo" />
+    <span *ngIf="!logoUrl" class="nav__marca-texto">Mesa de Servicios</span>
+  </a>
+
+  <!-- ============ Derecha ============ -->
+  <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+    <!-- Toggle tema claro/oscuro -->
+    <button
+      type="button"
+      role="switch"
+      [attr.aria-checked]="isDark"
+      [attr.aria-label]="
+        isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
+      "
+      [title]="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+      (click)="toggleTheme()"
+      class="relative w-14 h-7 rounded-full overflow-hidden shadow-inner cursor-pointer select-none shrink-0 transition duration-500 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+      [ngClass]="
+        isDark
+          ? 'bg-gradient-to-r from-indigo-900 via-slate-900 to-slate-800'
+          : 'bg-gradient-to-r from-sky-300 via-sky-400 to-indigo-500'
+      "
+    >
+      <!-- Nubes (solo modo claro) -->
+      <div
+        class="absolute inset-0 transition-opacity duration-500"
+        [class.opacity-0]="isDark"
+        [class.opacity-100]="!isDark"
+      >
+        <i
+          class="fa-solid fa-cloud absolute right-2 top-1/2 -translate-y-1/2 text-xs text-white/90"
+        ></i>
+      </div>
+
+      <!-- Estrellas (solo modo oscuro) -->
+      <div
+        class="absolute inset-0 transition-opacity duration-500"
+        [class.opacity-100]="isDark"
+        [class.opacity-0]="!isDark"
+      >
+        <span
+          class="absolute left-2 top-2 w-1 h-1 bg-white rounded-full"
+        ></span>
+        <span
+          class="absolute left-4 top-5 w-0.5 h-0.5 bg-white rounded-full"
+        ></span>
+        <span
+          class="absolute left-6 top-3 w-1 h-1 bg-white rounded-full"
+        ></span>
+        <span
+          class="absolute left-8 top-5 w-0.5 h-0.5 bg-white rounded-full"
+        ></span>
+        <span
+          class="absolute left-3 top-4 w-0.5 h-0.5 bg-white rounded-full"
+        ></span>
+      </div>
+
+      <!-- Thumb con sol/luna -->
+      <span
+        class="absolute top-1 left-1 w-5 h-5 rounded-full shadow-md transition duration-500 ease-in-out flex items-center justify-center"
+        [ngClass]="
+          isDark
+            ? 'translate-x-7 bg-gradient-to-br from-slate-100 to-slate-300'
+            : 'translate-x-0 bg-gradient-to-br from-yellow-300 to-yellow-500'
+        "
+      >
+        <i
+          class="fa-solid fa-sun text-xs text-yellow-700 transition-opacity duration-300"
+          [class.opacity-100]="!isDark"
+          [class.opacity-0]="isDark"
+        ></i>
+        <i
+          class="fa-solid fa-moon text-xs text-slate-700 transition-opacity duration-300 absolute"
+          [class.opacity-100]="isDark"
+          [class.opacity-0]="!isDark"
+        ></i>
       </span>
-    </a>
-  </div>
+    </button>
 
-  <!-- ============ navbar-center (opcional) ============ -->
-  <div class="navbar-center hidden lg:flex">
-    <div class="badge badge-lg badge-primary gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-        aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-      Sistema de Mesa de Ayuda
-    </div>
-  </div>
-
-  <!-- ============ navbar-end ============ -->
-  <div class="navbar-end gap-1 sm:gap-2">
-
-    <!-- Notificaciones -->
+    <!-- ==================================================== -->
+    <!-- ============ INDICADOR DE TIEMPO =================== -->
+    <!-- ==================================================== -->
     <div class="dropdown dropdown-end">
-      <label tabindex="0" class="btn btn-ghost btn-circle btn-sm" aria-label="Notificaciones">
-        <div class="indicator">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+      <!-- Botón/pill con el tiempo restante -->
+      <button
+        *ngIf="inactividadRestante || sesionRestante"
+        type="button"
+        tabindex="0"
+        class="btn btn-sm gap-2 px-2.5 h-9 transition"
+        [ngClass]="indicadorTiempo.clase"
+        [title]="indicadorTiempo.tooltip"
+        (click)="seguirActivo()"
+        [disabled]="inactividadRenovando || sesionRenovando"
+        aria-label="Tiempo de sesión"
+      >
+        <!-- Icono de reloj/refresh según estado -->
+        <i
+          [class]="indicadorTiempo.icono"
+          class="text-xs"
+          [class.animate-spin]="inactividadRenovando || sesionRenovando"
+          aria-hidden="true"
+        ></i>
+
+        <!-- Texto del tiempo -->
+        <span class="text-xs font-medium tabular-nums leading-none">
+          {{ indicadorTiempo.texto }}
+        </span>
+
+        <!-- Barra de progreso circular (opcional) -->
+        <span
+          *ngIf="indicadorTiempo.progreso != null"
+          class="relative w-4 h-4 shrink-0"
+          aria-hidden="true"
+        >
+          <!-- Círculo de fondo -->
+          <svg class="w-4 h-4 -rotate-90" viewBox="0 0 16 16" fill="none">
+            <circle
+              cx="8"
+              cy="8"
+              r="6"
+              stroke="currentColor"
+              stroke-width="2"
+              opacity="0.2"
+            />
           </svg>
-          <span *ngIf="notificationsCount > 0" class="badge badge-xs badge-error indicator-item">
-            {{ notificationsCount > 99 ? '99+' : notificationsCount }}
-          </span>
+          <!-- Círculo de progreso -->
+          <svg
+            class="w-4 h-4 -rotate-90 absolute inset-0"
+            viewBox="0 0 16 16"
+            fill="none"
+          >
+            <circle
+              cx="8"
+              cy="8"
+              r="6"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              [attr.stroke-dasharray]="progresoCirculo.circunferencia"
+              [attr.stroke-dashoffset]="progresoCirculo.offset"
+            />
+          </svg>
+        </span>
+      </button>
+
+      <!-- Dropdown con detalle: sesión + inactividad -->
+      <div
+        tabindex="0"
+        class="dropdown-content mt-3 z-[1] bg-base-100 text-base-content rounded-2xl w-72 shadow-2xl border border-base-200 overflow-hidden"
+      >
+        <!-- Header -->
+        <div
+          class="px-4 py-3 bg-gradient-to-r from-primary/5 to-transparent border-b border-base-200 flex items-center gap-2"
+        >
+          <div
+            class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+            aria-hidden="true"
+          >
+            <i class="fa-regular fa-clock text-sm"></i>
+          </div>
+          <span class="font-semibold text-sm">Tiempo de actividad</span>
+        </div>
+
+        <!-- Cuerpo -->
+        <div class="p-4 space-y-4">
+          <!-- Inactividad -->
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <div class="flex items-center gap-1.5 text-xs">
+                <i
+                  [class]="
+                    inactividadPorVencer
+                      ? 'fa-solid fa-triangle-exclamation text-warning'
+                      : 'fa-regular fa-circle-pause opacity-60'
+                  "
+                  class="text-[11px]"
+                  aria-hidden="true"
+                ></i>
+                <span class="font-medium">Sin actividad</span>
+              </div>
+              <span
+                class="text-sm font-bold tabular-nums"
+                [ngClass]="
+                  inactividadPorVencer ? 'text-warning' : 'text-base-content'
+                "
+              >
+                {{ inactividadRestante || "—" }}
+              </span>
+            </div>
+
+            <!-- Barra de progreso -->
+            <div class="h-1.5 rounded-full bg-base-200 overflow-hidden">
+              <div
+                class="h-full transition-[width] duration-1000 ease-linear"
+                [ngClass]="inactividadPorVencer ? 'bg-warning' : 'bg-primary'"
+                [style.width.%]="progresoInactividad"
+              ></div>
+            </div>
+
+            <p class="text-[10px] opacity-60 mt-1.5 leading-relaxed">
+              La sesión se cierra automáticamente tras este tiempo sin
+              actividad. Haz clic para seguir trabajando.
+            </p>
+          </div>
+
+          <!-- Separador -->
+          <div class="h-px bg-base-200" aria-hidden="true"></div>
+
+          <!-- Sesión -->
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <div class="flex items-center gap-1.5 text-xs">
+                <i
+                  [class]="
+                    sesionPorVencer
+                      ? 'fa-solid fa-clock text-warning'
+                      : 'fa-regular fa-clock opacity-60'
+                  "
+                  class="text-[11px]"
+                  aria-hidden="true"
+                ></i>
+                <span class="font-medium">Sesión válida</span>
+              </div>
+              <span
+                class="text-sm font-bold tabular-nums"
+                [ngClass]="
+                  sesionPorVencer ? 'text-warning' : 'text-base-content'
+                "
+              >
+                {{ sesionRestante || "—" }}
+              </span>
+            </div>
+
+            <!-- Barra de progreso -->
+            <div class="h-1.5 rounded-full bg-base-200 overflow-hidden">
+              <div
+                class="h-full transition-[width] duration-1000 ease-linear"
+                [ngClass]="sesionPorVencer ? 'bg-warning' : 'bg-success'"
+                [style.width.%]="progresoSesion"
+              ></div>
+            </div>
+
+            <p class="text-[10px] opacity-60 mt-1.5 leading-relaxed">
+              Tiempo antes de que el token expire. Se renueva automáticamente al
+              seguir usando el sistema.
+            </p>
+          </div>
+        </div>
+
+        <!-- Footer con acciones -->
+        <div
+          class="flex items-center gap-2 px-3 py-2 border-t border-base-200 bg-base-200/30"
+        >
+          <button
+            type="button"
+            class="btn btn-sm btn-primary flex-1 gap-2"
+            (click)="seguirActivo()"
+            [disabled]="inactividadRenovando || sesionRenovando"
+          >
+            <span
+              *ngIf="inactividadRenovando || sesionRenovando"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="!inactividadRenovando && !sesionRenovando"
+              class="fa-solid fa-rotate text-[15px]"
+              aria-hidden="true"
+            ></i>
+            {{
+              inactividadRenovando || sesionRenovando
+                ? "Renovando..."
+                : "Seguir activo"
+            }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado del canal en tiempo real. Discreto: solo un punto. Verde = los
+         cambios llegan solos; ámbar = reconectando (la página puede ir con
+         retraso hasta que vuelva). -->
+    <span
+      class="hidden sm:inline-flex items-center justify-center w-6 h-6"
+      role="status"
+      [attr.aria-label]="sseStatus === 'connected' ? 'Actualizaciones en tiempo real activas' : 'Reconectando las actualizaciones en tiempo real'"
+      [title]="sseStatus === 'connected' ? 'En vivo: los cambios llegan al instante' : 'Reconectando… los cambios pueden tardar'"
+    >
+      <span
+        class="nav-vivo"
+        [class.nav-vivo--ok]="sseStatus === 'connected'"
+        [class.nav-vivo--espera]="sseStatus !== 'connected'"
+        aria-hidden="true"
+      ></span>
+    </span>
+
+    <!-- ==================================================== -->
+    <!-- ============ NOTIFICACIONES ======================= -->
+    <!-- ==================================================== -->
+    <div class="dropdown dropdown-end">
+      <!-- Botón campana con indicador -->
+      <label
+        tabindex="0"
+        class="nav__btn relative"
+        aria-label="Notificaciones"
+      >
+        <div class="indicator">
+          <i class="fa-regular fa-bell text-[17px]" aria-hidden="true"></i>
+
+          <ng-container *ngIf="notificationsCount > 0">
+            <!-- Se recrea con pulsoContador para que el globo "lata" al subir. -->
+            <span
+              *ngFor="let _ of [pulsoContador]"
+              class="badge badge-xs badge-error indicator-item font-bold animate-count-pop"
+              [title]="notificationsCount + ' sin leer'"
+            >
+              {{ notificationsCount > 99 ? "99+" : notificationsCount }}
+            </span>
+          </ng-container>
         </div>
       </label>
 
       <!-- Contenedor del dropdown -->
-      <div tabindex="0"
-        class="dropdown-content mt-3 z-[1] bg-base-100 rounded-box w-80 shadow-lg border border-base-200 overflow-hidden">
-        <!-- Header -->
-        <div class="flex items-center justify-between px-4 py-3 bg-base-200/40 border-b border-base-200">
-          <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
+      <div
+        tabindex="0"
+        class="dropdown-content mt-3 z-[1] bg-base-100 text-base-content rounded-2xl w-[24rem] max-w-[calc(100vw-2rem)] shadow-2xl border border-base-200 overflow-hidden"
+      >
+        <!-- ============ HEADER ============ -->
+        <div
+          class="flex items-center justify-between gap-2 px-4 py-3 bg-gradient-to-r from-primary/5 to-transparent border-b border-base-200"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <div
+              class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-bell text-sm"></i>
+            </div>
             <span class="font-semibold text-sm">Notificaciones</span>
+
+            <span
+              *ngIf="notificationsCount > 0"
+              class="badge badge-sm badge-primary text-primary-content gap-1 font-medium"
+            >
+              {{ notificationsCount }}
+            </span>
           </div>
-          <span *ngIf="notificationsCount > 0" class="badge badge-sm badge-primary">{{ notificationsCount }}</span>
+
+          <button
+            *ngIf="notificationsCount > 0"
+            type="button"
+            class="btn btn-ghost btn-xs gap-1.5 text-primary hover:bg-primary/10"
+            (click)="marcarTodasComoLeidas($event)"
+            title="Marcar todas como leídas"
+            aria-label="Marcar todas como leídas"
+          >
+            <i
+              class="fa-solid fa-check-double text-[11px]"
+              aria-hidden="true"
+            ></i>
+            <span class="hidden sm:inline">Marcar todas</span>
+          </button>
         </div>
 
-        <!-- Lista scrolleable -->
-        <div class="max-h-80 overflow-y-auto">
-          <ul class="menu menu-sm p-2 w-full">
-            <li *ngFor="let n of notifications">
-              <a class="flex items-start gap-2 py-2 rounded-lg">
-                <div class="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0 mt-0.5" aria-hidden="true">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium truncate" [title]="n.subjectNotification">
-                    {{ n.subjectNotification }}
-                  </p>
-                  <p class="text-xs opacity-70 truncate" [title]="n.messageNotification">
-                    {{ n.messageNotification }}
-                  </p>
-                  <p class="text-[10px] opacity-50 mt-0.5">
-                    {{ n.createdAtNotification | date: 'dd/MM HH:mm' }}
-                  </p>
-                </div>
-              </a>
-            </li>
+        <!-- ============ LISTA AGRUPADA ============ -->
+        <div class="max-h-[28rem] overflow-y-auto">
+          <!-- Sin notificaciones -->
+          <div
+            *ngIf="!notifications || notifications.length === 0"
+            class="flex flex-col items-center py-12 gap-3"
+          >
+            <div
+              class="p-4 rounded-full bg-base-200 text-base-content/40"
+              aria-hidden="true"
+            >
+              <i class="fa-regular fa-bell-slash text-3xl"></i>
+            </div>
+            <p class="text-sm font-medium">Sin notificaciones</p>
+            <p class="text-xs opacity-60 text-center max-w-[200px]">
+              Cuando recibas una, aparecerá aquí
+            </p>
+          </div>
 
-            <!-- Estado vacío -->
-            <li *ngIf="!notifications || notifications.length === 0">
-              <div class="flex flex-col items-center py-8 gap-2 opacity-60">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <span class="text-xs">Sin notificaciones</span>
+          <!-- Grupos por fecha -->
+          <ng-container *ngIf="notifications && notifications.length > 0">
+            <ng-container *ngFor="let grupo of gruposNavbar()">
+              <!-- Separador de grupo -->
+              <div
+                class="flex items-center gap-2 px-4 py-2 bg-base-200/40 border-b border-base-200/60 sticky top-0 backdrop-blur-sm z-10"
+              >
+                <span
+                  class="text-[10px] font-bold uppercase tracking-wider opacity-60"
+                >
+                  {{ grupo.label }}
+                </span>
+                <div class="h-px bg-base-300 flex-1" aria-hidden="true"></div>
+                <span class="badge badge-xs badge-ghost font-medium">
+                  {{ grupo.items.length }}
+                </span>
               </div>
-            </li>
-          </ul>
+
+              <!-- Items del grupo -->
+              <div class="divide-y divide-base-200">
+                <a
+                  *ngFor="let n of grupo.items"
+                  class="group flex gap-3 px-4 py-3 hover:bg-base-200/50 transition-colors cursor-pointer relative"
+                  [class.opacity-70]="n.readNotification"
+                  (click)="abrirNotificacion(n)"
+                >
+                  <!-- Barra de no leída -->
+                  <span
+                    *ngIf="!n.readNotification"
+                    class="absolute left-0 top-3 bottom-3 w-0.5 rounded-e bg-primary"
+                    aria-hidden="true"
+                  ></span>
+
+                  <!-- Avatar con el icono del tipo -->
+                  <div class="relative shrink-0">
+                    <div
+                      class="w-10 h-10 rounded-full flex items-center justify-center transition-shadow"
+                      [ngClass]="getNotificationIconClass(n.typeNotification)"
+                      [class.ring-2]="!n.readNotification"
+                      [class.ring-offset-1]="!n.readNotification"
+                      [class.ring-offset-base-100]="!n.readNotification"
+                      [class.ring-primary]="!n.readNotification"
+                      [title]="n.subjectNotification || 'Notificación'"
+                    >
+                      <i
+                        [class]="notificationIcon(n.typeNotification)"
+                        class="text-sm text-white"
+                        aria-hidden="true"
+                      ></i>
+                    </div>
+                  </div>
+
+                  <!-- Contenido -->
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-start gap-2">
+                      <p
+                        class="text-sm leading-snug line-clamp-1 flex-1"
+                        [ngClass]="
+                          n.readNotification ? 'font-normal' : 'font-semibold'
+                        "
+                        [title]="n.subjectNotification"
+                      >
+                        {{ n.subjectNotification }}
+                      </p>
+                    </div>
+
+                    <p
+                      class="text-xs opacity-70 leading-snug mt-0.5 line-clamp-2"
+                      [title]="n.messageNotification"
+                    >
+                      {{ n.messageNotification }}
+                    </p>
+
+                    <div class="flex items-center gap-2 mt-1">
+                      <p class="text-[10px] text-primary font-medium">
+                        <i
+                          class="fa-regular fa-clock text-[9px] me-0.5"
+                          aria-hidden="true"
+                        ></i>
+                        {{ n.createdAtNotification | date: "dd/MM HH:mm" }}
+                      </p>
+
+                      <span
+                        *ngIf="n.ticketId"
+                        class="text-[10px] text-info font-medium flex items-center gap-0.5"
+                      >
+                        <i
+                          class="fa-solid fa-ticket text-[9px]"
+                          aria-hidden="true"
+                        ></i>
+                        #{{ n.ticketNumber }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Acción: marcar como leída (visible al hover si no está leída) -->
+                  <button
+                    *ngIf="!n.readNotification"
+                    type="button"
+                    class="btn btn-ghost btn-xs btn-square opacity-0 group-hover:opacity-100 transition-opacity shrink-0 self-center"
+                    (click)="marcarComoLeida($event, n)"
+                    title="Marcar como leída"
+                    aria-label="Marcar como leída"
+                  >
+                    <i
+                      class="fa-solid fa-check text-[11px] text-primary"
+                      aria-hidden="true"
+                    ></i>
+                  </button>
+                </a>
+              </div>
+            </ng-container>
+          </ng-container>
         </div>
 
-        <!-- Footer con "Ver todas" -->
-        <div class="border-t border-base-200 p-2">
-          <a routerLink="/notifications"
-            class="flex items-center justify-center gap-1 text-primary text-xs font-medium py-2 rounded-lg hover:bg-primary/10 transition-colors">
+        <!-- ============ FOOTER ============ -->
+        <div class="border-t border-base-200 p-2 bg-base-200/20">
+          <a
+            routerLink="/notifications"
+            class="flex items-center justify-center gap-1.5 text-primary text-sm font-medium py-2 rounded-lg hover:bg-primary/10 transition-colors"
+          >
+            <i class="fa-solid fa-list text-xs" aria-hidden="true"></i>
             Ver todas las notificaciones
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
+            <i
+              class="fa-solid fa-chevron-right text-[10px]"
+              aria-hidden="true"
+            ></i>
           </a>
         </div>
       </div>
@@ -121,27 +551,69 @@
 
     <!-- Menú de usuario -->
     <div class="dropdown dropdown-end">
-      <label tabindex="0" class="btn btn-ghost btn-circle btn-sm" aria-label="Menú de usuario">
+      <label
+        tabindex="0"
+        class="nav__avatar relative"
+        [attr.title]="'Sesión: ' + sesionLabel"
+        aria-label="Menú de usuario"
+      >
+        <img
+          *ngIf="photoSrc"
+          [src]="photoSrc"
+          [alt]="displayName"
+          class="w-9 h-9 rounded-xl object-cover"
+        />
         <span
-          class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-content font-medium text-sm leading-none">
+          *ngIf="!photoSrc"
+          class="w-9 h-9 rounded-xl bg-white/15 text-white flex items-center justify-center font-semibold text-sm leading-none"
+        >
           {{ initials }}
         </span>
+
+        <!--
+          Punto de conexión a la derecha del avatar. Conectado va en blanco con
+          aro verde, que es lo que se pidió; los otros estados usan ámbar y rojo.
+          No se usa app-presence-dot aquí a propósito: sobre la barra azul el
+          verde de "en línea" se pierde y este necesita el blanco con aro.
+        -->
+        <span
+          class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
+          [ngClass]="sesionDot"
+          [title]="'Sesión: ' + sesionLabel"
+          role="img"
+          [attr.aria-label]="'Sesión: ' + sesionLabel"
+        ></span>
       </label>
 
       <!-- Contenedor del dropdown (NO es ul, es un div) -->
-      <div tabindex="0"
-        class="dropdown-content mt-3 z-[1] bg-base-100 rounded-box w-64 shadow-lg border border-base-200 overflow-hidden">
+      <div
+        tabindex="0"
+        class="dropdown-content mt-3 z-[1] bg-base-100 text-base-content rounded-box w-64 shadow-lg border border-base-200 overflow-hidden"
+      >
         <!-- Header del usuario -->
-        <div class="flex items-center gap-3 p-4 bg-base-200/40 border-b border-base-200">
+        <div
+          class="flex items-center gap-3 p-4 bg-base-200/40 border-b border-base-200"
+        >
+          <img
+            *ngIf="photoSrc"
+            [src]="photoSrc"
+            [alt]="displayName"
+            class="w-10 h-10 rounded-full object-cover ring-2 ring-primary/30 shrink-0"
+          />
           <div
-            class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-content font-bold shrink-0">
+            *ngIf="!photoSrc"
+            class="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-secondary-content font-bold shrink-0"
+          >
             {{ initials }}
           </div>
           <div class="min-w-0 flex-1">
-            <p class="font-semibold text-sm truncate" [title]="email">
-              {{ email || 'Usuario' }}
+            <p class="font-semibold text-sm truncate" [title]="displayName">
+              {{ displayName }}
             </p>
-            <span class="badge badge-xs badge-primary mt-1">{{ role }}</span>
+            <span
+              class="badge badge-xs badge-primary mt-1 px-3 whitespace-nowrap"
+              >{{ roleLabel }}</span
+            >
           </div>
         </div>
 
@@ -149,48 +621,64 @@
         <ul class="menu menu-sm p-2 w-full">
           <li>
             <a routerLink="/settings/profile" class="gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
+              <i class="fa-solid fa-user text-xs"></i>
               Mi Perfil
             </a>
           </li>
 
           <li>
             <a routerLink="/settings/password" class="gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-              </svg>
+              <i class="fa-solid fa-key text-xs"></i>
               Cambiar Contraseña
             </a>
           </li>
 
           <!-- Bloque admin -->
-          <ng-container *ngIf="isAdmin">
+          <ng-container *ngIf="isSuperAdmin">
             <li class="mt-1 pt-1 border-t border-base-200">
               <a routerLink="/admin/branding" class="gap-3 mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                </svg>
+                <i class="fa-solid fa-palette text-xs"></i>
                 Configuración de Marca
               </a>
             </li>
           </ng-container>
 
-          <!-- Logout -->
-          <li class="mt-1 pt-1 border-t border-base-200">
-            <a (click)="logout()" class="text-error hover:bg-error/10 gap-3 mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
+<!-- Sonido de las notificaciones -->
+            <li>
+              <button
+                type="button"
+                class="gap-3"
+                (click)="toggleSonido()"
+                [attr.aria-pressed]="notificationSound.enabled"
+              >
+                <i
+                  [class]="notificationSound.enabled
+                    ? 'fa-solid fa-volume-high text-xs'
+                    : 'fa-solid fa-volume-xmark text-xs opacity-50'"
+                  aria-hidden="true"
+                ></i>
+                Sonido de notificaciones
+                <span class="text-[10px] opacity-50 ml-auto">
+                  {{ notificationSound.enabled ? "Activado" : "Apagado" }}
+                </span>
+              </button>
+            </li>
+            <!-- Configuracion por tipo de notificacion: se abre desde aqui y
+                 desde el menu lateral, siempre en Configuracion. -->
+            <li>
+              <a routerLink="/settings/sounds" class="gap-3">
+                <i class="fa-solid fa-music text-xs" aria-hidden="true"></i>
+                Configurar sonidos
+              </a>
+            </li>
+
+            <!-- Logout -->
+            <li class="mt-1 pt-1 border-t border-base-200">
+            <a
+              (click)="logout()"
+              class="text-error hover:bg-error/10 gap-3 mt-1"
+            >
+              <i class="fa-solid fa-right-from-bracket text-xs"></i>
               Cerrar sesión
             </a>
           </li>

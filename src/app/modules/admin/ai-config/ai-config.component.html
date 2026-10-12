@@ -1,100 +1,553 @@
-<div class="space-y-6 max-w-3xl mx-auto">
-  <header class="flex items-center gap-3">
-    <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.308 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
-      </svg>
+<div class="space-y-6 max-w-4xl mx-auto">
+
+  <!-- ============================ HEADER ============================ -->
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex items-center gap-3 min-w-0">
+      <div
+        class="page-head__icono p-3 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary shrink-0 ring-1 ring-primary/10"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-wand-magic-sparkles text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">
+          Configuración de IA
+        </h1>
+        <p class="text-sm opacity-70 truncate">
+          Configura el proveedor del asistente de tickets
+        </p>
+      </div>
     </div>
-    <div>
-      <h1 class="text-2xl sm:text-3xl font-bold text-primary">Configuración de IA</h1>
-      <p class="text-sm opacity-70">Almacena los datos de conexión del proveedor de IA (solo configuración)</p>
-    </div>
+
+    <!-- Badge de estado -->
+    <span
+      *ngIf="!isLoading"
+      class="badge badge-lg gap-2 font-semibold self-start sm:self-center shrink-0 py-3 px-4"
+      [ngClass]="
+        aiForm.get('enabled')?.value
+          ? 'badge-success text-success-content'
+          : 'badge-ghost text-base-content/70'
+      "
+    >
+      <span
+        class="w-2 h-2 rounded-full"
+        [ngClass]="aiForm.get('enabled')?.value ? 'bg-success-content animate-pulse' : 'bg-base-content/40'"
+      ></span>
+      {{ aiForm.get('enabled')?.value ? "IA habilitada" : "IA deshabilitada" }}
+    </span>
   </header>
 
-  <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20 gap-3" role="status" aria-live="polite">
-    <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
-    <span class="text-sm opacity-70">Cargando configuración...</span>
-  </div>
+  <!-- ============================ LOADING ============================ -->
+  <app-skeleton *ngIf="isLoading" tipo="panel" [cantidad]="6" etiqueta="Cargando configuración..."></app-skeleton>
 
-  <form [formGroup]="aiForm" *ngIf="!isLoading" class="card bg-base-100 shadow-md border border-base-200">
-    <div class="card-body space-y-4">
-      <label class="flex items-center gap-3 p-3 rounded-lg border border-base-200 hover:bg-base-200/40 transition-colors cursor-pointer">
-        <input formControlName="enabled" type="checkbox" class="toggle toggle-primary toggle-sm" />
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium">Habilitar integración de IA</p>
-          <p class="text-xs opacity-60">Al deshabilitarse, la configuración se conserva pero no se usará</p>
-        </div>
-      </label>
+  <!-- ============================ FORMULARIO ============================ -->
+  <form
+    [formGroup]="aiForm"
+    (ngSubmit)="onSave()"
+    *ngIf="!isLoading"
+    class="space-y-5"
+  >
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <label class="form-control w-full">
-          <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Proveedor <span class="text-error">*</span></span>
+    <!-- ============ Card: Estado de la integración ============ -->
+    <div
+      class="card bg-base-100 shadow-md border rounded-[1.5rem] overflow-hidden transition"
+      [ngClass]="
+        aiForm.get('enabled')?.value
+          ? 'border-base-200 border-t-4 border-t-success'
+          : 'border-base-200 border-t-4 border-t-base-content/20'
+      "
+    >
+      <div class="card-body space-y-4">
+
+        <label
+          class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
+          [ngClass]="
+            aiForm.get('enabled')?.value
+              ? 'border-success/40 bg-success/5 hover:bg-success/10'
+              : 'border-base-200 bg-base-100 hover:border-primary/30 hover:bg-base-200/40'
+          "
+        >
+          <input
+            formControlName="enabled"
+            type="checkbox"
+            class="toggle toggle-success toggle-sm mt-0.5 shrink-0"
+          />
+          <div class="flex-1 min-w-0">
+            <span class="text-sm font-semibold flex items-center gap-2">
+              <i
+                class="fa-solid fa-power-off text-xs"
+                [ngClass]="aiForm.get('enabled')?.value ? 'text-success' : 'opacity-60'"
+                aria-hidden="true"
+              ></i>
+              Habilitar integración de IA
+            </span>
+            <p class="text-xs opacity-60 mt-1 leading-relaxed">
+              Cuando está activo, el asistente aparece en tickets para agentes y
+              administradores. Al deshabilitarlo, la configuración se conserva
+              pero el asistente no estará disponible.
+            </p>
           </div>
-          <select formControlName="provider" class="select select-bordered select-sm w-full">
-            <option *ngFor="let p of providers" [value]="p">{{ p }}</option>
-          </select>
-        </label>
-
-        <label class="form-control w-full">
-          <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Modelo <span class="text-error">*</span></span>
-          </div>
-          <input formControlName="model" type="text" class="input input-bordered input-sm w-full font-mono"
-            placeholder="gpt-4o-mini" />
         </label>
       </div>
+    </div>
 
-      <label class="form-control w-full">
-        <div class="label pt-0 pb-1">
-          <span class="label-text text-xs font-medium">API Key</span>
-          <span *ngIf="apiKeyMasked" class="label-text-alt text-xs opacity-60">Actual: {{ apiKeyMasked }}</span>
+    <!-- ============ Card: Proveedor y modelo ============ -->
+    <div class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden">
+      <div class="card-body space-y-5">
+
+        <div class="flex items-start gap-3">
+          <div
+            class="p-2 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-robot text-lg"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-base font-semibold">Proveedor y modelo</h2>
+            <p class="text-xs opacity-60 mt-0.5">
+              Servicio que procesará las solicitudes del asistente
+            </p>
+          </div>
         </div>
-        <div class="relative">
-          <input formControlName="apiKey" [type]="showApiKey ? 'text' : 'password'"
-            class="input input-bordered input-sm w-full pr-10 font-mono" placeholder="Dejar vacío para conservar la actual"
-            autocomplete="new-password" />
-          <button type="button" class="btn btn-ghost btn-xs btn-circle absolute right-1 top-1/2 -translate-y-1/2"
-            (click)="showApiKey = !showApiKey"
-            [attr.aria-label]="showApiKey ? 'Ocultar API key' : 'Mostrar API key'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <!-- Proveedor -->
+          <div>
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">
+                Proveedor <span class="text-error">*</span>
+              </span>
+            </label>
+            <div class="relative">
+              <i
+                class="fa-solid fa-cloud text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                aria-hidden="true"
+              ></i>
+              <select
+                formControlName="provider"
+                class="select select-bordered select-sm w-full pl-9 focus:ring-2 focus:ring-primary/25"
+                (change)="onProviderChange()"
+              >
+                <option *ngFor="let p of providers" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Modelo -->
+          <div>
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">
+                Modelo <span class="text-error">*</span>
+              </span>
+            </label>
+            <div class="relative">
+              <i
+                class="fa-solid fa-microchip text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                aria-hidden="true"
+              ></i>
+              <input
+                formControlName="model"
+                type="text"
+                class="input input-bordered input-sm w-full pl-9 font-mono text-xs focus:ring-2 focus:ring-primary/25"
+                placeholder="gpt-4o-mini"
+              />
+            </div>
+          </div>
+
+          <!-- URL base -->
+          <div class="md:col-span-2">
+            <label class="label pt-0 pb-1 flex justify-between items-center">
+              <span class="label-text text-xs font-medium">
+                URL base
+                <span class="opacity-50 font-normal">(opcional)</span>
+              </span>
+              <span class="label-text-alt text-[10px] opacity-50">
+                Se autocompleta al elegir proveedor
+              </span>
+            </label>
+            <div class="relative">
+              <i
+                class="fa-solid fa-link text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                aria-hidden="true"
+              ></i>
+              <input
+                formControlName="baseUrl"
+                type="text"
+                class="input input-bordered input-sm w-full pl-9 font-mono text-xs focus:ring-2 focus:ring-primary/25"
+                placeholder="https://api.openai.com/v1"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Card: Credenciales ============ -->
+    <div class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden">
+      <div class="card-body space-y-5">
+
+        <div class="flex items-start gap-3">
+          <div
+            class="p-2 rounded-xl bg-warning/10 text-warning ring-1 ring-warning/15 shrink-0"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-key text-lg"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-base font-semibold">Credenciales</h2>
+            <p class="text-xs opacity-60 mt-0.5">
+              La clave solo se almacena en el servidor
+            </p>
+          </div>
+          <span
+            *ngIf="apiKeyConfigured"
+            class="badge badge-sm badge-success text-success-content gap-1 shrink-0 font-medium"
+          >
+            <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
+            Configurada
+          </span>
+        </div>
+
+        <!-- API Key -->
+        <div>
+          <label class="label pt-0 pb-1 flex justify-between items-center">
+            <span class="label-text text-xs font-medium">
+              API Key
+              <span *ngIf="!apiKeyConfigured" class="text-error">*</span>
+            </span>
+            <span
+              *ngIf="apiKeyConfigured"
+              class="label-text-alt text-[10px] opacity-60 font-mono"
+            >
+              <!--
+                  No se muestra la clave guardada: el backend solo dice si hay
+                  alguna. Antes se veian los ultimos cuatro caracteres, que
+                  bastaban para identificar una clave filtrada.
+                -->
+                Ya hay una clave guardada
+            </span>
+          </label>
+          <div class="relative">
+            <i
+              class="fa-solid fa-lock text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+              aria-hidden="true"
+            ></i>
+            <input
+              formControlName="apiKey"
+              [type]="showApiKey ? 'text' : 'password'"
+              class="input input-bordered input-sm w-full pl-9 pr-10 font-mono text-xs focus:ring-2 focus:ring-warning/25"
+              placeholder="Dejar vacío para conservar la actual"
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs btn-square absolute right-1 top-1/2 -translate-y-1/2 z-10"
+              (click)="showApiKey = !showApiKey"
+              [attr.aria-label]="showApiKey ? 'Ocultar API key' : 'Mostrar API key'"
+              [title]="showApiKey ? 'Ocultar' : 'Mostrar'"
+            >
+              <i
+                [class]="showApiKey ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"
+                class="text-[15px]"
+                aria-hidden="true"
+              ></i>
+            </button>
+          </div>
+          <p class="text-[10px] opacity-60 mt-1.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-shield-halved text-success text-[10px]" aria-hidden="true"></i>
+            Cifrada en el servidor. No se devuelve al frontend.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Card: Icono del proveedor ============ -->
+    <div class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden">
+      <div class="card-body space-y-5">
+
+        <div class="flex items-start gap-3">
+          <div
+            class="p-2 rounded-xl bg-secondary/10 text-secondary ring-1 ring-secondary/15 shrink-0"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-icons text-lg"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-base font-semibold">Icono del asistente</h2>
+            <p class="text-xs opacity-60 mt-0.5">
+              Se muestra en el botón flotante de IA
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+
+          <!-- Input + preview -->
+          <div class="space-y-3">
+            <div>
+              <label class="label pt-0 pb-1">
+                <span class="label-text text-xs font-medium">Clase o URL</span>
+              </label>
+              <div class="relative">
+                <i
+                  class="fa-solid fa-code text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                  aria-hidden="true"
+                ></i>
+                <input
+                  formControlName="providerIcon"
+                  type="text"
+                  class="input input-bordered input-sm w-full pl-9 font-mono text-xs focus:ring-2 focus:ring-secondary/25"
+                  placeholder="fa-solid fa-robot"
+                />
+              </div>
+              <p class="text-[10px] opacity-60 mt-1.5 leading-relaxed">
+                Acepta una clase de Font Awesome (<code class="bg-base-200 px-1 rounded">fa-solid fa-robot</code>),
+                un emoji (<code class="bg-base-200 px-1 rounded">✨</code>) o una URL de imagen.
+              </p>
+            </div>
+
+            <!-- Ejemplos rápidos -->
+            <div class="flex flex-wrap gap-1.5">
+              <span class="text-[10px] opacity-60 self-center">Rápido:</span>
+              <button
+                *ngFor="let ic of iconosSugeridos"
+                type="button"
+                class="btn btn-ghost btn-xs gap-1.5 border border-base-200 hover:border-secondary/40 hover:bg-secondary/5"
+                (click)="aiForm.patchValue({ providerIcon: ic.value })"
+                [title]="ic.label"
+              >
+                <i [class]="ic.value + ' text-[11px]'" aria-hidden="true"></i>
+                <span class="hidden sm:inline text-[10px]">{{ ic.label }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Preview del icono + info -->
+          <div class="p-4 rounded-xl bg-base-200/40 border border-base-200 space-y-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider opacity-60">
+              Vista previa
+            </p>
+
+            <div class="flex items-center gap-4">
+              <!-- Preview circular grande -->
+              <div
+                class="w-16 h-16 rounded-full flex items-center justify-center bg-primary text-white text-2xl ring-4 ring-primary/15 shadow-md shrink-0 overflow-hidden"
+                aria-hidden="true"
+              >
+                <img
+                  *ngIf="isUrl(iconPreview())"
+                  [src]="iconPreview()"
+                  alt="Icono"
+                  class="w-full h-full object-cover"
+                  (error)="iconError()"
+                />
+                <i
+                  *ngIf="isFa(iconPreview())"
+                  [class]="iconPreview() + ' text-2xl leading-none'"
+                ></i>
+                <span
+                  *ngIf="!isUrl(iconPreview()) && !isFa(iconPreview()) && iconPreview()"
+                  class="text-2xl leading-none"
+                >
+                  {{ iconPreview() }}
+                </span>
+                <i
+                  *ngIf="!iconPreview()"
+                  class="fa-solid fa-robot text-2xl leading-none"
+                ></i>
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold truncate">
+                  {{ aiForm.get("provider")?.value }}
+                </p>
+                <p class="text-xs opacity-60 truncate font-mono">
+                  {{ aiForm.get("model")?.value }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Simulación del botón flotante -->
+            <div class="pt-2 border-t border-base-200">
+              <p class="text-[10px] opacity-60 mb-2">Así se verá el botón flotante:</p>
+              <div class="flex justify-end">
+                <div
+                  class="w-12 h-12 rounded-full flex items-center justify-center bg-primary text-white shadow-lg ring-2 ring-primary/20 overflow-hidden"
+                  aria-hidden="true"
+                >
+                  <img
+                    *ngIf="isUrl(iconPreview())"
+                    [src]="iconPreview()"
+                    alt=""
+                    class="w-full h-full object-cover"
+                  />
+                  <i
+                    *ngIf="isFa(iconPreview())"
+                    [class]="iconPreview() + ' text-lg leading-none'"
+                  ></i>
+                  <span
+                    *ngIf="!isUrl(iconPreview()) && !isFa(iconPreview()) && iconPreview()"
+                    class="text-lg leading-none"
+                  >
+                    {{ iconPreview() }}
+                  </span>
+                  <i
+                    *ngIf="!iconPreview()"
+                    class="fa-solid fa-robot text-lg leading-none"
+                  ></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Reglas y comportamiento esperado ============ -->
+    <div
+      class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+    >
+      <div class="card-body space-y-5">
+        <div class="flex items-start gap-4">
+          <div
+            class="p-2 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-scale-balanced text-lg"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-base font-semibold">
+              Reglas y comportamiento esperado
+            </h2>
+            <p class="text-xs opacity-60 mt-0.5">
+              Lo que el asistente siempre debe y nunca debe hacer
+            </p>
+          </div>
+          <button
+            type="button"
+            class="btn btn-xs btn-ghost gap-1 shrink-0"
+            (click)="aiForm.patchValue({ rulesText: borradorReglas })"
+          >
+            <i class="fa-solid fa-wand-magic-sparkles text-[11px]" aria-hidden="true"></i>
+            Usar ejemplo
           </button>
         </div>
-      </label>
 
-      <label class="form-control w-full">
-        <div class="label pt-0 pb-1">
-          <span class="label-text text-xs font-medium">URL base (opcional)</span>
+        <div class="alert bg-info/10 border-info/25 text-info text-xs flex items-start gap-2.5 rounded-2xl">
+          <i class="fa-solid fa-circle-info mt-0.5 shrink-0" aria-hidden="true"></i>
+          <span>
+            Estas reglas se anteponen a las instrucciones de cada acción, así
+            que ganan a las que trae el sistema. Sirven para fijar el tono, los
+            límites y los pasos obligatorios de la institución.
+          </span>
         </div>
-        <input formControlName="baseUrl" type="text" class="input input-bordered input-sm w-full font-mono"
-          placeholder="https://api.openai.com/v1" />
-      </label>
 
-      <div class="flex justify-end gap-2 pt-3 mt-1 border-t border-base-200">
-        <button type="button" class="btn btn-primary btn-sm gap-2" (click)="onSave()" [disabled]="isLoading || aiForm.invalid">
-          <span *ngIf="isLoading" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
-          Guardar configuración
-        </button>
+        <div>
+          <label class="label pt-0 pb-1.5">
+            <span class="label-text text-xs font-medium">
+              Reglas para la IA
+            </span>
+            <span class="label-text-alt text-[10px] opacity-60">
+              {{ reglasLongitud() }} caracteres
+            </span>
+          </label>
+          <textarea
+            formControlName="rulesText"
+            rows="10"
+            class="textarea textarea-bordered w-full text-xs leading-relaxed"
+            placeholder="Una regla por línea. Ejemplo:&#10;- Responde en español de Ecuador, tono formal y cercano.&#10;- No inventes datos: si no están en el ticket, di qué debe consultar el agente.&#10;- No prometas plazos que no estén en el SLA del ticket."
+          ></textarea>
+          <p class="text-[10px] opacity-60 mt-1.5">
+            Si lo dejas vacío, el asistente usa solo sus instrucciones
+            propias, sin reglas adicionales.
+          </p>
+        </div>
+
+        <!-- Acciones habilitadas -->
+        <div>
+          <label class="label pt-0 pb-1.5">
+            <span class="label-text text-xs font-medium">
+              Acciones habilitadas
+            </span>
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <label
+              *ngFor="let a of accionesIa"
+              class="flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-colors"
+              [class.border-primary]="accionActiva(a.value)"
+              [style.backgroundColor]="
+                accionActiva(a.value)
+                  ? 'color-mix(in srgb, currentColor 6%, transparent)'
+                  : 'transparent'
+              "
+              [class.border-base-300]="!accionActiva(a.value)"
+            >
+              <input
+                type="checkbox"
+                class="checkbox checkbox-sm checkbox-primary mt-0.5"
+                [checked]="accionActiva(a.value)"
+                (change)="alternarAccion(a.value)"
+              />
+              <span class="min-w-0">
+                <span class="text-xs font-medium block">{{ a.label }}</span>
+                <span class="text-[10px] opacity-60">{{ a.ayuda }}</span>
+              </span>
+            </label>
+          </div>
+          <p class="text-[10px] opacity-60 mt-1.5">
+            Apagar una acción la bloquea en el servidor, no solo esconde el
+            botón.
+          </p>
+        </div>
       </div>
+    </div>
+
+    <!-- ============ Acciones ============ -->
+    <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm gap-2"
+        (click)="loadConfig()"
+        [disabled]="isLoading"
+      >
+        <i class="fa-solid fa-rotate-left text-[15px]" aria-hidden="true"></i>
+        Descartar cambios
+      </button>
+
+      <button
+        type="submit"
+        class="btn btn-primary btn-sm gap-2 shadow-md hover:shadow-lg transition"
+        [disabled]="isLoading || aiForm.invalid"
+      >
+        <span *ngIf="isLoading" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+        <i *ngIf="!isLoading" class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
+        {{ isLoading ? "Guardando..." : "Guardar configuración" }}
+      </button>
     </div>
   </form>
 
-  <div class="card bg-info/5 border border-info/20">
-    <div class="card-body p-4 flex-row items-start gap-3">
-      <div class="p-2 rounded-lg bg-info/10 text-info shrink-0" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </div>
-      <div class="text-sm">
-        <p class="font-semibold text-info mb-1">Solo almacenamiento</p>
-        <p class="text-xs opacity-80">Por ahora esta sección únicamente guarda la configuración. El procesamiento con IA se incorporará en una etapa posterior.</p>
-      </div>
+  <!-- ============================ CARD INFORMATIVA ============================ -->
+  <div class="flex items-start gap-3 p-4 rounded-xl bg-info/5 border border-info/20">
+    <div
+      class="p-2 rounded-lg bg-info/15 text-info shrink-0 ring-1 ring-info/15"
+      aria-hidden="true"
+    >
+      <i class="fa-solid fa-circle-info text-sm"></i>
+    </div>
+    <div class="text-sm flex-1 min-w-0">
+      <p class="font-semibold text-info mb-1">Asistente de IA</p>
+      <p class="text-xs opacity-80 leading-relaxed">
+        Proveedores soportados: <span class="font-mono font-medium">GEMINI</span>
+        (recomendado, incluye free tier) y cualquier API compatible con Chat
+        Completions de OpenAI como
+        <span class="font-mono">OPENAI</span>,
+        <span class="font-mono">AZURE_OPENAI</span>,
+        <span class="font-mono">ANTHROPIC</span> u
+        <span class="font-mono">OLLAMA</span>. Con esto se habilitan las
+        sugerencias de respuesta y el resumen de tickets para agentes y
+        administradores.
+      </p>
     </div>
   </div>
 </div>

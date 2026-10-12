@@ -1,0 +1,97 @@
+/* La zona del contenedor solo existe para el ratón: no tapa clics fuera de los avisos. */
+.toaster {
+  pointer-events: none;
+  transition: height 300ms var(--ease-out);
+}
+.toast-item {
+  pointer-events: auto;
+  transform-origin: bottom center;
+  /* La posición en la pila va en `transform`; la entrada, la salida y el
+     arrastre van en `translate`, que se compone con ella sin pisarla. */
+  transition:
+    transform 300ms var(--ease-out),
+    opacity 200ms var(--ease-out),
+    translate 200ms var(--ease-out),
+    height 300ms var(--ease-out);
+  animation: toast-enter 300ms var(--ease-out) both;
+}
+
+/* En la pila plegada, los de detrás son solo el borde que asoma: su texto se
+   leería a medias detrás del de delante. */
+.toast-cuerpo {
+  transition: opacity 200ms var(--ease-out);
+}
+.toast-item--detras .toast-cuerpo {
+  opacity: 0;
+}
+
+/* Entra desde la derecha, el mismo lado por el que sale al deslizarlo. */
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    translate: 24px 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/* Salida por la cuenta atrás o la X: vuelve por donde entró. */
+.toast-item--saliendo {
+  opacity: 0 !important;
+  translate: 24px 0;
+}
+
+/* Salida tras deslizarlo: sigue el gesto hasta fuera. */
+.toast-item--deslizado {
+  opacity: 0 !important;
+  translate: 110% 0 !important;
+}
+
+/* Mientras se arrastra, sigue al dedo sin retraso. */
+.toast-item--arrastrando {
+  transition: transform 300ms var(--ease-out), opacity 200ms var(--ease-out), height 300ms var(--ease-out);
+  cursor: grabbing;
+}
+
+/* Cuenta atrás: se encoge de 1 a 0 a ritmo constante. */
+.toast-progress {
+  animation-name: toast-progreso;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes toast-progreso {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+.toaster--pausado .toast-progress {
+  animation-play-state: paused;
+}
+
+/* El contador ×N "late" al cambiar. */
+.toast-count {
+  animation: count-pop 250ms var(--ease-out);
+}
+@keyframes count-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-item {
+    animation-name: fade-in;
+    animation-duration: 150ms;
+  }
+  .toast-item--saliendo,
+  .toast-item--deslizado {
+    translate: 0 0 !important;
+  }
+}
+
+/* Copia local: Angular aísla los @keyframes de cada componente. */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

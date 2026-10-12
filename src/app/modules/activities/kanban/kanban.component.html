@@ -1,33 +1,24 @@
 <div class="space-y-6">
   <!-- Encabezado -->
-  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div class="flex items-center gap-3">
-      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-        </svg>
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-table-columns text-2xl" aria-hidden="true"></i>
       </div>
       <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Actividades</h1>
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">Actividades</h1>
         <p class="text-sm opacity-70">Tablero kanban de tareas asignadas</p>
       </div>
     </div>
 
     <button class="btn btn-primary btn-sm gap-2" (click)="openNew()">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-        aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-      </svg>
+      <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
       Nueva tarea
     </button>
   </header>
 
   <!-- Cargando -->
-  <div *ngIf="loading" class="flex flex-col items-center justify-center py-20 gap-3" role="status" aria-live="polite">
-    <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
-    <span class="text-sm opacity-70">Cargando actividades...</span>
-  </div>
+  <app-skeleton *ngIf="loading" tipo="tarjetas" [cantidad]="4" etiqueta="Cargando actividades..."></app-skeleton>
 
   <!-- Tablero kanban -->
   <div *ngIf="!loading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 min-h-[60vh]">
@@ -46,18 +37,14 @@
       <!-- Lista de tareas -->
       <div cdkDropList [id]="col.key" [cdkDropListData]="col.tasks" [cdkDropListConnectedTo]="columnIds"
         class="flex-1 overflow-y-auto p-2 space-y-2 kanban-list" (cdkDropListDropped)="drop($event)">
-        <div *ngFor="let task of col.tasks" cdkDrag (cdkDragStarted)="onDragStart()" (cdkDragEnded)="onDragEnd()"
-          class="kanban-card bg-base-100 rounded-lg shadow-sm border border-base-200 border-l-4 p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group relative"
+        <div *ngFor="let task of tareasVisibles(col)" cdkDrag (cdkDragStarted)="onDragStart()" (cdkDragEnded)="onDragEnd()"
+          class="kanban-card bg-base-100 rounded-lg shadow-sm border border-base-200 border-l-4 p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition group relative"
           [style.borderLeftColor]="col.color">
           <!-- Botón editar (aparece al hover) -->
           <button type="button"
             class="absolute top-2 right-2 btn btn-ghost btn-xs btn-square opacity-0 group-hover:opacity-100 transition-opacity z-10"
             (click)="openEdit(task); $event.stopPropagation()" aria-label="Editar tarea">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
+            <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
           </button>
 
           <!-- Título -->
@@ -71,28 +58,39 @@
           </p>
 
           <!-- Footer con asignado y fecha -->
-          <div class="flex items-center gap-2 mt-2 pt-2 border-t border-base-200 text-xs opacity-70">
-            <div class="flex items-center gap-1 min-w-0 flex-1">
-              <div class="avatar placeholder shrink-0" aria-hidden="true">
-                <div class="rounded-full w-5 flex items-center justify-center" [style.background]="col.color + '20'"
-                  [style.color]="col.color">
+          <div class="flex items-center gap-2 mt-2 pt-2 border-t border-base-200 text-xs opacity-70 flex-wrap">
+            <div class="flex items-center gap-1.5 min-w-0 flex-1 max-w-[55%]">
+              <!-- Avatar con el punto de sesión del responsable -->
+              <span class="relative shrink-0 w-5 h-5">
+                <img
+                  *ngIf="assignedPhoto(task)"
+                  [src]="assignedPhoto(task)"
+                  [alt]="asignado(task)"
+                  class="w-5 h-5 rounded-full object-cover block"
+                />
+                <span
+                  *ngIf="!assignedPhoto(task)"
+                  class="w-5 h-5 rounded-full flex items-center justify-center"
+                  [style.background]="col.color + '20'"
+                  [style.color]="col.color"
+                >
                   <span class="text-[10px] font-bold">
                     {{ (task.assignedUserEmail || '?').charAt(0).toUpperCase() }}
                   </span>
-                </div>
-              </div>
-              <span class="truncate" [title]="task.assignedUserEmail">
-                {{ task.assignedUserEmail }}
+                </span>
+                <app-presence-dot
+                  class="absolute -bottom-0.5 -right-0.5"
+                  [state]="sesionDe(task)"
+                />
+              </span>
+              <span class="truncate text-[11px] leading-tight" [title]="task.assignedUserEmail">
+                {{ asignado(task) }}
               </span>
             </div>
 
             <span *ngIf="task.start" class="badge badge-sm badge-ghost gap-1 shrink-0 font-mono"
               [title]="task.start | date: 'dd/MM/yyyy'">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+              <i class="fa-regular fa-calendar text-xs" aria-hidden="true"></i>
               {{ task.start | date: 'dd MMM' }}
             </span>
           </div>
@@ -101,12 +99,21 @@
         <!-- Estado vacío de columna -->
         <div *ngIf="!col.tasks.length"
           class="flex flex-col items-center justify-center gap-2 py-8 border-2 border-dashed border-base-300 rounded-lg opacity-50">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
+          <i class="fa-solid fa-clipboard text-3xl" aria-hidden="true"></i>
           <span class="text-xs">Sin tareas</span>
+        </div>
+
+        <!-- Hay más tarjetas de las que se pintan -->
+        <div *ngIf="quedanOcultas(col) > 0" class="pt-1 space-y-1">
+          <button type="button" class="btn btn-ghost btn-xs w-full"
+            (click)="mostrarMas(col)">
+            <i class="fa-solid fa-chevron-down text-[10px]" aria-hidden="true"></i>
+            Ver {{ quedanOcultas(col) }} más
+          </button>
+          <button type="button" class="btn btn-ghost btn-xs w-full opacity-60"
+            (click)="mostrarTodas(col)">
+            Ver todas ({{ col.tasks.length }})
+          </button>
         </div>
       </div>
     </div>

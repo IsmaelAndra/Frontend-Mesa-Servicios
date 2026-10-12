@@ -1,0 +1,403 @@
+<div class="space-y-6 max-w-5xl mx-auto">
+
+  <!-- ============================ HEADER ============================ -->
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-volume-high text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">
+          Sonidos de notificaciones
+        </h1>
+        <p class="text-sm opacity-70">
+          {{
+            esSuperAdmin
+              ? 'Elige qué tipos de aviso suenan y con qué tono, o sube un MP3 propio para cada tipo'
+              : 'Activa o desactiva el sonido de cada tipo de aviso'
+          }}
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================ AVISO AUTOPLAY ============================ -->
+  <div
+    class="flex items-center gap-3 p-3 rounded-xl bg-info/10 border border-info/25 text-xs"
+    role="alert"
+  >
+    <div class="p-1.5 rounded-lg bg-info shrink-0" aria-hidden="true">
+      <i class="fa-solid fa-circle-info text-sm text-white"></i>
+    </div>
+    <p class="opacity-80 leading-relaxed">
+      El sonido solo se oye después de interactuar con la página, por la política
+      de autoplay del navegador.
+    </p>
+  </div>
+
+  <!-- ============================ INTERRUPTOR GLOBAL ============================ -->
+  <div
+    *ngIf="sonidoGlobal !== undefined"
+    class="card bg-base-100 shadow-md border border-base-200 border-t-4 rounded-[1.5rem] overflow-hidden"
+    [ngClass]="sonidoGlobal ? 'border-t-primary' : 'border-t-secondary'"
+  >
+    <div class="card-body p-5 space-y-4">
+
+      <div class="flex items-center gap-3">
+        <div
+          class="p-2 rounded-xl shrink-0"
+          [ngClass]="
+            sonidoGlobal
+              ? 'bg-primary/10 text-primary'
+              : 'bg-base-200 text-base-content/50'
+          "
+          aria-hidden="true"
+        >
+          <i
+            class="text-base"
+            [ngClass]="sonidoGlobal ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark'"
+          ></i>
+        </div>
+
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2">
+            <h2 class="font-bold text-sm">Sonido global</h2>
+            <span
+              class="badge badge-sm gap-1.5 font-medium"
+              [ngClass]="
+                sonidoGlobal
+                  ? 'badge-success text-success-content'
+                  : 'badge-ghost text-base-content/60'
+              "
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full"
+                [ngClass]="sonidoGlobal ? 'bg-success-content' : 'bg-base-content/40'"
+              ></span>
+              {{ sonidoGlobal ? "Activado" : "Apagado" }}
+            </span>
+          </div>
+          <p class="text-xs opacity-60 mt-1 leading-relaxed">
+            Controla todo a la vez; los ajustes por tipo de abajo siguen
+            guardados. El toggle del menu del usuario manda aquí.
+          </p>
+        </div>
+
+        <label class="flex items-center gap-2 cursor-pointer shrink-0">
+          <input
+            type="checkbox"
+            class="toggle toggle-primary"
+            [checked]="sonidoGlobal"
+            (change)="alternarGlobal()"
+            aria-label="Activar o desactivar el sonido de las notificaciones"
+          />
+        </label>
+      </div>
+
+      <div
+        *ngIf="!sonidoGlobal"
+        class="flex items-center gap-2.5 p-2.5 rounded-lg bg-warning/10 border border-warning/30 text-xs"
+        role="alert"
+      >
+        <div class="p-1 rounded-md bg-warning shrink-0" aria-hidden="true">
+          <i class="fa-solid fa-volume-xmark text-xs text-white"></i>
+        </div>
+        <span class="opacity-80">
+          El sonido global esta apagado: ningun tipo sonara hasta que lo enciendas.
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ GRUPOS ============================ -->
+  <div class="space-y-4">
+
+    <div
+      *ngFor="let grupo of grupos"
+      class="card bg-base-100 shadow-md border border-base-200 border-t-4 rounded-[1.5rem] overflow-hidden"
+      [ngClass]="{
+        'border-t-error': grupo.urgencia === 'urgent',
+        'border-t-primary': grupo.urgencia === 'normal',
+        'border-t-secondary': grupo.urgencia === 'soft'
+      }"
+    >
+
+      <!-- Cabecera del grupo -->
+      <div
+        class="flex items-center gap-3 px-5 py-3 border-b border-base-200"
+        [ngClass]="{
+          'bg-error/5': grupo.urgencia === 'urgent',
+          'bg-primary/5': grupo.urgencia === 'normal',
+          'bg-secondary/5': grupo.urgencia === 'soft'
+        }"
+      >
+        <div
+          class="p-2 rounded-xl shrink-0"
+          [ngClass]="{
+            'bg-error/15 text-error': grupo.urgencia === 'urgent',
+            'bg-primary/15 text-primary': grupo.urgencia === 'normal',
+            'bg-secondary/15 text-secondary': grupo.urgencia === 'soft'
+          }"
+          aria-hidden="true"
+        >
+          <i
+            class="text-sm"
+            [ngClass]="{
+              urgent: 'fa-solid fa-bell',
+              normal: 'fa-solid fa-bell',
+              soft: 'fa-regular fa-bell'
+            }[grupo.urgencia]"
+          ></i>
+        </div>
+
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="font-bold text-sm">{{ grupo.titulo }}</h2>
+            <span
+              class="badge badge-sm gap-1.5 font-medium shrink-0"
+              [ngClass]="{
+                'badge-error text-error-content': grupo.urgencia === 'urgent',
+                'badge-primary text-primary-content': grupo.urgencia === 'normal',
+                'badge-secondary text-secondary-content': grupo.urgencia === 'soft'
+              }"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full"
+                [ngClass]="{
+                  'bg-error-content': grupo.urgencia === 'urgent',
+                  'bg-primary-content': grupo.urgencia === 'normal',
+                  'bg-secondary-content': grupo.urgencia === 'soft'
+                }"
+              ></span>
+              {{
+                grupo.urgencia === "urgent"
+                  ? "URGENTE"
+                  : grupo.urgencia === "normal"
+                    ? "NORMAL"
+                    : "SUAVE"
+              }}
+            </span>
+          </div>
+          <p class="text-[11px] opacity-60 mt-0.5 leading-relaxed">
+            {{ grupo.descripcion }}
+          </p>
+        </div>
+
+        <span
+          class="badge badge-sm badge-ghost text-base-content/60 font-mono shrink-0 hidden sm:inline-flex"
+        >
+          {{ grupo.tipos.length }}
+        </span>
+      </div>
+
+      <!-- Filas de tipos -->
+      <div class="divide-y divide-base-200">
+        <div
+          *ngFor="let item of grupo.tipos"
+          class="px-5 py-3 transition-colors hover:bg-base-200/30"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:items-center">
+
+            <!-- Icono + nombre + tipo -->
+            <div class="flex items-center gap-3 min-w-0">
+              <span
+                class="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center transition-colors"
+                [ngClass]="
+                  item.config.enabled
+                    ? 'bg-primary/10 text-primary ring-1 ring-primary/15'
+                    : 'bg-base-200 text-base-content/40'
+                "
+                aria-hidden="true"
+              >
+                <i [class]="item.icono" class="text-sm"></i>
+              </span>
+
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <p
+                    class="text-sm font-semibold truncate"
+                    [class.opacity-40]="!item.config.enabled"
+                    [title]="item.etiqueta"
+                  >
+                    {{ item.etiqueta }}
+                  </p>
+                  <span
+                    *ngIf="item.config.sample"
+                    class="badge badge-xs badge-primary gap-1"
+                    title="Tiene un MP3 propio subido"
+                  >
+                    <i class="fa-solid fa-music text-[8px]" aria-hidden="true"></i>
+                    MP3
+                  </span>
+                </div>
+                <p
+                  class="text-[10px] opacity-40 uppercase tracking-wider font-mono mt-0.5 truncate"
+                  [title]="item.tipo"
+                >
+                  {{ item.tipo }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Controles -->
+            <div class="flex items-center gap-2 flex-wrap md:flex-nowrap md:justify-end">
+
+              <!-- Grupo de urgencia (solo lo configura el SUPER_ADMIN) -->
+              <div
+                *ngIf="esSuperAdmin"
+                class="join"
+                [class.opacity-40]="!item.config.enabled"
+                [class.pointer-events-none]="!item.config.enabled"
+              >
+                <button
+                  type="button"
+                  class="btn btn-xs join-item gap-1"
+                  [ngClass]="
+                    item.config.urgency === 'urgent'
+                      ? 'btn-primary text-primary-content'
+                      : 'btn-ghost'
+                  "
+                  (click)="cambiarUrgencia(item.tipo, item.config, 'urgent')"
+                  title="Tono urgente: dos notas descendentes"
+                >
+                  <i class="fa-solid fa-angles-down text-[9px]" aria-hidden="true"></i>
+                  Urgente
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-xs join-item gap-1"
+                  [ngClass]="
+                    item.config.urgency === 'normal'
+                      ? 'btn-primary text-primary-content'
+                      : 'btn-ghost'
+                  "
+                  (click)="cambiarUrgencia(item.tipo, item.config, 'normal')"
+                  title="Tono normal: dos notas ascendentes"
+                >
+                  <i class="fa-solid fa-equals text-[9px]" aria-hidden="true"></i>
+                  Normal
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-xs join-item gap-1"
+                  [ngClass]="
+                    item.config.urgency === 'soft'
+                      ? 'btn-primary text-primary-content'
+                      : 'btn-ghost'
+                  "
+                  (click)="cambiarUrgencia(item.tipo, item.config, 'soft')"
+                  title="Tono suave: una sola nota corta"
+                >
+                  <i class="fa-solid fa-angle-down text-[9px]" aria-hidden="true"></i>
+                  Suave
+                </button>
+              </div>
+
+              <!-- MP3 propio (solo lo configura el SUPER_ADMIN) -->
+              <div
+                *ngIf="esSuperAdmin"
+                class="flex items-center gap-1"
+                [class.opacity-40]="!item.config.enabled"
+                [class.pointer-events-none]="!item.config.enabled"
+              >
+                <label
+                  class="btn btn-xs btn-ghost gap-1 cursor-pointer"
+                  [ngClass]="item.config.sample ? 'text-primary' : ''"
+                  [title]="
+                    item.config.sample
+                      ? 'Reemplazar el MP3 propio de ' + item.etiqueta
+                      : 'Subir un MP3 propio para ' + item.etiqueta
+                  "
+                >
+                  <i class="fa-solid fa-upload text-[11px]" aria-hidden="true"></i>
+                  MP3
+                  <input
+                    type="file"
+                    accept="audio/mpeg,.mp3,audio/mp3"
+                    class="hidden"
+                    (change)="onFileSeleccionado($event, item)"
+                    [attr.aria-label]="'Subir un MP3 para ' + item.etiqueta"
+                  />
+                </label>
+
+                <button
+                  *ngIf="item.config.sample"
+                  type="button"
+                  class="btn btn-xs btn-ghost btn-square text-error hover:bg-error/10"
+                  (click)="quitarMuestra(item.tipo)"
+                  [title]="'Volver al tono predeterminado de ' + item.etiqueta"
+                  aria-label="Quitar MP3 propio"
+                >
+                  <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+                </button>
+              </div>
+
+              <!-- Probar: oir el sonido configurado, para cualquier usuario -->
+              <button
+                type="button"
+                class="btn btn-xs btn-ghost btn-square"
+                [class.opacity-40]="!item.config.enabled"
+                (click)="previsualizar(item.tipo)"
+                [attr.aria-label]="'Probar el sonido de ' + item.etiqueta"
+                title="Probar el sonido"
+              >
+                <i class="fa-solid fa-volume-high text-xs" aria-hidden="true"></i>
+              </button>
+
+              <!-- Toggle final -->
+              <input
+                type="checkbox"
+                class="toggle toggle-primary toggle-sm shrink-0"
+                [checked]="item.config.enabled"
+                (change)="
+                  cambiarHabilitado(item.tipo, item.config, $any($event.target).checked)
+                "
+                [attr.aria-label]="'Activar el sonido de ' + item.etiqueta"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ AVISO MP3 ============================ -->
+  <div
+    *ngIf="esSuperAdmin"
+    class="flex items-center gap-3 p-3 rounded-xl bg-info/10 border border-info/25 text-xs"
+    role="alert"
+  >
+    <div class="p-1.5 rounded-lg bg-info shrink-0" aria-hidden="true">
+      <i class="fa-solid fa-circle-info text-sm text-white"></i>
+    </div>
+    <p class="opacity-80 leading-relaxed">
+      Los botones <b>Urgente</b> / <b>Normal</b> / <b>Suave</b> solo se usan si el
+      tipo no tiene un MP3 propio. El MP3 se guarda en tu navegador (hasta 1 MB
+      por tipo).
+    </p>
+  </div>
+
+  <!-- ============================ ACCIONES ============================ -->
+  <div class="flex items-center justify-between gap-3 pt-1">
+    <p class="text-xs opacity-60">
+      <span *ngIf="cambios === 0">Sin cambios respecto a los valores por defecto.</span>
+      <span *ngIf="cambios === 1">
+        <b>{{ cambios }}</b> tipo tiene una preferencia propia.
+      </span>
+      <span *ngIf="cambios > 1">
+        <b>{{ cambios }}</b> tipos tienen una preferencia propia.
+      </span>
+    </p>
+
+    <button
+      *ngIf="esSuperAdmin"
+      type="button"
+      class="btn btn-sm btn-ghost gap-2"
+      (click)="restablecerTodo()"
+      [disabled]="!cambios"
+    >
+      <i class="fa-solid fa-rotate-left text-[15px]" aria-hidden="true"></i>
+      Restablecer por defecto
+    </button>
+  </div>
+</div>

@@ -1,45 +1,451 @@
-<div class="space-y-6" *ngIf="catalog">
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <h1 class="text-2xl font-bold text-primary">Configuración SLA</h1>
-    <button class="btn btn-primary btn-sm" (click)="generateEvaluations()">
-      <span *ngIf="loadingEvals" class="loading loading-spinner loading-xs"></span>
-      Generar evaluación mensual
-    </button>
+<div class="space-y-6 max-w-6xl mx-auto" *ngIf="catalog">
+  <!-- ============================ HEADER ============================ -->
+  <header
+    class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+  >
+    <div class="flex items-center gap-3 min-w-0">
+      <div
+        class="page-head__icono p-3 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary shrink-0 ring-1 ring-primary/10"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-clipboard-check text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">
+          Evaluaciones mensuales
+        </h1>
+        <p class="text-sm opacity-70 truncate">
+          Revisa el desempeño de los agentes y genera el cierre del mes
+        </p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="badge badge-lg badge-ghost gap-2 font-medium py-3 px-4">
+        <i class="fa-regular fa-calendar text-primary" aria-hidden="true"></i>
+        {{ mesActual }}
+      </span>
+
+      <button
+        class="btn btn-primary btn-sm gap-2 shadow-md hover:shadow-lg transition"
+        (click)="generateEvaluations()"
+        [disabled]="loadingEvals"
+      >
+        <span
+          *ngIf="loadingEvals"
+          class="loading loading-spinner loading-xs"
+        ></span>
+        <i
+          *ngIf="!loadingEvals"
+          class="fa-solid fa-wand-magic-sparkles text-[15px]"
+          aria-hidden="true"
+        ></i>
+        {{ loadingEvals ? "Generando..." : "Generar evaluación" }}
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================ LOADING ============================ -->
+  <div
+    *ngIf="loadingEvals"
+    role="status"
+    aria-live="polite"
+    aria-label="Generando evaluaciones"
+  >
+    <div
+      class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+    >
+      <div class="card-body items-center py-12 gap-3">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+        <p class="text-sm opacity-70">Generando evaluaciones del mes...</p>
+        <p class="text-xs opacity-50">Esto puede tardar unos segundos</p>
+      </div>
+    </div>
   </div>
 
-  <div class="card bg-base-100 shadow-md overflow-x-auto">
-    <table class="table table-sm">
-      <thead>
-        <tr><th>Política</th><th>Respuesta (min)</th><th>Resolución (min)</th></tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let s of catalog.slaPolicies">
-          <td class="font-semibold">{{ s.name }}</td>
-          <td>{{ s.response }}</td>
-          <td>{{ s.resolution }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <!-- ============================ CONTENIDO ============================ -->
+  <div *ngIf="!loadingEvals" class="space-y-6">
+    <!-- ============================================================ -->
+    <!-- ============ Card: Políticas SLA vigentes =================== -->
+    <!-- ============================================================ -->
+    <div
+      class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+    >
+      <div class="card-body pb-3">
+        <div class="flex items-start gap-3">
+          <div
+            class="p-2 rounded-xl bg-info/10 text-info ring-1 ring-info/15 shrink-0"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-shield-halved text-lg"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-base font-semibold">Políticas SLA vigentes</h2>
+            <p class="text-xs opacity-60 mt-0.5">
+              Tiempos de referencia con los que se calcula el cumplimiento
+            </p>
+          </div>
+          <span
+            class="badge badge-sm badge-info text-info-content gap-1 font-medium"
+          >
+            {{ catalog.slaPolicies.length }}
+          </span>
+        </div>
+      </div>
 
-  <div class="card bg-base-100 shadow-md overflow-x-auto" *ngIf="evaluations.length">
-    <div class="card-body">
-      <h2 class="card-title">Evaluaciones del mes</h2>
-      <table class="table table-sm">
-        <thead>
-          <tr><th>Agente</th><th>Tickets cerrados</th><th>Cumplimiento SLA %</th><th>Requerimientos</th><th>Satisfacción</th><th>Estado</th></tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let e of evaluations">
-            <td>{{ e.agentEmail }}</td>
-            <td>{{ e.ticketsClosed }}</td>
-            <td>{{ e.slaComplianceRate ?? '—' }}</td>
-            <td>{{ e.avgRequirementsMet ?? '—' }}</td>
-            <td>{{ e.satisfactionScore ?? '—' }}</td>
-            <td><span class="badge" [ngClass]="e.status==='REVIEWED' ? 'badge-success' : 'badge-warning'">{{ e.status }}</span></td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="overflow-x-auto">
+        <table class="table table-sm">
+          <thead class="bg-primary text-primary-content">
+            <tr>
+              <th class="text-xs text-center">
+                <i
+                  class="fa-solid fa-shield-halved mr-1"
+                  aria-hidden="true"
+                ></i>
+                Política
+              </th>
+              <th class="text-xs text-center">
+                <i class="fa-regular fa-clock mr-1" aria-hidden="true"></i>
+                Respuesta
+              </th>
+              <th class="text-xs text-center">
+                <i class="fa-solid fa-circle-check mr-1" aria-hidden="true"></i>
+                Resolución
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let s of catalog.slaPolicies"
+              class="hover:bg-base-200/40 transition-colors"
+            >
+              <td class="text-center">
+                <div
+                  class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 border"
+                  [style.background-color]="policyBg(s)"
+                  [style.border-color]="policyColor(s) + '55'"
+                  [style.color]="policyColor(s)"
+                  [title]="s.description || s.name"
+                >
+                  <i
+                    class="fa-solid text-xs"
+                    [ngClass]="policyIcon(s)"
+                    aria-hidden="true"
+                  ></i>
+                  <span class="font-semibold">{{ s.name }}</span>
+                </div>
+              </td>
+              <td class="text-center">
+                <span
+                  class="badge badge-sm badge-ghost font-semibold whitespace-nowrap"
+                >
+                  {{ duracion(s.response) }}
+                </span>
+              </td>
+              <td class="text-center">
+                <span
+                  class="badge badge-sm badge-ghost font-semibold whitespace-nowrap"
+                >
+                  {{ duracion(s.resolution) }}
+                </span>
+              </td>
+            </tr>
+
+            <tr *ngIf="catalog.slaPolicies.length === 0">
+              <td colspan="3" class="text-center py-8 opacity-60">
+                <i
+                  class="fa-solid fa-shield-halved text-3xl block mb-2"
+                  aria-hidden="true"
+                ></i>
+                <p class="text-sm">Sin políticas SLA configuradas</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ============ Card: Evaluaciones del mes ===================== -->
+    <!-- ============================================================ -->
+    <div
+      class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+    >
+      <!-- Header de la sección -->
+      <div class="card-body pb-3">
+        <div class="flex items-start gap-3">
+          <div
+            class="p-2 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-user-tie text-lg"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-base font-semibold">Evaluaciones del mes</h2>
+            <p class="text-xs opacity-60 mt-0.5">
+              Desempeño de cada agente en {{ mesActual }}
+            </p>
+          </div>
+          <span
+            *ngIf="evaluations.length"
+            class="badge badge-sm badge-primary text-primary-content gap-1 font-medium"
+          >
+            <i class="fa-solid fa-users text-[10px]" aria-hidden="true"></i>
+            {{ evaluations.length }} agente{{
+              evaluations.length === 1 ? "" : "s"
+            }}
+          </span>
+        </div>
+      </div>
+
+      <!-- KPIs resumen -->
+      <div *ngIf="evaluations.length > 0" class="px-6 pb-3">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div
+            class="bg-primary/5 border border-primary/10 rounded-xl p-3 text-center"
+          >
+            <div class="text-2xl font-bold text-primary leading-none">
+              {{ totalTicketsCerrados }}
+            </div>
+            <div class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
+              Tickets cerrados
+            </div>
+          </div>
+
+          <div
+            class="bg-success/5 border border-success/10 rounded-xl p-3 text-center"
+          >
+            <div class="text-2xl font-bold text-success leading-none">
+              {{ promedioSla }}<span class="text-base">%</span>
+            </div>
+            <div class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
+              SLA promedio
+            </div>
+          </div>
+
+          <div
+            class="bg-warning/5 border border-warning/10 rounded-xl p-3 text-center"
+          >
+            <div class="text-2xl font-bold text-warning leading-none">
+              {{ promedioSatisfaccion }}<span class="text-base">/5</span>
+            </div>
+            <div class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
+              Satisfacción
+            </div>
+          </div>
+
+          <div
+            class="bg-info/5 border border-info/10 rounded-xl p-3 text-center"
+          >
+            <div class="text-2xl font-bold text-info leading-none">
+              {{ evaluacionesRevisadas }}
+              <span class="text-base opacity-60"
+                >/ {{ evaluations.length }}</span
+              >
+            </div>
+            <div class="text-[10px] opacity-60 uppercase tracking-wider mt-1">
+              Revisadas
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="overflow-x-auto" *ngIf="evaluations.length > 0">
+        <table class="table table-sm">
+          <thead class="bg-primary text-primary-content">
+            <tr>
+              <th class="text-xs text-center">Agente</th>
+              <th class="text-xs text-center">Tickets cerrados</th>
+              <th class="text-xs text-center">Cumplimiento SLA</th>
+              <th class="text-xs text-center">Requerimientos</th>
+              <th class="text-xs text-center">Satisfacción</th>
+              <th class="text-xs text-center">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let e of pagEvals.vista"
+              class="hover:bg-base-200/40 transition-colors"
+            >
+              <td class="text-center">
+                <div class="flex items-center justify-center gap-2">
+                  <!-- Avatar con presencia superpuesta -->
+                  <div class="relative shrink-0 inline-flex">
+                    <div class="avatar placeholder">
+                      <div
+                        class="w-8 h-8 rounded-full bg-primary/10 text-primary ring-2 ring-base-100 overflow-hidden"
+                      >
+                        <img
+                          *ngIf="agentPhoto(e)"
+                          [src]="agentPhoto(e)"
+                          alt=""
+                          loading="lazy"
+                          class="w-full h-full object-cover"
+                        />
+                        <div
+                          *ngIf="!agentPhoto(e)"
+                          class="w-full h-full flex items-center justify-center text-[10px] font-bold"
+                        >
+                          {{ inicialAgente(e.agentEmail) }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Punto de sesión superpuesto, sin desbordar el avatar -->
+                    <app-presence-dot
+                      class="absolute -bottom-0.5 -right-0.5 pointer-events-none"
+                      [state]="e.agentSessionState"
+                    />
+                  </div>
+
+                  <!-- Nombre + email -->
+                  <div class="min-w-0 text-left">
+                    <div
+                      class="text-sm font-medium truncate max-w-[180px]"
+                      [title]="agentLabel(e)"
+                    >
+                      {{ agentLabel(e) }}
+                    </div>
+                    <div
+                      class="text-[10px] opacity-60 truncate max-w-[180px]"
+                      [title]="e.agentEmail"
+                    >
+                      {{ e.agentEmail }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <td class="text-center">
+                <span
+                  class="badge badge-sm badge-ghost font-mono font-semibold"
+                >
+                  {{ e.ticketsClosed }}
+                </span>
+              </td>
+
+              <td class="text-center">
+                <span
+                  class="badge badge-sm gap-1 font-semibold"
+                  [ngClass]="slaBadgeClass(e.slaComplianceRate)"
+                >
+                  <i
+                    [class]="slaBadgeIcon(e.slaComplianceRate)"
+                    class="text-[10px]"
+                    aria-hidden="true"
+                  ></i>
+                  {{
+                    e.slaComplianceRate != null
+                      ? e.slaComplianceRate + "%"
+                      : "—"
+                  }}
+                </span>
+              </td>
+
+              <td class="text-center">
+                <span
+                  class="badge badge-sm font-mono"
+                  [ngClass]="
+                    e.avgRequirementsMet != null
+                      ? 'badge-ghost'
+                      : 'badge-ghost opacity-50'
+                  "
+                >
+                  {{
+                    e.avgRequirementsMet != null
+                      ? e.avgRequirementsMet + "/5"
+                      : "—"
+                  }}
+                </span>
+              </td>
+
+              <td class="text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <i
+                    *ngFor="let i of [1, 2, 3, 4, 5]"
+                    class="fa-solid fa-star text-[10px]"
+                    [ngClass]="
+                      e.satisfactionScore != null && i <= e.satisfactionScore
+                        ? 'text-warning'
+                        : 'text-base-content/20'
+                    "
+                    aria-hidden="true"
+                  ></i>
+                  <span
+                    *ngIf="e.satisfactionScore == null"
+                    class="text-xs opacity-50"
+                  >
+                    —
+                  </span>
+                </div>
+              </td>
+
+              <td class="text-center">
+                <span
+                  class="badge badge-sm gap-1 font-medium"
+                  [ngClass]="
+                    e.status === 'REVIEWED'
+                      ? 'badge-success text-success-content'
+                      : 'badge-warning text-warning-content'
+                  "
+                >
+                  <i
+                    [class]="
+                      e.status === 'REVIEWED'
+                        ? 'fa-solid fa-circle-check'
+                        : 'fa-solid fa-clock'
+                    "
+                    class="text-[10px]"
+                    aria-hidden="true"
+                  ></i>
+                  {{ e.status === "REVIEWED" ? "Revisada" : "Pendiente" }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Estado vacío -->
+      <div
+        *ngIf="evaluations.length === 0"
+        class="p-10 flex flex-col items-center gap-3"
+      >
+        <div
+          class="p-4 rounded-full bg-base-200 text-base-content/40"
+          aria-hidden="true"
+        >
+          <i class="fa-solid fa-clipboard-check text-3xl"></i>
+        </div>
+        <h3 class="text-base font-semibold">No hay evaluaciones este mes</h3>
+        <p class="text-xs opacity-60 text-center max-w-sm">
+          Genera la evaluación mensual para ver el desempeño de cada agente y
+          hacer el cierre del mes.
+        </p>
+        <button
+          class="btn btn-primary btn-sm gap-2 mt-2"
+          (click)="generateEvaluations()"
+          [disabled]="loadingEvals"
+        >
+          <i
+            class="fa-solid fa-wand-magic-sparkles text-[15px]"
+            aria-hidden="true"
+          ></i>
+          Generar evaluación mensual
+        </button>
+      </div>
+
+      <!-- Paginador -->
+      <app-paginator
+        *ngIf="evaluations.length > 0"
+        [total]="evaluations.length"
+        [page]="pagEvals.page"
+        [pageSize]="pagEvals.pageSize"
+        [mostrarResumen]="false"
+        (pageChange)="pagEvals.cambiarPagina($event)"
+        (pageSizeChange)="pagEvals.cambiarTamano($event)"
+      />
     </div>
   </div>
 </div>

@@ -1,0 +1,86 @@
+<section
+  class="toaster fixed bottom-4 right-4 z-[10000] w-80 sm:w-96 max-w-[calc(100vw-2rem)]"
+  [class.toaster--pausado]="pausado"
+  [style.height.px]="alturaContenedor"
+  aria-live="polite"
+  aria-label="Avisos"
+  (mouseenter)="expandido = true"
+  (mouseleave)="expandido = false"
+  (focusin)="expandido = true"
+  (focusout)="expandido = false"
+>
+  <div
+    *ngFor="let t of toasts; let i = index; trackBy: trackById"
+    [attr.role]="rol(t.type)"
+    class="toast-item group absolute bottom-0 right-0 w-full select-none touch-pan-y
+           rounded-2xl border border-base-200 bg-base-100
+           shadow-[0_12px_32px_-12px_rgba(15,23,42,0.35)] overflow-hidden"
+    [class.toast-item--detras]="!expandido && i > 0"
+    [style.height.px]="alturaPlegada(i)"
+    [class.toast-item--saliendo]="t.leaving"
+    [class.toast-item--deslizado]="deslizados.has(t.id)"
+    [class.toast-item--arrastrando]="arrastre?.id === t.id"
+    [style.transform]="transformDe(i)"
+    [style.opacity]="opacidadDe(i)"
+    [style.zIndex]="100 - i"
+    [style.translate]="desplazamientoArrastre(t)"
+    [attr.aria-hidden]="!expandido && i >= VISIBLES_PLEGADO ? 'true' : null"
+    (pointerdown)="iniciarArrastre($event, t)"
+  >
+    <!-- Franja de color del tipo -->
+    <span class="absolute left-0 inset-y-0 w-1" [ngClass]="acento(t.type)" aria-hidden="true"></span>
+
+    <!-- Se mide este cuerpo y no la tarjeta: plegada, la tarjeta toma el alto de la de delante. -->
+    <div #toastEl [attr.data-id]="t.id" class="toast-cuerpo flex items-start gap-3 pl-4 pr-2 py-3">
+      <span
+        class="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full ring-1 text-sm"
+        [ngClass]="[iconBg(t.type), iconAnim(t.type)]"
+        aria-hidden="true"
+      >
+        <i [class]="icon(t.type)"></i>
+      </span>
+
+      <div class="min-w-0 flex-1 pt-0.5">
+        <p class="font-semibold text-sm leading-tight text-base-content flex items-center gap-2">
+          <span class="truncate">{{ t.title }}</span>
+          <span
+            *ngIf="t.count > 1"
+            class="toast-count shrink-0 inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-full text-[11px] font-bold bg-base-200 text-base-content/80"
+            [attr.aria-label]="'Repetido ' + t.count + ' veces'"
+          >×{{ t.count }}</span>
+        </p>
+        <p class="text-xs leading-snug text-base-content/70 break-words mt-0.5">{{ t.message }}</p>
+
+        <button
+          *ngIf="t.action as accion"
+          type="button"
+          class="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline focus-visible:underline"
+          (click)="ejecutar(t, accion)"
+        >
+          {{ accion.label }}
+          <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-ghost btn-xs btn-square shrink-0 text-base-content/50 hover:text-base-content"
+        (click)="dismiss(t.id)"
+        aria-label="Cerrar aviso"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Cuenta atrás. Se reinicia cuando el aviso se repite (cambia version). -->
+    <div class="absolute left-0 right-0 bottom-0 h-[3px] bg-base-200/60" aria-hidden="true">
+      <span
+        *ngFor="let v of [t.version]"
+        class="toast-progress block h-full origin-left opacity-70"
+        [ngClass]="acento(t.type)"
+        [style.animationDuration.ms]="t.duration"
+        (animationend)="dismiss(t.id)"
+      ></span>
+    </div>
+  </div>
+</section>

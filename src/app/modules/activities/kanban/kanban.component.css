@@ -47,6 +47,17 @@
   overflow: hidden;
 }
 
+/* ============ Fotos de los responsables ============ */
+/* La foto del avatar se fija a 1.25rem de alto para que todas las tarjetas
+   queden alineadas. Se usa !important porque el contenedor .avatar de daisyUI
+   impone sus propias dimensiones y gana en especificidad. */
+.kanban-card .avatar img,
+.kanban-card .avatar > div {
+  height: 1.25rem !important;
+  width: 1.25rem !important;
+  min-height: 1.25rem !important;
+}
+
 /* ============ Scrollbar suave en columnas ============ */
 .kanban-list {
   scrollbar-width: thin;

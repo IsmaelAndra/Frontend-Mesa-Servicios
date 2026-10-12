@@ -1,0 +1,433 @@
+<div class="space-y-6 max-w-7xl mx-auto">
+  <!-- ============================ HEADER ============================ -->
+  <header
+    class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+  >
+    <div class="flex items-center gap-3 min-w-0">
+      <div
+        class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-diagram-project text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">
+          Automatizaciones
+        </h1>
+        <p class="text-sm opacity-70">
+          Procesos que se disparan solos cuando pasa algo. Solo un
+          <strong>super administrador</strong> puede crearlos y activarlos.
+        </p>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2 shrink-0">
+      <button
+        type="button"
+        class="btn btn-sm btn-ghost gap-2"
+        (click)="irAlHistorialGlobal()"
+      >
+        <i
+          class="fa-solid fa-clock-rotate-left text-[15px]"
+          aria-hidden="true"
+        ></i>
+        Todas las ejecuciones
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm btn-primary gap-2"
+        (click)="mostrarFormulario.set(!mostrarFormulario())"
+      >
+        <i
+          class="fa-solid text-[15px]"
+          [ngClass]="mostrarFormulario() ? 'fa-xmark' : 'fa-plus'"
+          aria-hidden="true"
+        ></i>
+        {{ mostrarFormulario() ? "Cerrar" : "Nuevo proceso" }}
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================ ALTA ============================ -->
+  <div
+    *ngIf="mostrarFormulario()"
+    class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+  >
+    <div class="card-body space-y-4">
+      <div class="flex items-center gap-2">
+        <div
+          class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+          aria-hidden="true"
+        >
+          <i class="fa-solid fa-plus text-sm"></i>
+        </div>
+        <h3 class="text-sm font-bold">Nuevo proceso</h3>
+        <span class="badge badge-ghost badge-sm ml-auto">Nace en borrador</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- Nombre -->
+        <div>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Nombre <span class="text-error">*</span>
+            </span>
+          </label>
+          <input
+            class="input input-bordered input-sm w-full focus:ring-2 focus:ring-primary/25"
+            [(ngModel)]="form.name"
+            placeholder="Aviso de tickets criticos"
+          />
+        </div>
+
+        <!-- Disparador -->
+        <div>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Disparador</span>
+          </label>
+          <select
+            class="select select-bordered select-sm w-full focus:ring-2 focus:ring-primary/25"
+            [(ngModel)]="form.triggerType"
+          >
+            <option *ngFor="let d of disparadores()" [value]="d.valor">
+              {{ d.titulo }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Programación (solo SCHEDULED) -->
+        <ng-container *ngIf="form.triggerType === 'SCHEDULED'">
+          <div>
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Programación</span>
+            </label>
+            <select
+              class="select select-bordered select-sm w-full focus:ring-2 focus:ring-primary/25"
+              [(ngModel)]="programacion.modo"
+            >
+              <option value="INTERVALO">Cada N minutos</option>
+              <option value="CRON">Expresión cron</option>
+              <option value="FECHA">Una sola vez</option>
+            </select>
+          </div>
+
+          <div *ngIf="programacion.modo === 'INTERVALO'">
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium"
+                >Minutos (mínimo 5)</span
+              >
+            </label>
+            <input
+              type="number"
+              min="5"
+              class="input input-bordered input-sm w-full focus:ring-2 focus:ring-primary/25"
+              [(ngModel)]="programacion.minutos"
+            />
+          </div>
+
+          <div *ngIf="programacion.modo === 'CRON'">
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">
+                Cron (seg min hora dia mes dia-semana)
+              </span>
+            </label>
+            <input
+              class="input input-bordered input-sm w-full font-mono focus:ring-2 focus:ring-primary/25"
+              placeholder="0 0 8 * * MON-FRI"
+              [(ngModel)]="programacion.cron"
+            />
+          </div>
+
+          <div *ngIf="programacion.modo === 'FECHA'">
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Fecha y hora</span>
+            </label>
+            <input
+              type="datetime-local"
+              class="input input-bordered input-sm w-full focus:ring-2 focus:ring-primary/25"
+              [(ngModel)]="programacion.fecha"
+            />
+          </div>
+        </ng-container>
+
+        <!-- Descripción -->
+        <div class="md:col-span-2">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">
+              Descripción <span class="opacity-50 font-normal">(opcional)</span>
+            </span>
+          </label>
+          <input
+            class="input input-bordered input-sm w-full focus:ring-2 focus:ring-primary/25"
+            [(ngModel)]="form.description"
+            placeholder="Que se espera que haga"
+          />
+        </div>
+      </div>
+
+      <div
+        class="flex items-start gap-3 p-3 rounded-xl bg-info/10 border border-info/30 text-xs"
+      >
+        <div
+          class="p-1.5 rounded-lg bg-info text-info-content shrink-0"
+          aria-hidden="true"
+        >
+          <i class="fa-solid fa-circle-info text-sm"></i>
+        </div>
+        <p class="opacity-80 leading-relaxed">
+          El grafo se dibuja en el paso siguiente. Un proceso nace en borrador y
+          no se ejecuta hasta que publiques una versión y lo actives.
+        </p>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-base-200">
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm"
+          (click)="mostrarFormulario.set(false)"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm gap-2"
+          (click)="crear()"
+        >
+          <i class="fa-solid fa-arrow-right text-[15px]" aria-hidden="true"></i>
+          Crear y dibujar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ LISTADO ============================ -->
+  <div
+    class="card bg-base-100 shadow-md border border-base-200 overflow-hidden rounded-[1.5rem]"
+  >
+    <div class="card-body p-0">
+      <div class="flex items-center justify-between px-5 pt-4 pb-2">
+        <div class="flex items-center gap-2">
+          <div
+            class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-list-check text-sm"></i>
+          </div>
+          <h2 class="text-sm font-bold">Procesos registrados</h2>
+        </div>
+        <span class="badge badge-sm badge-ghost">{{ workflows().length }}</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="table table-sm table-zebra">
+          <thead class="bg-primary text-primary-content">
+            <tr>
+              <th class="text-center">Proceso</th>
+              <th class="text-center">Disparador</th>
+              <th class="text-center">Estado</th>
+              <th class="text-center">Versión</th>
+              <th class="text-center">Ejecuciones</th>
+              <th class="text-center">Última ejecución</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Cargando -->
+            <tr *ngIf="cargando()">
+              <td colspan="7">
+                <app-skeleton tipo="filas" etiqueta="Cargando procesos..."></app-skeleton>
+              </td>
+            </tr>
+
+            <!-- Filas -->
+            <tr
+              *ngFor="let w of workflows()"
+              class="hover:bg-base-200/50 transition-colors"
+            >
+              <!-- Proceso -->
+              <td>
+                <div class="flex items-center gap-2">
+                  <div
+                    class="p-1.5 rounded-lg shrink-0 flex items-center justify-center bg-primary/10 text-primary"
+                    aria-hidden="true"
+                  >
+                    <i class="fa-solid fa-diagram-project text-[15px]"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <div class="font-medium text-sm truncate" [title]="w.name">
+                      {{ w.name }}
+                    </div>
+                    <div
+                      *ngIf="w.description"
+                      class="text-[11px] opacity-60 truncate max-w-[240px]"
+                      [title]="w.description"
+                    >
+                      {{ w.description }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Disparador -->
+              <td>
+                <span class="badge badge-sm badge-outline gap-1">
+                  <i
+                    class="fa-solid fa-bolt text-[10px]"
+                    aria-hidden="true"
+                  ></i>
+                  {{ etiquetaDisparador(w.triggerType) }}
+                </span>
+              </td>
+
+              <!-- Estado -->
+              <td>
+                <span
+                  class="badge badge-sm gap-1.5 font-medium"
+                  [ngClass]="claseEstado(w)"
+                >
+                  <i
+                    [class]="iconoEstado(w)"
+                    class="text-[10px]"
+                    aria-hidden="true"
+                  ></i>
+                  {{ w.status }}
+                </span>
+              </td>
+
+              <!-- Version -->
+              <td>
+                <code class="text-xs bg-base-200 px-2 py-0.5 rounded font-mono">
+                  v{{ w.currentVersion }}
+                </code>
+              </td>
+
+              <!-- Ejecuciones -->
+              <td>
+                <span class="badge badge-sm badge-ghost font-mono">
+                  {{ w.runCount }}
+                </span>
+              </td>
+
+              <!-- Ultima ejecucion -->
+              <td class="text-xs">
+                <div class="opacity-80">{{ fecha(w.lastRun) }}</div>
+                <div
+                  *ngIf="w.nextRunAt"
+                  class="text-[10px] opacity-60 mt-0.5 flex items-center gap-1"
+                >
+                  <i
+                    class="fa-regular fa-clock text-[9px]"
+                    aria-hidden="true"
+                  ></i>
+                  proxima: {{ fecha(w.nextRunAt) }}
+                </div>
+              </td>
+
+              <!-- Acciones -->
+              <td class="text-right">
+                <div class="flex justify-end gap-0.5 whitespace-nowrap">
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-ghost gap-1"
+                    (click)="irAlGrafo(w)"
+                    title="Editar el grafo"
+                    aria-label="Editar el grafo"
+                  >
+                    <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-ghost gap-1"
+                    (click)="irAlHistorial(w)"
+                    title="Ver ejecuciones"
+                    aria-label="Ver ejecuciones"
+                  >
+                    <i
+                      class="fa-solid fa-clock-rotate-left text-sm"
+                      aria-hidden="true"
+                    ></i>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-ghost gap-1"
+                    (click)="ejecutar(w)"
+                    title="Ejecutar ahora"
+                    aria-label="Ejecutar ahora"
+                  >
+                    <i class="fa-solid fa-play text-sm" aria-hidden="true"></i>
+                  </button>
+
+                  <button
+                    *ngIf="!w.active"
+                    type="button"
+                    class="btn btn-xs btn-ghost text-success hover:bg-success/10 gap-1"
+                    (click)="activar(w)"
+                    title="Activar"
+                    aria-label="Activar"
+                  >
+                    <i
+                      class="fa-solid fa-circle-check text-sm"
+                      aria-hidden="true"
+                    ></i>
+                  </button>
+
+                  <button
+                    *ngIf="w.active"
+                    type="button"
+                    class="btn btn-xs btn-ghost text-warning hover:bg-warning/10 gap-1"
+                    (click)="desactivar(w)"
+                    title="Desactivar"
+                    aria-label="Desactivar"
+                  >
+                    <i class="fa-solid fa-pause text-sm" aria-hidden="true"></i>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
+                    (click)="borrar(w)"
+                    title="Eliminar"
+                    aria-label="Eliminar"
+                  >
+                    <i class="fa-solid fa-trash text-sm" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Estado vacio -->
+            <tr *ngIf="!cargando() && workflows().length === 0">
+              <td colspan="7">
+                <div
+                  class="flex flex-col items-center justify-center py-12 gap-3 opacity-70"
+                >
+                  <i
+                    class="fa-solid fa-diagram-project text-4xl"
+                    aria-hidden="true"
+                  ></i>
+                  <span class="text-sm">No hay procesos registrados</span>
+                  <p class="text-xs opacity-70 text-center max-w-sm">
+                    Crea el primero: un nombre, un disparador y luego el grafo.
+                  </p>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-primary gap-2 mt-1"
+                    (click)="mostrarFormulario.set(true)"
+                  >
+                    <i
+                      class="fa-solid fa-plus text-[15px]"
+                      aria-hidden="true"
+                    ></i>
+                    Crear el primero
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

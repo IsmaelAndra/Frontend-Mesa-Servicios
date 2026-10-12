@@ -1,22 +1,18 @@
 <div class="space-y-6">
   <!-- Encabezado -->
-  <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div class="flex items-center gap-3">
-      <div class="p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-        </svg>
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-arrow-trend-up text-2xl"></i>
       </div>
       <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Gestión de Escalaciones</h1>
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">Gestión de Escalaciones</h1>
         <p class="text-sm opacity-70">Configura reglas de escalamiento automático por SLA</p>
       </div>
     </div>
 
     <button class="btn btn-primary btn-sm gap-2" (click)="showNew = !showNew">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-      </svg>
+      <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
       {{ showNew ? 'Cerrar' : 'Nueva Escalación' }}
     </button>
   </header>
@@ -26,16 +22,14 @@
     <div class="card-body">
       <div class="flex items-center gap-2 mb-2">
         <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
+          <i class="fa-solid fa-plus text-[15px]"></i>
         </div>
         <h3 class="card-title text-base">Nueva Escalación</h3>
       </div>
 
       <form class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2" (ngSubmit)="create()">
         <!-- Política SLA -->
-        <label class="form-control w-full">
+        <div class="form-control w-full">
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">
               Política SLA <span class="text-error">*</span>
@@ -50,16 +44,22 @@
             <option [ngValue]="null" disabled>Seleccione política</option>
             <option *ngFor="let p of policies" [ngValue]="p.idSlaPolicy">{{ p.nameSlaPolicy }}</option>
           </select>
-        </label>
+          <div class="label pt-1" *ngIf="newEsc.slaPolicyId">
+            <span class="label-text-alt text-xs opacity-70 inline-flex items-center gap-1.5">
+              <i [class]="policyIcon(newEsc.slaPolicyId)" aria-hidden="true"></i>
+              {{ getPolicyName(newEsc.slaPolicyId) }}
+            </span>
+          </div>
+        </div>
 
         <!-- Porcentaje disparo -->
-        <label class="form-control w-full">
+        <div class="form-control w-full">
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">
               Porcentaje disparo <span class="text-error">*</span>
             </span>
           </div>
-          <label class="input input-bordered input-sm flex items-center gap-2 w-full">
+          <div class="input input-bordered input-sm flex items-center gap-2 w-full">
             <input
               type="number"
               [(ngModel)]="newEsc.triggerPercentage"
@@ -71,11 +71,11 @@
               placeholder="Ej. 80"
             />
             <span class="text-xs opacity-60">%</span>
-          </label>
-        </label>
+          </div>
+        </div>
 
         <!-- Acción -->
-        <label class="form-control w-full">
+        <div class="form-control w-full">
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">
               Acción <span class="text-error">*</span>
@@ -87,36 +87,35 @@
             class="select select-bordered select-sm w-full"
             required
           >
-            <option value="NOTIFY_SUPERVISOR">🔔 Notificar Supervisor</option>
-            <option value="ESCALATE">⬆️ Escalar</option>
-            <option value="REASSIGN">🔀 Reasignar</option>
+            <option value="NOTIFY_SUPERVISOR">Notificar al supervisor</option>
+            <option value="ESCALATE">Escalar</option>
+            <option value="REASSIGN">Reasignar</option>
           </select>
-        </label>
+        </div>
 
         <!-- Equipo destino -->
-        <label class="form-control w-full">
+        <div class="form-control w-full">
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">Equipo destino</span>
           </div>
-          <select
-            [(ngModel)]="newEsc.destinationTeamId"
-            name="destinationTeamId"
-            class="select select-bordered select-sm w-full"
-          >
-            <option [ngValue]="null">Ninguno</option>
-            <option *ngFor="let t of teams" [ngValue]="t.idTeam">{{ t.nameTeam }}</option>
-          </select>
-        </label>
+<app-master-select
+              [(ngModel)]="newEsc.destinationTeamId"
+              name="destinationTeamId"
+              [options]="teamOptions"
+              [allowEmpty]="true"
+              emptyLabel="Ninguno"
+              placeholder="Ninguno"
+              label="Equipo destino"
+            ></app-master-select>
+          </div>
 
         <!-- Usuario destino -->
-        <label class="form-control w-full">
+        <div class="form-control w-full">
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">Usuario destino</span>
           </div>
-          <label class="input input-bordered input-sm flex items-center gap-2 w-full">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+          <div class="input input-bordered input-sm flex items-center gap-2 w-full">
+            <i class="fa-regular fa-user text-[15px] opacity-50" aria-hidden="true"></i>
             <input
               type="number"
               [(ngModel)]="newEsc.destinationUserId"
@@ -124,27 +123,28 @@
               class="grow bg-transparent outline-none"
               placeholder="ID Usuario"
             />
-          </label>
-        </label>
+          </div>
+        </div>
 
         <!-- Plantilla notificación -->
-        <label class="form-control w-full">
+        <div class="form-control w-full">
           <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Plantilla notificación</span>
+            <span class="label-text text-xs font-medium">Plantilla de notificación</span>
           </div>
-          <label class="input input-bordered input-sm flex items-center gap-2 w-full">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            <input
-              type="number"
-              [(ngModel)]="newEsc.notificationTemplateId"
-              name="notificationTemplateId"
-              class="grow bg-transparent outline-none"
-              placeholder="ID Plantilla"
-            />
-          </label>
-        </label>
+          <select
+            [(ngModel)]="newEsc.notificationTemplateId"
+            name="notificationTemplateId"
+            class="select select-bordered select-sm w-full"
+          >
+            <option [ngValue]="null">Sin plantilla</option>
+            <option *ngFor="let t of templates" [ngValue]="t.idTemplate">{{ t.nameTemplate }}</option>
+          </select>
+          <div class="label pt-1">
+            <span class="label-text-alt text-xs opacity-60">
+              Correo que se envía al ejecutar la escalación.
+            </span>
+          </div>
+        </div>
 
         <!-- Acciones -->
         <div class="md:col-span-3 flex justify-end gap-2 pt-2 border-t border-base-200">
@@ -156,9 +156,7 @@
             class="btn btn-sm btn-primary gap-2"
             [disabled]="!newEsc.slaPolicyId || !newEsc.triggerPercentage || !newEsc.actionType"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
+            <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
             Crear escalación
           </button>
         </div>
@@ -176,111 +174,191 @@
             <th class="text-center">Disparo</th>
             <th class="text-center">Acción</th>
             <th class="text-center">Equipo destino</th>
-            <th class="text-center">Usuario destino</th>
+            <th class="text-center">Plantilla</th>
             <th class="text-center">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <!-- Filas -->
-          <tr *ngFor="let e of escalations" class="hover:bg-base-200/50 transition-colors">
-            <!-- Política -->
-            <td>
-              <div class="flex items-center gap-2">
-                <div class="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0" aria-hidden="true">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
+          <ng-container *ngFor="let e of pagEscalations.vista">
+            <!-- Modo edición -->
+            <tr *ngIf="editEsc?.idEscalation === e.idEscalation" class="bg-base-200/50">
+              <td colspan="6">
+                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 p-2 items-end">
+                  <div class="form-control">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Política SLA</span>
+                    </div>
+                    <select [(ngModel)]="editEsc!.slaPolicyId" class="select select-bordered select-sm w-full">
+                      <option *ngFor="let p of policies" [ngValue]="p.idSlaPolicy">{{ p.nameSlaPolicy }}</option>
+                    </select>
+                  </div>
+
+                  <div class="form-control">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Disparo (%)</span>
+                    </div>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      [(ngModel)]="editEsc!.triggerPercentage"
+                      class="input input-bordered input-sm w-full"
+                    />
+                  </div>
+
+                  <div class="form-control">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Acción</span>
+                    </div>
+                    <select [(ngModel)]="editEsc!.actionType" class="select select-bordered select-sm w-full">
+                      <option value="NOTIFY_SUPERVISOR">Notificar al supervisor</option>
+                      <option value="ESCALATE">Escalar</option>
+                      <option value="REASSIGN">Reasignar</option>
+                    </select>
+                  </div>
+
+                  <div class="form-control">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Equipo destino</span>
+                    </div>
+<app-master-select
+                        [(ngModel)]="editEsc!.destinationTeamId"
+                        [options]="teamOptions"
+                        [allowEmpty]="true"
+                        emptyLabel="Ninguno"
+                        placeholder="Ninguno"
+                        label="Equipo destino"
+                      ></app-master-select>
+                  </div>
+
+                  <div class="form-control">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Plantilla</span>
+                    </div>
+                    <select
+                      [(ngModel)]="editEsc!.notificationTemplateId"
+                      class="select select-bordered select-sm w-full"
+                    >
+                      <option [ngValue]="null">Sin plantilla</option>
+                      <option *ngFor="let t of templates" [ngValue]="t.idTemplate">{{ t.nameTemplate }}</option>
+                    </select>
+                  </div>
+
+                  <div class="col-span-2 md:col-span-3 xl:col-span-5 flex justify-end gap-2 pt-2 border-t border-base-200">
+                    <button class="btn btn-sm btn-ghost gap-1" (click)="cancelEdit()">
+                      <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i>
+                      Cancelar
+                    </button>
+                    <button class="btn btn-sm btn-primary gap-1" (click)="saveEdit()">
+                      <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
+                      Guardar
+                    </button>
+                  </div>
                 </div>
-                <span class="font-medium">{{ getPolicyName(e.slaPolicyId) }}</span>
-              </div>
-            </td>
+              </td>
+            </tr>
 
-            <!-- Disparo -->
-            <td>
-              <div class="flex flex-col items-center gap-1">
-                <span class="badge badge-sm badge-outline font-mono">{{ e.triggerPercentage }}%</span>
-                <progress
-                  class="progress progress-primary w-20 h-1.5"
-                  [value]="e.triggerPercentage"
-                  max="100"
-                ></progress>
-              </div>
-            </td>
+            <!-- Modo lectura -->
+            <tr *ngIf="editEsc?.idEscalation !== e.idEscalation" class="hover:bg-base-200/50 transition-colors">
+              <td>
+                <div class="flex items-center gap-2">
+                  <div
+                    class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
+                    [style.background-color]="policyColor(e.slaPolicyId) + '22'"
+                    [style.color]="policyColor(e.slaPolicyId)"
+                    aria-hidden="true"
+                  >
+                    <i [class]="policyIcon(e.slaPolicyId)" class="text-[15px]"></i>
+                  </div>
+                  <span class="font-medium whitespace-nowrap">{{ getPolicyName(e.slaPolicyId) }}</span>
+                </div>
+              </td>
 
-            <!-- Acción -->
-            <td>
-              <span
-                class="badge badge-sm gap-1"
-                [ngClass]="{
-                  'badge-warning': e.actionType === 'NOTIFY_SUPERVISOR',
-                  'badge-error': e.actionType === 'ESCALATE',
-                  'badge-info': e.actionType === 'REASSIGN'
-                }"
-              >
-                <svg *ngIf="e.actionType === 'NOTIFY_SUPERVISOR'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <svg *ngIf="e.actionType === 'ESCALATE'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
-                <svg *ngIf="e.actionType === 'REASSIGN'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-                {{ e.actionType }}
-              </span>
-            </td>
+              <td>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="badge badge-sm badge-outline font-mono">{{ e.triggerPercentage }}%</span>
+                  <progress
+                    class="progress progress-primary w-20 h-1.5"
+                    [value]="e.triggerPercentage"
+                    max="100"
+                  ></progress>
+                </div>
+              </td>
 
-            <!-- Equipo destino -->
-            <td>
-              <span *ngIf="e.destinationTeamId" class="badge badge-sm badge-outline gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                {{ getTeamName(e.destinationTeamId) }}
-              </span>
-              <span *ngIf="!e.destinationTeamId" class="opacity-50">—</span>
-            </td>
-
-            <!-- Usuario destino -->
-            <td>
-              <span *ngIf="e.destinationUserId" class="badge badge-sm badge-ghost gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                #{{ e.destinationUserId }}
-              </span>
-              <span *ngIf="!e.destinationUserId" class="opacity-50">—</span>
-            </td>
-
-            <!-- Acciones -->
-            <td class="text-right">
-              <div class="flex justify-end gap-1 whitespace-nowrap">
-                <button
-                  class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
-                  (click)="delete(e)"
-                  aria-label="Eliminar escalación"
+              <td>
+                <span
+                  class="badge badge-sm gap-1 whitespace-nowrap"
+                  [title]="e.actionType"
+                  [ngClass]="{
+                    'badge-warning': e.actionType === 'NOTIFY_SUPERVISOR',
+                    'badge-error': e.actionType === 'ESCALATE',
+                    'badge-info': e.actionType === 'REASSIGN'
+                  }"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Eliminar
-                </button>
-              </div>
-            </td>
-          </tr>
+                  <i *ngIf="e.actionType === 'NOTIFY_SUPERVISOR'" class="fa-regular fa-bell text-xs" aria-hidden="true"></i>
+                  <i *ngIf="e.actionType === 'ESCALATE'" class="fa-solid fa-arrow-up text-xs" aria-hidden="true"></i>
+                  <i *ngIf="e.actionType === 'REASSIGN'" class="fa-solid fa-arrow-right-arrow-left text-xs" aria-hidden="true"></i>
+                  {{ etiquetaAccion(e.actionType) }}
+                </span>
+              </td>
+
+              <td>
+                <span
+                  *ngIf="e.destinationTeamId; else sinEquipo"
+                  class="badge badge-sm gap-1.5"
+                  [style.background-color]="teamColor(e.destinationTeamId) + '22'"
+                  [style.color]="teamColor(e.destinationTeamId)"
+                >
+                  <i [class]="teamIcon(e.destinationTeamId)" class="text-xs" aria-hidden="true"></i>
+                  {{ getTeamName(e.destinationTeamId) }}
+                </span>
+                <ng-template #sinEquipo>
+                  <span class="opacity-50">—</span>
+                </ng-template>
+              </td>
+
+              <td>
+                <span
+                  class="badge badge-sm gap-1.5"
+                  [style.background-color]="templateColor(e.notificationTemplateId) + '22'"
+                  [style.color]="templateColor(e.notificationTemplateId)"
+                >
+                  <i [class]="templateIcon(e.notificationTemplateId)" class="text-xs" aria-hidden="true"></i>
+                  {{ templateName(e.notificationTemplateId) }}
+                </span>
+              </td>
+
+              <td class="text-right">
+                <div class="flex justify-end gap-1 whitespace-nowrap">
+                  <button
+                    class="btn btn-xs btn-ghost gap-1"
+                    (click)="startEdit(e)"
+                    aria-label="Editar escalación"
+                  >
+                    <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
+                    Editar
+                  </button>
+                  <button
+                    class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
+                    (click)="delete(e)"
+                    aria-label="Eliminar escalación"
+                  >
+                    <i class="fa-solid fa-trash text-sm" aria-hidden="true"></i>
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
 
           <!-- Estado vacío -->
           <tr *ngIf="!escalations || escalations.length === 0">
             <td colspan="6">
               <div class="flex flex-col items-center justify-center py-12 gap-3 opacity-70">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
+                <i class="fa-solid fa-arrow-trend-up text-4xl" aria-hidden="true"></i>
                 <span class="text-sm">No hay escalaciones registradas</span>
                 <button class="btn btn-sm btn-primary gap-2 mt-1" (click)="showNew = true">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
+                  <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
                   Crear la primera
                 </button>
               </div>
@@ -290,4 +368,12 @@
       </table>
     </div>
   </div>
+    <app-paginator
+    [total]="escalations.length"
+    [page]="pagEscalations.page"
+    [pageSize]="pagEscalations.pageSize"
+    [mostrarResumen]="false"
+    (pageChange)="pagEscalations.cambiarPagina($event)"
+    (pageSizeChange)="pagEscalations.cambiarTamano($event)"
+    ></app-paginator>
 </div>

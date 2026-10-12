@@ -1,0 +1,662 @@
+<div
+  class="p-4 sm:p-6 flex flex-col gap-4 h-full min-h-[calc(100vh-6rem)] max-w-[1600px] mx-auto"
+>
+  <!-- ============================ Cabecera ============================ -->
+  <header class="flex flex-col gap-3">
+    <div
+      class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3"
+    >
+      <div class="flex items-center gap-3 min-w-0">
+        <div
+          class="p-2.5 rounded-xl bg-primary/10 text-primary"
+          aria-hidden="true"
+        >
+          <i class="fa-solid fa-diagram-project text-2xl"></i>
+        </div>
+        <div class="min-w-0">
+          <h1
+            class="text-xl sm:text-2xl font-bold text-primary leading-tight truncate"
+          >
+            {{ workflow()?.name ?? "Proceso nuevo" }}
+          </h1>
+          <div
+            class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5 text-xs"
+          >
+            <ng-container *ngIf="workflow() as w; else sinWorkflow">
+              <span
+                class="badge badge-sm gap-1.5 font-medium"
+                [ngClass]="{
+                  'badge-success text-success-content': w.status === 'ACTIVO',
+                  'badge-ghost text-base-content/60': w.status === 'BORRADOR',
+                  'badge-warning text-warning-content': w.status === 'INACTIVO',
+                  'badge-error text-error-content': w.status === 'ERROR',
+                }"
+              >
+                <i
+                  class="text-[10px]"
+                  [ngClass]="{
+                    'fa-solid fa-play': w.status === 'ACTIVO',
+                    'fa-regular fa-file-lines': w.status === 'BORRADOR',
+                    'fa-solid fa-pause': w.status === 'INACTIVO',
+                    'fa-solid fa-circle-exclamation': w.status === 'ERROR',
+                  }"
+                  aria-hidden="true"
+                ></i>
+                {{ w.status }}
+              </span>
+              <span class="opacity-70">
+                Disparador:
+                <strong class="font-semibold opacity-100">
+                  {{ disparadorActual()?.descripcion ?? w.triggerType }}
+                </strong>
+              </span>
+              <span class="opacity-60">· v{{ w.currentVersion }}</span>
+              <span class="opacity-60"
+                >· actua como {{ w.authorityScope }}</span
+              >
+              <span
+                *ngIf="cambiosSinPublicar()"
+                class="badge badge-sm badge-warning gap-1"
+              >
+                <i
+                  class="fa-solid fa-circle-exclamation text-[9px]"
+                  aria-hidden="true"
+                ></i>
+                cambios sin publicar
+              </span>
+            </ng-container>
+            <ng-template #sinWorkflow>
+              <span class="opacity-60"
+                >Crea primero el workflow desde la lista.</span
+              >
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botonera -->
+    <div class="flex flex-wrap gap-2">
+      <button
+        type="button"
+        class="btn btn-sm btn-ghost gap-2"
+        [disabled]="!workflowId()"
+        (click)="mostrarAjustes.set(!mostrarAjustes())"
+      >
+        <i class="fa-solid fa-cog text-[15px]" aria-hidden="true"></i>
+        Ajustes
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-ghost gap-2"
+        [disabled]="!workflowId()"
+        (click)="validar()"
+      >
+        <i class="fa-solid fa-check-circle text-[15px]" aria-hidden="true"></i>
+        Validar
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-primary gap-2"
+        [disabled]="!puedeGuardar() || !workflowId()"
+        (click)="publicar()"
+      >
+        <i class="fa-solid fa-paper-plane text-[15px]" aria-hidden="true"></i>
+        Publicar versión
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm gap-2"
+        [ngClass]="
+          workflow()?.active
+            ? 'btn-warning text-warning-content'
+            : 'btn-success text-success-content'
+        "
+        [disabled]="!workflow()"
+        (click)="alternarActivo()"
+      >
+        <i
+          class="fa-solid text-[15px]"
+          [ngClass]="workflow()?.active ? 'fa-pause' : 'fa-check'"
+          aria-hidden="true"
+        ></i>
+        {{ workflow()?.active ? "Desactivar" : "Activar" }}
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-ghost gap-2"
+        [disabled]="!workflow()?.currentVersion"
+        (click)="probar()"
+      >
+        <i class="fa-solid fa-play text-[15px]" aria-hidden="true"></i>
+        Probar
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-ghost gap-2"
+        [disabled]="!workflowId()"
+        (click)="irAlHistorial()"
+      >
+        <i
+          class="fa-solid fa-clock-rotate-left text-[15px]"
+          aria-hidden="true"
+        ></i>
+        Historial
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================ Ajustes ============================ -->
+  <div
+    *ngIf="mostrarAjustes()"
+    class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+  >
+    <div class="card-body space-y-4">
+      <div class="flex items-center gap-2">
+        <div
+          class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+          aria-hidden="true"
+        >
+          <i class="fa-solid fa-cog text-sm"></i>
+        </div>
+        <h3 class="text-sm font-bold">Ajustes del proceso</h3>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Nombre</span>
+          </label>
+          <input
+            class="input input-bordered input-sm w-full"
+            [(ngModel)]="ajustes.name"
+          />
+        </div>
+        <div class="md:col-span-2">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Descripción</span>
+          </label>
+          <input
+            class="input input-bordered input-sm w-full"
+            [(ngModel)]="ajustes.description"
+          />
+        </div>
+        <div>
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Disparador</span>
+          </label>
+          <select
+            class="select select-bordered select-sm w-full"
+            [(ngModel)]="ajustes.triggerType"
+          >
+            <option
+              *ngFor="let d of catalogo()?.disparadores ?? []"
+              [value]="d.tipo"
+            >
+              {{ d.descripcion }}
+            </option>
+          </select>
+        </div>
+
+        <ng-container *ngIf="ajustes.triggerType === 'SCHEDULED'">
+          <div>
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Programación</span>
+            </label>
+            <select
+              class="select select-bordered select-sm w-full"
+              [(ngModel)]="ajustes.programacion.modo"
+            >
+              <option value="INTERVALO">Cada N minutos</option>
+              <option value="CRON">Expresión cron</option>
+              <option value="FECHA">Una sola vez</option>
+            </select>
+          </div>
+          <div *ngIf="ajustes.programacion.modo === 'INTERVALO'">
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium"
+                >Minutos (mínimo 5)</span
+              >
+            </label>
+            <input
+              type="number"
+              min="5"
+              class="input input-bordered input-sm w-full"
+              [(ngModel)]="ajustes.programacion.minutos"
+            />
+          </div>
+          <div
+            *ngIf="ajustes.programacion.modo === 'CRON'"
+            class="md:col-span-2"
+          >
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">
+                Cron (seg min hora dia mes dia-semana), hora de Ecuador
+              </span>
+            </label>
+            <input
+              class="input input-bordered input-sm w-full font-mono"
+              placeholder="0 0 8 * * MON-FRI"
+              [(ngModel)]="ajustes.programacion.cron"
+            />
+          </div>
+          <div *ngIf="ajustes.programacion.modo === 'FECHA'">
+            <label class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Fecha y hora</span>
+            </label>
+            <input
+              type="datetime-local"
+              class="input input-bordered input-sm w-full"
+              [(ngModel)]="ajustes.programacion.fecha"
+            />
+          </div>
+        </ng-container>
+      </div>
+
+      <div
+        class="flex flex-wrap items-center gap-2 pt-2 border-t border-base-200"
+      >
+        <button
+          type="button"
+          class="btn btn-sm btn-primary gap-2"
+          (click)="guardarAjustes()"
+        >
+          <i class="fa-solid fa-save text-[15px]" aria-hidden="true"></i>
+          Guardar ajustes
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm btn-ghost"
+          (click)="mostrarAjustes.set(false)"
+        >
+          Cancelar
+        </button>
+        <span class="text-[11px] opacity-60 ml-auto">
+          Cambiar el disparador no publica una versión nueva: el grafo sigue
+          igual.
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ Errores ============================ -->
+  <div
+    *ngIf="errores().length > 0"
+    class="flex items-start gap-3 p-3 rounded-xl bg-error/10 border border-error/30 text-xs"
+  >
+    <div
+      class="p-1.5 rounded-lg bg-error text-error-content shrink-0"
+      aria-hidden="true"
+    >
+      <i class="fa-solid fa-circle-exclamation text-sm"></i>
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-start justify-between gap-2">
+        <p class="font-semibold text-error">
+          El workflow no se puede publicar todavía:
+        </p>
+        <button
+          type="button"
+          class="btn btn-ghost btn-xs"
+          (click)="errores.set([])"
+          aria-label="Ocultar errores"
+        >
+          <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+        </button>
+      </div>
+      <ul class="list-disc pl-5 space-y-0.5 mt-1">
+        <li *ngFor="let e of errores()">{{ e }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============================ Layout principal ============================ -->
+  <div
+    class="grid grid-cols-1 lg:grid-cols-[240px_1fr_340px] gap-3 flex-1 min-h-[560px]"
+  >
+    <!-- ==================== Paleta ==================== -->
+    <aside
+      class="overflow-y-auto card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+    >
+      <div class="card-body p-3 gap-3">
+        <div class="flex items-center gap-2">
+          <div
+            class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-shapes text-sm"></i>
+          </div>
+          <h3 class="text-sm font-bold">Nodos</h3>
+        </div>
+
+        <div *ngFor="let grupo of grupos">
+          <p
+            class="text-[10px] uppercase tracking-wider opacity-50 mb-1.5 mt-2"
+          >
+            {{ grupo.titulo }}
+          </p>
+          <ng-container *ngFor="let entrada of paletaDisponible()">
+            <button
+              *ngIf="entrada.group === grupo.id"
+              type="button"
+              class="w-full text-left px-2 py-1.5 mb-1 rounded-lg border border-base-200 border-l-4 text-xs hover:bg-base-200/60 hover:border-base-300 transition-colors flex items-center gap-2"
+              [style.borderLeftColor]="entrada.color"
+              [title]="entrada.description"
+              (click)="agregar(entrada.type)"
+            >
+              <i
+                [class]="iconos[entrada.type]"
+                [style.color]="entrada.color"
+                class="text-[13px] shrink-0"
+                aria-hidden="true"
+              ></i>
+              <span class="font-medium truncate">{{ entrada.label }}</span>
+            </button>
+          </ng-container>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-outline btn-primary gap-2 mt-2 w-full"
+          (click)="cargarEjemplo()"
+        >
+          <i
+            class="fa-solid fa-wand-magic-sparkles text-[13px]"
+            aria-hidden="true"
+          ></i>
+          Cargar ejemplo
+        </button>
+
+        <div
+          class="flex items-start gap-2 p-2 rounded-lg bg-info/10 border border-info/20 text-[11px] mt-1"
+        >
+          <i
+            class="fa-solid fa-circle-info mt-0.5 shrink-0 opacity-70"
+            aria-hidden="true"
+          ></i>
+          <p class="leading-relaxed opacity-80">
+            Arrastra desde los puntos de abajo de una caja hasta otra para
+            conectarlas. <b>Ctrl + rueda</b> para el zoom; arrastra el fondo
+            para moverte.
+          </p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== Lienzo ==================== -->
+    <section
+      class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden flex flex-col"
+    >
+      <div class="relative flex-1 bg-base-200/40">
+        <!-- Controles de zoom -->
+        <div
+          class="absolute top-3 right-3 z-10 flex items-center gap-0.5 bg-base-100/95 backdrop-blur border border-base-200 rounded-xl shadow-md overflow-hidden"
+        >
+          <button
+            type="button"
+            class="btn btn-xs btn-ghost gap-0 px-2 h-8 min-h-0"
+            title="Alejar"
+            aria-label="Alejar"
+            (click)="cambiarZoom(-0.1)"
+          >
+            <i class="fa-solid fa-minus text-[11px]" aria-hidden="true"></i>
+          </button>
+          <span class="px-2 text-xs font-mono tabular-nums w-12 text-center">
+            {{ (zoom() * 100).toFixed(0) }}%
+          </span>
+          <button
+            type="button"
+            class="btn btn-xs btn-ghost gap-0 px-2 h-8 min-h-0"
+            title="Acercar"
+            aria-label="Acercar"
+            (click)="cambiarZoom(0.1)"
+          >
+            <i class="fa-solid fa-plus text-[11px]" aria-hidden="true"></i>
+          </button>
+          <div class="w-px h-5 bg-base-300"></div>
+          <button
+            type="button"
+            class="btn btn-xs btn-ghost gap-0 px-2 h-8 min-h-0"
+            title="Ver todo"
+            aria-label="Ver todo"
+            (click)="encuadrar()"
+          >
+            <i class="fa-solid fa-expand text-[11px]" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <!-- Lienzo -->
+        <div
+          #lienzo
+          class="absolute inset-0 overflow-auto cursor-grab active:cursor-grabbing select-none"
+          (wheel)="zoomRueda($event)"
+        >
+          <div
+            [style.width.px]="TAMANO_LIENZO * zoom()"
+            [style.height.px]="TAMANO_LIENZO * zoom()"
+            class="relative"
+          >
+            <div
+              class="absolute top-0 left-0 origin-top-left"
+              [style.width.px]="TAMANO_LIENZO"
+              [style.height.px]="TAMANO_LIENZO"
+              [style.transform]="'scale(' + zoom() + ')'"
+              style="
+                background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+                background-size: 20px 20px;
+              "
+              (pointerdown)="iniciarPaneo($event)"
+            >
+              <!-- Lineas -->
+              <svg
+                [attr.width]="TAMANO_LIENZO"
+                [attr.height]="TAMANO_LIENZO"
+                class="absolute inset-0"
+              >
+                <defs>
+                  <!-- Una punta por color: el marcador no hereda el color del trazo. -->
+                  <marker
+                    *ngFor="let m of marcasAristas()"
+                    [attr.id]="'punta-' + m.id"
+                    markerWidth="10"
+                    markerHeight="10"
+                    refX="8"
+                    refY="3"
+                    orient="auto"
+                    markerUnits="strokeWidth"
+                  >
+                    <path d="M0,0 L0,6 L9,3 z" [style.fill]="m.color" />
+                  </marker>
+                </defs>
+                <g *ngFor="let a of aristas()">
+                  <!-- Cada conector nace del color de su nodo de origen. -->
+                  <path
+                    [attr.d]="a.path"
+                    fill="none"
+                    [attr.stroke]="a.color"
+                    stroke-width="2"
+                    [attr.marker-end]="'url(#punta-' + idColor(a.color) + ')'"
+                  />
+                  <path
+                    [attr.d]="a.path"
+                    fill="none"
+                    stroke="transparent"
+                    stroke-width="12"
+                    class="cursor-pointer"
+                    (pointerdown)="$event.stopPropagation()"
+                    (click)="clicEnConector(a.edge)"
+                  >
+                    <title>Clic para quitar este conector</title>
+                  </path>
+                  <g *ngIf="a.etiqueta">
+                    <rect
+                      [attr.x]="a.lx - 34"
+                      [attr.y]="a.ly - 9"
+                      width="68"
+                      height="18"
+                      rx="4"
+                      fill="white"
+                      stroke="#cbd5e1"
+                    />
+                    <text
+                      [attr.x]="a.lx"
+                      [attr.y]="a.ly + 4"
+                      text-anchor="middle"
+                      font-size="10"
+                      fill="#334155"
+                    >
+                      {{ a.etiqueta }}
+                    </text>
+                  </g>
+                </g>
+                <path
+                  *ngIf="conexion()"
+                  [attr.d]="rutaConexion()"
+                  fill="none"
+                  [attr.stroke]="colorConexion()"
+                  stroke-width="2"
+                  stroke-dasharray="6 4"
+                />
+              </svg>
+
+              <!-- Cajas -->
+              <div
+                *ngFor="let nodo of grafo().nodes"
+                class="absolute rounded-xl border-2 bg-base-100 shadow-sm transition-shadow"
+                [style.left.px]="nodo.positionX"
+                [style.top.px]="nodo.positionY"
+                [style.width.px]="ANCHO_NODO"
+                [style.height.px]="ALTO_NODO"
+                [style.borderColor]="
+                  erroresPorNodo().has(nodo.id) ? '#dc2626' : colorDe(nodo.type)
+                "
+                [class.ring-2]="nodoSeleccionado() === nodo.id"
+                [class.ring-primary]="nodoSeleccionado() === nodo.id"
+                [class.shadow-md]="nodoSeleccionado() === nodo.id"
+                (pointerdown)="iniciarArrastre($event, nodo)"
+              >
+                <div class="flex items-center gap-2 px-2 pt-1.5 cursor-move">
+                  <span
+                    class="w-6 h-6 rounded-md flex items-center justify-center text-white text-[11px] shrink-0"
+                    [style.backgroundColor]="colorDe(nodo.type)"
+                  >
+                    <i [class]="iconos[nodo.type]"></i>
+                  </span>
+                  <div class="min-w-0 flex-1">
+                    <div class="text-xs font-semibold truncate">
+                      {{ nodo.name }}
+                    </div>
+                    <div class="text-[10px] opacity-50 truncate">
+                      {{ etiquetaTipo(nodo.type) }}
+                    </div>
+                  </div>
+                  <i
+                    *ngIf="erroresPorNodo().has(nodo.id)"
+                    class="fa-solid fa-circle-exclamation text-error text-[11px]"
+                    [title]="erroresPorNodo().get(nodo.id)?.join(' ')"
+                  ></i>
+                </div>
+                <div
+                  class="px-2 text-[10px] opacity-70 truncate"
+                  [title]="resumen(nodo)"
+                >
+                  {{ resumen(nodo) }}
+                </div>
+
+                <!-- Puertos de salida -->
+                <div
+                  *ngFor="let puerto of puertosDe(nodo)"
+                  class="absolute -bottom-2 -translate-x-1/2 flex flex-col items-center"
+                  [style.left.px]="posPuerto(nodo, puerto).x - nodo.positionX"
+                >
+                  <span
+                    class="w-4 h-4 rounded-full border-2 border-base-100 shadow cursor-crosshair transition-transform hover:scale-105"
+                    [style.backgroundColor]="
+                      destinoDe(nodo, puerto) ? colorDe(nodo.type) : '#94a3b8'
+                    "
+                    [title]="'Arrastra para conectar la salida ' + puerto"
+                    (pointerdown)="iniciarConexion($event, nodo, puerto)"
+                  ></span>
+                  <span
+                    *ngIf="puerto !== 'NEXT'"
+                    class="text-[9px] font-medium opacity-70 mt-0.5 bg-base-100/90 px-1 rounded"
+                  >
+                    {{ puerto }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <p
+          *ngIf="grafo().nodes.length === 0 && !cargando()"
+          class="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-60 pointer-events-none"
+        >
+          <i
+            class="fa-solid fa-diagram-project text-4xl"
+            aria-hidden="true"
+          ></i>
+          <span class="text-sm">
+            Anade un nodo de <b>Inicio</b> o carga el ejemplo para empezar.
+          </span>
+        </p>
+      </div>
+    </section>
+
+    <!-- ==================== Panel de propiedades ==================== -->
+    <app-workflow-node-panel class="contents"></app-workflow-node-panel>
+  </div>
+
+  <!-- ============================ PRUEBA EN VIVO ============================ -->
+  <div
+    *ngIf="prueba() as p"
+    class="overlay-backdrop fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+    style="margin-top: 0px;"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Prueba en vivo"
+    (click)="cerrarPrueba()"
+  >
+    <div
+      class="overlay-panel card bg-base-100 shadow-2xl border border-base-200 rounded-[1.5rem] w-full max-w-6xl max-h-[92vh] overflow-hidden"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex items-center gap-3 px-5 py-3 border-b border-base-200">
+        <div class="p-1.5 rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15" aria-hidden="true">
+          <i class="fa-solid fa-flask text-sm"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h3 class="font-bold text-base truncate">
+            Prueba · ejecución <span class="font-mono" [title]="p.ejecucionId">{{ p.ejecucionId | slice: 0 : 8 }}</span>
+          </h3>
+          <p class="text-xs opacity-60 truncate">
+            {{ workflow()?.name }} · corre la versión publicada con la autoridad del autor
+          </p>
+        </div>
+        <button type="button" class="btn btn-sm btn-ghost gap-2" (click)="verPruebaEnHistorial()">
+          <i class="fa-solid fa-clock-rotate-left text-[13px]" aria-hidden="true"></i>
+          Ver en el historial
+        </button>
+        <button type="button" class="btn btn-sm btn-ghost btn-square" (click)="cerrarPrueba()" aria-label="Cerrar">
+          <i class="fa-solid fa-xmark text-base" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="p-4 overflow-y-auto">
+        <app-workflow-run-canvas
+          [grafo]="p.grafo"
+          [pasos]="pasosPrueba()"
+          [fin]="finPrueba()"
+          modo="vivo"
+          [alto]="480"
+        ></app-workflow-run-canvas>
+      </div>
+    </div>
+  </div>
+</div>

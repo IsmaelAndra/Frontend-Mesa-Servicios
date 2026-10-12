@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { APP_INITIALIZER } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
@@ -6,14 +7,10 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+import { AuthService } from './core/services/auth.service';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
-import { TicketsModule } from './modules/tickets/tickets.module';
-import { AdminModule } from './modules/admin/admin.module';
-import { ReportsModule } from './modules/reports/reports.module';
-import { SettingsModule } from './modules/settings/settings.module';
-import { ActivitiesModule } from './modules/activities/activities.module';
 import { SharedModule } from './modules/shared/shared.module';
 
 @NgModule({
@@ -25,15 +22,16 @@ import { SharedModule } from './modules/shared/shared.module';
     AppRoutingModule,
     AuthModule,
     DashboardModule,
-    TicketsModule,
-    AdminModule,
-    ReportsModule,
-    SettingsModule,
-    ActivitiesModule,
     SharedModule
   ],
   providers: [
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (authService: AuthService) => () => authService.restoreSession(),
+      deps: [AuthService],
+      multi: true
+    }
   ],
   bootstrap: [AppComponent]
 })

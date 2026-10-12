@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { DashboardStats, MonthlyEvaluation } from '../../models/dashboard.model';
+import { DashboardOperations, DashboardStats, MonthlyEvaluation } from '../../models/dashboard.model';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
@@ -18,6 +18,10 @@ export class DashboardService {
     if (from) params = params.set('from', from);
     if (to) params = params.set('to', to);
     return this.http.get<DashboardStats>(`${this.url}/stats`, { params });
+  }
+
+  operations(): Observable<DashboardOperations> {
+    return this.http.get<DashboardOperations>(`${this.url}/operations`);
   }
 }
 

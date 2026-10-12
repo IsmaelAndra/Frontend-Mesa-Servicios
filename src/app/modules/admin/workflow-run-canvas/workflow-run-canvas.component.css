@@ -1,0 +1,206 @@
+/* ============================ Conectores ============================ */
+
+/* El color de trazo, la punta y la traza vienen del nodo de origen (bindings en
+   el template): un conector nace con el color de su proceso (INICIO verde,
+   NEXA morado…) y la punta necesita un marcador por color, porque los marcadores
+   SVG no heredan el color del trazo al que se enganchan. */
+.run-arista {
+  fill: none;
+  stroke-width: 1.5;
+}
+
+/* Trazo de la rama tomada: con pathLength=1 el guion mide toda la línea, y el
+   desplazamiento de 1 a 0 la "dibuja" mientras el punto viaja. */
+.run-arista-traza {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 380ms var(--ease-in-out);
+}
+.run-arista-traza--on {
+  stroke-dashoffset: 0;
+}
+
+/* Al terminar, las ramas que no se tomaron se apagan. */
+.run-linea {
+  transition: opacity 300ms var(--ease-out);
+}
+.run-linea--descartada {
+  opacity: 0.3;
+}
+
+.run-etiqueta-fondo {
+  fill: oklch(var(--b1));
+  stroke: oklch(var(--bc) / 0.15);
+  transition: fill 200ms var(--ease-out), stroke 200ms var(--ease-out);
+}
+.run-etiqueta {
+  font-size: 10px;
+  font-weight: 700;
+  fill: oklch(var(--bc) / 0.6);
+}
+
+/* Punto viajero */
+.run-punto {
+  fill: oklch(var(--p));
+  stroke: oklch(var(--b1));
+  stroke-width: 2;
+}
+.run-punto-halo {
+  fill: oklch(var(--p) / 0.25);
+}
+
+/* ============================ Nodos ============================ */
+
+.run-nodo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0.6rem 0 0.7rem;
+  border-radius: 1rem;
+  border: 2px solid oklch(var(--bc) / 0.12);
+  background: oklch(var(--b1));
+  box-shadow: 0 4px 14px -8px rgb(15 23 42 / 0.35);
+  transition:
+    opacity 300ms var(--ease-out),
+    border-color 200ms var(--ease-out),
+    box-shadow 200ms var(--ease-out),
+    filter 300ms var(--ease-out);
+}
+
+/* Aún no ha llegado: presente pero en segundo plano. */
+.run-nodo--pendiente {
+  opacity: 0.6;
+}
+
+/* Al final, lo que no se recorrió se apaga del todo. */
+.run-nodo--no_visitado {
+  opacity: 0.35;
+  filter: grayscale(0.8);
+}
+
+/* Trabajando: borde del color principal y un halo que late. */
+.run-nodo--ejecutando {
+  border-color: oklch(var(--p));
+  box-shadow: 0 8px 24px -10px oklch(var(--p) / 0.6);
+}
+.run-nodo--ejecutando::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 2px solid oklch(var(--p) / 0.6);
+  animation: run-halo 1.2s var(--ease-out) infinite;
+  pointer-events: none;
+}
+@keyframes run-halo {
+  from { opacity: 0.8; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.08); }
+}
+
+/* NEXA pensando: un brillo recorre la caja mientras espera a la IA. */
+.run-nodo--nexa.run-nodo--ejecutando {
+  border-color: #9333ea;
+  overflow: hidden;
+}
+.run-nodo--nexa.run-nodo--ejecutando::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgb(147 51 234 / 0.14) 50%, transparent 70%);
+  translate: -100% 0;
+  animation: run-brillo 1.4s var(--ease-in-out) infinite;
+  pointer-events: none;
+}
+@keyframes run-brillo {
+  to { translate: 100% 0; }
+}
+.run-pensando {
+  color: #9333ea;
+}
+
+.run-nodo--completado {
+  border-color: oklch(var(--su));
+}
+
+.run-nodo--error {
+  border-color: oklch(var(--er));
+  background: color-mix(in oklch, oklch(var(--er)) 6%, oklch(var(--b1)));
+  animation: run-sacudida 320ms var(--ease-in-out);
+}
+@keyframes run-sacudida {
+  0%, 100% { translate: 0 0; }
+  20% { translate: -5px 0; }
+  40% { translate: 5px 0; }
+  60% { translate: -3px 0; }
+  80% { translate: 3px 0; }
+}
+
+.run-nodo--pausa {
+  border-color: oklch(var(--wa));
+}
+/* El reloj de arena da la vuelta de vez en cuando: está esperando, no colgado. */
+.run-reloj i {
+  animation: run-reloj 2.4s var(--ease-in-out) infinite;
+}
+@keyframes run-reloj {
+  0%, 70% { transform: rotate(0); }
+  100% { transform: rotate(180deg); }
+}
+
+/* Resultado del paso, como un badge en la esquina (mismo badge que las tablas:
+   el posicionamiento vive aquí, el aspecto lo pone daisyUI). */
+.run-chip {
+  position: absolute;
+  top: -0.7rem;
+  right: 0.6rem;
+  max-width: 70%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 10px -4px oklch(var(--su) / 0.7);
+  animation: run-chip 250ms var(--ease-out) both;
+}
+@keyframes run-chip {
+  from { opacity: 0; transform: translateY(4px) scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Indicador de directo */
+.run-directo {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 9999px;
+  background: oklch(var(--er));
+  animation: run-directo 1.4s var(--ease-in-out) infinite;
+}
+@keyframes run-directo {
+  50% { opacity: 0.25; }
+}
+
+/* ============================ Movimiento reducido ============================ */
+/* Solo cambian los colores: sin halos, brillos, sacudidas ni trazos animados. */
+@media (prefers-reduced-motion: reduce) {
+  .run-arista-traza {
+    transition: none;
+  }
+  .run-nodo--ejecutando::after,
+  .run-nodo--nexa.run-nodo--ejecutando::before,
+  .run-reloj i,
+  .run-directo {
+    animation: none;
+  }
+  .run-nodo--error {
+    animation: none;
+  }
+  .run-chip {
+    animation: run-chip-fundido 150ms ease both;
+  }
+}
+@keyframes run-chip-fundido {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

@@ -1,0 +1,174 @@
+/*
+ * --aviso-color lo pone la plantilla con el color del estado (gris el 404,
+ * ámbar el 403, rojo el 500, azul el 503) que viene de Páginas del Sistema.
+ */
+.aviso {
+  --aviso-color: #64748b;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  background:
+    radial-gradient(60% 50% at 15% 20%, color-mix(in srgb, var(--aviso-color) 10%, transparent), transparent),
+    oklch(var(--b2));
+}
+/* Dentro de la aplicación (con barra y menú) no hace falta ocupar toda la
+   altura de la ventana: basta con el área de contenido. */
+:host-context(main) .aviso {
+  min-height: calc(100vh - 9rem);
+  background: transparent;
+}
+
+.aviso__tarjeta {
+  width: 100%;
+  max-width: 62rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: hidden;
+  border-radius: 2rem;
+  background: oklch(var(--b1));
+  border: 1px solid oklch(var(--bc) / 0.07);
+  box-shadow: 0 30px 70px -35px rgb(2 6 23 / 0.35);
+  animation: aviso-entra 420ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@media (min-width: 900px) {
+  .aviso__tarjeta {
+    grid-template-columns: 1fr 1.15fr;
+    min-height: 26rem;
+  }
+}
+
+/* ---------- Visual ---------- */
+.aviso__visual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2.5rem 1.5rem 1.5rem;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--aviso-color) 7%, oklch(var(--b1)));
+}
+@media (min-width: 900px) {
+  .aviso__visual {
+    padding: 3rem 2rem;
+  }
+}
+.aviso__halo {
+  position: absolute;
+  inset: auto;
+  width: 22rem;
+  height: 22rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--aviso-color) 22%, transparent) 0%, transparent 70%);
+}
+.aviso__codigo {
+  position: relative;
+  font-size: clamp(5rem, 13vw, 9.5rem);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, var(--aviso-color) 0%, color-mix(in srgb, var(--aviso-color) 45%, transparent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.aviso__icono {
+  position: relative;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.9rem;
+  color: var(--aviso-color);
+  background: oklch(var(--b1));
+  box-shadow:
+    0 0 0 8px color-mix(in srgb, var(--aviso-color) 12%, transparent),
+    0 12px 28px -12px color-mix(in srgb, var(--aviso-color) 70%, transparent);
+}
+
+/* ---------- Contenido ---------- */
+.aviso__contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 2rem 1.5rem 2.5rem;
+}
+@media (min-width: 900px) {
+  .aviso__contenido {
+    align-items: flex-start;
+    text-align: left;
+    padding: 3rem 3.25rem;
+  }
+}
+.aviso__logo {
+  height: 3.5rem;
+  max-width: 14rem;
+  object-fit: contain;
+  margin-bottom: 0.4rem;
+}
+.aviso__etiqueta {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--aviso-color);
+}
+.aviso__titulo {
+  font-size: clamp(1.9rem, 3.4vw, 3rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: oklch(var(--bc));
+}
+.aviso__mensaje {
+  max-width: 34rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: oklch(var(--bc) / 0.72);
+}
+.aviso__eta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--aviso-color);
+  background: color-mix(in srgb, var(--aviso-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--aviso-color) 35%, transparent);
+}
+.aviso__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+@media (min-width: 900px) {
+  .aviso__acciones {
+    justify-content: flex-start;
+  }
+}
+
+@keyframes aviso-entra {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aviso__tarjeta {
+    animation: none;
+  }
+}

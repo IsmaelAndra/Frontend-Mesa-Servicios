@@ -1,210 +1,231 @@
 <aside
-  class="fixed md:relative top-0 left-0 h-screen bg-base-100 border-r border-base-300 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
-  [class.w-64]="!isMobile && !collapsed"
-  [class.w-20]="!isMobile && collapsed"
-  [class.w-72]="isMobile"
-  [class.-translate-x-full]="isMobile && !isOpen"
-  [class.translate-x-0]="!isMobile || isOpen"
-  [style.z-index]="isMobile ? '50' : 'auto'">
+  class="sb fixed md:relative top-0 left-0 h-screen app-chrome flex flex-col overflow-hidden"
+  [class.sb--contraido]="contraido"
+  [ngClass]="{
+    'w-64': !isMobile && !collapsed,
+    'w-[4.75rem]': contraido,
+    'w-72': isMobile,
+    '-translate-x-full': isMobile && !isOpen,
+    'translate-x-0': !isMobile || isOpen
+  }"
+  [style.z-index]="isMobile ? '50' : 'auto'"
+  aria-label="Menú principal"
+>
+  <!-- ============ Marca ============ -->
+  <div class="sb__marca">
+    <a routerLink="/dashboard" class="flex items-center gap-3 min-w-0" aria-label="Ir al inicio">
+      <span class="sb__logo">
+        <img *ngIf="iconUrl || logoUrl" [src]="iconUrl || logoUrl" alt="" class="w-full h-full object-contain" />
+        <span *ngIf="!logoUrl && !iconUrl" class="font-bold text-sm">COAC</span>
+      </span>
+      <span class="sb__texto min-w-0">
+        <span class="block font-bold text-[15px] text-white leading-tight whitespace-nowrap">Mesa de Servicios</span>
+        <span class="block text-[10px] text-white/60 uppercase tracking-[0.14em] whitespace-nowrap">COAC Magisterio</span>
+      </span>
+    </a>
 
-  <!-- ============ Header ============ -->
-  <div class="p-3 border-b border-base-300 flex items-center justify-between gap-2 shrink-0">
-    <div class="flex items-center gap-3 min-w-0">
-      <!-- Logo -->
-      <img
-        *ngIf="logoUrl"
-        [src]="logoUrl"
-        alt="Logo"
-        class="h-10 w-10 object-contain shrink-0"
-      />
-      <div
-        *ngIf="!logoUrl"
-        class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-content font-bold text-lg shrink-0"
-        aria-hidden="true"
-      >
-        COAC
-      </div>
-
-      <!-- Nombre (se oculta al contraer) -->
-      <div
-        class="min-w-0 transition-all duration-300"
-        [class.opacity-0]="!isMobile && collapsed"
-        [class.w-0]="!isMobile && collapsed"
-        [class.pointer-events-none]="!isMobile && collapsed"
-      >
-        <p class="font-bold text-base text-primary leading-tight whitespace-nowrap">
-          Mesa de Ayuda
-        </p>
-        <p class="text-[10px] opacity-60 uppercase tracking-wide whitespace-nowrap">
-          Sistema de soporte
-        </p>
-      </div>
-    </div>
-
-    <!-- Botón cerrar (móvil) -->
     <button
       *ngIf="isMobile"
-      class="btn btn-ghost btn-sm btn-square shrink-0"
+      type="button"
+      class="sb__icono-btn ml-auto"
       (click)="toggleSidebar()"
       aria-label="Cerrar menú"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-      </svg>
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
     </button>
+  </div>
 
-    <!-- Botón contraer (desktop) -->
+  <!-- ============ Búsqueda ============ -->
+  <div class="px-3 pb-2 shrink-0">
     <button
-      *ngIf="!isMobile"
-      class="btn btn-ghost btn-sm btn-square shrink-0"
-      (click)="toggleSidebar()"
-      [attr.aria-label]="collapsed ? 'Expandir menú' : 'Contraer menú'"
-      [title]="collapsed ? 'Expandir menú' : 'Contraer a iconos'"
+      type="button"
+      class="sb__buscar"
+      (click)="abrirBusqueda()"
+      (mouseenter)="mostrarEtiqueta($event, 'Buscar (Ctrl + K)')"
+      (focus)="mostrarEtiqueta($event, 'Buscar (Ctrl + K)')"
+      (mouseleave)="ocultarEtiqueta()"
+      (blur)="ocultarEtiqueta()"
+      aria-label="Buscar en la plataforma (Ctrl + K)"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-5 w-5 transition-transform duration-300"
-        [class.rotate-180]="collapsed"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        aria-hidden="true"
-      >
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7 1.4 1.4L6.8 12l4.6 4.6L11 19z" />
-      </svg>
+      <i class="fa-solid fa-magnifying-glass text-[13px] shrink-0" aria-hidden="true"></i>
+      <span class="sb__texto flex-1 text-left">Buscar…</span>
+      <kbd class="sb__texto sb__kbd">Ctrl K</kbd>
     </button>
   </div>
 
   <!-- ============ Navegación ============ -->
-  <nav class="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-1 sidebar-scroll">
-    <div
-      *ngFor="let item of navItems"
-      class="space-y-1"
-      [class.hidden]="!isVisible(item)"
-    >
-      <!-- Item sin hijos -->
-      <div *ngIf="!item.children">
-        <a
-          [routerLink]="item.route"
-          routerLinkActive="active"
-          class="sidebar-link tooltip tooltip-right"
-          [attr.data-tip]="collapsed && !isMobile ? item.label : null"
-          [title]="collapsed && !isMobile ? item.label : ''"
-          [class.active]="isActive(item.route)"
-        >
-          <i [class]="item.icon" class="shrink-0 text-base"></i>
-          <span
-            class="truncate transition-all duration-300 whitespace-nowrap"
-            [class.opacity-0]="!isMobile && collapsed"
-            [class.w-0]="!isMobile && collapsed"
-          >{{ item.label }}</span>
-        </a>
-      </div>
+  <nav class="flex-1 overflow-y-auto overflow-x-hidden px-3 pb-3 sidebar-scroll">
+    <section *ngFor="let sec of secciones; trackBy: trackSeccion" class="sb__seccion">
+      <p class="sb__titulo">
+        <span class="sb__texto">{{ sec.titulo }}</span>
+      </p>
 
-      <!-- Item con hijos -->
-      <div *ngIf="item.children && hasVisibleChildren(item)">
-        <button
-          class="sidebar-link w-full justify-between tooltip tooltip-right"
-          [attr.data-tip]="collapsed && !isMobile ? item.label : null"
-          [title]="collapsed && !isMobile ? item.label : ''"
-          (click)="toggleChild(item)"
-          [class.active]="isChildActive(item)"
-          [attr.aria-expanded]="item.expanded"
-        >
-          <div class="flex items-center gap-3 min-w-0">
-            <i [class]="item.icon" class="shrink-0 text-base"></i>
-            <span
-              class="truncate transition-all duration-300 whitespace-nowrap"
-              [class.opacity-0]="!isMobile && collapsed"
-              [class.w-0]="!isMobile && collapsed"
-            >{{ item.label }}</span>
-          </div>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4 shrink-0 transition-transform duration-300"
-            [class.rotate-180]="item.expanded"
-            [class.opacity-0]="!isMobile && collapsed"
-            [class.w-0]="!isMobile && collapsed"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-
-        <!-- Submenu -->
-        <div
-          *ngIf="item.expanded"
-          class="ml-4 pl-3 border-l-2 border-base-300 space-y-1 mt-1"
-          [class.hidden]="!isMobile && collapsed"
-        >
+      <ul class="space-y-0.5">
+        <li *ngFor="let item of sec.items; trackBy: trackItem">
+          <!-- Enlace simple -->
           <a
-            *ngFor="let child of item.children"
-            [routerLink]="child.route"
-            routerLinkActive="active"
-            class="sidebar-link text-sm"
-            [class.active]="isActive(child.route)"
-            [class.hidden]="!isVisible(child)"
-            [title]="child.label"
+            *ngIf="!item.children"
+            [routerLink]="item.route"
+            [fragment]="item.fragment || undefined"
+            [queryParams]="item.queryParams || undefined"
+            class="sb__link"
+            [class.sb__link--activo]="isActive(item.route)"
+            (mouseenter)="mostrarEtiqueta($event, item.label)"
+            (focus)="mostrarEtiqueta($event, item.label)"
+            (mouseleave)="ocultarEtiqueta()"
+            (blur)="ocultarEtiqueta()"
+            [attr.aria-current]="isActive(item.route) ? 'page' : null"
           >
-            <i [class]="child.icon" class="text-xs shrink-0"></i>
-            <span class="truncate">{{ child.label }}</span>
+            <span class="sb__ico"><i [class]="item.icon" aria-hidden="true"></i></span>
+            <span class="sb__texto truncate">{{ item.label }}</span>
           </a>
-        </div>
-      </div>
-    </div>
+
+          <!-- Grupo con submenú -->
+          <ng-container *ngIf="item.children">
+            <button
+              type="button"
+              class="sb__link w-full"
+              [class.sb__link--grupo-activo]="hasActiveChild(item)"
+              [class.sb__link--flotante-abierto]="grupoFlotante?.item === item"
+              [attr.aria-expanded]="contraido ? grupoFlotante?.item === item : !!item.expanded"
+              [attr.aria-haspopup]="contraido ? 'menu' : null"
+              (click)="toggleChild(item, $event)"
+              (mouseenter)="mostrarEtiqueta($event, item.label)"
+              (focus)="mostrarEtiqueta($event, item.label)"
+              (mouseleave)="ocultarEtiqueta()"
+              (blur)="ocultarEtiqueta()"
+            >
+              <span class="sb__ico"><i [class]="item.icon" aria-hidden="true"></i></span>
+              <span class="sb__texto truncate flex-1 text-left">{{ item.label }}</span>
+              <i
+                class="sb__texto fa-solid fa-chevron-down text-[10px] opacity-60 sb__flecha"
+                [class.sb__flecha--abierta]="item.expanded"
+                aria-hidden="true"
+              ></i>
+            </button>
+
+            <!-- Despliegue animado: la fila pasa de 0fr a 1fr. -->
+            <div class="sb__sub" [class.sb__sub--abierto]="item.expanded && !contraido">
+              <ul class="sb__sub-lista">
+                <ng-container *ngFor="let child of item.children; trackBy: trackItem">
+                  <li *ngIf="isVisible(child)">
+                    <a
+                      [routerLink]="child.route"
+                      class="sb__sublink"
+                      [class.sb__sublink--activo]="isChildActive(child, item)"
+                      [attr.aria-current]="isChildActive(child, item) ? 'page' : null"
+                      [attr.tabindex]="item.expanded && !contraido ? null : -1"
+                    >
+                      <i [class]="child.icon" class="w-4 text-center text-[11px] opacity-80" aria-hidden="true"></i>
+                      <span class="truncate">{{ child.label }}</span>
+                    </a>
+                  </li>
+                </ng-container>
+              </ul>
+            </div>
+          </ng-container>
+        </li>
+      </ul>
+    </section>
   </nav>
 
-  <!-- ============ Footer ============ -->
-  <div class="p-3 border-t border-base-300 shrink-0">
-    <!-- Card de usuario -->
-    <div
-      class="flex items-center gap-3 p-2 bg-base-200 rounded-lg mb-3 transition-all duration-300"
-      [class.justify-center]="!isMobile && collapsed"
-      [class.p-1.5]="!isMobile && collapsed"
-      [class.bg-transparent]="!isMobile && collapsed"
-      [title]="authService.getEmail() || 'Usuario'"
-    >
-      <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-content font-medium text-sm shrink-0">
-        {{ initials }}
-      </div>
-      <div
-        class="flex-1 min-w-0 transition-all duration-300"
-        [class.hidden]="!isMobile && collapsed"
+  <!-- ============ Usuario ============ -->
+  <div class="sb__pie">
+    <div class="sb__usuario">
+      <a
+        routerLink="/settings/profile"
+        class="flex items-center gap-3 min-w-0 flex-1"
+        (mouseenter)="mostrarEtiqueta($event, displayName)"
+        (focus)="mostrarEtiqueta($event, displayName)"
+        (mouseleave)="ocultarEtiqueta()"
+        (blur)="ocultarEtiqueta()"
+        aria-label="Mi perfil"
       >
-        <p class="text-sm font-medium truncate">
-          {{ authService.getEmail() || 'Usuario' }}
-        </p>
-        <p class="text-[10px] uppercase tracking-wide opacity-60 truncate">
-          {{ role.toLowerCase().replace('_', ' ') }}
-        </p>
-      </div>
-    </div>
+        <span class="relative shrink-0">
+          <img
+            *ngIf="photoSrc"
+            [src]="photoSrc"
+            [alt]="displayName"
+            class="w-9 h-9 rounded-xl object-cover ring-2 ring-white/20"
+          />
+          <span
+            *ngIf="!photoSrc"
+            class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-white font-semibold text-sm"
+          >{{ initials }}</span>
+          <span
+            class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-[#0b1f45]"
+            [ngClass]="sesionDot"
+            [attr.aria-label]="'Sesión: ' + sesionLabel"
+            role="img"
+          ></span>
+        </span>
+        <span class="sb__texto min-w-0">
+          <span class="block text-sm font-medium text-white truncate">{{ displayName }}</span>
+          <span class="block text-[10px] uppercase tracking-wide text-white/60 truncate">{{ roleLabel }}</span>
+        </span>
+      </a>
 
-    <!-- Botón logout -->
-    <button
-      class="btn btn-outline btn-error btn-sm w-full gap-2"
-      [class.btn-square]="!isMobile && collapsed"
-      (click)="logout()"
-      [title]="'Cerrar sesión'"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-      </svg>
-      <span
-        class="transition-all duration-300 whitespace-nowrap"
-        [class.hidden]="!isMobile && collapsed"
-      >Cerrar sesión</span>
-    </button>
+      <button
+        type="button"
+        class="sb__icono-btn sb__salir shrink-0"
+        (click)="logout()"
+        (mouseenter)="mostrarEtiqueta($event, 'Cerrar sesión', true)"
+        (focus)="mostrarEtiqueta($event, 'Cerrar sesión', true)"
+        (mouseleave)="ocultarEtiqueta()"
+        (blur)="ocultarEtiqueta()"
+        aria-label="Cerrar sesión"
+      >
+        <i class="fa-solid fa-right-from-bracket text-[13px]" aria-hidden="true"></i>
+      </button>
+    </div>
   </div>
 </aside>
 
-<!-- Overlay móvil -->
+<!--
+  Etiqueta y submenú del menú contraído. Van FUERA del <aside>: el aside tiene
+  overflow hidden (para cerrar su ancho al contraer) y recortaba los tooltips,
+  que salían por la derecha; solo se veía la punta de la flecha.
+-->
+<div
+  *ngIf="flotante"
+  class="sb-etiqueta"
+  [style.top.px]="flotante.top"
+  [style.left.px]="flotante.left"
+  role="tooltip"
+>{{ flotante.texto }}</div>
+
+<div
+  *ngIf="grupoFlotante as g"
+  class="sb-flyout"
+  [style.top.px]="g.top"
+  [style.left.px]="g.left"
+  role="menu"
+  [attr.aria-label]="g.item.label"
+>
+  <p class="sb-flyout__titulo">
+    <i [class]="g.item.icon" aria-hidden="true"></i>
+    {{ g.item.label }}
+  </p>
+  <ng-container *ngFor="let child of g.item.children; trackBy: trackItem">
+    <a
+      *ngIf="isVisible(child)"
+      [routerLink]="child.route"
+      class="sb-flyout__link"
+      [class.sb-flyout__link--activo]="isChildActive(child, g.item)"
+      [attr.aria-current]="isChildActive(child, g.item) ? 'page' : null"
+      role="menuitem"
+      (click)="cerrarGrupoFlotante()"
+    >
+      <i [class]="child.icon" class="w-4 text-center text-[12px] opacity-80" aria-hidden="true"></i>
+      <span class="truncate">{{ child.label }}</span>
+    </a>
+  </ng-container>
+</div>
+
+<!-- Fondo del menú en el móvil -->
 <div
   *ngIf="isMobile && isOpen"
-  class="fixed inset-0 bg-black/50 z-40 animate-[fadeIn_200ms_ease]"
+  class="overlay-backdrop fixed inset-0 bg-black/50 z-40"
   (click)="toggleSidebar()"
   aria-hidden="true"
 ></div>

@@ -1,37 +1,72 @@
-import { Component, OnInit } from '@angular/core';
-import Swal from 'sweetalert2';
-import { saveAs } from 'file-saver';
-import { NotificationService } from '../../core/services/notification.service';
-import { AdminService } from '../../core/services/admin.service';
+import { Component, OnInit } from "@angular/core";
+import { saveAs } from "file-saver";
+import { NotificationService } from "../../core/services/notification.service";
+import { AdminService } from "../../core/services/admin.service";
+import { ToastService } from "../../core/services/toast.service";
+import { MasterOption } from "../shared/components/master-select/master-select.component";
 
 interface ReportItem {
+  kind: "custom";
   name: string;
   label: string;
+  description?: string;
+  id: string;
+  icon?: string;
+  color?: string;
 }
 
 @Component({
-  selector: 'app-reports',
-  templateUrl: './reports.component.html'
+  selector: "app-reports",
+  templateUrl: "./reports.component.html",
 })
 export class ReportsComponent implements OnInit {
-  reports: ReportItem[] = [
-    { name: 'tickets', label: 'Tickets por estado' },
-    { name: 'tickets', label: 'Tickets por área' },
-    { name: 'tickets', label: 'Cumplimiento de SLA' },
-    { name: 'tickets', label: 'Rendimiento de agentes' },
-    { name: 'tickets', label: 'Tickets por categoría' }
-  ];
+  /** Los reportes los publica el backend; aquí no hay ninguna lista fija. */
+  reports: ReportItem[] = [];
 
-  format = 'PDF';
-  period = 'MES';
+  format = "PDF";
+  /** "H" hoja apaisada (más columnas) · "V" vertical. */
+  orientacion: "H" | "V" = "H";
+  period = "MES";
   fromDate = new Date().toISOString().slice(0, 10);
   toDate = new Date().toISOString().slice(0, 10);
-  typeId?: number;
-  ticketTypes: { id: number; name: string }[] = [];
+  /** null = sin filtro. La opción vacía de app-master-select entrega null. */
+typeId: string | null = null;
+    /** Sede por la que se acota el reporte; null = todas. */
+    sucursalId: string | null = null;
+    ticketTypes: { id: string; name: string; icon?: string; color?: string }[] =
+      [];
+    sucursales: { id: string; code: string; name: string; icon?: string; color?: string }[] =
+      [];
+
+  /** Opciones del filtro de tipo, con icono y color del maestro. */
+  get ticketTypeOptions(): MasterOption[] {
+    return this.ticketTypes.map(t => ({
+      value: t.id,
+      label: t.name,
+      icon: t.icon,
+      color: t.color
+    }));
+  }
+
+  /** Opciones del filtro de sede, con el icono y color de la oficina. */
+  get sucursalOptions(): MasterOption[] {
+    return this.sucursales.map(s => ({
+      value: s.id,
+      label: `${s.code} - ${s.name}`,
+      icon: s.icon,
+      color: s.color
+    }));
+  }
+
+  /** Nombre de la sede para el chip de filtro activo. */
+  sucursalName(id: string): string {
+    const s = this.sucursales.find(x => x.id === id);
+    return s ? `${s.code} - ${s.name}` : "";
+  }
 
   // Estado de filtros
-  search = '';
-  sortBy: 'label' | 'label-desc' = 'label';
+  search = "";
+  sortBy: "label" | "label-desc" = "label";
 
   // Estado de descarga por reporte (usa el label como clave única)
   downloading: Record<string, boolean> = {};
@@ -41,14 +76,40 @@ export class ReportsComponent implements OnInit {
 
   constructor(
     private notificationService: NotificationService,
-    private adminService: AdminService
+    private adminService: AdminService,
+    private toastService: ToastService,
   ) {}
 
   ngOnInit(): void {
     this.applyPeriod();
     this.adminService.catalog().subscribe({
-      next: (c) => (this.ticketTypes = c.ticketTypes || []),
-      error: () => undefined
+      next: (c) => {
+        this.ticketTypes = c.ticketTypes || [];
+        this.sucursales = c.sucursales || [];
+      },
+      error: () => undefined,
+    });
+    this.loadCustomReports();
+  }
+
+  /** Carga los reportes que publica el backend (solo los activos). */
+  loadCustomReports(): void {
+    this.notificationService.availableReports().subscribe({
+      next: (list) => {
+        this.reports = (Array.isArray(list) ? list : []).map((r) => ({
+          kind: "custom" as const,
+          name: r.nombre,
+          label: r.titulo,
+          description: r.descripcion || "Reporte definido por consulta SQL",
+          id: r.id,
+          icon: r.icono || "fa-solid fa-file-lines",
+          color: r.color || "#062e86",
+        }));
+      },
+      error: () => {
+        this.reports = [];
+        this.toastService.error("No se pudieron cargar los reportes");
+      },
     });
   }
 
@@ -56,37 +117,45 @@ export class ReportsComponent implements OnInit {
     const today = new Date();
     const iso = (d: Date) => d.toISOString().slice(0, 10);
     switch (this.period) {
-      case 'HOY':
+      case "HOY":
         this.fromDate = iso(today);
         this.toDate = iso(today);
         break;
-      case 'MES':
+      case "MES":
         this.fromDate = iso(new Date(today.getFullYear(), today.getMonth(), 1));
         this.toDate = iso(today);
         break;
-      case 'ANIO':
+      case "ANIO":
         this.fromDate = iso(new Date(today.getFullYear(), 0, 1));
         this.toDate = iso(today);
         break;
-      case 'SEMESTRE':
-        this.fromDate = iso(new Date(today.getFullYear(), today.getMonth() - 5, 1));
+      case "SEMESTRE":
+        this.fromDate = iso(
+          new Date(today.getFullYear(), today.getMonth() - 5, 1),
+        );
         this.toDate = iso(today);
         break;
-      case 'PERSONALIZADO':
+      case "PERSONALIZADO":
         break;
       default:
-        this.fromDate = '';
-        this.toDate = '';
+        this.fromDate = "";
+        this.toDate = "";
     }
   }
 
-  get filterParams(): { from?: string; to?: string; typeId?: number } {
-    const params: { from?: string; to?: string; typeId?: number } = {};
-    if (this.period !== 'TODO') {
+  get filterParams(): {
+    from?: string;
+    to?: string;
+    typeId?: string;
+    sucursalId?: string;
+  } {
+    const params: { from?: string; to?: string; typeId?: string; sucursalId?: string } = {};
+    if (this.period !== "TODO") {
       if (this.fromDate) params.from = this.fromDate;
       if (this.toDate) params.to = this.toDate;
     }
     if (this.typeId) params.typeId = this.typeId;
+    if (this.sucursalId) params.sucursalId = this.sucursalId;
     return params;
   }
 
@@ -97,90 +166,123 @@ export class ReportsComponent implements OnInit {
     // Filtro por búsqueda
     const term = this.search?.toLowerCase().trim();
     if (term) {
-      result = result.filter(r =>
-        r.label.toLowerCase().includes(term) ||
-        r.name.toLowerCase().includes(term)
+      result = result.filter(
+        (r) =>
+          r.label.toLowerCase().includes(term) ||
+          r.name.toLowerCase().includes(term),
       );
     }
 
     // Ordenamiento
     result.sort((a, b) => {
-      const cmp = a.label.localeCompare(b.label, 'es');
-      return this.sortBy === 'label-desc' ? -cmp : cmp;
+      const cmp = a.label.localeCompare(b.label, "es");
+      return this.sortBy === "label-desc" ? -cmp : cmp;
     });
 
     return result;
   }
 
-  /** Icono según el tipo de reporte (basado en label/name) */
-  getReportIcon(r: ReportItem): string {
-    const s = `${r.name} ${r.label}`.toLowerCase();
-    if (s.includes('venta') || s.includes('ingreso') || s.includes('factur')) return 'sales';
-    if (s.includes('usuario') || s.includes('user') || s.includes('agente') || s.includes('rendimiento')) return 'users';
-    if (s.includes('sla') || s.includes('tiempo') || s.includes('resoluc') || s.includes('cumplimiento')) return 'sla';
-    if (s.includes('inventario') || s.includes('stock') || s.includes('producto')) return 'inventory';
-    if (s.includes('ticket')) return 'tickets';
-    return 'default';
+  /** Color del reporte; el fondo del icono usa el mismo color con 13% de opacidad. */
+  reportColor(r: ReportItem): string {
+    return r.color || "#062e86";
   }
 
-  /** Clases Tailwind para el fondo del icono según el tipo */
-  getIconBg(r: ReportItem): string {
-    const icon = this.getReportIcon(r);
-    const map: Record<string, string> = {
-      sales: 'bg-success/10 text-success',
-      users: 'bg-info/10 text-info',
-      tickets: 'bg-primary/10 text-primary',
-      sla: 'bg-warning/10 text-warning',
-      inventory: 'bg-secondary/10 text-secondary',
-      default: 'bg-primary/10 text-primary'
-    };
-    return map[icon] ?? map['default'];
-  }
-
-  /** Botón "Actualizar" de la barra del header. Como los reportes son estáticos,
-   *  solo simulamos un pequeño delay para dar feedback visual. */
+  /** Botón "Actualizar" */
   loadReports(): void {
     if (this.loading) return;
     this.loading = true;
+    this.loadCustomReports();
+    this.adminService.catalog().subscribe({
+      next: (c) => {
+        this.ticketTypes = c.ticketTypes || [];
+        this.sucursales = c.sucursales || [];
+      },
+      error: () => undefined,
+    });
     setTimeout(() => {
       this.loading = false;
-      Swal.fire({
-        icon: 'success',
-        title: 'Reportes actualizados',
-        timer: 1000,
-        showConfirmButton: false
-      });
-    }, 400);
+      this.lastRefresh = new Date();
+      this.toastService.success("Reportes actualizados");
+    }, 500);
   }
 
   /** Descarga un reporte mostrando spinner en su propia tarjeta */
-  download(reportName: string, label: string): void {
-    if (this.downloading[label]) return;
-    this.downloading[label] = true;
+  download(r: ReportItem): void {
+    if (this.downloading[r.label]) return;
+    this.downloading[r.label] = true;
 
-    this.notificationService.downloadReport(reportName, this.format, this.filterParams).subscribe({
+    const request = this.notificationService.downloadReport(
+      r.id,
+      this.format,
+      { ...this.filterParams, orientacion: this.orientacion },
+    );
+
+    request.subscribe({
       next: (blob) => {
-        const ext = this.format.toLowerCase();
+        const ext =
+          this.format === "EXCEL" ? "xlsx" : this.format.toLowerCase();
         const date = new Date().toISOString().slice(0, 10);
-        saveAs(blob, `${reportName}_${date}.${ext}`);
+        saveAs(blob, `${r.name}_${date}.${ext}`);
 
-        Swal.fire({
-          icon: 'success',
-          title: `${label} generado`,
-          timer: 1300,
-          showConfirmButton: false
-        });
-
-        this.downloading[label] = false;
+        this.toastService.success(`${r.label} generado`);
+        this.downloading[r.label] = false;
       },
       error: (err) => {
-        Swal.fire(
-          'Error',
-          err?.error?.message || 'No se pudo generar el reporte',
-          'error'
+        this.toastService.error(
+          err?.error?.message || "No se pudo generar el reporte",
         );
-        this.downloading[label] = false;
-      }
+        this.downloading[r.label] = false;
+      },
     });
+  }
+
+  formats = [
+    { value: "PDF", label: "PDF", icon: "fa-regular fa-file-pdf" },
+    { value: "EXCEL", label: "Excel", icon: "fa-regular fa-file-excel" },
+    { value: "HTML", label: "HTML", icon: "fa-solid fa-globe" },
+  ] as const;
+
+  lastRefresh: Date | null = null;
+
+  // Añade estos métodos:
+  trackByLabel(_: number, r: ReportItem): string {
+    return r.label;
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(this.search || this.period !== "MES" || this.typeId || this.sucursalId);
+  }
+
+  typeName(id?: string): string {
+    if (!id) return "";
+    return this.ticketTypes.find((t) => t.id === id)?.name ?? "";
+  }
+
+  periodLabel(): string {
+    switch (this.period) {
+      case "HOY":
+        return "Hoy";
+      case "MES":
+        return "Este mes";
+      case "ANIO":
+        return "Este año";
+      case "SEMESTRE":
+        return "Últimos 6 meses";
+      case "PERSONALIZADO":
+        return "Rango personalizado";
+      case "TODO":
+        return "Todo";
+      default:
+        return this.period;
+    }
+  }
+
+  clearFilters(): void {
+    this.search = "";
+    this.period = "MES";
+    this.applyPeriod();
+    this.typeId = null;
+    this.sucursalId = null;
+    this.sortBy = "label";
   }
 }

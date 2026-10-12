@@ -1,16 +1,134 @@
-<div *ngIf="isAuthPage" class="min-h-screen">
+<!--
+  Splash mientras la app arranca. Todo lo que se ve sale de loadingScreen, que
+  se resuelve con la configuracion de marca (pantalla de carga) y con valores
+  por defecto si esa peticion todavia no ha llegado.
+-->
+<div
+  *ngIf="booting"
+  class="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-7 px-6"
+  [style.backgroundColor]="loadingScreen.backgroundColor"
+  [attr.data-theme]="loadingScreen.theme"
+  role="status"
+  aria-live="polite"
+>
+  <!-- Indicador de carga -->
+  <span
+    *ngIf="loadingScreen.animation === 'SPINNER'"
+    class="loading loading-spinner loading-lg"
+    [style.color]="loadingScreen.textColor"
+    aria-hidden="true"
+  ></span>
+  <span
+    *ngIf="loadingScreen.animation === 'RING'"
+    class="loading loading-ring loading-lg"
+    [style.color]="loadingScreen.textColor"
+    aria-hidden="true"
+  ></span>
+  <span
+    *ngIf="loadingScreen.animation === 'DOTS'"
+    class="loading loading-dots loading-lg"
+    [style.color]="loadingScreen.textColor"
+    aria-hidden="true"
+  ></span>
+  <span
+    *ngIf="loadingScreen.animation === 'BARS'"
+    class="loading loading-bars loading-lg"
+    [style.color]="loadingScreen.textColor"
+    aria-hidden="true"
+  ></span>
+  <span
+    *ngIf="loadingScreen.animation === 'BALL'"
+    class="loading loading-ball loading-lg"
+    [style.color]="loadingScreen.textColor"
+    aria-hidden="true"
+  ></span>
+  <span
+    *ngIf="loadingScreen.animation === 'INFINITY'"
+    class="loading loading-infinity loading-lg"
+    [style.color]="loadingScreen.textColor"
+    aria-hidden="true"
+  ></span>
+  <span
+    *ngIf="loadingScreen.animation === 'PULSE'"
+    class="w-4 h-4 rounded-full animate-ping"
+    [style.backgroundColor]="loadingScreen.textColor"
+    aria-hidden="true"
+  ></span>
+
+  <!--
+    Imagen o icono de la marca. El contenedor lleva el efecto elegido: el halo
+    y el barrido de luz se dibujan con currentColor, asi que hereda el color de
+    texto de la configuracion.
+  -->
+  <div
+    class="inline-flex items-center justify-center"
+    [ngClass]="loadingScreen.logoEffectClass"
+    [style.color]="loadingScreen.textColor"
+    [style.width.px]="loadingScreen.imageSize"
+    [style.height.px]="loadingScreen.imageSize"
+  >
+    <img
+      *ngIf="loadingScreen.mode !== 'ICON'"
+      [src]="loadingScreen.imageUrl"
+      alt=""
+      class="w-full h-full object-contain rounded-2xl p-3 app-chrome shadow-sm"
+    />
+    <i
+      *ngIf="loadingScreen.mode === 'ICON'"
+      [class]="loadingScreen.icon + ' text-6xl'"
+      [style.color]="loadingScreen.textColor"
+      [style.fontSize.px]="loadingScreen.imageSize * 0.72"
+      aria-hidden="true"
+    ></i>
+  </div>
+
+  <!-- Textos -->
+  <div *ngIf="loadingScreen.showTexts" class="text-center space-y-1.5">
+    <p
+      class="text-xl font-semibold"
+      [style.color]="loadingScreen.textColor"
+    >
+      {{ loadingScreen.title }}
+    </p>
+    <p
+      class="text-sm"
+      [style.color]="loadingScreen.textColor"
+      [style.opacity]="0.75"
+    >
+      {{ loadingScreen.message }}
+    </p>
+  </div>
+
+  <!-- Barra de progreso -->
+  <div
+    *ngIf="loadingScreen.progress"
+    class="loading-bar-track w-56 h-1.5 rounded-full"
+    [style.backgroundColor]="loadingScreen.textColor + '4d'"
+    aria-hidden="true"
+  >
+    <div
+      class="loading-bar-indeterminate h-full rounded-full"
+      [style.backgroundColor]="loadingScreen.textColor"
+    ></div>
+  </div>
+</div>
+
+<div *ngIf="!booting && isAuthPage" class="min-h-screen">
   <router-outlet></router-outlet>
 </div>
 
-<div *ngIf="!isAuthPage" class="h-screen bg-base-200 flex overflow-hidden">
-  <app-sidebar #sidebar></app-sidebar>
-  <div class="flex-1 flex flex-col min-w-0 h-full">
-    <app-navbar (toggleSidebar)="sidebar.toggleSidebar()"></app-navbar>
-    <main class="flex-1 overflow-y-auto">
-      <div class="container mx-auto px-4 py-6">
-        <app-breadcrumb></app-breadcrumb>
-        <router-outlet></router-outlet>
-      </div>
-    </main>
+<div *ngIf="!booting && !isAuthPage" class="h-screen bg-base-200 flex overflow-hidden">
+    <app-sidebar #sidebar></app-sidebar>
+    <div class="flex-1 flex flex-col min-w-0 h-full">
+      <app-navbar (toggleSidebar)="sidebar.toggleSidebar()"></app-navbar>
+      <main class="flex-1 overflow-y-auto app-fondo">
+        <div class="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 py-6">
+          <app-breadcrumb></app-breadcrumb>
+          <router-outlet></router-outlet>
+        </div>
+      </main>
+    </div>
   </div>
-</div>
+
+<app-toast-container></app-toast-container>
+<app-global-search></app-global-search>

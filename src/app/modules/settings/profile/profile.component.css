@@ -1,0 +1,57 @@
+/* Dato del perfil: rótulo pequeño encima y valor debajo. */
+.perfil-dato {
+  min-width: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.9rem;
+  background: oklch(var(--bc) / 0.03);
+  border: 1px solid oklch(var(--bc) / 0.06);
+}
+.perfil-dato dt {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: oklch(var(--bc) / 0.5);
+}
+.perfil-dato dd {
+  margin-top: 0.2rem;
+  font-weight: 600;
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+.perfil-dato--vacio {
+  font-weight: 400 !important;
+  font-style: italic;
+  opacity: 0.55;
+}
+
+/* Fila rótulo/valor de las tarjetas laterales. */
+.perfil-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+.perfil-fila + .perfil-fila {
+  padding-top: 0.75rem;
+  border-top: 1px solid oklch(var(--bc) / 0.06);
+}
+.perfil-fila dt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: oklch(var(--bc) / 0.6);
+  white-space: nowrap;
+}
+.perfil-fila dt i {
+  width: 1rem;
+  text-align: center;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+.perfil-fila dd {
+  font-weight: 600;
+  text-align: right;
+  min-width: 0;
+}

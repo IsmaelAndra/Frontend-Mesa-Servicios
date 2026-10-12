@@ -1,0 +1,189 @@
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+  <!-- ============ Editor de colores ============ -->
+  <div
+    class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+  >
+    <div class="card-body space-y-5">
+      <div class="flex items-start gap-4">
+        <div
+          class="p-2 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0"
+          aria-hidden="true"
+        >
+          <i class="fa-solid fa-palette text-lg"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h2 class="text-base font-semibold">Colores corporativos</h2>
+          <p class="text-xs opacity-60 mt-0.5">
+            Se aplican en toda la aplicación
+          </p>
+        </div>
+      </div>
+
+      <!-- Primario -->
+      <div>
+        <label class="label pt-0 pb-1.5">
+          <span class="label-text text-xs font-medium">Color primario</span>
+        </label>
+        <div class="flex items-center gap-3">
+          <div class="relative shrink-0">
+            <input
+              type="color"
+              [(ngModel)]="b.config.primaryColor"
+              class="w-14 h-11 cursor-pointer rounded-xl border-2 border-base-300 p-0.5"
+              aria-label="Selector color primario"
+            />
+          </div>
+          <div class="relative flex-1">
+            <i
+              class="fa-solid fa-hashtag text-[13px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+              aria-hidden="true"
+            ></i>
+            <input
+              [(ngModel)]="b.config.primaryColor"
+              class="input input-bordered input-sm w-full pl-8 font-mono uppercase"
+              maxlength="7"
+              placeholder="#062E86"
+            />
+          </div>
+        </div>
+        <p class="text-[10px] opacity-60 mt-1.5">
+          Botones principales, sidebar, enlaces, cabecera de tablas
+        </p>
+      </div>
+
+      <!-- Secundario -->
+      <div>
+        <label class="label pt-0 pb-1.5">
+          <span class="label-text text-xs font-medium"
+            >Color secundario</span
+          >
+        </label>
+        <div class="flex items-center gap-3">
+          <div class="relative shrink-0">
+            <input
+              type="color"
+              [(ngModel)]="b.config.secondaryColor"
+              class="w-14 h-11 cursor-pointer rounded-xl border-2 border-base-300 p-0.5"
+              aria-label="Selector color secundario"
+            />
+          </div>
+          <div class="relative flex-1">
+            <i
+              class="fa-solid fa-hashtag text-[13px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+              aria-hidden="true"
+            ></i>
+            <input
+              [(ngModel)]="b.config.secondaryColor"
+              class="input input-bordered input-sm w-full pl-8 font-mono uppercase"
+              maxlength="7"
+              placeholder="#EC9811"
+            />
+          </div>
+        </div>
+        <p class="text-[10px] opacity-60 mt-1.5">
+          Acentos, badges, botones secundarios, estados intermedios
+        </p>
+      </div>
+
+      <!-- Acciones -->
+      <div class="flex justify-end pt-3 border-t border-base-200">
+        <button
+          class="btn btn-primary btn-sm gap-2 shadow-md hover:shadow-lg transition"
+          (click)="b.saveColors()"
+          [disabled]="b.loading"
+        >
+          <span
+            *ngIf="b.loading"
+            class="loading loading-spinner loading-xs"
+            aria-hidden="true"
+          ></span>
+          <i
+            *ngIf="!b.loading"
+            class="fa-solid fa-check text-[15px]"
+            aria-hidden="true"
+          ></i>
+          {{ b.loading ? "Guardando..." : "Guardar colores" }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Vista previa en vivo ============ -->
+  <div
+    class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+  >
+    <div class="card-body space-y-4">
+      <div class="flex items-start gap-4">
+        <div
+          class="p-2 rounded-xl bg-success/10 text-success ring-1 ring-success/15 shrink-0"
+          aria-hidden="true"
+        >
+          <i class="fa-solid fa-eye text-lg"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h2 class="text-base font-semibold">Vista previa</h2>
+          <p class="text-xs opacity-60 mt-0.5">
+            Así se ven los colores aplicados
+          </p>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <!-- Botones -->
+        <div class="grid grid-cols-2 gap-2">
+          <button class="btn btn-primary btn-sm" type="button">
+            Primario
+          </button>
+          <button class="btn btn-secondary btn-sm" type="button">
+            Secundario
+          </button>
+        </div>
+
+        <!-- Sidebar item -->
+        <div
+          class="app-chrome p-2.5 rounded-xl text-sm flex items-center gap-2"
+        >
+          <i class="fa-solid fa-house text-[15px]" aria-hidden="true"></i>
+          Item de menú activo
+        </div>
+
+        <!-- Badges -->
+        <div class="p-3 rounded-xl bg-base-200/40 border border-base-200">
+          <p
+            class="text-[10px] font-semibold uppercase tracking-wider opacity-60 mb-2"
+          >
+            Badges
+          </p>
+          <div class="flex flex-wrap gap-1.5">
+            <span class="badge badge-primary badge-sm">Primary</span>
+            <span class="badge badge-secondary badge-sm">Secondary</span>
+            <span class="badge badge-success badge-sm">Success</span>
+            <span class="badge badge-warning badge-sm">Warning</span>
+            <span class="badge badge-error badge-sm">Error</span>
+          </div>
+        </div>
+
+        <!-- Cabecera de tabla -->
+        <div class="p-3 rounded-xl bg-base-200/40 border border-base-200">
+          <p
+            class="text-[10px] font-semibold uppercase tracking-wider opacity-60 mb-2"
+          >
+            Cabecera de tabla
+          </p>
+          <div class="rounded-lg overflow-hidden border border-base-300">
+            <div
+              class="bg-primary text-primary-content text-xs font-medium text-center py-1.5"
+            >
+              TABLA HEADER
+            </div>
+            <div
+              class="text-xs text-center py-1.5 bg-base-100 border-t border-base-200"
+            >
+              Fila de ejemplo
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

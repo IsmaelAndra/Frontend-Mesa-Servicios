@@ -1,0 +1,225 @@
+<div class="space-y-6 max-w-4xl mx-auto">
+
+  <!-- ============================ HEADER ============================ -->
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-clipboard-check text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">
+          Aprobaciones pendientes
+        </h1>
+        <p class="text-sm opacity-70">
+          Pasos de las automatizaciones que esperan su decisión
+        </p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 shrink-0">
+      <span
+        *ngIf="!cargando() && pendientes().length > 0"
+        class="badge badge-lg badge-warning text-warning-content gap-2 font-semibold py-3 px-4"
+      >
+        <span class="w-2 h-2 rounded-full bg-warning-content animate-pulse"></span>
+        {{ pendientes().length }}
+        {{ pendientes().length === 1 ? "pendiente" : "pendientes" }}
+      </span>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-ghost gap-2"
+        (click)="cargar()"
+        [disabled]="cargando()"
+      >
+        <i
+          class="fa-solid fa-rotate text-[15px]"
+          [class.animate-spin]="cargando()"
+          aria-hidden="true"
+        ></i>
+        Actualizar
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================ LOADING ============================ -->
+  <div
+    *ngIf="cargando()"
+    class="flex justify-center py-12"
+    role="status"
+    aria-live="polite"
+  >
+    <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+  </div>
+
+  <!-- ============================ VACIO ============================ -->
+  <div
+    *ngIf="!cargando() && pendientes().length === 0"
+    class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+  >
+    <div class="card-body items-center text-center py-12 gap-3">
+      <div
+        class="p-4 rounded-2xl bg-success/10 text-success animate-check-pop"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-circle-check text-4xl"></i>
+      </div>
+      <h2 class="font-bold text-lg mt-1">Todo al día</h2>
+      <p class="text-sm opacity-70 max-w-sm">
+        No tiene aprobaciones pendientes. Cuando una automatización necesite su
+        decisión, aparecerá aquí.
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================ LISTA ============================ -->
+  <div *ngIf="!cargando() && pendientes().length > 0" class="space-y-3">
+
+    <div
+      *ngFor="let a of pendientes()"
+      [class.item-saliendo]="saliendo().has(a.id)"
+      class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden transition-shadow hover:shadow-lg"
+      [ngClass]="
+        a.deadline && porVencer(a)
+          ? 'border-t-4 border-t-warning'
+          : 'border-t-4 border-t-primary'
+      "
+    >
+      <div class="card-body p-5 space-y-3">
+
+        <!-- Cabecera de la card -->
+        <div class="flex items-start gap-3">
+          <div
+            class="p-2 rounded-xl shrink-0"
+            [ngClass]="
+              a.deadline && porVencer(a)
+                ? 'bg-warning/15 text-warning'
+                : 'bg-primary/10 text-primary'
+            "
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-user-check text-base"></i>
+          </div>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-start justify-between gap-2">
+              <h3 class="font-semibold text-sm leading-tight break-words">
+                {{ a.solicitud ?? "Aprobacion pendiente" }}
+              </h3>
+
+              <!-- Badge de plazo -->
+              <span
+                *ngIf="a.deadline"
+                class="badge badge-sm gap-1.5 shrink-0"
+                [ngClass]="
+                  porVencer(a)
+                    ? 'badge-warning text-warning-content'
+                    : 'badge-ghost text-base-content/70'
+                "
+              >
+                <i class="fa-regular fa-clock text-[10px]" aria-hidden="true"></i>
+                {{ etiquetaPlazo(a) }}
+              </span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs opacity-70 mt-1">
+              <span class="inline-flex items-center gap-1">
+                <i class="fa-solid fa-diagram-project text-[10px]" aria-hidden="true"></i>
+                {{ a.workflowName ?? "Automatizacion" }}
+              </span>
+              <span class="inline-flex items-center gap-1">
+                <i class="fa-solid fa-user-shield text-[10px]" aria-hidden="true"></i>
+                Pide un {{ a.requiredRole }} o superior
+              </span>
+              <span class="inline-flex items-center gap-1">
+                <i class="fa-regular fa-calendar text-[10px]" aria-hidden="true"></i>
+                desde {{ fecha(a.createdAt) }}
+              </span>
+            </div>
+
+            <!-- Entidad asociada -->
+            <div *ngIf="a.entityLabel" class="mt-2">
+              <a
+                [routerLink]="['/tickets', a.entityId]"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/15 text-primary text-xs font-medium transition-colors"
+              >
+                <i class="fa-solid fa-ticket text-[10px]" aria-hidden="true"></i>
+                {{ a.entityLabel }}
+                <i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-60" aria-hidden="true"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider my-0 opacity-40"></div>
+
+        <!-- Comentario -->
+        <div>
+          <label class="label pt-0 pb-1 flex justify-between items-center">
+            <span class="label-text text-xs font-medium">
+              Comentario
+              <span class="opacity-50 font-normal">
+                (obligatorio si rechaza)
+              </span>
+            </span>
+            <span
+              class="label-text-alt text-[10px] opacity-50"
+              [class.text-error]="(comentarios[a.id] || '').length > 500"
+            >
+              {{ (comentarios[a.id] || '').length }} / 500
+            </span>
+          </label>
+          <textarea
+            class="textarea textarea-bordered w-full text-sm focus:ring-2 focus:ring-primary/25 leading-relaxed"
+            rows="2"
+            maxlength="500"
+            placeholder="Explique el motivo o deje una nota para el solicitante"
+            [(ngModel)]="comentarios[a.id]"
+            [disabled]="decidiendo() === a.id"
+          ></textarea>
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex flex-wrap items-center justify-end gap-2 pt-1">
+          <button
+            type="button"
+            class="btn btn-sm btn-error btn-outline gap-2"
+            [disabled]="decidiendo() === a.id"
+            (click)="decidir(a, false)"
+          >
+            <span
+              *ngIf="decidiendo() === a.id"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="decidiendo() !== a.id"
+              class="fa-solid fa-xmark text-[15px]"
+              aria-hidden="true"
+            ></i>
+            Rechazar
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-sm btn-success text-success-content gap-2 min-w-[130px]"
+            [disabled]="decidiendo() === a.id"
+            (click)="decidir(a, true)"
+          >
+            <span
+              *ngIf="decidiendo() === a.id"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            ></span>
+            <i
+              *ngIf="decidiendo() !== a.id"
+              class="fa-solid fa-check text-[15px]"
+              aria-hidden="true"
+            ></i>
+            Aprobar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

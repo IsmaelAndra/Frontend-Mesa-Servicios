@@ -3,9 +3,10 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
-  Answer, AnswerRequest, Attach, AuditLog, Rating, RatingRequest,
+  Answer, AnswerPage, AnswerRequest, Attach, AuditLog, Rating, RatingRequest,
   Ticket, TicketPage, TicketQuery, TicketRequest
 } from '../../models/ticket.model';
+import { SolicitanteResumen } from '../../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class TicketService {
@@ -21,7 +22,7 @@ export class TicketService {
     return this.http.get<TicketPage>(this.url, { params });
   }
 
-  getById(id: number): Observable<Ticket> {
+  getById(id: string): Observable<Ticket> {
     return this.http.get<Ticket>(`${this.url}/${id}`);
   }
 
@@ -37,27 +38,63 @@ export class TicketService {
     return this.http.post<Ticket>(this.url, data);
   }
 
-  assign(id: number, agentId?: number, teamId?: number): Observable<Ticket> {
+  assign(id: string, agentId?: string, teamId?: string): Observable<Ticket> {
     return this.http.post<Ticket>(`${this.url}/${id}/assign`, { agentId, teamId });
   }
 
-  changeStatus(id: number, statusName: string): Observable<Ticket> {
+  changeStatus(id: string, statusName: string): Observable<Ticket> {
     return this.http.post<Ticket>(`${this.url}/${id}/status`, { statusName });
   }
 
-  answers(id: number): Observable<Answer[]> {
-    return this.http.get<Answer[]>(`${this.url}/${id}/answers`);
+  /**
+   * Página del hilo. El backend pagina de la más reciente a la más antigua,
+   * que es como se lee un chat: primero lo reciente y, al subir, lo anterior.
+   */
+  answersPage(id: string, page = 0, size = 20): Observable<AnswerPage> {
+    return this.http.get<AnswerPage>(`${this.url}/${id}/answers`, {
+      params: { page, size }
+    });
   }
 
-  addAnswer(id: number, data: AnswerRequest): Observable<Answer> {
+  addAnswer(id: string, data: AnswerRequest): Observable<Answer> {
     return this.http.post<Answer>(`${this.url}/${id}/answers`, data);
   }
 
-  attachments(id: number): Observable<Attach[]> {
+  /** Corrige un mensaje propio (el backend solo lo permite los primeros 15 min). */
+  editAnswer(id: string, answerId: string, message: string): Observable<Answer> {
+    return this.http.put<Answer>(`${this.url}/${id}/answers/${answerId}`, { message });
+  }
+
+  /** Retira un mensaje propio (mismas reglas que editar). */
+  deleteAnswer(id: string, answerId: string): Observable<void> {
+    return this.http.delete<void>(`${this.url}/${id}/answers/${answerId}`);
+  }
+
+  /** Avisa al backend de que se está escribiendo, para el indicador de los demás. */
+  notifyTyping(id: string): Observable<void> {
+    return this.http.post<void>(`${this.url}/${id}/typing`, {});
+  }
+
+  attachments(id: string): Observable<Attach[]> {
     return this.http.get<Attach[]>(`${this.url}/${id}/attachments`);
   }
 
-  uploadAttachment(id: number, file: File, answerId?: number): Observable<Attach> {
+  /**
+ * Descarga el contenido de un adjunto.
+ *
+ * Va por HttpClient y no como enlace directo a propósito: el endpoint exige
+ * sesión, y un <a href> no lleva la cabecera Authorization que añade el
+ * interceptor, así que devolvería 401. Con responseType 'blob' el token viaja
+ * en la petición y el archivo se guarda desde memoria.
+ */
+downloadAttachment(ticketId: string, attachmentId: string): Observable<Blob> {
+  return this.http.get(
+    `${this.url}/${ticketId}/attachments/${attachmentId}/content`,
+    { responseType: 'blob' }
+  );
+}
+
+uploadAttachment(id: string, file: File, answerId?: string): Observable<Attach> {
     const form = new FormData();
     form.append('file', file);
     let params = new HttpParams();
@@ -65,15 +102,19 @@ export class TicketService {
     return this.http.post<Attach>(`${this.url}/${id}/attachments`, form, { params });
   }
 
-  audit(id: number): Observable<AuditLog[]> {
+  audit(id: string): Observable<AuditLog[]> {
     return this.http.get<AuditLog[]>(`${this.url}/${id}/audit`);
   }
 
-  rate(id: number, data: RatingRequest): Observable<Rating> {
+  rate(id: string, data: RatingRequest): Observable<Rating> {
     return this.http.post<Rating>(`${this.url}/${id}/rate`, data);
   }
 
-  getRating(id: number): Observable<Rating> {
+  getRating(id: string): Observable<Rating> {
     return this.http.get<Rating>(`${this.url}/${id}/rating`);
+  }
+
+  solicitanteResumen(userId: string): Observable<SolicitanteResumen> {
+    return this.http.get<SolicitanteResumen>(`${environment.apiUrl}/solicitantes/${userId}/resumen`);
   }
 }

@@ -1,0 +1,70 @@
+<div *ngIf="visible" class="fixed bottom-5 right-5 z-[9998] flex flex-col items-end gap-3">
+  <!-- Widget de chat -->
+  <div *ngIf="open" class="card w-[21rem] sm:w-[27rem] shadow-2xl border border-base-200 bg-base-100 overflow-hidden flex flex-col max-h-[min(640px,85vh)]">
+    <div class="flex items-center gap-2 px-4 py-3 bg-primary text-white shrink-0">
+      <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-lg shrink-0 overflow-hidden">
+        <img *ngIf="iconIsUrl()" [src]="iconSrc()" alt="Icono del proveedor de IA"
+          class="w-full h-full object-cover" (error)="iconError()" />
+        <i *ngIf="iconIsFa()" [class]="iconFaClass()" aria-hidden="true"></i>
+        <span *ngIf="!iconIsUrl() && !iconIsFa()">{{ iconGlyph() }}</span>
+      </div>
+      <div class="min-w-0 flex-1">
+        <p class="font-bold text-sm leading-tight">Asistente IA</p>
+        <p class="text-[10px] opacity-90 truncate">
+          {{ providerLabel() }}<span *ngIf="modelLabel()"> · {{ modelLabel() }}</span>
+        </p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-xs btn-circle text-white" (click)="toggle()"
+        aria-label="Cerrar asistente">
+        <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div id="ai-chat-scroll" class="chat-wa-bg h-96 flex-1 overflow-y-auto p-3 space-y-2" aria-live="polite">
+      <div *ngIf="!messages.length" class="text-xs text-center opacity-50 pt-10 leading-relaxed">
+        Hola, soy el asistente de la mesa de servicios.<br />
+        Escribe tu consulta y te ayudaré a resolverla.
+      </div>
+      <div *ngFor="let m of messages" class="chat" [ngClass]="m.from === 'user' ? 'chat-end' : 'chat-start'">
+        <div *ngIf="m.from === 'user'"
+          class="chat-bubble chat-message chat-message-user bg-primary text-primary-content border border-primary/40 text-sm whitespace-pre-wrap">
+          {{ m.content }}
+        </div>
+        <div *ngIf="m.from === 'ai'"
+          class="chat-bubble chat-message chat-message-ai bg-base-200 text-base-content border border-base-300/70 text-sm">
+          <div class="ai-markdown" [innerHTML]="formatAi(m.content)"></div>
+        </div>
+      </div>
+      <div *ngIf="loading" class="flex items-center gap-2 text-xs opacity-60 pl-2">
+        <span class="loading loading-dots loading-sm text-primary"></span>
+        Analizando...
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 p-3 border-t border-base-200 shrink-0">
+      <input
+        type="text"
+        [value]="message"
+        (input)="message = $any($event.target).value"
+        (keyup.enter)="send()"
+        placeholder="Escribe tu consulta..."
+        class="input input-bordered input-sm flex-1"
+        [attr.aria-label]="'Mensaje para el asistente IA'" />
+      <button type="button" class="btn btn-primary btn-sm btn-square" (click)="send()"
+        [disabled]="!message.trim() || loading" aria-label="Enviar mensaje">
+        <i class="fa-solid fa-paper-plane text-[15px]" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Botón flotante -->
+  <button type="button"
+    class="btn btn-primary btn-circle w-14 h-14 shadow-lg hover:scale-105 transition-transform"
+    (click)="toggle()" [attr.aria-expanded]="open"
+    [attr.aria-label]="open ? 'Cerrar asistente IA' : 'Abrir asistente IA'">
+    <img *ngIf="iconIsUrl()" [src]="iconSrc()" alt="Icono del proveedor de IA" class="w-7 h-7 object-cover"
+      (error)="iconError()" />
+    <i *ngIf="iconIsFa()" [class]="iconFaClass()" aria-hidden="true"></i>
+    <span *ngIf="!iconIsUrl() && !iconIsFa()" class="text-2xl leading-none">{{ iconGlyph() }}</span>
+  </button>
+</div>

@@ -1,0 +1,514 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <header
+    class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+  >
+    <div class="flex items-center gap-3">
+      <div
+        class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary"
+        aria-hidden="true"
+      >
+        <i class="fa-solid fa-flask text-2xl"></i>
+      </div>
+      <div>
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">
+          Reportes personalizados
+        </h1>
+        <p class="text-sm opacity-70">
+          Crea reportes por consulta SQL y genéralos con JasperReports
+        </p>
+      </div>
+    </div>
+
+    <button
+      class="btn btn-primary btn-sm gap-2"
+      (click)="showCreate = !showCreate"
+    >
+      <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
+      {{ showCreate ? "Cerrar" : "Nuevo reporte" }}
+    </button>
+  </header>
+
+  <!-- Ayuda: variables y parámetros -->
+  <div class="card bg-info/5 border border-info/20">
+    <div class="card-body p-4">
+      <h3 class="text-sm font-semibold text-info flex items-center gap-2">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        Variables y parámetros disponibles en la consulta
+      </h3>
+      <ul class="text-xs opacity-80 mt-2 space-y-1 list-disc list-inside">
+        <li>
+          La consulta debe ser de
+          <span class="font-medium">solo lectura</span> y comenzar con
+          <span class="font-mono">SELECT</span> o
+          <span class="font-mono">WITH</span>.
+        </li>
+        <li>
+          Parámetros SQL nombrados (opcionales):
+          <span class="font-mono">:desde</span> (fecha inicio),
+          <span class="font-mono">:hasta</span> (fecha fin +1 día),
+<span class="font-mono">:tipoId</span> (tipo de ticket),
+            <span class="font-mono">:sucursalId</span> (sede física),
+            <span class="font-mono">:usuarioId</span> (usuario que genera el
+            reporte).
+          </li>
+          <li>
+            Los parámetros llegan siempre, aunque no se elijan. Para que un filtro
+            no-restringa cuando está vacío, usa el patrón
+            <span class="font-mono">(:sucursalId IS NULL OR t.sucursal_id = :sucursalId)</span>.
+          </li>
+          <li>
+            Para desglosar por sede, une la tabla
+            <span class="font-mono">sucursal</span>:
+            <span class="font-mono">LEFT JOIN sucursal sc ON sc.id_sucursal = t.sucursal_id</span>
+            y muestra <span class="font-mono">sc.name_sucursal</span>. El ticket
+            guarda la sede del <em>caso</em>, que puede no ser la de quien lo
+            reportó.
+          </li>
+        <li>
+          Variables del encabezado: <span class="font-mono">[TITULO]</span>,
+          <span class="font-mono">[FECHA]</span>,
+          <span class="font-mono">[TOTAL]</span> (número de registros) y
+          <span class="font-mono">[LOGO]</span> (logo de la marca).
+        </li>
+        <li>
+          Cada columna devuelta por la consulta se convierte en una columna del
+          reporte.
+        </li>
+        <li>
+          Para mostrar el ticket usa <span class="font-mono">t.number_ticket</span>
+          (el número que ve la gente, #43), y ordena por él.
+          <span class="font-mono">t.id_ticket</span> y el resto de ids son
+          identificadores internos (uuid): no se leen ni ordenan con sentido.
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Formulario de creación -->
+  <div
+    class="card bg-base-100 shadow-md border border-base-200"
+    *ngIf="showCreate"
+  >
+    <div class="card-body">
+      <div class="flex items-center gap-2 mb-2">
+        <div
+          class="p-1.5 rounded-lg bg-primary/10 text-primary"
+          aria-hidden="true"
+        >
+          <i class="fa-solid fa-plus text-[15px]"></i>
+        </div>
+        <h3 class="card-title text-base">Nuevo reporte</h3>
+      </div>
+
+      <form
+        class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2"
+        (ngSubmit)="create()"
+      >
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium"
+              >Nombre (único) <span class="text-error">*</span></span
+            >
+          </div>
+          <input
+            [(ngModel)]="newReport.nameReport"
+            name="nameReport"
+            class="input input-bordered input-sm w-full font-mono"
+            required
+            placeholder="reporte_mensual"
+          />
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium"
+              >Título <span class="text-error">*</span></span
+            >
+          </div>
+          <input
+            [(ngModel)]="newReport.titleReport"
+            name="titleReport"
+            class="input input-bordered input-sm w-full"
+            required
+            placeholder="Reporte mensual de tickets"
+          />
+        </label>
+
+        <label class="form-control w-full md:col-span-2">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Descripción</span>
+          </div>
+          <input
+            [(ngModel)]="newReport.descriptionReport"
+            name="descriptionReport"
+            class="input input-bordered input-sm w-full"
+            placeholder="Breve descripción que se muestra en la tarjeta del reporte"
+          />
+        </label>
+
+        <label class="form-control w-full md:col-span-2">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium"
+              >Consulta SQL <span class="text-error">*</span></span
+            >
+          </div>
+          <textarea
+            [(ngModel)]="newReport.querySql"
+            name="querySql"
+            class="textarea textarea-bordered textarea-sm w-full font-mono"
+            rows="5"
+            required
+            placeholder="SELECT ..."
+          ></textarea>
+        </label>
+
+        <label class="flex items-center gap-2 cursor-pointer p-2">
+          <input
+            type="checkbox"
+            class="checkbox checkbox-primary checkbox-sm"
+            [(ngModel)]="newReport.activeReport"
+            name="activeReport"
+          />
+          <span class="text-sm">Activo (visible en la sección Reportes)</span>
+        </label>
+
+        <div class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium"
+              >Icono (Font Awesome)</span
+            >
+          </div>
+          <div class="flex items-center gap-2">
+            <span
+              class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
+              [style.background-color]="reportColor(newReport) + '22'"
+              [style.color]="reportColor(newReport)"
+              aria-hidden="true"
+            >
+              <i [class]="reportIcon(newReport)" class="text-[15px]"></i>
+            </span>
+            <input
+              [(ngModel)]="newReport.iconReport"
+              name="iconReport"
+              class="input input-bordered input-sm w-full font-mono"
+              placeholder="fa-solid fa-file-lines"
+            />
+          </div>
+        </div>
+
+        <div class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Color</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input
+              type="color"
+              [(ngModel)]="newReport.colorReport"
+              name="colorReport"
+              class="w-10 h-9 shrink-0 cursor-pointer rounded-lg border border-base-300 p-0.5"
+              aria-label="Color del reporte"
+            />
+            <input
+              [(ngModel)]="newReport.colorReport"
+              name="colorReportHex"
+              class="input input-bordered input-sm w-full font-mono"
+              placeholder="#062e86"
+            />
+          </div>
+        </div>
+
+        <div
+          class="flex justify-end gap-2 md:col-span-2 pt-2 border-t border-base-200"
+        >
+          <button
+            type="button"
+            class="btn btn-sm btn-ghost"
+            (click)="showCreate = false"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="btn btn-sm btn-primary gap-2"
+            [disabled]="
+              !newReport.nameReport?.trim() ||
+              !newReport.titleReport?.trim() ||
+              !newReport.querySql?.trim()
+            "
+          >
+            <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
+            Crear reporte
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Listado -->
+  <div
+    class="card bg-base-100 shadow-md border border-base-200 overflow-hidden"
+  >
+    <div class="overflow-x-auto">
+      <table class="table table-sm table-zebra">
+        <thead class="bg-primary text-primary-content">
+          <tr>
+            <th class="text-center">Título</th>
+            <th class="text-center">Nombre</th>
+            <th class="text-center">Descripción</th>
+            <th class="text-center">Consulta SQL</th>
+            <th class="text-center">Activo</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading">
+            <td colspan="5">
+              <app-skeleton tipo="filas" etiqueta="Cargando reportes..."></app-skeleton>
+            </td>
+          </tr>
+
+          <ng-container *ngFor="let r of pagReportes.vista">
+            <!-- Modo edición -->
+            <tr
+              *ngIf="editReport && editReport.idReport === r.idReport"
+              class="bg-base-200/50 align-top"
+            >
+              <td colspan="5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-2">
+                  <label class="form-control">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Título</span>
+                    </div>
+                    <input
+                      [(ngModel)]="editReport.titleReport"
+                      class="input input-bordered input-xs w-full"
+                    />
+                  </label>
+                  <label class="form-control">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Nombre</span>
+                    </div>
+                    <input
+                      [(ngModel)]="editReport.nameReport"
+                      class="input input-bordered input-xs w-full font-mono"
+                    />
+                  </label>
+                  <label class="form-control md:col-span-2">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium"
+                        >Descripción</span
+                      >
+                    </div>
+                    <input
+                      [(ngModel)]="editReport.descriptionReport"
+                      class="input input-bordered input-xs w-full"
+                    />
+                  </label>
+                  <label class="form-control md:col-span-2">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium"
+                        >Consulta SQL</span
+                      >
+                    </div>
+                    <textarea
+                      [(ngModel)]="editReport.querySql"
+                      class="textarea textarea-bordered textarea-xs w-full font-mono"
+                      rows="4"
+                    ></textarea>
+                  </label>
+                  <label class="flex items-center gap-2 py-1">
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-primary checkbox-xs"
+                      [(ngModel)]="editReport.activeReport"
+                    />
+                    <span class="text-xs font-medium">Activo</span>
+                  </label>
+                  <div class="form-control">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Icono</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
+                        [style.background-color]="
+                          reportColor(editReport) + '22'
+                        "
+                        [style.color]="reportColor(editReport)"
+                        aria-hidden="true"
+                      >
+                        <i
+                          [class]="reportIcon(editReport)"
+                          class="text-[15px]"
+                        ></i>
+                      </span>
+                      <input
+                        [(ngModel)]="editReport.iconReport"
+                        class="input input-bordered input-xs w-full font-mono"
+                        placeholder="fa-solid fa-file-lines"
+                      />
+                    </div>
+                  </div>
+                  <div class="form-control">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Color</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <input
+                        type="color"
+                        [(ngModel)]="editReport.colorReport"
+                        class="w-9 h-7 shrink-0 cursor-pointer rounded-lg border border-base-300 p-0.5"
+                        aria-label="Color del reporte"
+                      />
+                      <input
+                        [(ngModel)]="editReport.colorReport"
+                        class="input input-bordered input-xs w-full font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div class="flex gap-2 md:justify-end">
+                    <button
+                      class="btn btn-sm btn-ghost gap-1"
+                      (click)="cancelEdit()"
+                    >
+                      <i
+                        class="fa-solid fa-xmark text-[15px]"
+                        aria-hidden="true"
+                      ></i>
+                      Cancelar
+                    </button>
+                    <button
+                      class="btn btn-sm btn-primary gap-1"
+                      (click)="saveEdit()"
+                    >
+                      <i
+                        class="fa-solid fa-check text-sm"
+                        aria-hidden="true"
+                      ></i>
+                      Guardar
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Modo lectura -->
+            <tr
+              *ngIf="!editReport || editReport.idReport !== r.idReport"
+              class="hover:bg-base-200/50"
+            >
+              <td>
+                <div class="flex items-center gap-2">
+                  <div
+                    class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
+                    [style.background-color]="reportColor(r) + '22'"
+                    [style.color]="reportColor(r)"
+                    aria-hidden="true"
+                  >
+                    <i [class]="reportIcon(r)" class="text-[15px]"></i>
+                  </div>
+                  <span
+                    class="badge badge-sm gap-1.5 font-medium min-w-0 uppercase"
+                    [style.background-color]="reportColor(r) + '22'"
+                    [style.color]="reportColor(r) + '!important'"
+                  >
+                    {{ r.titleReport }}
+                  </span>
+                </div>
+              </td>
+              <td>
+                <span class="font-mono text-xs">{{ r.nameReport }}</span>
+              </td>
+              <td class="text-center">
+                <span class="badge badge-sm badge-ghost gap-1">{{
+                  r.descriptionReport || "Sin descripción"
+                }}</span>
+              </td>
+              <td class="text-center">
+                <button
+                  class="btn btn-xs btn-outline gap-1"
+                  (click)="verConsulta(r)"
+                >
+                  <i
+                    class="fa-solid fa-code text-[13px]"
+                    aria-hidden="true"
+                  ></i>
+                  Ver consulta
+                </button>
+              </td>
+              <td class="text-center">
+                <button
+                  class="badge badge-sm gap-1 cursor-pointer"
+                  [ngClass]="r.activeReport ? 'badge-success' : 'badge-neutral'"
+                  (click)="toggleActive(r)"
+                  [attr.aria-label]="
+                    r.activeReport ? 'Desactivar reporte' : 'Activar reporte'
+                  "
+                >
+                  <i
+                    class="fa-solid text-xs"
+                    [ngClass]="
+                      r.activeReport ? 'fa-toggle-on' : 'fa-toggle-off'
+                    "
+                    aria-hidden="true"
+                  ></i>
+                  {{ r.activeReport ? "Activo" : "Inactivo" }}
+                </button>
+              </td>
+              <td class="text-center">
+                <div class="flex gap-1 justify-center">
+                  <button
+                    class="btn btn-xs btn-ghost gap-1"
+                    (click)="edit(r)"
+                    aria-label="Editar reporte"
+                  >
+                    <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
+                    Editar
+                  </button>
+                  <button
+                    class="btn btn-xs btn-ghost text-error gap-1"
+                    (click)="delete(r)"
+                    aria-label="Eliminar reporte"
+                  >
+                    <i class="fa-solid fa-trash text-sm" aria-hidden="true"></i>
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <tr *ngIf="!loading && reports.length === 0">
+            <td colspan="5">
+              <div
+                class="flex flex-col items-center justify-center py-12 gap-3 opacity-70"
+              >
+                <i class="fa-solid fa-flask text-4xl" aria-hidden="true"></i>
+                <span class="text-sm">No hay reportes personalizados</span>
+                <button
+                  class="btn btn-sm btn-primary gap-2 mt-1"
+                  (click)="showCreate = true"
+                >
+                  <i
+                    class="fa-solid fa-plus text-[15px]"
+                    aria-hidden="true"
+                  ></i>
+                  Crear el primero
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <app-paginator
+    [total]="reports.length"
+    [page]="pagReportes.page"
+    [pageSize]="pagReportes.pageSize"
+    [mostrarResumen]="false"
+    (pageChange)="pagReportes.cambiarPagina($event)"
+    (pageSizeChange)="pagReportes.cambiarTamano($event)"
+  ></app-paginator>
+</div>
