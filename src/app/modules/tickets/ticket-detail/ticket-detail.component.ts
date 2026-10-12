@@ -53,7 +53,7 @@ interface EstadoMensaje {
 @Component({
   selector: "app-ticket-detail",
   templateUrl: "./ticket-detail.component.html",
-  styleUrls: ["./ticket-detail.component.css"],
+  styleUrls: ["./ticket-detail.component.css", "./ticket-detail-chat.css"],
 })
 export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   ticketId!: string;

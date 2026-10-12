@@ -123,6 +123,7 @@ const URLS_APP = [
   '/admin/microsoft-graph',
   '/admin/session-config',
   '/admin/chat-config',
+  '/admin/mail-outbox',
   '/admin/ticket-types',
   '/admin/audit-sistema',
   '/admin/reports',

@@ -1,0 +1,254 @@
+<!--
+  Cola de correo (SUPER_ADMIN). Todo correo pasa por una cola en la base de
+  datos y sale al ritmo que permite el buzón de Microsoft 365. Aquí se ve qué
+  espera, qué salió, qué se agrupó en resúmenes y qué falló.
+-->
+<div class="space-y-6">
+  <!-- ============ Cabecera ============ -->
+  <header class="page-head flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="page-head__icono" aria-hidden="true"><i class="fa-solid fa-paper-plane"></i></div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo font-bold">Cola de correo</h1>
+        <p class="text-sm opacity-70">Correos que salen por Microsoft 365: qué espera, qué salió y qué falló.</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="cc-estado" [ngClass]="estadoEnvio.clase" [title]="estadoEnvio.detalle">
+        <i [class]="estadoEnvio.icono" aria-hidden="true"></i>
+        <span>
+          <span class="block font-semibold leading-tight">{{ estadoEnvio.texto }}</span>
+          <span *ngIf="estadoEnvio.detalle" class="block text-[11px] opacity-75 leading-tight">{{ estadoEnvio.detalle }}</span>
+        </span>
+      </span>
+      <label class="flex items-center gap-2 text-xs cursor-pointer select-none" title="Actualizar cada 10 segundos">
+        <input type="checkbox" class="toggle toggle-primary toggle-xs" [(ngModel)]="autoRefresco" />
+        En vivo
+      </label>
+      <button type="button" class="btn btn-sm btn-ghost gap-2" (click)="refrescar()">
+        <i class="fa-solid fa-rotate-right text-[12px]" aria-hidden="true"></i>
+        Actualizar
+      </button>
+    </div>
+  </header>
+
+  <!-- ============ Indicadores ============ -->
+  <section class="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6" aria-label="Indicadores de la cola">
+    <ng-container *ngIf="resumen as r; else kpiCargando">
+      <article class="cc-kpi" style="--kpi: #f59e0b">
+        <div class="cc-kpi__icono"><i class="fa-solid fa-hourglass-half"></i></div>
+        <p class="cc-kpi__rotulo">Pendientes</p>
+        <p class="cc-kpi__valor">{{ r.pendientes | number }}</p>
+        <p class="cc-kpi__pie">{{ antiguedad(r.segundosPendienteMasAntiguo) }}</p>
+      </article>
+
+      <article class="cc-kpi" style="--kpi: #16a34a">
+        <div class="cc-kpi__icono"><i class="fa-solid fa-check"></i></div>
+        <p class="cc-kpi__rotulo">Enviados hoy</p>
+        <p class="cc-kpi__valor">{{ r.enviadosHoy | number }}</p>
+        <p class="cc-kpi__pie">Aceptados por Microsoft</p>
+      </article>
+
+      <article class="cc-kpi" style="--kpi: #6366f1">
+        <div class="cc-kpi__icono"><i class="fa-solid fa-layer-group"></i></div>
+        <p class="cc-kpi__rotulo">En resúmenes hoy</p>
+        <p class="cc-kpi__valor">{{ r.agrupadosHoy | number }}</p>
+        <p class="cc-kpi__pie">Avisos que salieron juntos</p>
+      </article>
+
+      <article class="cc-kpi" style="--kpi: #dc2626">
+        <div class="cc-kpi__icono"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <p class="cc-kpi__rotulo">Fallidos</p>
+        <p class="cc-kpi__valor">{{ r.fallidos | number }}</p>
+        <button
+          *ngIf="r.fallidos > 0; else sinFallos"
+          type="button"
+          class="btn btn-xs btn-error btn-outline gap-1 mt-1 self-start"
+          (click)="reintentarFallidos()"
+        >
+          <i class="fa-solid fa-rotate-right text-[10px]" aria-hidden="true"></i>
+          Reintentar todos
+        </button>
+        <ng-template #sinFallos><p class="cc-kpi__pie">{{ r.fallidosHoy }} hoy</p></ng-template>
+      </article>
+
+      <article class="cc-kpi" style="--kpi: #0891b2">
+        <div class="cc-kpi__icono"><i class="fa-solid fa-gauge-high"></i></div>
+        <p class="cc-kpi__rotulo">Ritmo actual</p>
+        <p class="cc-kpi__valor">{{ r.enviadosUltimoMinuto }}<span class="cc-kpi__unidad">/ {{ r.limitePorMinuto }} por min</span></p>
+        <div class="cc-barra" role="progressbar" [attr.aria-valuenow]="usoRitmo" aria-valuemin="0" aria-valuemax="100">
+          <span [style.width.%]="usoRitmo" [class.cc-barra--lleno]="usoRitmo >= 90"></span>
+        </div>
+      </article>
+
+      <article class="cc-kpi" style="--kpi: #062e86">
+        <div class="cc-kpi__icono"><i class="fa-solid fa-stopwatch"></i></div>
+        <p class="cc-kpi__rotulo">Para vaciar la cola</p>
+        <p class="cc-kpi__valor cc-kpi__valor--texto">{{ tiempoVaciar(r.minutosParaVaciar) }}</p>
+        <p class="cc-kpi__pie">Al ritmo del límite del buzón</p>
+      </article>
+    </ng-container>
+    <ng-template #kpiCargando>
+      <div *ngFor="let _ of [1, 2, 3, 4, 5, 6]" class="cc-kpi animate-pulse"><div class="h-20"></div></div>
+    </ng-template>
+  </section>
+
+  <!-- ============ Gráficas ============ -->
+  <section class="grid gap-4 xl:grid-cols-3">
+    <div class="cc-panel xl:col-span-2">
+      <div class="cc-panel__cabecera">
+        <span class="cc-panel__icono" aria-hidden="true"><i class="fa-solid fa-chart-column"></i></span>
+        <div>
+          <h2 class="font-bold text-sm">Últimas 24 horas</h2>
+          <p class="text-xs opacity-60">Correos por hora y cómo terminaron</p>
+        </div>
+      </div>
+      <div class="relative h-72">
+        <canvas baseChart type="bar" [data]="horas" [options]="horasOptions"></canvas>
+      </div>
+    </div>
+    <div class="cc-panel">
+      <div class="cc-panel__cabecera">
+        <span class="cc-panel__icono" aria-hidden="true"><i class="fa-solid fa-chart-pie"></i></span>
+        <div>
+          <h2 class="font-bold text-sm">Por tipo de aviso</h2>
+          <p class="text-xs opacity-60">Últimas 24 horas</p>
+        </div>
+      </div>
+      <div class="relative h-72">
+        <canvas *ngIf="resumen?.porTipo?.length; else sinTipos" baseChart type="doughnut" [data]="tipos" [options]="tiposOptions"></canvas>
+        <ng-template #sinTipos>
+          <div class="h-full flex flex-col items-center justify-center gap-2 opacity-60 text-sm">
+            <i class="fa-regular fa-envelope-open text-3xl" aria-hidden="true"></i>
+            Sin correos en las últimas 24 horas
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Correos ============ -->
+  <section class="cc-panel">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div class="cc-panel__cabecera mb-0">
+        <span class="cc-panel__icono" aria-hidden="true"><i class="fa-solid fa-list"></i></span>
+        <div>
+          <h2 class="font-bold text-sm">Correos</h2>
+          <p class="text-xs opacity-60">
+            {{ total | number }} {{ total === 1 ? "correo" : "correos" }}
+            <ng-container *ngIf="ultimaActualizacion"> · actualizado {{ ultimaActualizacion | date: "HH:mm:ss" }}</ng-container>
+          </p>
+        </div>
+      </div>
+      <label class="cc-buscar">
+        <i class="fa-solid fa-magnifying-glass text-[12px] opacity-50" aria-hidden="true"></i>
+        <input
+          type="search"
+          class="flex-1 min-w-0 bg-transparent outline-none text-sm"
+          placeholder="Destinatario o asunto…"
+          [value]="busqueda"
+          (input)="buscar($any($event.target).value)"
+          aria-label="Buscar por destinatario o asunto"
+        />
+      </label>
+    </div>
+
+    <div class="flex flex-wrap gap-1.5 mb-4" role="tablist" aria-label="Filtrar por estado">
+      <button
+        *ngFor="let f of filtros"
+        type="button"
+        role="tab"
+        class="cc-filtro"
+        [class.cc-filtro--activo]="estado === f"
+        [attr.aria-selected]="estado === f"
+        (click)="cambiarEstado(f)"
+      >
+        <i *ngIf="f" [class]="estadosMeta[f].icono" class="text-[10px]" aria-hidden="true"></i>
+        {{ f ? estadosMeta[f].etiqueta : "Todos" }}
+      </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Estado</th>
+            <th>Destinatario</th>
+            <th>Asunto</th>
+            <th>Tipo</th>
+            <th class="text-center">Intentos</th>
+            <th>Creado</th>
+            <th>Enviado / próximo intento</th>
+            <th class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of correos; trackBy: trackCorreo" [class.opacity-60]="cargandoLista">
+            <td>
+              <span class="badge badge-sm gap-1.5 font-medium whitespace-nowrap" [ngClass]="estadosMeta[c.status].clase">
+                <i [class]="estadosMeta[c.status].icono" class="text-[10px]" aria-hidden="true"></i>
+                {{ estadosMeta[c.status].etiqueta }}
+              </span>
+              <span *ngIf="c.priority < 5" class="badge badge-xs badge-outline ml-1" title="Prioridad alta: sale antes que el resto">Urgente</span>
+            </td>
+            <td class="max-w-[14rem]"><span class="block truncate" [title]="c.to">{{ c.to }}</span></td>
+            <td class="max-w-[22rem]">
+              <span class="block truncate font-medium" [title]="c.subject">{{ c.subject }}</span>
+              <span *ngIf="c.lastError" class="block truncate text-[11px] text-error" [title]="c.lastError">{{ c.lastError }}</span>
+            </td>
+            <td class="whitespace-nowrap text-xs opacity-80">{{ tipo(c.type) }}</td>
+            <td class="text-center tabular-nums">{{ c.attempts }}</td>
+            <td class="whitespace-nowrap text-xs tabular-nums">{{ c.createdAt | date: "dd/MM HH:mm:ss" }}</td>
+            <td class="whitespace-nowrap text-xs tabular-nums">
+              <ng-container *ngIf="c.sentAt; else proximo">{{ c.sentAt | date: "dd/MM HH:mm:ss" }}</ng-container>
+              <ng-template #proximo>
+                <span *ngIf="c.status === 'PENDIENTE' && c.nextAttemptAt" class="opacity-70">
+                  {{ c.nextAttemptAt | date: "dd/MM HH:mm:ss" }}
+                </span>
+                <span *ngIf="c.status !== 'PENDIENTE'" class="opacity-40">—</span>
+              </ng-template>
+            </td>
+            <td class="text-right whitespace-nowrap">
+              <button
+                *ngIf="c.status === 'FALLIDO' || c.status === 'CANCELADO'"
+                type="button"
+                class="btn btn-ghost btn-xs gap-1"
+                (click)="reintentar(c)"
+                title="Volver a la cola"
+              >
+                <i class="fa-solid fa-rotate-right text-[10px]" aria-hidden="true"></i>
+                Reintentar
+              </button>
+              <button
+                *ngIf="c.status === 'PENDIENTE' || c.status === 'FALLIDO'"
+                type="button"
+                class="btn btn-ghost btn-xs gap-1 hover:text-error"
+                (click)="cancelar(c)"
+                title="No enviar"
+              >
+                <i class="fa-solid fa-ban text-[10px]" aria-hidden="true"></i>
+                Cancelar
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!correos.length && !cargandoLista">
+            <td colspan="8">
+              <div class="py-10 flex flex-col items-center gap-2 opacity-60 text-sm">
+                <i class="fa-regular fa-envelope text-3xl" aria-hidden="true"></i>
+                {{ busqueda || estado ? "Ningún correo coincide con el filtro" : "La cola está vacía" }}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <app-paginator
+      [total]="total"
+      [page]="pagina"
+      [pageSize]="tamano"
+      (pageChange)="cambiarPagina($event)"
+      (pageSizeChange)="cambiarTamano($event)"
+    ></app-paginator>
+  </section>
+</div>

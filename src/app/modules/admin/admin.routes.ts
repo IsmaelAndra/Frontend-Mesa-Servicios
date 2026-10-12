@@ -20,6 +20,7 @@ import { EscalationManagementComponent } from './escalation-management/escalatio
 import { TemplateManagementComponent } from './template-management/template-management.component';
 import { BrandingComponent } from './branding/branding.component';
 import { TicketTypeManagementComponent } from './ticket-type-management/ticket-type-management.component';
+import { MailOutboxComponent } from './mail-outbox/mail-outbox.component';
 
 /**
  * Rutas bajo /admin. La ruta padre ya exige sesión y rol ADMIN o SUPER_ADMIN;
@@ -47,6 +48,7 @@ export const ADMIN_ROUTES: Routes = [
   { path: 'mfa', component: MfaConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
   { path: 'audit-sistema', component: AuditSistemaComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
   { path: 'chat-config', component: ChatConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: 'mail-outbox', component: MailOutboxComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
 
   { path: 'reports', component: ReportManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } }
 ];

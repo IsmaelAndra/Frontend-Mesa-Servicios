@@ -96,6 +96,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: 'Microsoft Graph y Correo', route: '/admin/microsoft-graph', icon: navIcon('microsoft-graph'), roles: ['SUPER_ADMIN'] },
         { label: 'Seguridad de Sesión', route: '/admin/session-config', icon: navIcon('session-config'), roles: ['SUPER_ADMIN'] },
         { label: 'Acuses de Lectura', route: '/admin/chat-config', icon: navIcon('chat-config'), roles: ['SUPER_ADMIN'] },
+        { label: 'Cola de correo', route: '/admin/mail-outbox', icon: navIcon('mail-outbox'), roles: ['SUPER_ADMIN'] },
         // Programar una automatizacion es escribir codigo con permisos ajenos,
         // asi que queda fuera del ADMIN igual que en el backend.
         { label: 'Automatizaciones', route: '/workflows', icon: navIcon('workflows'), roles: ['SUPER_ADMIN'] },

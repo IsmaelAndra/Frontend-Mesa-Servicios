@@ -52,6 +52,7 @@ export const NAV_ICONS: Record<string, string> = {
   'microsoft-graph': 'fa-solid fa-share-nodes',
   'session-config': 'fa-solid fa-shield-halved',
   'chat-config': 'fa-solid fa-check-double',
+  'mail-outbox': 'fa-solid fa-paper-plane',
   mantenimiento: 'fa-solid fa-screwdriver-wrench',
   reports: 'fa-solid fa-chart-column',
   // /admin/reports es la gestion de plantillas de reporte, no la pantalla de

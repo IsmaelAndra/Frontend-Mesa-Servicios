@@ -26,9 +26,12 @@ import { BrandingCargaComponent } from './branding-carga/branding-carga.componen
 import { RouterModule } from '@angular/router';
 import { SharedModule } from '../shared/shared.module';
 import { ADMIN_ROUTES } from './admin.routes';
+import { NgChartsModule } from 'ng2-charts';
+import { MailOutboxComponent } from './mail-outbox/mail-outbox.component';
 
 @NgModule({
   declarations: [
+    MailOutboxComponent,
     BrandingLogosComponent, BrandingImagenesComponent, BrandingColoresComponent, BrandingCargaComponent,
     AdminDashboardComponent,
     UserManagementComponent,
@@ -51,7 +54,7 @@ import { ADMIN_ROUTES } from './admin.routes';
     ReportManagementComponent,
     PagesSystemComponent
   ],
-  imports: [SharedModule, RouterModule.forChild(ADMIN_ROUTES)],
+  imports: [SharedModule, NgChartsModule, RouterModule.forChild(ADMIN_ROUTES)],
   exports: [
     AdminDashboardComponent,
     UserManagementComponent,

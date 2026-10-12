@@ -33,6 +33,7 @@ describe('nav-icons', () => {
     ['microsoft-graph', 'Microsoft Graph y Correo'],
     ['session-config', 'Seguridad de Sesión'],
     ['chat-config', 'Acuses de Lectura'],
+    ['mail-outbox', 'Cola de correo'],
     ['report-templates', 'Reportes Personalizados'],
     ['activities', 'Actividades'],
     ['calendar', 'Calendario'],
