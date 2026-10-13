@@ -53,7 +53,7 @@
             class="badge badge-sm badge-primary gap-1.5 shrink-0 font-medium"
             [title]="getActiveAreasCount() + ' de ' + catalog.areas.length + ' activas'"
           >
-            <span class="w-1.5 h-1.5 rounded-full bg-primary-content/80"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-primary-content animate-pulse"></span>
             {{ getActiveAreasPercent() }}% activas
           </span>
         </div>
@@ -79,7 +79,7 @@
             </div>
           </div>
           <span class="badge badge-sm badge-success gap-1.5 shrink-0 font-medium">
-            <span class="w-1.5 h-1.5 rounded-full bg-success-content/80"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-primary-content animate-pulse"></span>
             Registradas
           </span>
         </div>
@@ -105,7 +105,7 @@
             </div>
           </div>
           <span class="badge badge-sm badge-warning gap-1.5 shrink-0 font-medium">
-            <span class="w-1.5 h-1.5 rounded-full bg-warning-content/80"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-primary-content animate-pulse"></span>
             Configuradas
           </span>
         </div>
@@ -690,6 +690,38 @@
             <i class="fa-solid fa-check-double text-lg"></i>
           </div>
           <span class="text-sm font-medium">Acuses de Lectura</span>
+        </div>
+      </a>
+
+      <a
+        *ngIf="isSuperAdmin"
+        routerLink="/admin/pages-system"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-primary/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div
+            class="p-2.5 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 group-hover:bg-primary group-hover:text-white group-hover:ring-primary transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-file-shield text-lg"></i>
+          </div>
+          <span class="text-sm font-medium">Páginas del Sistema</span>
+        </div>
+      </a>
+
+      <a
+        *ngIf="isSuperAdmin"
+        routerLink="/admin/mail-outbox"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 border border-base-200 hover:border-primary/40 rounded-2xl overflow-hidden transition duration-200 group"
+      >
+        <div class="card-body p-4 items-center text-center gap-2">
+          <div
+            class="p-2.5 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 group-hover:bg-primary group-hover:text-white group-hover:ring-primary transition"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-paper-plane text-lg"></i>
+          </div>
+          <span class="text-sm font-medium">Cola de correo</span>
         </div>
       </a>
     </div>

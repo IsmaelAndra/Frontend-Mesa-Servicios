@@ -70,9 +70,10 @@
               *ngIf="e !== ''"
               [class]="iconoEstado(e)"
               class="text-[10px]"
+              [style.color]="filtro() !== e ? colorEstado(e) : null"
               aria-hidden="true"
             ></i>
-            {{ e === "" ? "Todas" : e }}
+            {{ e === "" ? "Todas" : etiquetaEstado(e) }}
           </button>
         </div>
 
@@ -149,15 +150,17 @@
               <!-- Estado -->
               <td class="text-center">
                 <span
-                  class="badge badge-sm gap-1.5 font-medium"
-                  [ngClass]="claseEstado(e.status)"
+                  class="badge badge-sm kanban-tag border gap-1.5 font-medium whitespace-nowrap"
+                  [style.background-color]="colorEstado(e.status) + '1F'"
+                  [style.border-color]="colorEstado(e.status)"
+                  [style.color]="colorEstado(e.status)" [style.--bc]="colorEstado(e.status)"
                 >
                   <i
                     [class]="iconoEstado(e.status)"
                     class="text-[10px]"
                     aria-hidden="true"
                   ></i>
-                  {{ e.status }}
+                  {{ etiquetaEstado(e.status) }}
                 </span>
               </td>
 
@@ -304,32 +307,15 @@
   </div>
 
   <!-- ============================ PAGINACION ============================ -->
-  <div
-    *ngIf="total() > tamano"
-    class="flex items-center justify-end gap-2 text-xs"
-  >
-    <button
-      type="button"
-      class="btn btn-sm btn-ghost btn-square"
-      [disabled]="pagina() === 0"
-      (click)="irAPagina(-1)"
-      aria-label="Página anterior"
-    >
-      <i class="fa-solid fa-chevron-left text-xs" aria-hidden="true"></i>
-    </button>
-    <span class="opacity-70 font-mono tabular-nums">
-      {{ pagina() * tamano + 1 }}–{{ pagina() * tamano + ejecuciones().length }}
-      de {{ total() }}
-    </span>
-    <button
-      type="button"
-      class="btn btn-sm btn-ghost btn-square"
-      (click)="irAPagina(1)"
-      aria-label="Página siguiente"
-    >
-      <i class="fa-solid fa-chevron-right text-xs" aria-hidden="true"></i>
-    </button>
-  </div>
+  <app-paginator
+    *ngIf="total() > 0"
+    [total]="total()"
+    [page]="pagina()"
+    [pageSize]="tamano"
+    [pageSizes]="[10, 25, 50, 100]"
+    (pageChange)="irAPagina($event)"
+    (pageSizeChange)="cambiarTamano($event)"
+  ></app-paginator>
 
   <!-- ============================ MODAL DE TRAZA ============================ -->
   <div
@@ -365,15 +351,17 @@
             </div>
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
               <span
-                class="badge badge-sm gap-1.5 font-medium"
-                [ngClass]="claseEstado(t.ejecucion.status)"
+                class="badge badge-sm kanban-tag border gap-1.5 font-medium whitespace-nowrap"
+                  [style.background-color]="colorEstado(t.ejecucion.status) + '1F'"
+                  [style.border-color]="colorEstado(t.ejecucion.status)"
+                  [style.color]="colorEstado(t.ejecucion.status)" [style.--bc]="colorEstado(t.ejecucion.status)"
               >
                 <i
                   [class]="iconoEstado(t.ejecucion.status)"
                   class="text-[10px]"
                   aria-hidden="true"
                 ></i>
-                {{ t.ejecucion.status }}
+                {{ etiquetaEstado(t.ejecucion.status) }}
               </span>
               <span class="opacity-70 inline-flex items-center gap-1">
                 <i class="fa-solid fa-bolt text-[9px]" aria-hidden="true"></i>
@@ -425,7 +413,7 @@
             <button
               *ngIf="sePuedeCancelar(t.ejecucion)"
               type="button"
-              class="btn btn-sm btn-error btn-outline gap-2"
+              class="btn btn-sm btn-error btn-outline gap-2 hover:!text-white"
               (click)="cancelar(t.ejecucion)"
             >
               <i class="fa-solid fa-stop text-[15px]" aria-hidden="true"></i>
@@ -496,15 +484,17 @@
                     </td>
                     <td class="text-center">
                       <span
-                        class="badge badge-sm gap-1.5 font-medium"
-                        [ngClass]="clasePasoBadge(p.status)"
+                        class="badge badge-sm kanban-tag border gap-1.5 font-medium whitespace-nowrap"
+                  [style.background-color]="colorPaso(p.status) + '1F'"
+                  [style.border-color]="colorPaso(p.status)"
+                  [style.color]="colorPaso(p.status)" [style.--bc]="colorPaso(p.status)"
                       >
                         <i
                           [class]="iconoPaso(p.status)"
                           class="text-[10px]"
                           aria-hidden="true"
                         ></i>
-                        {{ p.status }}
+                        {{ etiquetaEstado(p.status) }}
                       </span>
                       <div
                         *ngIf="p.errorMessage"

@@ -1,3 +1,4 @@
+import { environment } from '../../../../environments/environment';
 import { Component, OnInit } from '@angular/core';
 import Swal from 'sweetalert2';
 import {
@@ -10,6 +11,8 @@ import {
 import { Paginacion } from '../../../core/utils/pagination.util';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterOption } from '../../shared/components/master-select/master-select.component';
+import { ACCIONES_ESCALACION, metaAccionEscalacion } from '../../../core/utils/sla-escalacion.util';
+import { AgentOption } from '../../../core/services/admin.service';
 
 @Component({
   selector: 'app-escalation-management',
@@ -22,7 +25,10 @@ export class EscalationManagementComponent implements OnInit {
   policies: SlaPolicy[] = [];
   teams: SupportTeam[] = [];
   templates: NotificationTemplate[] = [];
+  /** Personas a las que se puede escalar directamente. */
+  agentes: AgentOption[] = [];
   loading = false;
+  readonly accionOptions = ACCIONES_ESCALACION;
   showNew = false;
   newEsc: Partial<SlaEscalation> = {};
 
@@ -39,6 +45,36 @@ export class EscalationManagementComponent implements OnInit {
     this.adminService.getSlaPolicies().subscribe({ next: (p) => this.policies = p });
     this.adminService.getTeams().subscribe({ next: (t) => this.teams = t });
     this.adminService.getTemplates().subscribe({ next: (t) => this.templates = t });
+    this.adminService.agents().subscribe({ next: (a) => this.agentes = a, error: () => this.agentes = [] });
+  }
+
+  get policyOptions(): MasterOption[] {
+    return this.policies.map(p => ({
+      value: p.idSlaPolicy, label: p.nameSlaPolicy,
+      icon: p.iconSlaPolicy || 'fa-solid fa-stopwatch', color: p.colorSlaPolicy || '#062e86'
+    }));
+  }
+
+  get templateOptions(): MasterOption[] {
+    return this.templates.map(t => ({
+      value: t.idTemplate, label: t.nameTemplate,
+      icon: t.iconTemplate || 'fa-regular fa-envelope', color: t.colorTemplate || '#64748B'
+    }));
+  }
+
+  get agenteOptions(): MasterOption[] {
+    return this.agentes.map(a => ({
+      value: a.idUser,
+      label: a.displayName || a.corporateEmailUser,
+      detail: a.corporateEmailUser,
+      avatar: a.photoUrl ? (/^https?:\/\//i.test(a.photoUrl) ? a.photoUrl : environment.apiUrl + a.photoUrl) : null,
+      initials: (a.displayName || a.corporateEmailUser || '?').charAt(0).toUpperCase(),
+      sessionState: a.sessionState
+    }));
+  }
+
+  metaAccion(valor?: string | null) {
+    return metaAccionEscalacion(valor);
   }
 
   create(): void {
@@ -69,11 +105,6 @@ export class EscalationManagementComponent implements OnInit {
   delete(e: SlaEscalation): void {
     Swal.fire({ title: '¿Eliminar?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' })
       .then((r) => { if (r.isConfirmed) this.adminService.deleteEscalation(e.idEscalation).subscribe({ next: () => this.load(), error: (err) => this.toastService.error(err?.error?.message || 'No se pudo eliminar') }); });
-  }
-
-  /** Texto de la acción, el mismo que se elige en el formulario. */
-  etiquetaAccion(accion: string): string {
-    return ACCIONES[accion] ?? accion;
   }
 
   getPolicyName(id: string): string {
@@ -122,9 +153,3 @@ export class EscalationManagementComponent implements OnInit {
     return this.templates.find(t => t.idTemplate === id)?.colorTemplate || '#64748B';
   }
 }
-
-const ACCIONES: Record<string, string> = {
-  NOTIFY_SUPERVISOR: 'Notificar al supervisor',
-  ESCALATE: 'Escalar',
-  REASSIGN: 'Reasignar'
-};

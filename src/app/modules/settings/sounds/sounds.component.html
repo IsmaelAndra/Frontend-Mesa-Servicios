@@ -72,7 +72,7 @@
             >
               <span
                 class="w-1.5 h-1.5 rounded-full"
-                [ngClass]="sonidoGlobal ? 'bg-success-content' : 'bg-base-content/40'"
+                [ngClass]="sonidoGlobal ? 'bg-primary-content animate-pulse' : 'bg-base-content/40 animate-pulse'"
               ></span>
               {{ sonidoGlobal ? "Activado" : "Apagado" }}
             </span>
@@ -110,10 +110,26 @@
   </div>
 
   <!-- ============================ GRUPOS ============================ -->
+  <!--
+    Urgente y Suave van apilados en la columna izquierda y Normal (la lista más
+    larga) ocupa la derecha. En una rejilla de dos columnas, Urgente quedaba al
+    lado de Normal y debajo de él se abría un hueco enorme hasta Suave.
+  -->
   <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+    <div class="space-y-4 min-w-0">
+      <ng-container *ngFor="let grupo of gruposLaterales; trackBy: trackGrupo">
+        <ng-container *ngTemplateOutlet="tarjetaGrupo; context: { $implicit: grupo }"></ng-container>
+      </ng-container>
+    </div>
+    <div class="space-y-4 min-w-0">
+      <ng-container *ngFor="let grupo of gruposPrincipales; trackBy: trackGrupo">
+        <ng-container *ngTemplateOutlet="tarjetaGrupo; context: { $implicit: grupo }"></ng-container>
+      </ng-container>
+    </div>
+  </div>
 
+  <ng-template #tarjetaGrupo let-grupo>
     <div
-      *ngFor="let grupo of grupos"
       class="card bg-base-100 shadow-md border border-base-200 border-t-4 rounded-[1.5rem] overflow-hidden"
       [ngClass]="{
         'border-t-error': grupo.urgencia === 'urgent',
@@ -146,7 +162,7 @@
               urgent: 'fa-solid fa-bell',
               normal: 'fa-solid fa-bell',
               soft: 'fa-regular fa-bell'
-            }[grupo.urgencia]"
+            }[urgenciaDe(grupo)]"
           ></i>
         </div>
 
@@ -162,9 +178,9 @@
               }"
             >
               <span
-                class="w-1.5 h-1.5 rounded-full"
+                class="w-1.5 h-1.5 rounded-full animate-pulse"
                 [ngClass]="{
-                  'bg-error-content': grupo.urgencia === 'urgent',
+                  'bg-white': grupo.urgencia === 'urgent',
                   'bg-primary-content': grupo.urgencia === 'normal',
                   'bg-secondary-content': grupo.urgencia === 'soft'
                 }"
@@ -196,7 +212,9 @@
           *ngFor="let item of grupo.tipos"
           class="px-5 py-3 transition-colors hover:bg-base-200/30"
         >
-          <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:items-center">
+          <!-- Nombre arriba (entero) y controles debajo: en dos columnas, con
+               todo en una línea el nombre se cortaba ("SLA venc…"). -->
+          <div class="flex flex-col gap-2.5">
 
             <!-- Icono + nombre + tipo -->
             <div class="flex items-center gap-3 min-w-0">
@@ -215,7 +233,7 @@
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2 flex-wrap">
                   <p
-                    class="text-sm font-semibold truncate"
+                    class="text-sm font-semibold leading-snug"
                     [class.opacity-40]="!item.config.enabled"
                     [title]="item.etiqueta"
                   >
@@ -240,7 +258,7 @@
             </div>
 
             <!-- Controles -->
-            <div class="flex items-center gap-2 flex-wrap md:flex-nowrap md:justify-end">
+            <div class="flex items-center gap-2 flex-wrap pl-12">
 
               <!-- Grupo de urgencia (solo lo configura el SUPER_ADMIN) -->
               <div
@@ -347,7 +365,7 @@
               <!-- Toggle final -->
               <input
                 type="checkbox"
-                class="toggle toggle-primary toggle-sm shrink-0"
+                class="toggle toggle-primary toggle-sm shrink-0 ml-auto"
                 [checked]="item.config.enabled"
                 (change)="
                   cambiarHabilitado(item.tipo, item.config, $any($event.target).checked)
@@ -359,7 +377,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </ng-template>
 
   <!-- ============================ AVISO MP3 ============================ -->
   <div

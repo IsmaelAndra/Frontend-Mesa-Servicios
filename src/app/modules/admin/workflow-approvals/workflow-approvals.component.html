@@ -8,17 +8,19 @@
       </div>
       <div class="min-w-0">
         <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">
-          Aprobaciones pendientes
+          Aprobaciones
         </h1>
         <p class="text-sm opacity-70">
-          Pasos de las automatizaciones que esperan su decisión
+          {{ esAprobador
+            ? "Solicitudes que esperan su decisión y las que usted originó"
+            : "Sus solicitudes y la respuesta del super administrador" }}
         </p>
       </div>
     </div>
 
     <div class="flex items-center gap-2 shrink-0">
       <span
-        *ngIf="!cargando() && pendientes().length > 0"
+        *ngIf="!cargando() && vista() === 'decidir' && pendientes().length > 0"
         class="badge badge-lg badge-warning text-warning-content gap-2 font-semibold py-3 px-4"
       >
         <span class="w-2 h-2 rounded-full bg-warning-content animate-pulse"></span>
@@ -42,6 +44,35 @@
     </div>
   </header>
 
+  <!-- ============================ PESTAÑAS ============================ -->
+  <div class="flex flex-wrap gap-2" role="tablist">
+    <button
+      *ngIf="esAprobador"
+      type="button"
+      role="tab"
+      class="btn btn-sm gap-2 rounded-full"
+      [class.btn-primary]="vista() === 'decidir'"
+      [class.btn-ghost]="vista() !== 'decidir'"
+      [attr.aria-selected]="vista() === 'decidir'"
+      (click)="verVista('decidir')"
+    >
+      <i class="fa-solid fa-gavel" aria-hidden="true"></i>
+      Por decidir
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="btn btn-sm gap-2 rounded-full"
+      [class.btn-primary]="vista() === 'mias'"
+      [class.btn-ghost]="vista() !== 'mias'"
+      [attr.aria-selected]="vista() === 'mias'"
+      (click)="verVista('mias')"
+    >
+      <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+      Mis solicitudes
+    </button>
+  </div>
+
   <!-- ============================ LOADING ============================ -->
   <div
     *ngIf="cargando()"
@@ -52,9 +83,79 @@
     <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
   </div>
 
+  <!-- ============================ MIS SOLICITUDES ============================ -->
+  <ng-container *ngIf="!cargando() && vista() === 'mias'">
+    <div
+      *ngIf="mias().length === 0"
+      class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+    >
+      <div class="card-body items-center text-center py-12 gap-3">
+        <div class="p-4 rounded-2xl bg-primary/10 text-primary" aria-hidden="true">
+          <i class="fa-solid fa-paper-plane text-4xl"></i>
+        </div>
+        <h2 class="font-bold text-lg mt-1">Sin solicitudes</h2>
+        <p class="text-sm opacity-70 max-w-sm">
+          Cuando una acción suya necesite la aprobación del super administrador,
+          verá aquí si la aceptó o no.
+        </p>
+      </div>
+    </div>
+
+    <div *ngIf="mias().length > 0" class="space-y-3">
+      <div
+        *ngFor="let a of mias()"
+        class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem] overflow-hidden"
+      >
+        <div class="card-body p-5 gap-2">
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <h3 class="font-semibold text-sm leading-tight break-words min-w-0 flex-1">
+              {{ a.solicitud ?? "Solicitud de aprobación" }}
+            </h3>
+            <span class="badge badge-sm gap-1.5 font-medium shrink-0" [ngClass]="estado(a).clase">
+              <i [class]="estado(a).icono + ' text-[10px]'" aria-hidden="true"></i>
+              {{ estado(a).texto }}
+            </span>
+          </div>
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs opacity-70">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-diagram-project text-[10px]" aria-hidden="true"></i>
+              {{ a.workflowName ?? "Automatización" }}
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-regular fa-calendar text-[10px]" aria-hidden="true"></i>
+              Solicitada {{ fecha(a.createdAt) }}
+            </span>
+            <span *ngIf="a.decidedAt" class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-user-shield text-[10px]" aria-hidden="true"></i>
+              {{ a.decidedBy ?? "Super administrador" }} · {{ fecha(a.decidedAt) }}
+            </span>
+          </div>
+          <div *ngIf="a.entityLabel">
+            <a
+              [routerLink]="['/tickets', a.entityId]"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/15 text-primary text-xs font-medium transition-colors"
+            >
+              <i class="fa-solid fa-ticket text-[10px]" aria-hidden="true"></i>
+              {{ a.entityLabel }}
+            </a>
+          </div>
+          <p
+            *ngIf="a.comment"
+            class="text-sm rounded-lg bg-base-200/60 px-3 py-2 border-l-4"
+            [class.border-l-error]="a.status === 'REJECTED'"
+            [class.border-l-success]="a.status !== 'REJECTED'"
+          >
+            <i class="fa-solid fa-quote-left text-[10px] opacity-50 mr-1" aria-hidden="true"></i>
+            {{ a.comment }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
   <!-- ============================ VACIO ============================ -->
   <div
-    *ngIf="!cargando() && pendientes().length === 0"
+    *ngIf="!cargando() && vista() === 'decidir' && pendientes().length === 0"
     class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
   >
     <div class="card-body items-center text-center py-12 gap-3">
@@ -73,7 +174,7 @@
   </div>
 
   <!-- ============================ LISTA ============================ -->
-  <div *ngIf="!cargando() && pendientes().length > 0" class="space-y-3">
+  <div *ngIf="!cargando() && vista() === 'decidir' && pendientes().length > 0" class="space-y-3">
 
     <div
       *ngFor="let a of pendientes()"
@@ -129,7 +230,7 @@
               </span>
               <span class="inline-flex items-center gap-1">
                 <i class="fa-solid fa-user-shield text-[10px]" aria-hidden="true"></i>
-                Pide un {{ a.requiredRole }} o superior
+                {{ a.requestedBy ? "Solicita " + a.requestedBy : "Solicitud automática" }}
               </span>
               <span class="inline-flex items-center gap-1">
                 <i class="fa-regular fa-calendar text-[10px]" aria-hidden="true"></i>

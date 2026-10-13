@@ -2,12 +2,12 @@
   <!-- Encabezado -->
   <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div class="flex items-center gap-3">
-      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
-        <i class="fa-solid fa-arrow-trend-up text-2xl"></i>
+      <div class="page-head__icono p-2 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-arrow-trend-up text-xl"></i>
       </div>
       <div>
-        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">Gestión de Escalaciones</h1>
-        <p class="text-sm opacity-70">Configura reglas de escalamiento automático por SLA</p>
+        <h1 class="page-head__titulo text-xl sm:text-2xl font-bold text-primary">Gestión de Escalaciones</h1>
+        <p class="text-xs opacity-70">Configura reglas de escalamiento automático por SLA</p>
       </div>
     </div>
 
@@ -35,15 +35,7 @@
               Política SLA <span class="text-error">*</span>
             </span>
           </div>
-          <select
-            [(ngModel)]="newEsc.slaPolicyId"
-            name="slaPolicyId"
-            class="select select-bordered select-sm w-full"
-            required
-          >
-            <option [ngValue]="null" disabled>Seleccione política</option>
-            <option *ngFor="let p of policies" [ngValue]="p.idSlaPolicy">{{ p.nameSlaPolicy }}</option>
-          </select>
+          <app-master-select [(ngModel)]="newEsc.slaPolicyId" name="slaPolicyId" [options]="policyOptions" icon="fa-solid fa-stopwatch" placeholder="Seleccione política" label="Política SLA"></app-master-select>
           <div class="label pt-1" *ngIf="newEsc.slaPolicyId">
             <span class="label-text-alt text-xs opacity-70 inline-flex items-center gap-1.5">
               <i [class]="policyIcon(newEsc.slaPolicyId)" aria-hidden="true"></i>
@@ -81,16 +73,7 @@
               Acción <span class="text-error">*</span>
             </span>
           </div>
-          <select
-            [(ngModel)]="newEsc.actionType"
-            name="actionType"
-            class="select select-bordered select-sm w-full"
-            required
-          >
-            <option value="NOTIFY_SUPERVISOR">Notificar al supervisor</option>
-            <option value="ESCALATE">Escalar</option>
-            <option value="REASSIGN">Reasignar</option>
-          </select>
+          <app-master-select [(ngModel)]="newEsc.actionType" name="actionType" [options]="accionOptions" icon="fa-solid fa-bolt" placeholder="Seleccione acción" label="Acción"></app-master-select>
         </div>
 
         <!-- Equipo destino -->
@@ -98,7 +81,7 @@
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">Equipo destino</span>
           </div>
-<app-master-select
+<app-master-select icon="fa-solid fa-users"
               [(ngModel)]="newEsc.destinationTeamId"
               name="destinationTeamId"
               [options]="teamOptions"
@@ -109,21 +92,20 @@
             ></app-master-select>
           </div>
 
-        <!-- Usuario destino -->
+        <!-- Usuario destino (los ids son uuid: antes era un campo numérico que no servía) -->
         <div class="form-control w-full">
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">Usuario destino</span>
           </div>
-          <div class="input input-bordered input-sm flex items-center gap-2 w-full">
-            <i class="fa-regular fa-user text-[15px] opacity-50" aria-hidden="true"></i>
-            <input
-              type="number"
-              [(ngModel)]="newEsc.destinationUserId"
-              name="destinationUserId"
-              class="grow bg-transparent outline-none"
-              placeholder="ID Usuario"
-            />
-          </div>
+          <app-master-select
+            [(ngModel)]="newEsc.destinationUserId"
+            name="destinationUserId"
+            [options]="agenteOptions"
+            [allowEmpty]="true"
+            emptyLabel="Ninguno"
+            placeholder="Ninguno"
+            label="Usuario destino"
+          ></app-master-select>
         </div>
 
         <!-- Plantilla notificación -->
@@ -131,14 +113,7 @@
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">Plantilla de notificación</span>
           </div>
-          <select
-            [(ngModel)]="newEsc.notificationTemplateId"
-            name="notificationTemplateId"
-            class="select select-bordered select-sm w-full"
-          >
-            <option [ngValue]="null">Sin plantilla</option>
-            <option *ngFor="let t of templates" [ngValue]="t.idTemplate">{{ t.nameTemplate }}</option>
-          </select>
+          <app-master-select [(ngModel)]="newEsc.notificationTemplateId" name="notificationTemplateId" [options]="templateOptions" [allowEmpty]="true" emptyLabel="Sin plantilla" placeholder="Sin plantilla" icon="fa-regular fa-envelope" label="Plantilla de notificación"></app-master-select>
           <div class="label pt-1">
             <span class="label-text-alt text-xs opacity-60">
               Correo que se envía al ejecutar la escalación.
@@ -188,9 +163,7 @@
                     <div class="label pt-0 pb-1">
                       <span class="label-text text-xs font-medium">Política SLA</span>
                     </div>
-                    <select [(ngModel)]="editEsc!.slaPolicyId" class="select select-bordered select-sm w-full">
-                      <option *ngFor="let p of policies" [ngValue]="p.idSlaPolicy">{{ p.nameSlaPolicy }}</option>
-                    </select>
+                    <app-master-select [(ngModel)]="editEsc!.slaPolicyId" [options]="policyOptions" icon="fa-solid fa-stopwatch" placeholder="Seleccione política" label="Política SLA"></app-master-select>
                   </div>
 
                   <div class="form-control">
@@ -210,18 +183,14 @@
                     <div class="label pt-0 pb-1">
                       <span class="label-text text-xs font-medium">Acción</span>
                     </div>
-                    <select [(ngModel)]="editEsc!.actionType" class="select select-bordered select-sm w-full">
-                      <option value="NOTIFY_SUPERVISOR">Notificar al supervisor</option>
-                      <option value="ESCALATE">Escalar</option>
-                      <option value="REASSIGN">Reasignar</option>
-                    </select>
+                    <app-master-select [(ngModel)]="editEsc!.actionType" [options]="accionOptions" icon="fa-solid fa-bolt" placeholder="Seleccione acción" label="Acción"></app-master-select>
                   </div>
 
                   <div class="form-control">
                     <div class="label pt-0 pb-1">
                       <span class="label-text text-xs font-medium">Equipo destino</span>
                     </div>
-<app-master-select
+<app-master-select icon="fa-solid fa-users"
                         [(ngModel)]="editEsc!.destinationTeamId"
                         [options]="teamOptions"
                         [allowEmpty]="true"
@@ -235,13 +204,7 @@
                     <div class="label pt-0 pb-1">
                       <span class="label-text text-xs font-medium">Plantilla</span>
                     </div>
-                    <select
-                      [(ngModel)]="editEsc!.notificationTemplateId"
-                      class="select select-bordered select-sm w-full"
-                    >
-                      <option [ngValue]="null">Sin plantilla</option>
-                      <option *ngFor="let t of templates" [ngValue]="t.idTemplate">{{ t.nameTemplate }}</option>
-                    </select>
+                    <app-master-select [(ngModel)]="editEsc!.notificationTemplateId" [options]="templateOptions" [allowEmpty]="true" emptyLabel="Sin plantilla" placeholder="Sin plantilla" icon="fa-regular fa-envelope" label="Plantilla de notificación"></app-master-select>
                   </div>
 
                   <div class="col-span-2 md:col-span-3 xl:col-span-5 flex justify-end gap-2 pt-2 border-t border-base-200">
@@ -260,21 +223,16 @@
 
             <!-- Modo lectura -->
             <tr *ngIf="editEsc?.idEscalation !== e.idEscalation" class="hover:bg-base-200/50 transition-colors">
-              <td>
-                <div class="flex items-center gap-2">
-                  <div
-                    class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
-                    [style.background-color]="policyColor(e.slaPolicyId) + '22'"
-                    [style.color]="policyColor(e.slaPolicyId)"
-                    aria-hidden="true"
-                  >
-                    <i [class]="policyIcon(e.slaPolicyId)" class="text-[15px]"></i>
-                  </div>
-                  <span class="font-medium whitespace-nowrap">{{ getPolicyName(e.slaPolicyId) }}</span>
-                </div>
+              <td class="text-center">
+                <span class="badge badge-sm kanban-tag border gap-1.5 font-medium whitespace-nowrap"
+                  [style.background-color]="policyColor(e.slaPolicyId) + '1F'" [style.border-color]="policyColor(e.slaPolicyId)"
+                  [style.color]="policyColor(e.slaPolicyId)" [style.--bc]="policyColor(e.slaPolicyId)">
+                  <i [class]="policyIcon(e.slaPolicyId)" class="text-[10px]" aria-hidden="true"></i>
+                  {{ getPolicyName(e.slaPolicyId) }}
+                </span>
               </td>
 
-              <td>
+              <td class="text-center">
                 <div class="flex flex-col items-center gap-1">
                   <span class="badge badge-sm badge-outline font-mono">{{ e.triggerPercentage }}%</span>
                   <progress
@@ -285,29 +243,22 @@
                 </div>
               </td>
 
-              <td>
-                <span
-                  class="badge badge-sm gap-1 whitespace-nowrap"
-                  [title]="e.actionType"
-                  [ngClass]="{
-                    'badge-warning': e.actionType === 'NOTIFY_SUPERVISOR',
-                    'badge-error': e.actionType === 'ESCALATE',
-                    'badge-info': e.actionType === 'REASSIGN'
-                  }"
-                >
-                  <i *ngIf="e.actionType === 'NOTIFY_SUPERVISOR'" class="fa-regular fa-bell text-xs" aria-hidden="true"></i>
-                  <i *ngIf="e.actionType === 'ESCALATE'" class="fa-solid fa-arrow-up text-xs" aria-hidden="true"></i>
-                  <i *ngIf="e.actionType === 'REASSIGN'" class="fa-solid fa-arrow-right-arrow-left text-xs" aria-hidden="true"></i>
-                  {{ etiquetaAccion(e.actionType) }}
+              <td class="text-center">
+                <span *ngIf="metaAccion(e.actionType) as m"
+                  class="badge badge-sm kanban-tag border gap-1.5 font-medium whitespace-nowrap"
+                  [style.background-color]="m.color + '1F'" [style.border-color]="m.color"
+                  [style.color]="m.color" [style.--bc]="m.color" [title]="m.label">
+                  <i [class]="m.icon" class="text-[10px]" aria-hidden="true"></i>
+                  {{ m.label }}
                 </span>
               </td>
 
-              <td>
+              <td class="text-center">
                 <span
                   *ngIf="e.destinationTeamId; else sinEquipo"
-                  class="badge badge-sm gap-1.5"
-                  [style.background-color]="teamColor(e.destinationTeamId) + '22'"
-                  [style.color]="teamColor(e.destinationTeamId)"
+                  class="badge badge-sm kanban-tag border gap-1.5 font-medium whitespace-nowrap"
+                  [style.background-color]="teamColor(e.destinationTeamId) + '1F'"
+                  [style.border-color]="teamColor(e.destinationTeamId)" [style.color]="teamColor(e.destinationTeamId)" [style.--bc]="teamColor(e.destinationTeamId)"
                 >
                   <i [class]="teamIcon(e.destinationTeamId)" class="text-xs" aria-hidden="true"></i>
                   {{ getTeamName(e.destinationTeamId) }}
@@ -317,11 +268,11 @@
                 </ng-template>
               </td>
 
-              <td>
+              <td class="text-center">
                 <span
-                  class="badge badge-sm gap-1.5"
-                  [style.background-color]="templateColor(e.notificationTemplateId) + '22'"
-                  [style.color]="templateColor(e.notificationTemplateId)"
+                  class="badge badge-sm kanban-tag border gap-1.5 font-medium whitespace-nowrap"
+                  [style.background-color]="templateColor(e.notificationTemplateId) + '1F'"
+                  [style.border-color]="templateColor(e.notificationTemplateId)" [style.color]="templateColor(e.notificationTemplateId)" [style.--bc]="templateColor(e.notificationTemplateId)"
                 >
                   <i [class]="templateIcon(e.notificationTemplateId)" class="text-xs" aria-hidden="true"></i>
                   {{ templateName(e.notificationTemplateId) }}
@@ -372,7 +323,6 @@
     [total]="escalations.length"
     [page]="pagEscalations.page"
     [pageSize]="pagEscalations.pageSize"
-    [mostrarResumen]="false"
     (pageChange)="pagEscalations.cambiarPagina($event)"
     (pageSizeChange)="pagEscalations.cambiarTamano($event)"
     ></app-paginator>

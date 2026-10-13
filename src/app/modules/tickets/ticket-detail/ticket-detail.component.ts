@@ -1224,6 +1224,28 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     return `mailto:${correo}?subject=${asunto}`;
   }
 
+  /**
+   * Enlace de llamada de Microsoft Teams al correo del solicitante. Abre Teams
+   * (aplicación o web) con la llamada lista para iniciar; antes era un tel: que
+   * solo funcionaba si la ficha tenía teléfono y el equipo sabía marcarlo.
+   */
+  teamsLlamada(): string {
+    const correo = this.ficha?.solicitante?.corporateEmailUser || "";
+    return `https://teams.microsoft.com/l/call/0/0?users=${encodeURIComponent(correo)}`;
+  }
+
+  /** Rol en español para la ficha (antes salía el código: USER). */
+  etiquetaRol(rol?: string | null): string {
+    const nombres: Record<string, string> = {
+      SUPER_ADMIN: "Super administrador",
+      ADMIN: "Administrador",
+      AGENT: "Agente",
+      USER: "Usuario",
+      AREA_MANAGER: "Jefe de área",
+    };
+    return (rol && nombres[rol]) || rol || "—";
+  }
+
   trackTicketHistorial = (_: number, t: { idTicket: string }) => t.idTicket;
   trackEstadoFicha = (_: number, e: { estado: string }) => e.estado;
   trackMesFicha = (i: number) => i;

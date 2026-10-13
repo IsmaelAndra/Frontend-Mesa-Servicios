@@ -56,7 +56,7 @@ export class TicketListComponent implements OnInit {
       next: (c) => (this.catalog = c),
       error: () => undefined
     });
-    if (this.role !== 'USER') {
+    if (!this.esUsuarioFinal) {
       this.router.navigate(['/tickets/kanban'], { replaceUrl: true });
       return;
     }
@@ -67,7 +67,7 @@ export class TicketListComponent implements OnInit {
     this.loading = true;
 
     const effectiveMode: 'all' | 'mine' | 'assigned' = this.mode === 'all'
-      ? (this.role === 'USER' ? 'mine' : this.role === 'AGENT' ? 'assigned' : 'all')
+      ? (this.esUsuarioFinal ? 'mine' : this.role === 'AGENT' ? 'assigned' : 'all')
       : this.mode;
 
     if (effectiveMode === 'mine') {
@@ -161,11 +161,16 @@ const matchStatus = !this.status || t.status === this.status;
   }
 
   get isUser(): boolean {
-    return this.role === 'USER';
+    return this.esUsuarioFinal;
   }
 
   get isAgent(): boolean {
     return this.role === 'AGENT';
+  }
+
+  /** Usuario final: USER o jefe de área (fuera de Activos es un usuario más). */
+  private get esUsuarioFinal(): boolean {
+    return this.role === 'USER' || this.role === 'AREA_MANAGER';
   }
 
   color(priority: string): string {

@@ -621,3 +621,7 @@
   font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
+
+/* Desplegables del encabezado (estado y "Asignar a"): el color de hover y de
+   la opción activa va en ticket-detail-ficha.css (.menu-colores), con el color
+   de cada estado. Aquí había un degradado azul igual para todos. */

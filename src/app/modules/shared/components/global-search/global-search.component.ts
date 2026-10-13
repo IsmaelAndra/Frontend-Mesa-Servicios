@@ -21,7 +21,8 @@ type GrupoClave =
   | 'users'
   | 'teams'
   | 'areas'
-  | 'workflows';
+  | 'workflows'
+  | 'assets';
 
 interface GrupoDef {
   clave: GrupoClave;
@@ -78,6 +79,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
     { clave: 'users', etiqueta: 'Usuarios', icono: 'fa-regular fa-user', color: 'text-secondary' },
     { clave: 'teams', etiqueta: 'Equipos', icono: 'fa-solid fa-users', color: 'text-success' },
     { clave: 'areas', etiqueta: 'Áreas', icono: 'fa-solid fa-building-columns', color: 'text-warning' },
+    { clave: 'assets', etiqueta: 'Activos de TI', icono: 'fa-solid fa-laptop', color: 'text-accent' },
     { clave: 'workflows', etiqueta: 'Workflows', icono: 'fa-solid fa-diagram-project', color: 'text-error' },
   ];
 
@@ -233,6 +235,9 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
       case 'areas':
         this.router.navigate(['/admin/areas']);
         break;
+      case 'assets':
+        this.router.navigate(['/activos']);
+        break;
       case 'workflows':
         this.router.navigate(['/workflows']);
         break;
@@ -259,7 +264,8 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
           r.users.length === 0 &&
           r.teams.length === 0 &&
           r.areas.length === 0 &&
-          r.workflows.length === 0;
+          r.workflows.length === 0 &&
+          r.assets.length === 0;
         this.reconstruirFilas();
       },
       error: () => {
@@ -310,6 +316,17 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
           titulo: a.nameArea,
           detalle: a.descriptionArea || '',
           navegar: () => this.router.navigate(['/admin/areas']),
+        });
+      }
+      for (const a of r.assets || []) {
+        filas.push({
+          grupo: 'assets',
+          pos: 0,
+          titulo: `${a.codeAsset} · ${a.nameAsset}`,
+          detalle: a.assignedUserName
+            ? `${a.typeAsset} · ${a.statusAsset} · ${a.assignedUserName}`
+            : `${a.typeAsset} · ${a.statusAsset}`,
+          navegar: () => this.router.navigate(['/activos', a.idAsset]),
         });
       }
       for (const w of r.workflows || []) {

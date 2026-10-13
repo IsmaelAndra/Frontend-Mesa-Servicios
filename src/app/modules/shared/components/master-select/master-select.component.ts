@@ -11,7 +11,9 @@ import {
   SimpleChanges,
   ViewChild,
   forwardRef,
-  inject
+  inject,
+  EventEmitter,
+  Output,
 } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -19,12 +21,24 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 /**
  * Opción de un dato maestro (tipo de ticket, prioridad, área, categoría,
  * estado...). El icono y el color vienen del propio maestro, no de un mapa.
+ *
+ * `avatar` y `sessionState` son para cuando la opción es una persona: en el
+ * desplegable de "Asignar a" hay que distinguir a varios usuarios con el mismo
+ * nombre, y el punto de presencia dice de un vistazo quién está conectado.
  */
 export interface MasterOption {
   value: unknown;
   label: string;
   icon?: string;
   color?: string;
+  /** URL (ya absoluta) de la foto; sin ella se pinta `initials`. */
+  avatar?: string | null;
+  /** Iniciales a mostrar cuando no hay foto. */
+  initials?: string;
+  /** Estado de sesión (EN_LINEA / RECIENTE / DESCONECTADO) para el punto de presencia. */
+  sessionState?: string | null;
+  /** Segunda línea pequeña (área, correo...) para distinguir a dos personas con el mismo nombre. */
+  detail?: string | null;
 }
 
 /** Opción con el índice y el id de DOM que necesita la navegación por teclado. */
@@ -59,6 +73,8 @@ interface MasterOptionView extends MasterOption {
                focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary
                disabled:opacity-60 disabled:cursor-not-allowed"
         [class.bg-base-200]="disabled"
+        [style.background-color]="tono ? tono + '14' : null"
+        [style.border-color]="tono ? tono + '66' : null"
         [disabled]="disabled"
         [attr.aria-expanded]="open"
         aria-haspopup="listbox"
@@ -67,16 +83,39 @@ interface MasterOptionView extends MasterOption {
         [attr.aria-activedescendant]="open && activeId ? activeId : null"
         (click)="toggle()"
       >
+        <!-- Persona: siempre el mismo círculo (foto o iniciales), nunca el icono. -->
+        <span *ngIf="personas && selected" class="relative shrink-0 w-6 h-6 inline-flex">
+          <img
+            *ngIf="fotoValida(selected.avatar)"
+            [src]="selected.avatar"
+            alt=""
+            class="w-6 h-6 rounded-full object-cover"
+            (error)="marcarFotoRota(selected.avatar)"
+          />
+          <span
+            *ngIf="!fotoValida(selected.avatar)"
+            class="w-6 h-6 rounded-full bg-primary/15 text-primary flex items-center justify-center text-[10px] font-semibold"
+            aria-hidden="true"
+            >{{ selected.initials || '?' }}</span
+          >
+          <app-presence-dot
+            *ngIf="selected.sessionState"
+            class="absolute -bottom-0.5 -right-0.5"
+            [state]="selected.sessionState"
+          />
+        </span>
         <i
-          *ngIf="selected?.icon"
+          *ngIf="!personas && (selected?.icon || icon)"
           class="shrink-0 text-sm leading-none"
-          [ngClass]="selected!.icon"
-          [style.color]="selected!.color || null"
+          [ngClass]="selected?.icon || icon"
+          [class.opacity-50]="!selected"
+          [style.color]="selected?.color || null"
           aria-hidden="true"
         ></i>
         <span
           class="min-w-0 flex-1 truncate"
           [ngClass]="selected ? '' : 'text-base-content/50'"
+          [class.font-medium]="!!tono"
           [style.color]="selected?.color || null"
         >
           {{ selected ? selected.label : placeholder }}
@@ -109,20 +148,58 @@ interface MasterOptionView extends MasterOption {
           [id]="view.optionId"
           role="option"
           class="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer transition-colors"
-          [class.bg-base-200]="view.viewIndex === highlighted"
+          [class.bg-base-200]="view.viewIndex === highlighted && !colorHex(view.color)"
+          [style.background-color]="view.viewIndex === highlighted && colorHex(view.color) ? view.color + '1A' : null"
           [attr.aria-selected]="view.value === value"
           (click)="select(view)"
           (mouseenter)="highlight(view.viewIndex)"
         >
-          <i
-            *ngIf="view.icon"
-            class="shrink-0 text-sm leading-none w-4 text-center"
-            [ngClass]="view.icon"
-            [style.color]="view.color || null"
-            aria-hidden="true"
-          ></i>
-          <span *ngIf="!view.icon" class="shrink-0 w-4" aria-hidden="true"></span>
-          <span class="min-w-0 flex-1 truncate" [style.color]="view.color || null">{{ view.label }}</span>
+          <!--
+            En una lista de personas cada fila lleva un único círculo del mismo
+            tamaño (foto, iniciales o "sin asignar"). Antes una fila sin foto
+            pintaba además el hueco reservado al icono y quedaba más a la derecha
+            que las que sí tenían foto.
+          -->
+          <ng-container *ngIf="personas; else filaConIcono">
+            <span class="relative shrink-0 w-7 h-7 inline-flex">
+              <img
+                *ngIf="fotoValida(view.avatar)"
+                [src]="view.avatar"
+                alt=""
+                class="w-7 h-7 rounded-full object-cover"
+                (error)="marcarFotoRota(view.avatar)"
+              />
+              <span
+                *ngIf="!fotoValida(view.avatar)"
+                class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold"
+                [ngClass]="view.value == null ? 'bg-base-200 text-base-content/50' : 'bg-primary/15 text-primary'"
+                aria-hidden="true"
+              >
+                <i *ngIf="view.value == null" class="fa-solid fa-user-slash text-[10px]"></i>
+                <ng-container *ngIf="view.value != null">{{ view.initials || '?' }}</ng-container>
+              </span>
+              <app-presence-dot
+                *ngIf="view.sessionState"
+                class="absolute -bottom-0.5 -right-0.5"
+                [state]="view.sessionState"
+              />
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate">{{ view.label }}</span>
+              <span *ngIf="view.detail" class="block text-[11px] opacity-60 truncate">{{ view.detail }}</span>
+            </span>
+          </ng-container>
+          <ng-template #filaConIcono>
+            <i
+              *ngIf="view.icon || (icon && view.value != null)"
+              class="shrink-0 text-sm leading-none w-4 text-center"
+              [ngClass]="view.icon || icon"
+              [style.color]="view.color || null"
+              aria-hidden="true"
+            ></i>
+            <span *ngIf="!view.icon && !(icon && view.value != null)" class="shrink-0 w-4" aria-hidden="true"></span>
+            <span class="min-w-0 flex-1 truncate" [style.color]="view.color || null">{{ view.label }}</span>
+          </ng-template>
           <i
             *ngIf="view.value === value"
             class="fa-solid fa-check text-[10px] shrink-0"
@@ -157,9 +234,30 @@ export class MasterSelectComponent implements ControlValueAccessor, OnChanges, O
   /** Muestra la opción "Sin especificar" como primera fila. */
   @Input() allowEmpty = false;
   @Input() emptyLabel = 'Sin especificar';
+  /**
+   * Icono genérico del select (lo que elige: equipo, prioridad, política...).
+   * Se pinta en las opciones que no traen el suyo y junto al placeholder.
+   */
+  @Input() icon = '';
+  /** Se emite solo cuando la persona elige una opción (no al cargar el valor por código). */
+  @Output() elegido = new EventEmitter<unknown>();
 
   value: unknown = null;
   open = false;
+  /** La lista es de personas (alguna opción trae foto o iniciales). */
+  personas = false;
+  /** Fotos que no cargaron: se cambian por las iniciales en vez de dejar la imagen rota. */
+  private readonly fotosRotas = new Set<string>();
+
+  fotoValida(url?: string | null): boolean {
+    return !!url && !this.fotosRotas.has(url);
+  }
+
+  marcarFotoRota(url?: string | null): void {
+    if (!url) return;
+    this.fotosRotas.add(url);
+    this.cdr.markForCheck();
+  }
   /** Índice de la opción resaltada, ya sea la vacía o una de `options`. */
   highlighted = 0;
 
@@ -220,6 +318,7 @@ export class MasterSelectComponent implements ControlValueAccessor, OnChanges, O
   trackByIndex = (index: number, view: MasterOptionView): string => view.optionId;
 
   private rebuild(): void {
+    this.personas = this.options.some((o) => o.avatar !== undefined || o.initials !== undefined);
     const rows: MasterOption[] = this.allowEmpty
       ? [{ value: null, label: this.emptyLabel }, ...this.options]
       : this.options;
@@ -248,6 +347,17 @@ export class MasterSelectComponent implements ControlValueAccessor, OnChanges, O
   }
 
   /** La opción que coincide con el valor actual, para pintar icono y color. */
+  /** Color (#rrggbb) de la opción elegida: tiñe el fondo y el borde del botón, como el estado del ticket. */
+  get tono(): string | null {
+    if (this.personas || this.disabled) return null;
+    const c = this.selected?.color;
+    return this.colorHex(c) ? c! : null;
+  }
+
+  colorHex(c?: string | null): boolean {
+    return !!c && /^#[0-9a-f]{6}$/i.test(c);
+  }
+
   get selected(): MasterOption | null {
     if (this.value === null || this.value === undefined) return null;
     return this.options.find(o => o.value === this.value) ?? null;
@@ -304,6 +414,7 @@ export class MasterSelectComponent implements ControlValueAccessor, OnChanges, O
     // reevalúen también al elegir otra opción de la lista.
     this.onChange(view.value);
     this.onTouched();
+    this.elegido.emit(view.value);
     this.cdr.markForCheck();
   }
 
@@ -393,7 +504,10 @@ export class MasterSelectComponent implements ControlValueAccessor, OnChanges, O
     const haciaArriba = abajo < alto + margen * 2 && r.top > abajo;
 
     panel.style.position = 'fixed';
-    panel.style.zIndex = '1100'; // por encima del modal de daisyUI (999)
+    // Por encima de cualquier diálogo: el modal de daisyUI usa 999 y los
+    // p-dialog de PrimeNG se apilan desde 1100 hacia arriba (con 1100 la lista
+    // quedaba debajo del diálogo de "Asignar activo").
+    panel.style.zIndex = '5000';
     panel.style.left = `${Math.max(margen, r.left)}px`;
     panel.style.width = `${r.width}px`;
     panel.style.top = haciaArriba ? `${Math.max(margen, r.top - alto - margen)}px` : `${r.bottom + margen}px`;

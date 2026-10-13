@@ -56,6 +56,11 @@ export const routes: Routes = [
       // hijas en su *.routes.ts.
       { path: 'tickets', canActivate: [AuthGuard], loadChildren: () => import('./modules/tickets/tickets.module').then((m) => m.TicketsModule) },
 
+      // Inventario de activos de TI. Cualquiera con sesión entra a la lista (el
+      // servidor filtra qué ve: USER solo lo suyo), pero crear/editar queda para
+      // ADMIN/SUPER_ADMIN/AREA_MANAGER (lo comprueba también el RoleGuard interno).
+      { path: 'activos', canActivate: [AuthGuard], loadChildren: () => import('./modules/assets/assets.module').then((m) => m.AssetsModule) },
+
       {
         path: 'admin',
         canActivate: [AuthGuard, RoleGuard],
@@ -73,10 +78,11 @@ export const routes: Routes = [
         data: { roles: ['SUPER_ADMIN'] },
         loadChildren: () => import('./modules/admin/workflow.routes').then((m) => m.WORKFLOW_ROUTES)
       },
-      // La bandeja la ve cualquiera con sesión; el servidor filtra qué puede decidir cada uno.
+      // Solo ADMIN y SUPER_ADMIN: el ADMIN sigue sus solicitudes y el SUPER_ADMIN decide.
       {
         path: 'aprobaciones',
-        canActivate: [AuthGuard],
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN'] },
         loadComponent: () => import('./modules/admin/workflow-approvals/workflow-approvals.component').then((m) => m.WorkflowApprovalsComponent)
       },
 

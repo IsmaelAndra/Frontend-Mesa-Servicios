@@ -255,9 +255,9 @@ export class KanbanComponent implements OnInit {
       customClass: {
         popup: 'rounded-xl',
         title: 'text-lg font-bold',
-        confirmButton: 'btn btn-primary btn-sm',
-        cancelButton: 'btn btn-ghost btn-sm',
-        denyButton: 'btn btn-error btn-sm'
+        confirmButton: 'btn btn-primary btn-sm text-white',
+        cancelButton: 'btn btn-ghost btn-sm text-white',
+        denyButton: 'btn btn-error btn-sm text-white'
       },
       buttonsStyling: false,
       showCancelButton: true,

@@ -213,6 +213,13 @@ export interface WorkflowApproval {
   entityLabel: string | null;
   createdAt: string;
   deadline: string | null;
+  /** PENDING, APPROVED, REJECTED o TIMEOUT. */
+  status?: string;
+  /** Correo de quien provocó la solicitud. */
+  requestedBy?: string | null;
+  decidedBy?: string | null;
+  decidedAt?: string | null;
+  comment?: string | null;
 }
 
 /** Paso de una ejecución que llega por SSE mientras ocurre (evento "workflow"). */

@@ -5,6 +5,7 @@ import { Area, Catalog } from '../../../models/user.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { Paginacion } from '../../../core/utils/pagination.util';
 import { MasterOption } from '../../shared/components/master-select/master-select.component';
+import { ACCIONES_ESCALACION, metaAccionEscalacion } from '../../../core/utils/sla-escalacion.util';
 import { duracionLegible } from '../../../core/utils/duracion.util';
 
 @Component({
@@ -77,6 +78,32 @@ export class SlaManagementComponent implements OnInit {
     return (this.teams || []).map(t => ({
       value: t.idTeam, label: t.nameTeam, icon: t.iconTeam, color: t.colorTeam
     }));
+  }
+
+  /** Políticas con su icono y color, para el select de reglas y escalaciones. */
+  policyOptions(): MasterOption[] {
+    return (this.policies || []).map(p => ({
+      value: p.idSlaPolicy, label: p.nameSlaPolicy,
+      icon: p.iconSlaPolicy || 'fa-solid fa-stopwatch', color: p.colorSlaPolicy || '#062e86'
+    }));
+  }
+
+  templateOptions(): MasterOption[] {
+    return (this.templates || []).map(t => ({
+      value: t.idTemplate, label: t.nameTemplate,
+      icon: t.iconTemplate || 'fa-regular fa-envelope', color: t.colorTemplate || '#64748B'
+    }));
+  }
+
+  readonly accionOptions = ACCIONES_ESCALACION;
+
+  metaAccion(valor?: string | null) {
+    return metaAccionEscalacion(valor);
+  }
+
+  teamMeta(id: string): { icon: string; color: string } {
+    const t = this.teams.find(x => x.idTeam === id);
+    return { icon: t?.iconTeam || 'fa-solid fa-users', color: t?.colorTeam || '#64748B' };
   }
 
   /** Filas en modo edición (políticas, reglas y escalaciones). */

@@ -163,7 +163,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Qué abarca el tablero según el rol, para que nadie compare cifras de alcances distintos. */
   get alcance(): string {
     switch (this.rol) {
-      case 'USER': return 'Tus tickets';
+      case 'USER':
+      case 'AREA_MANAGER': return 'Tus tickets';
       case 'AGENT': return 'Tickets asignados a ti';
       default: return 'Toda la mesa de servicios';
     }

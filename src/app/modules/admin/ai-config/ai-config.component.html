@@ -31,7 +31,7 @@
     >
       <span
         class="w-2 h-2 rounded-full"
-        [ngClass]="aiForm.get('enabled')?.value ? 'bg-success-content animate-pulse' : 'bg-base-content/40'"
+        [ngClass]="aiForm.get('enabled')?.value ? 'bg-primary-content animate-pulse' : 'bg-base-content/40 animate-pulse'"
       ></span>
       {{ aiForm.get('enabled')?.value ? "IA habilitada" : "IA deshabilitada" }}
     </span>
@@ -119,19 +119,15 @@
                 Proveedor <span class="text-error">*</span>
               </span>
             </label>
-            <div class="relative">
-              <i
-                class="fa-solid fa-cloud text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
-                aria-hidden="true"
-              ></i>
-              <select
-                formControlName="provider"
-                class="select select-bordered select-sm w-full pl-9 focus:ring-2 focus:ring-primary/25"
-                (change)="onProviderChange()"
-              >
-                <option *ngFor="let p of providers" [value]="p">{{ p }}</option>
-              </select>
-            </div>
+            <!-- Cada proveedor con el icono de su marca (o de su modelo) y su color -->
+            <app-master-select
+              formControlName="provider"
+              [options]="providerOptions"
+              icon="fa-solid fa-cloud"
+              placeholder="Seleccione el proveedor"
+              label="Proveedor de IA"
+              (elegido)="onProviderChange()"
+            ></app-master-select>
           </div>
 
           <!-- Modelo -->
@@ -359,8 +355,10 @@
               </div>
 
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold truncate">
-                  {{ aiForm.get("provider")?.value }}
+                <p class="text-sm font-semibold truncate inline-flex items-center gap-1.5">
+                  <i [class]="metaProveedor(aiForm.get('provider')?.value).icon"
+                     [style.color]="metaProveedor(aiForm.get('provider')?.value).color" aria-hidden="true"></i>
+                  {{ metaProveedor(aiForm.get("provider")?.value).label }}
                 </p>
                 <p class="text-xs opacity-60 truncate font-mono">
                   {{ aiForm.get("model")?.value }}

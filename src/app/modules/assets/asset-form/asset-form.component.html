@@ -1,0 +1,268 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i
+          aria-hidden="true"
+          [class]="'fa-solid text-2xl ' + (editando ? 'fa-pen-to-square' : 'fa-plus')"
+        ></i>
+      </div>
+      <div>
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">
+          {{ editando ? 'Editar activo' : 'Registrar activo' }}
+        </h1>
+        <p class="text-sm opacity-70">Datos del equipo de TI</p>
+      </div>
+    </div>
+    <button type="button" class="btn btn-sm btn-ghost gap-2" (click)="cancelar()">
+      <i class="fa-solid fa-arrow-left text-[13px]" aria-hidden="true"></i>
+      Volver
+    </button>
+  </header>
+
+  <div *ngIf="loading" class="card bg-base-100 shadow-md border border-base-200">
+    <div class="card-body">
+      <app-skeleton tipo="filas" etiqueta="Cargando activo..."></app-skeleton>
+    </div>
+  </div>
+
+  <form *ngIf="!loading" (ngSubmit)="guardar()" class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+    <!-- Formulario -->
+    <div class="xl:col-span-8 space-y-6">
+      <div class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-4">
+          <h2 class="card-title text-base">
+            <i class="fa-solid fa-circle-info text-primary" aria-hidden="true"></i>
+            Identificación
+          </h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Código <span class="text-error">*</span></span></label>
+              <input type="text" class="input input-bordered w-full" name="codeAsset" [(ngModel)]="request.codeAsset"
+                required [maxlength]="max.codigo" placeholder="Ej. TI-LAP-001" />
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Tipo <span class="text-error">*</span></span></label>
+              <app-master-select
+                name="typeAsset"
+                [(ngModel)]="request.typeAsset"
+                [options]="typeOptions"
+                [allowEmpty]="false"
+                placeholder="Seleccione el tipo"
+                label="Tipo de activo"
+              ></app-master-select>
+            </div>
+
+            <div class="form-control sm:col-span-2">
+              <label class="label"><span class="label-text font-medium">Nombre <span class="text-error">*</span></span></label>
+              <input type="text" class="input input-bordered w-full" name="nameAsset" [(ngModel)]="request.nameAsset"
+                required [maxlength]="max.nombre" placeholder="Ej. Laptop Dell Latitude 5430" />
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Marca</span></label>
+              <input type="text" class="input input-bordered w-full" name="brandAsset" [(ngModel)]="request.brandAsset"
+                [maxlength]="max.marca" placeholder="Ej. Dell" />
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Modelo</span></label>
+              <input type="text" class="input input-bordered w-full" name="modelAsset" [(ngModel)]="request.modelAsset"
+                [maxlength]="max.modelo" placeholder="Ej. Latitude 5430" />
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Número de serie</span></label>
+              <input type="text" class="input input-bordered w-full font-mono" name="serialNumberAsset"
+                [(ngModel)]="request.serialNumberAsset" [maxlength]="max.serie" placeholder="Ej. 5CG1234ABC" />
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Estado</span></label>
+              <app-master-select
+                name="statusAsset"
+                [(ngModel)]="request.statusAsset"
+                [options]="statusOptions"
+                [allowEmpty]="false"
+                placeholder="Seleccione el estado"
+                label="Estado del activo"
+              ></app-master-select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-4">
+          <h2 class="card-title text-base">
+            <i class="fa-solid fa-file-invoice-dollar text-primary" aria-hidden="true"></i>
+            Compra y garantía
+          </h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Proveedor</span></label>
+              <input type="text" class="input input-bordered w-full" name="providerAsset" [(ngModel)]="request.providerAsset"
+                [maxlength]="max.proveedor" placeholder="Ej. Tecnomega" />
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Costo (USD)</span></label>
+              <input type="number" step="0.01" min="0" class="input input-bordered w-full" name="costAsset"
+                [(ngModel)]="request.costAsset" placeholder="0.00" />
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Fecha de compra</span></label>
+              <input type="date" class="input input-bordered w-full" name="purchaseDateAsset"
+                [(ngModel)]="request.purchaseDateAsset" />
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Garantía hasta</span></label>
+              <input type="date" class="input input-bordered w-full" name="warrantyUntilAsset"
+                [(ngModel)]="request.warrantyUntilAsset" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-4">
+          <h2 class="card-title text-base">
+            <i class="fa-solid fa-user-gear text-primary" aria-hidden="true"></i>
+            Asignación y ubicación
+          </h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="form-control sm:col-span-2">
+              <label class="label"><span class="label-text font-medium">Asignado a (usuario)</span></label>
+              <app-master-select
+                name="assignedUserId"
+                [(ngModel)]="request.assignedUserId"
+                [options]="userOptions"
+                [allowEmpty]="true"
+                emptyLabel="Sin asignar"
+                placeholder="Seleccione el usuario"
+                label="Usuario asignado"
+              ></app-master-select>
+              <label class="label"><span class="label-text-alt opacity-60">
+                {{ esAdmin ? 'Con una persona, el activo queda «Asignado»; sin ella, «Disponible».' : 'Solo aparecen las personas de tu área.' }}
+              </span></label>
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Área</span></label>
+              <app-master-select
+                name="areaId"
+                [(ngModel)]="request.areaId"
+                [options]="areaOptions"
+                [disabled]="areaBloqueada"
+                [allowEmpty]="true"
+                emptyLabel="Sin área"
+                placeholder="Seleccione el área"
+                label="Área"
+              ></app-master-select>
+              <label *ngIf="areaBloqueada" class="label"><span class="label-text-alt opacity-60">Los activos que registras quedan en tu área.</span></label>
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">Sede</span></label>
+              <app-master-select
+                name="sucursalId"
+                [(ngModel)]="request.sucursalId"
+                [options]="sucursalOptions"
+                [allowEmpty]="true"
+                emptyLabel="Sin sede"
+                placeholder="Seleccione la sede"
+                label="Sede"
+              ></app-master-select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-4">
+          <h2 class="card-title text-base">
+            <i class="fa-solid fa-note-sticky text-primary" aria-hidden="true"></i>
+            Notas y documentos
+          </h2>
+
+          <div class="form-control">
+            <label class="label"><span class="label-text font-medium">Notas</span></label>
+            <textarea class="textarea textarea-bordered w-full" rows="3" name="notesAsset"
+              [(ngModel)]="request.notesAsset" placeholder="Observaciones, accesorios incluidos, etc."></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">URL de imagen</span></label>
+              <input type="text" class="input input-bordered w-full" name="imageUrlAsset" [(ngModel)]="request.imageUrlAsset"
+                [maxlength]="max.url" placeholder="/api/uploads/publico/..." />
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text font-medium">URL de documento</span></label>
+              <input type="text" class="input input-bordered w-full" name="documentUrlAsset"
+                [(ngModel)]="request.documentUrlAsset" [maxlength]="max.url" placeholder="Acta de entrega, factura..." />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel lateral -->
+    <aside class="xl:col-span-4 space-y-6">
+      <div class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-3">
+          <h3 class="font-semibold flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-success" aria-hidden="true"></i>
+            Resumen
+          </h3>
+          <p class="text-sm opacity-70">
+            Los campos marcados con <span class="text-error">*</span> son obligatorios. El código debe ser único.
+          </p>
+          <div class="divider my-0"></div>
+          <div class="text-sm space-y-2">
+            <div class="flex justify-between gap-2"><span class="opacity-60">Código</span><span class="font-mono truncate">{{ request.codeAsset || '—' }}</span></div>
+            <div class="flex justify-between items-center gap-2">
+              <span class="opacity-60">Tipo</span>
+              <span class="flex items-center gap-1.5">
+                <i class="text-primary text-xs" [class]="typeIcon(request.typeAsset)" aria-hidden="true"></i>
+                {{ typeLabel(request.typeAsset) }}
+              </span>
+            </div>
+            <div class="flex justify-between items-center gap-2">
+              <span class="opacity-60">Quedará</span>
+              <span class="badge badge-sm kanban-tag border gap-1.5 font-medium"
+                [style.background-color]="estado(estadoResultante).color + '1F'"
+                [style.border-color]="estado(estadoResultante).color"
+                [style.color]="estado(estadoResultante).color" [style.--bc]="estado(estadoResultante).color">
+                <i class="text-[10px]" [class]="estado(estadoResultante).icono" aria-hidden="true"></i>
+                {{ estado(estadoResultante).etiqueta }}
+              </span>
+            </div>
+            <div class="flex justify-between items-center gap-2">
+              <span class="opacity-60">Responsable</span>
+              <span class="truncate text-right">{{ personaElegida?.displayName || (request.assignedUserId ? '…' : 'Sin asignar') }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-3">
+          <button type="submit" class="btn btn-primary w-full gap-2" [disabled]="guardando || !valido">
+            <i class="fa-solid" [class.fa-spinner]="guardando" [class.fa-spin]="guardando" [class.fa-floppy-disk]="!guardando" aria-hidden="true"></i>
+            {{ guardando ? 'Guardando...' : (editando ? 'Guardar cambios' : 'Registrar activo') }}
+          </button>
+          <button type="button" class="btn btn-ghost w-full" (click)="cancelar()">Cancelar</button>
+        </div>
+      </div>
+    </aside>
+  </form>
+</div>

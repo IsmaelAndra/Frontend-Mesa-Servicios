@@ -53,3 +53,8 @@ En desarrollo la API se llama en `http://localhost:8080/api` (`src/environments/
 `.github/workflows/ci.yml`: lint, pruebas y build de producción en cada push y pull request.
 
 Las convenciones del proyecto están en el `AGENTS.md` de la carpeta de trabajo. El código, los comentarios y los textos están en español.
+
+## Módulo de Activos de TI
+
+- Listado, creación/edición, ficha y gestión de asignación por activo.
+- Selects de usuario, área y sede con pp-master-select y carga de catálogos vía AdminService/AssetService.

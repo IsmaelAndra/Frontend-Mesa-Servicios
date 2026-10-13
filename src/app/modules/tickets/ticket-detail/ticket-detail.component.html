@@ -57,12 +57,14 @@
 
         <ul
           tabindex="0"
-          class="dropdown-content menu menu-sm p-1 mt-1 z-[1] bg-base-100 rounded-xl w-56 shadow-lg border border-base-200 max-h-80 overflow-y-auto"
+          class="menu-colores dropdown-content menu menu-sm p-1 mt-1 z-[1] bg-base-100 rounded-xl w-56 shadow-lg border border-base-200 max-h-80 overflow-y-auto"
         >
           <li *ngFor="let s of statuses">
+            <!-- --tono: el hover y la opción activa toman el color del estado -->
             <a
               (click)="changeStatus(s)"
               [class.active]="s === ticket.status"
+              [style.--tono]="statusMeta(s).color || '#059669'"
               class="gap-2.5"
             >
               <span
@@ -153,7 +155,7 @@
 
           <ul
             tabindex="0"
-            class="dropdown-content z-[1] menu menu-sm p-1 mt-1 shadow-lg bg-base-100 rounded-xl border border-base-200 w-full max-h-72 overflow-y-auto"
+            class="menu-colores dropdown-content z-[1] menu menu-sm p-1 mt-1 shadow-lg bg-base-100 rounded-xl border border-base-200 w-full max-h-72 overflow-y-auto"
           >
             <!-- Sin asignar -->
             <li>
@@ -307,7 +309,7 @@
             </span>
             <span class="badge badge-sm badge-ghost gap-1 font-medium" title="Rol en el sistema">
               <i class="fa-regular fa-user text-[10px]" aria-hidden="true"></i>
-              {{ ficha.solicitante.role }}
+              {{ etiquetaRol(ficha.solicitante.role) }}
             </span>
           </div>
         </div>
@@ -318,13 +320,17 @@
             <i class="fa-regular fa-envelope" aria-hidden="true"></i>
             Escribir
           </a>
+          <!-- Llamada por Microsoft Teams al correo corporativo (abre la app o la web) -->
           <a
-            *ngIf="ficha.solicitante.phoneUser"
+            *ngIf="ficha.solicitante.corporateEmailUser"
             class="btn btn-sm btn-ghost border border-base-300 gap-2"
-            [href]="'tel:' + ficha.solicitante.phoneUser"
+            [href]="teamsLlamada()"
+            target="_blank"
+            rel="noopener"
+            [title]="'Llamar por Teams a ' + ficha.solicitante.corporateEmailUser"
           >
-            <i class="fa-solid fa-phone" aria-hidden="true"></i>
-            Llamar
+            <i class="fa-solid fa-phone" style="color: #5B5FC7" aria-hidden="true"></i>
+            Llamar por Teams
           </a>
           <button
             type="button"

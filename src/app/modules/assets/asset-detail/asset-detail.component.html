@@ -1,0 +1,306 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="text-2xl" [class]="typeIcon(asset?.typeAsset)"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary truncate">
+          {{ asset?.nameAsset || 'Activo' }}
+        </h1>
+        <p class="text-sm opacity-70 flex items-center gap-2 flex-wrap">
+          <span class="font-mono">{{ asset?.codeAsset }}</span>
+          <span *ngIf="asset" aria-hidden="true">·</span>
+          <span *ngIf="asset">{{ typeLabel(asset.typeAsset) }}</span>
+        </p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span *ngIf="asset" class="badge kanban-tag border gap-1.5 font-semibold"
+        [style.background-color]="estado(asset.statusAsset).color + '1F'"
+        [style.border-color]="estado(asset.statusAsset).color"
+        [style.color]="estado(asset.statusAsset).color" [style.--bc]="estado(asset.statusAsset).color">
+        <i class="text-[11px]" [class]="estado(asset.statusAsset).icono" aria-hidden="true"></i>
+        {{ estado(asset.statusAsset).etiqueta }}
+      </span>
+      <a class="btn btn-sm btn-ghost gap-2" routerLink="/activos">
+        <i class="fa-solid fa-arrow-left text-[13px]" aria-hidden="true"></i>
+        Volver
+      </a>
+    </div>
+  </header>
+
+  <div *ngIf="loading" class="card bg-base-100 shadow-md border border-base-200">
+    <div class="card-body">
+      <app-skeleton tipo="filas" etiqueta="Cargando activo..."></app-skeleton>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && asset" class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+    <!-- ===================== Columna principal ===================== -->
+    <div class="xl:col-span-8 space-y-6">
+      <!-- Datos -->
+      <section class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-4">
+          <h2 class="card-title text-base">
+            <i class="fa-solid fa-circle-info text-primary" aria-hidden="true"></i>
+            Datos del equipo
+          </h2>
+
+          <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="activo-dato"><dt>Marca</dt><dd>{{ asset.brandAsset || '—' }}</dd></div>
+            <div class="activo-dato"><dt>Modelo</dt><dd>{{ asset.modelAsset || '—' }}</dd></div>
+            <div class="activo-dato"><dt>Número de serie</dt><dd class="font-mono">{{ asset.serialNumberAsset || '—' }}</dd></div>
+            <div class="activo-dato"><dt>Área</dt><dd>{{ asset.area || '—' }}</dd></div>
+            <div class="activo-dato"><dt>Sede</dt><dd>{{ asset.sucursal || '—' }}</dd></div>
+            <div class="activo-dato"><dt>Proveedor</dt><dd>{{ asset.providerAsset || '—' }}</dd></div>
+            <div class="activo-dato">
+              <dt>Costo</dt>
+              <dd>{{ asset.costAsset != null ? (asset.costAsset | currency: 'USD' : 'symbol' : '1.2-2') : '—' }}</dd>
+            </div>
+            <div class="activo-dato"><dt>Fecha de compra</dt><dd>{{ formatDate(asset.purchaseDateAsset) }}</dd></div>
+            <div class="activo-dato">
+              <dt>Garantía hasta</dt>
+              <dd [class.text-warning]="garantiaPorVencer">
+                {{ formatDate(asset.warrantyUntilAsset) }}
+                <i *ngIf="garantiaPorVencer" class="fa-solid fa-triangle-exclamation text-[11px] ml-1"
+                  title="Vence en menos de 60 días o ya venció" aria-label="Garantía por vencer"></i>
+              </dd>
+            </div>
+          </dl>
+
+          <div *ngIf="asset.notesAsset" class="rounded-xl bg-base-200/50 border border-base-200 p-3">
+            <div class="text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-1">Notas</div>
+            <p class="text-sm whitespace-pre-line">{{ asset.notesAsset }}</p>
+          </div>
+
+          <div *ngIf="asset.imageUrlAsset || asset.documentUrlAsset" class="flex flex-wrap gap-2">
+            <a *ngIf="asset.imageUrlAsset" [href]="asset.imageUrlAsset" target="_blank" rel="noopener"
+              class="btn btn-sm btn-outline gap-2">
+              <i class="fa-solid fa-image text-[13px]" aria-hidden="true"></i> Ver imagen
+            </a>
+            <a *ngIf="asset.documentUrlAsset" [href]="asset.documentUrlAsset" target="_blank" rel="noopener"
+              class="btn btn-sm btn-outline gap-2">
+              <i class="fa-solid fa-file-lines text-[13px]" aria-hidden="true"></i> Ver documento
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Historial -->
+      <section class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-4">
+          <div class="flex items-center justify-between gap-2">
+            <h2 class="card-title text-base">
+              <i class="fa-solid fa-clock-rotate-left text-primary" aria-hidden="true"></i>
+              Historial de asignaciones
+            </h2>
+            <span class="badge badge-ghost badge-sm">{{ history.length }}</span>
+          </div>
+
+          <div *ngIf="history.length === 0" class="text-sm opacity-60 py-6 text-center">
+            Sin movimientos registrados.
+          </div>
+
+          <ol *ngIf="history.length" class="activo-historial">
+            <li *ngFor="let h of history; let last = last; trackBy: trackHistorial" class="activo-historial__item">
+              <span class="activo-historial__punto"
+                [style.background-color]="accionMeta(h.actionType).color + '1F'"
+                [style.color]="accionMeta(h.actionType).color" [style.--bc]="accionMeta(h.actionType).color" aria-hidden="true">
+                <i class="text-xs" [class]="accionMeta(h.actionType).icono"></i>
+              </span>
+              <span *ngIf="!last" class="activo-historial__linea" aria-hidden="true"></span>
+
+              <div class="min-w-0 flex-1 pb-5">
+                <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span class="font-semibold text-sm">{{ frase(h) }}</span>
+                  <span class="badge badge-xs kanban-tag border font-medium"
+                    [style.background-color]="accionMeta(h.actionType).color + '14'"
+                    [style.border-color]="accionMeta(h.actionType).color + '66'"
+                    [style.color]="accionMeta(h.actionType).color" [style.--bc]="accionMeta(h.actionType).color">{{ accionMeta(h.actionType).etiqueta }}</span>
+                </div>
+                <div *ngIf="h.actionType === 'REASIGNACION' && (h.previousUserDisplayName || h.previousUser)"
+                  class="text-xs opacity-70 mt-0.5">
+                  Antes lo tenía <span class="font-medium">{{ h.previousUserDisplayName || h.previousUser }}</span>
+                </div>
+                <div class="text-xs opacity-60 mt-0.5 flex flex-wrap gap-x-2">
+                  <span>
+                    <i class="fa-regular fa-clock text-[10px]" aria-hidden="true"></i>
+                    {{ formatDateTime(h.createdAtAssetHistory) }}
+                  </span>
+                  <span *ngIf="h.performedByDisplayName || h.performedBy">
+                    · por {{ h.performedByDisplayName || h.performedBy }}
+                  </span>
+                </div>
+                <p *ngIf="h.notes" class="text-xs mt-1.5 px-2.5 py-1.5 rounded-lg bg-base-200/60 border-l-2 border-base-300">
+                  {{ h.notes }}
+                </p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== Panel lateral ===================== -->
+    <aside class="xl:col-span-4 space-y-6 xl:sticky xl:top-4">
+      <!-- Responsable -->
+      <section class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-4">
+          <h3 class="font-semibold flex items-center gap-2">
+            <i class="fa-solid fa-user-tag text-primary" aria-hidden="true"></i>
+            Responsable
+          </h3>
+
+          <div *ngIf="asset.assignedUser; else sinAsignar"
+            class="flex items-center gap-3 rounded-xl bg-base-200/50 border border-base-200 p-3">
+            <span class="relative shrink-0 w-12 h-12 inline-flex">
+              <img *ngIf="foto(asset.assignedUserPhotoUrl) as f" [src]="f" alt=""
+                class="w-12 h-12 rounded-full object-cover" (error)="fotoRota(asset.assignedUserPhotoUrl)" />
+              <span *ngIf="!foto(asset.assignedUserPhotoUrl)"
+                class="w-12 h-12 rounded-full bg-primary/15 text-primary flex items-center justify-center font-semibold"
+                aria-hidden="true">{{ iniciales(asset.assignedUserDisplayName || asset.assignedUser) }}</span>
+              <app-presence-dot *ngIf="responsable?.sessionState" class="absolute -bottom-0.5 -right-0.5"
+                [state]="responsable?.sessionState" />
+            </span>
+            <div class="min-w-0">
+              <div class="font-semibold truncate">{{ asset.assignedUserDisplayName || asset.assignedUser }}</div>
+              <div class="text-xs opacity-60 truncate">{{ asset.assignedUser }}</div>
+              <div *ngIf="asset.assignedUserArea" class="text-xs opacity-60 truncate">
+                <i class="fa-solid fa-building text-[10px]" aria-hidden="true"></i> {{ asset.assignedUserArea }}
+              </div>
+            </div>
+          </div>
+          <ng-template #sinAsignar>
+            <div class="rounded-xl border border-dashed border-base-300 p-4 text-center">
+              <i class="fa-solid fa-user-slash text-lg opacity-40" aria-hidden="true"></i>
+              <p class="text-sm opacity-60 mt-1">Sin responsable</p>
+            </div>
+          </ng-template>
+
+          <!-- Acciones de asignación: una fila, mismo tamaño -->
+          <div *ngIf="puedeGestionar" class="grid gap-2" [class.grid-cols-2]="!!asset.assignedUser">
+            <button type="button" class="btn btn-sm btn-primary gap-2 text-white"
+              [disabled]="!asignable" (click)="abrir('asignar')">
+              <i class="fa-solid" [class.fa-right-left]="asset.assignedUser" [class.fa-user-plus]="!asset.assignedUser"
+                aria-hidden="true"></i>
+              {{ asset.assignedUser ? 'Reasignar' : 'Asignar' }}
+            </button>
+            <button *ngIf="asset.assignedUser" type="button" class="btn btn-sm btn-outline gap-2" (click)="abrir('devolver')">
+              <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+              Devolver
+            </button>
+          </div>
+          <p *ngIf="puedeGestionar && !asignable" class="text-xs opacity-60 -mt-1">
+            {{ estadoActual === 'BAJA' ? 'Está dado de baja: reactívalo para poder asignarlo.' : 'Está en reparación: finaliza la reparación para poder asignarlo.' }}
+          </p>
+        </div>
+      </section>
+
+      <!-- Estado y gestión -->
+      <section *ngIf="puedeGestionar" class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-3">
+          <h3 class="font-semibold flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-primary" aria-hidden="true"></i>
+            Gestión
+          </h3>
+
+          <button *ngIf="estadoActual === 'DISPONIBLE' || estadoActual === 'ASIGNADO'" type="button"
+            class="btn btn-sm btn-outline btn-warning w-full justify-start gap-2 hover:!text-white" (click)="abrir('reparar')">
+            <i class="fa-solid fa-screwdriver-wrench w-4" aria-hidden="true"></i>
+            Enviar a reparación
+          </button>
+          <button *ngIf="estadoActual === 'EN_REPARACION'" type="button"
+            class="btn btn-sm btn-outline btn-success w-full justify-start gap-2 hover:!text-white" (click)="abrir('finReparacion')">
+            <i class="fa-solid fa-wrench w-4" aria-hidden="true"></i>
+            Finalizar reparación
+          </button>
+          <button *ngIf="estadoActual === 'BAJA'" type="button"
+            class="btn btn-sm btn-outline btn-success w-full justify-start gap-2 hover:!text-white" (click)="abrir('reactivar')">
+            <i class="fa-solid fa-arrow-rotate-right w-4" aria-hidden="true"></i>
+            Reactivar
+          </button>
+          <button *ngIf="estadoActual !== 'BAJA'" type="button"
+            class="btn btn-sm btn-outline btn-error w-full justify-start gap-2 hover:!text-white" (click)="abrir('baja')">
+            <i class="fa-solid fa-ban w-4" aria-hidden="true"></i>
+            Dar de baja
+          </button>
+
+          <div class="divider my-0"></div>
+
+          <a class="btn btn-sm btn-ghost w-full justify-start gap-2" [routerLink]="['/activos', id, 'editar']">
+            <i class="fa-solid fa-pen w-4" aria-hidden="true"></i>
+            Editar datos
+          </a>
+          <button *ngIf="puedeEliminar" type="button" class="btn btn-sm btn-ghost text-error w-full justify-start gap-2"
+            (click)="abrir('eliminar')">
+            <i class="fa-solid fa-trash w-4" aria-hidden="true"></i>
+            Eliminar del inventario
+          </button>
+        </div>
+      </section>
+
+      <!-- Fechas -->
+      <section class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-2 text-sm">
+          <div class="flex justify-between gap-2"><span class="opacity-60">Registrado</span><span>{{ formatDateTime(asset.createdAtAsset) }}</span></div>
+          <div class="flex justify-between gap-2"><span class="opacity-60">Última modificación</span><span>{{ formatDateTime(asset.updatedAtAsset) }}</span></div>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<!--
+  Diálogo único de confirmación (asignar, devolver, cambios de estado, eliminar).
+  Modal de daisyUI, como el resto de la aplicación: el p-dialog de PrimeNG que
+  había aquí salía sin fondo ni máscara porque la app no carga su tema.
+-->
+<div *ngIf="accion && info" class="modal modal-open" role="dialog" aria-modal="true"
+  [attr.aria-label]="tituloAccion" (keydown.escape)="cerrar()">
+  <div class="modal-box max-w-lg p-0">
+    <div class="flex items-start gap-3 p-5 pb-3">
+      <span class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-primary/10 text-primary" aria-hidden="true">
+        <i [class]="info.icono"></i>
+      </span>
+      <div class="min-w-0 flex-1">
+        <h3 class="font-bold text-lg leading-tight">{{ tituloAccion }}</h3>
+        <p *ngIf="asset" class="text-xs opacity-60 font-mono mt-0.5">{{ asset.codeAsset }} · {{ asset.nameAsset }}</p>
+      </div>
+      <button type="button" class="btn btn-sm btn-ghost btn-square" (click)="cerrar()" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="px-5 space-y-4">
+      <p *ngIf="info.texto" class="text-sm opacity-80">{{ info.texto }}</p>
+
+      <div *ngIf="accion === 'asignar'" class="form-control">
+        <label class="label pt-0"><span class="label-text font-medium">Persona</span></label>
+        <app-master-select [(ngModel)]="personaElegida" [options]="userOptions" [allowEmpty]="false"
+          placeholder="Elige a la persona" label="Persona a la que se asigna"></app-master-select>
+        <label class="label pb-0"><span class="label-text-alt opacity-60">
+          {{ esAdmin ? 'Aparecen todas las personas activas.' : 'Solo aparecen las personas de tu área.' }}
+        </span></label>
+      </div>
+
+      <div *ngIf="info.conNota" class="form-control">
+        <label class="label pt-0"><span class="label-text font-medium">Nota <span class="opacity-60 font-normal">(opcional)</span></span></label>
+        <textarea class="textarea textarea-bordered w-full" rows="2" [(ngModel)]="nota" maxlength="500"
+          placeholder="Motivo, número de acta de entrega…"></textarea>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 p-5 pt-4">
+      <button type="button" class="btn btn-sm btn-ghost" (click)="cerrar()" [disabled]="saving">Cancelar</button>
+      <button type="button" class="btn btn-sm gap-2" [ngClass]="info.clase" (click)="confirmar()"
+        [disabled]="saving || (accion === 'asignar' && !personaElegida)">
+        <span *ngIf="saving" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+        <i *ngIf="!saving" [class]="info.icono" aria-hidden="true"></i>
+        {{ info.boton }}
+      </button>
+    </div>
+  </div>
+  <div class="modal-backdrop" (click)="cerrar()"></div>
+</div>

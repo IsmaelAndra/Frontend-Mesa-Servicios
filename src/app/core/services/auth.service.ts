@@ -347,6 +347,22 @@ restoreSession(): Promise<void> {
     return decoded?.roles?.replace('ROLE_', '') || '';
   }
 
+  /**
+   * Roles con los que cuenta el usuario para menús y rutas. El jefe de área
+   * (AREA_MANAGER) es, fuera de Activos, un usuario más: crea y sigue sus
+   * tickets como un USER. Sin esto solo veía "Activos" en el menú.
+   */
+  rolesEfectivos(): string[] {
+    const rol = this.getRole();
+    return rol === 'AREA_MANAGER' ? ['AREA_MANAGER', 'USER'] : rol ? [rol] : [];
+  }
+
+  /** Usuario final (USER o jefe de área): ve solo sus tickets. */
+  esUsuarioFinal(): boolean {
+    const rol = this.getRole();
+    return rol === 'USER' || rol === 'AREA_MANAGER';
+  }
+
   getEmail(): string {
     const token = this.getToken();
     if (!token) return '';

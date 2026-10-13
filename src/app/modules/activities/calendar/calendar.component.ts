@@ -69,10 +69,13 @@ export function plantillaEvento(ev: EventObject, conHora: boolean): string {
     : urgencia === 'PROXIMO'
       ? '<span class="cal-punto cal-punto--proximo" aria-hidden="true"></span>'
       : '';
+  // En el mes los eventos con hora van como barra de día completo y ToastUI
+  // lleva su inicio a las 00:00: la hora real viaja en raw.hora.
+  const horaRaw = (ev.raw as { hora?: string } | undefined)?.hora;
   const inicio = ev.start ? new Date(ev.start as unknown as string | Date) : null;
-  const hora = conHora && inicio && !Number.isNaN(inicio.getTime())
-    ? `<span class="cal-hora">${pad(inicio.getHours())}:${pad(inicio.getMinutes())}</span> `
-    : '';
+  const texto = horaRaw
+    ?? (inicio && !Number.isNaN(inicio.getTime()) ? `${pad(inicio.getHours())}:${pad(inicio.getMinutes())}` : '');
+  const hora = conHora && texto ? `<span class="cal-hora">${texto}</span> ` : '';
   return `${punto}${hora}${escaparHtml(String(ev.title ?? ''))}`;
 }
 
@@ -237,16 +240,23 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
       // una aplicación que va toda en español. La opción es "template" (singular)
       // y vive en la raíz, no dentro de "week".
       template: {
-        alldayTitle: () => 'Todo el día',
+        // En dos líneas ("Todo" / "el día"): en una sola no cabía en la
+        // columna de horas y se cortaba. El centrado va en styles.css.
+        alldayTitle: () => 'Todo<br>el día',
         time: (ev: EventObject) => plantillaEvento(ev, true),
-        allday: (ev: EventObject) => plantillaEvento(ev, false),
+        // En la vista de mes los eventos con hora también van como barra (ver
+        // toToastEvent): ahí la hora se antepone para no perderla.
+        allday: (ev: EventObject) =>
+          plantillaEvento(ev, (ev.raw as { mostrarHora?: boolean } | undefined)?.mostrarHora === true),
         // Contador de eventos que no caben en la fila de día completo.
         weekGridFooterExceed: (n: number) => `+${n} más`
       },
+      // Sin visibleWeeksCount: con 6, ToastUI mostraba seis semanas a partir de
+      // la semana actual y no el mes, así que en "Octubre" la rejilla empezaba
+      // el día 12 y lo anterior del mes no se veía.
       month: {
         startDayOfWeek: 1,
         dayNames: ['D', 'L', 'M', 'X', 'J', 'V', 'S'],
-        visibleWeeksCount: 6,
         isAlways6Weeks: false
       },
       theme: this.currentTheme === 'dark' ? calendarDarkTheme() : calendarLightTheme()
@@ -435,7 +445,8 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
           this.eventos = events ?? [];
           this.cargado = true;
           if (this.eventos.length) {
-            this.calendar?.createEvents(this.eventos.map(toToastEvent));
+            const vista = this.currentView;
+            this.calendar?.createEvents(this.eventos.map((e) => toToastEvent(e, vista)));
           }
           this.construirLeyenda();
         },
@@ -459,7 +470,9 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
     for (const e of this.eventos) {
       const color = (e.color || '').trim();
       if (!color) continue;
-      const clave = color.toLowerCase();
+      // Por tipo, estado y color: agrupando solo por color, dos estados que
+      // compartían color se contaban bajo la etiqueta del primero.
+      const clave = `${e.type}|${(e.status || '').toUpperCase()}|${color.toLowerCase()}`;
       const previo = grupos.get(clave);
       if (previo) {
         previo.count++;
@@ -474,8 +487,16 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
     }
     this.leyenda = [...grupos.values()]
       .sort((a, b) => b.count - a.count)
-      .slice(0, 8);
+      .slice(0, 10);
+    const ahora = Date.now();
+    this.urgentes = {
+      vencidos: this.eventos.filter((e) => urgenciaDe(e, ahora) === 'VENCIDO').length,
+      proximos: this.eventos.filter((e) => urgenciaDe(e, ahora) === 'PROXIMO').length
+    };
   }
+
+  /** Vencidos y por vencer del rango visible, para explicar los puntos. */
+  urgentes = { vencidos: 0, proximos: 0 };
 
   /** Eventos cargados en el rango visible; alimentan la leyenda. */
   private eventos: CalendarEvent[] = [];
@@ -497,8 +518,17 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
 
     // La formateacion vive en calendar-state.service para que el encabezado y
     // cualquier otro uso del rango no se dupliquen (y no se vuelvan a divergir).
-    this.rangeLabel = etiquetaRango(start, end, this.currentView);
+    // En la vista de mes el primer día visible suele ser del mes anterior
+    // (28 de septiembre en octubre): el mes es el de la fecha que se ve.
+    const desde = this.currentView === 'month' ? this.calendar.getDate().toDate() : start;
+    this.rangeLabel = etiquetaRango(desde, end, this.currentView);
   }
+}
+
+/** "HH:mm" en hora local. */
+function horaLocal(iso: string): string | undefined {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? undefined : `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function pad(n: number): string {
@@ -614,7 +644,14 @@ function toLocalDateTime(iso: string): string {
   )}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
-function toToastEvent(e: CalendarEvent): EventObject {
+/**
+ * Evento de ToastUI. En la vista de mes todos van como barra rellena de su
+ * color: ToastUI pinta los que tienen hora como un punto y texto gris (#333)
+ * sin fondo, que en el tema oscuro casi no se veía y además no se parecía a los
+ * de día completo.
+ */
+function toToastEvent(e: CalendarEvent, vista: CalendarView = 'week'): EventObject {
+  const comoBarra = vista === 'month' && !e.allDay;
   const calendarId = e.type === 'TICKET' ? 'tickets' : 'tareas';
   const creado = e.createdAt ? new Date(e.createdAt) : null;
   // ToastUI no dibuja la hora en los eventos de todo el dia, por lo que la
@@ -639,13 +676,23 @@ function toToastEvent(e: CalendarEvent): EventObject {
     title: titulo,
     start: toLocalDateTime(e.start),
     end: toLocalDateTime(e.end),
-    isAllDay: e.allDay,
+    // ToastUI v2 usa isAllday (con "d" minúscula) y category; con isAllDay,
+    // como estaba, la opción se ignoraba sin ningún error.
+    isAllday: e.allDay || comoBarra,
+    category: e.allDay || comoBarra ? 'allday' : 'time',
     backgroundColor: e.color,
-    // Lo vencido lleva el borde rojo además del punto: se distingue también
-    // sin depender del color de fondo y en la vista de mes, donde el punto es
-    // pequeño.
-    borderColor: urgenciaDe(e) === 'VENCIDO' ? '#dc2626' : e.color,
+    // Mismo borde que el fondo en todos: lo vencido ya se marca con el punto
+    // rojo animado. El borde rojo extra hacía que unos eventos se vieran "con
+    // borde" y otros "de color completo".
+    borderColor: e.color,
     color: '#ffffff',
-    raw: { refType: e.type, status: e.status, createdAt: e.createdAt, urgencia: urgenciaDe(e) } as never
+    raw: {
+      refType: e.type,
+      status: e.status,
+      createdAt: e.createdAt,
+      urgencia: urgenciaDe(e),
+      mostrarHora: comoBarra,
+      hora: comoBarra ? horaLocal(e.start) : undefined
+    } as never
   };
 }

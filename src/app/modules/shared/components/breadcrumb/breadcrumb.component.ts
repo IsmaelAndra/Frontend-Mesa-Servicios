@@ -1,8 +1,9 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, Optional } from '@angular/core';
 import { ActivatedRouteSnapshot, NavigationEnd, Router, UrlSegment } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { navIcon } from '../../../../core/constants/nav-icons';
+import { BreadcrumbService, EtiquetaCrumb } from '../../../../core/services/breadcrumb.service';
 
 export interface Crumb {
   label: string;
@@ -26,6 +27,7 @@ const LABELS: Record<string, string> = {
   mine: 'Mis tickets',
   assigned: 'Mis asignados',
   kanban: 'Tablero de tickets',
+  activos: 'Activos de TI',
   admin: 'Administración',
   users: 'Usuarios',
   teams: 'Equipos',
@@ -126,18 +128,27 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
   crumbs: Crumb[] = [];
 
   private sub?: Subscription;
+  private subEtiquetas?: Subscription;
+  /** Nombre e icono que fija la pantalla para su URL (p. ej. el tipo de activo). */
+  private etiquetas: ReadonlyMap<string, EtiquetaCrumb> = new Map();
 
-  constructor(private router: Router) {}
+  /** El servicio es opcional para que el spec pueda crear el componente con solo el Router. */
+  constructor(private router: Router, @Optional() private breadcrumbService?: BreadcrumbService) {}
 
   ngOnInit(): void {
     this.build();
     this.sub = this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe(() => this.build());
+    this.subEtiquetas = this.breadcrumbService?.etiquetas$.subscribe((m) => {
+      this.etiquetas = m;
+      this.build();
+    });
   }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+    this.subEtiquetas?.unsubscribe();
   }
 
   private build(): void {
@@ -160,7 +171,7 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
           url,
           icon: this.segmentIcon(seg, previo),
           // Solo se enlaza lo que existe como ruta: /workflows/5 no la es.
-          enlazable: !esId || previo === 'tickets',
+          enlazable: !esId || previo === 'tickets' || previo === 'activos',
         });
         previo = seg.path;
       });
@@ -183,6 +194,13 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
       });
     }
 
+    // Lo que la pantalla sabe y la URL no (nombre del activo, icono de su tipo).
+    for (const c of crumbs) {
+      const e = this.etiquetas.get(c.url);
+      if (e?.label) c.label = e.label;
+      if (e?.icon) c.icon = e.icon;
+    }
+
     this.crumbs = crumbs;
   }
 
@@ -196,11 +214,11 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
 
   /**
    * Un segmento es "id" solo bajo las rutas que llevan parametro:
-   * /tickets/:id y /workflows/:id, y solo si es un uuid. Sin contexto, un
-   * numero es una ruta propia (las pantallas de error son /404, /403…).
+   * /tickets/:id, /activos/:id y /workflows/:id, y solo si es un uuid. Sin
+   * contexto, un numero es una ruta propia (las pantallas de error son /404, /403…).
    */
   private esId(seg: UrlSegment, previo: string): boolean {
-    return (previo === 'tickets' || previo === 'workflows') && UUID_RE.test(seg.path);
+    return (previo === 'tickets' || previo === 'workflows' || previo === 'activos') && UUID_RE.test(seg.path);
   }
 
   /**
@@ -211,15 +229,20 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
    */
   private segmentLabel(seg: UrlSegment, previo: string): string {
     if (this.esId(seg, previo)) {
-      return previo === 'tickets' ? 'Detalle del ticket' : 'Proceso';
+      if (previo === 'tickets') return 'Detalle del ticket';
+      if (previo === 'activos') return 'Detalle del activo';
+      return 'Proceso';
     }
     if (seg.path === 'reports' && previo === 'admin') return 'Reportes personalizados';
+    if (seg.path === 'new' && previo === 'activos') return 'Nuevo activo';
     return LABELS[seg.path] ?? this.titleCase(seg.path);
   }
 
   private segmentIcon(seg: UrlSegment, previo: string): string {
     if (this.esId(seg, previo)) {
-      return previo === 'tickets' ? 'fa-solid fa-ticket' : 'fa-solid fa-diagram-project';
+      if (previo === 'tickets') return 'fa-solid fa-ticket';
+      if (previo === 'activos') return 'fa-solid fa-laptop';
+      return 'fa-solid fa-diagram-project';
     }
     if (seg.path === 'reports' && previo === 'admin') return navIcon('report-templates');
     return navIcon(seg.path);

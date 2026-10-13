@@ -56,7 +56,8 @@ export class AiFloatButtonComponent implements OnInit {
       role === 'ADMIN' ||
       role === 'SUPER_ADMIN' ||
       role === 'AGENT' ||
-      role === 'USER'
+      role === 'USER' ||
+      role === 'AREA_MANAGER'
     );
   }
 

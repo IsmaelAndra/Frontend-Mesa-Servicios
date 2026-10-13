@@ -24,10 +24,7 @@ import {
       <div
         class="flex items-center gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto"
       >
-        <span
-          *ngIf="mostrarResumen"
-          class="inline-flex items-center gap-1.5 text-xs"
-        >
+        <span class="inline-flex items-center gap-1.5 text-xs">
           <i
             class="fa-solid fa-list text-primary text-[10px]"
             aria-hidden="true"
@@ -47,7 +44,7 @@ import {
             (change)="onPageSizeChange($any($event.target).value)"
             aria-label="Filas por página"
           >
-            <option *ngFor="let s of pageSizes" [value]="s">
+            <option *ngFor="let s of opciones" [value]="s" [selected]="s === pageSize">
               {{ s }}
             </option>
           </select>
@@ -180,10 +177,16 @@ export class PaginatorComponent implements OnChanges {
   @Input() page = 0;
   @Input() pageSize = 10;
   @Input() pageSizes = [10, 25, 50, 100];
-  @Input() mostrarResumen = true;
 
   @Output() pageChange = new EventEmitter<number>();
   @Output() pageSizeChange = new EventEmitter<number>();
+
+  /** Tamaños del selector; incluye el actual aunque el padre no lo liste. */
+  get opciones(): number[] {
+    return this.pageSizes.includes(this.pageSize)
+      ? this.pageSizes
+      : [...this.pageSizes, this.pageSize].sort((x, y) => x - y);
+  }
 
   get totalPages(): number {
     return Math.max(1, Math.ceil(this.total / this.pageSize));

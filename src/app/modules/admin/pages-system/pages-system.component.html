@@ -33,7 +33,7 @@
       <span
         class="w-2 h-2 rounded-full animate-pulse"
         [ngClass]="
-          config.maintenanceMode ? 'bg-warning-content' : 'bg-success-content'
+          config.maintenanceMode ? 'bg-primary-content' : 'bg-primary-content'
         "
       ></span>
       {{ config.maintenanceMode ? "En mantenimiento" : "Sistema operativo" }}
@@ -390,15 +390,26 @@
               ></i>
               <div>
                 <p *ngIf="!privacidad.edited">
-                  Este texto es la plantilla que trae el sistema. En cuanto lo
-                  guardes, el repositorio deja de actualizarlo y la política
-                  será tuya.
+                  Este texto es la plantilla que trae el sistema y se muestra
+                  como <strong>Borrador</strong>. Al guardarlo o publicarlo, el
+                  repositorio deja de actualizarlo y la política será la oficial.
                 </p>
                 <p *ngIf="privacidad.edited">
                   Esta política fue editada por un administrador y ya no se
                   sobrescribe al reiniciar el servidor.
                 </p>
               </div>
+              <button
+                *ngIf="!privacidad.edited"
+                type="button"
+                class="btn btn-sm btn-warning gap-2 shrink-0"
+                [disabled]="saving"
+                (click)="publicarComoOficial()"
+                title="Quita el aviso de borrador del texto y la marca como oficial"
+              >
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                Publicar como oficial
+              </button>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -688,10 +699,10 @@
           "
         >
           <span
-            class="w-1.5 h-1.5 rounded-full"
+            class="w-1.5 h-1.5 rounded-full animate-pulse"
             [ngClass]="
               config.maintenanceMode
-                ? 'bg-warning-content'
+                ? 'bg-primary-content'
                 : 'bg-base-content/40'
             "
           ></span>
@@ -926,7 +937,7 @@
 
             <button
               type="button"
-              class="btn btn-sm gap-2 shadow-md hover:shadow-lg transition min-w-[150px]"
+              class="btn btn-sm gap-2 text-white shadow-md hover:shadow-lg transition min-w-[150px]"
               [ngClass]="
                 config.maintenanceMode
                   ? 'btn-warning text-warning-content'

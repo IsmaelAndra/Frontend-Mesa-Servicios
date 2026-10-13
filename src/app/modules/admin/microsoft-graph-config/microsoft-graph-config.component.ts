@@ -106,19 +106,19 @@ export class MicrosoftGraphConfigComponent implements OnInit {
         return {
           label: "Conectado",
           className: "badge-success text-success-content",
-          icon: "fa-solid fa-circle-check",
+          icon: "fa-solid fa-circle-check animate-pulse",
         };
       case "INCOMPLETE":
         return {
           label: "Configuración incompleta",
           className: "badge-warning text-warning-content",
-          icon: "fa-solid fa-triangle-exclamation",
+          icon: "fa-solid fa-triangle-exclamation animate-pulse",
         };
       default:
         return {
           label: "Deshabilitado",
           className: "badge-ghost text-base-content/70",
-          icon: "fa-solid fa-circle-xmark",
+          icon: "fa-solid fa-circle-xmark animate-pulse",
         };
     }
   }

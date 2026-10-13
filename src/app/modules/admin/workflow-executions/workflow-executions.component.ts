@@ -1,5 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { SkeletonComponent } from "../../shared/components/skeleton/skeleton.component";
+import { SharedModule } from "../../shared/shared.module";
 import { Component, OnDestroy, OnInit, signal } from "@angular/core";
 import { ActivatedRoute, RouterModule } from "@angular/router";
 import { FormsModule } from "@angular/forms";
@@ -40,7 +41,7 @@ interface Traza {
 @Component({
   selector: "app-workflow-executions",
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, RouterModule, WorkflowRunCanvasComponent, SkeletonComponent],
+  imports: [CommonModule, FormsModule, ButtonModule, RouterModule, WorkflowRunCanvasComponent, SkeletonComponent, SharedModule],
   templateUrl: "./workflow-executions.component.html",
 })
 export class WorkflowExecutionsComponent implements OnInit, OnDestroy {
@@ -49,7 +50,7 @@ export class WorkflowExecutionsComponent implements OnInit, OnDestroy {
   readonly ejecuciones = signal<WorkflowExecution[]>([]);
   readonly total = signal(0);
   readonly pagina = signal(0);
-  readonly tamano = 25;
+  tamano = 25;
   readonly filtro = signal<ExecutionStatus | "">("");
   readonly filtroWorkflow = signal<string | null>(null);
   readonly traza = signal<Traza | null>(null);
@@ -158,10 +159,16 @@ export class WorkflowExecutionsComponent implements OnInit, OnDestroy {
     this.cargarEjecuciones();
   }
 
-  irAPagina(delta: number): void {
-    const nueva = Math.max(0, this.pagina() + delta);
-    if (delta > 0 && nueva * this.tamano >= this.total()) return;
-    this.pagina.set(nueva);
+  /** Paginación del servidor con el paginador común (app-paginator). */
+  irAPagina(pagina: number): void {
+    if (pagina === this.pagina()) return;
+    this.pagina.set(pagina);
+    this.cargarEjecuciones();
+  }
+
+  cambiarTamano(tamano: number): void {
+    this.tamano = tamano;
+    this.pagina.set(0);
     this.cargarEjecuciones();
   }
 
@@ -327,6 +334,54 @@ export class WorkflowExecutionsComponent implements OnInit, OnDestroy {
   }
 
   /** Mismo badge que el resto de tablas: daisyUI semantico con su puntito. */
+  /** Color de marca del estado: el badge se pinta con fondo tenue, borde y texto de ese color. */
+  colorEstado(estado: string): string {
+    switch (estado) {
+      case "COMPLETADO":
+        return "#16A34A";
+      case "ERROR":
+        return "#DC2626";
+      case "CANCELADO":
+        return "#64748B";
+      case "ESPERANDO":
+        return "#D97706";
+      case "APROBACION":
+        return "#7C3AED";
+      case "PENDIENTE":
+        return "#0E7490";
+      default:
+        return "#2563EB";
+    }
+  }
+
+  /** Nombre del estado en español, para badges y filtros. */
+  etiquetaEstado(estado: string): string {
+    const nombres: Record<string, string> = {
+      PENDIENTE: "Pendiente",
+      EJECUTANDO: "Ejecutando",
+      ESPERANDO: "Esperando",
+      APROBACION: "En aprobación",
+      COMPLETADO: "Completado",
+      ERROR: "Error",
+      CANCELADO: "Cancelado",
+      OMITIDO: "Omitido",
+    };
+    return nombres[estado] ?? estado;
+  }
+
+  colorPaso(estado: string): string {
+    switch (estado) {
+      case "COMPLETADO":
+        return "#16A34A";
+      case "ERROR":
+        return "#DC2626";
+      case "EJECUTANDO":
+        return "#2563EB";
+      default:
+        return "#64748B";
+    }
+  }
+
   claseEstado(estado: string): string {
     switch (estado) {
       case "COMPLETADO":

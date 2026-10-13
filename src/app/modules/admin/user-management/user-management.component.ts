@@ -7,6 +7,7 @@ import { ToastService } from "../../../core/services/toast.service";
 import { environment } from "../../../../environments/environment";
 import { metaSesion } from "../../../core/utils/session-presence.util";
 import { Paginacion } from "../../../core/utils/pagination.util";
+import { MasterOption } from "../../shared/components/master-select/master-select.component";
 
 @Component({
   selector: "app-user-management",
@@ -17,7 +18,7 @@ export class UserManagementComponent implements OnInit {
   areas: { id: string; name: string }[] = [];
   /** Sedes activas, del mismo catálogo público que usa el resto de selectores. */
   sucursales: { id: string; code: string; name: string }[] = [];
-  roles = ["ADMIN", "AGENT", "USER"];
+  roles = ["ADMIN", "AGENT", "AREA_MANAGER", "USER"];
   search = "";
   role = "";
   status = "";
@@ -34,6 +35,7 @@ export class UserManagementComponent implements OnInit {
     ADMIN: "Administrador",
     AGENT: "Agente",
     USER: "Usuario",
+    AREA_MANAGER: "Jefe de área",
   };
 
   roleDescriptions: Record<string, string> = {
@@ -41,6 +43,7 @@ export class UserManagementComponent implements OnInit {
     ADMIN: "Gestiona usuarios, áreas, configuraciones y reportes",
     AGENT: "Atiende y resuelve los tickets asignados",
     USER: "Crea y da seguimiento a sus propios tickets",
+    AREA_MANAGER: "Como un usuario, y además ve y gestiona los activos de su área",
   };
 
   getRoleLabel(role: string): string {
@@ -58,6 +61,8 @@ export class UserManagementComponent implements OnInit {
         return 'fa-solid fa-headset';
       case 'USER':
         return 'fa-regular fa-user';
+      case 'AREA_MANAGER':
+        return 'fa-solid fa-user-tie';
       default:
         return 'fa-regular fa-user';
     }
@@ -74,6 +79,8 @@ export class UserManagementComponent implements OnInit {
         return '#0E7490';
       case 'USER':
         return '#64748B';
+      case 'AREA_MANAGER':
+        return '#B45309';
       default:
         return '#64748B';
     }
@@ -176,54 +183,13 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  async createOrEditUser(user?: User): Promise<void> {
-    const { value: form } = await Swal.fire({
-      title: user ? "Editar usuario" : "Nuevo usuario",
-      html: this.userFormHtml(user),
-      focusConfirm: false,
-      showCancelButton: true,
-      preConfirm: () => {
-        const g = (i: string): string => {
-          const el = Swal.getPopup()?.querySelector(
-            `#${i}`,
-          ) as HTMLInputElement | null;
-          return el ? el.value.trim() : "";
-        };
-        return { corporateEmail: g("email"), password: g("pass") };
-      },
-    });
-
-    if (!form) return;
-
-const areaSel = await this.pickArea(user?.area);
-      if (areaSel === undefined) return;
-      const sucursalSel = await this.pickSucursal(user?.sucursal);
-
-    const roleSel = await this.pickRole(user?.role);
-    if (roleSel === undefined) return;
-
-const payload: RegisterRequest = {
-          corporateEmail: form.corporateEmail,
-          roleName: roleSel,
-          areaId: areaSel,
-          sucursalId: sucursalSel || null,
-        };
-    if (form.password) {
-      payload.password = form.password;
+  /** Editar abre el modal de edición; sin usuario, el asistente de alta. */
+  createOrEditUser(user?: User): void {
+    if (user) {
+      this.abrirEdicion(user);
+    } else {
+      this.openCreateStepper();
     }
-
-    const obs = user
-      ? this.adminService.updateUser(user.idUser, payload)
-      : this.adminService.createUser(payload);
-
-    obs.subscribe({
-      next: () => {
-        this.loadUsers();
-        this.toastService.success("Guardado");
-      },
-      error: (e) =>
-        this.toastService.error(e?.error?.message || "No se pudo guardar"),
-    });
   }
 
   deleteUser(u: User): void {
@@ -244,108 +210,87 @@ const payload: RegisterRequest = {
     });
   }
 
-  private userFormHtml(user?: User): string {
-    if (!user) {
-      return `
-        <div class="text-left space-y-2 text-sm">
-          <label>Correo corporativo *</label>
-          <input id="email" class="input input-bordered input-sm w-full" />
-          <p class="opacity-70 text-xs">La foto, nombres y correo se obtienen automáticamente de Microsoft Graph.</p>
-        </div>`;
-    }
-    return `
-      <div class="text-left space-y-2 text-sm">
-        <label>Correo corporativo *</label>
-        <input id="email" class="input input-bordered input-sm w-full" value="${user.corporateEmailUser}" />
-        <label>Contraseña (dejar vacío para no cambiar)</label>
-        <input id="pass" type="password" class="input input-bordered input-sm w-full" />
-      </div>`;
+  // ============ Modal de edición ============
+  /** Usuario que se está editando (null = modal cerrado). */
+  editando: User | null = null;
+  guardandoEdicion = false;
+  verPassword = false;
+  edicion: {
+    corporateEmail: string;
+    password: string;
+    roleName: string;
+    areaId: string | null;
+    sucursalId: string | null;
+  } = { corporateEmail: "", password: "", roleName: "", areaId: null, sucursalId: null };
+
+  /** Opciones de área y sede para los selects con icono (app-master-select). */
+  get areaOpciones(): MasterOption[] {
+    return this.areas.map((a) => ({ value: a.id, label: a.name, icon: "fa-solid fa-building", color: "#0E7490" }));
   }
 
-pickArea(current?: string): Promise<string | undefined> {
-      const currentId = this.areas.find((a) => a.name === current)?.id;
-      return this.pickIdSelect(
-        "Área",
-        this.areas.map((a) => ({ value: a.id, label: a.name })),
-        currentId,
-      );
-    }
-
-    /**
-     * Sede de la persona. A diferencia del área, es opcional: se puede dejar
-     * sin asignar para no bloquear el alta de alguien antes de que el catálogo
-     * de sedes esté cargado.
-     */
-    pickSucursal(current?: string): Promise<string | undefined> {
-      const currentId = this.sucursales.find((s) => s.name === current)?.id;
-      return this.pickIdSelect(
-        "Sede",
-        this.sucursales.map((s) => ({ value: s.id, label: `${s.code} - ${s.name}` })),
-        currentId,
-        true,
-      );
-    }
-
-  pickRole(current?: string): Promise<string | undefined> {
-    const opts = this.roles
-      .map(
-        (r) => `
-        <label style="display:flex;align-items:flex-start;gap:8px;padding:10px;border:1px solid #d1d5db;border-radius:8px;margin-bottom:6px;cursor:pointer;${r === current ? "background:#eef2ff;border-color:#6366f1;" : ""}">
-          <input type="radio" name="roleopt" value="${r}" ${r === current ? "checked" : ""} style="margin-top:3px;" />
-          <span style="display:block;">
-            <span style="display:block;font-weight:600;font-size:14px;">${this.getRoleLabel(r)}</span>
-            <span style="display:block;font-size:12px;opacity:0.7;">${this.roleDescriptions[r] || ""}</span>
-          </span>
-        </label>`,
-      )
-      .join("");
-
-    return new Promise((resolve) => {
-      Swal.fire({
-        title: "Seleccione el rol",
-        html: `<div>${opts}</div>`,
-        focusConfirm: false,
-        showCancelButton: true,
-        confirmButtonText: "Aceptar",
-        cancelButtonText: "Cancelar",
-        preConfirm: () => {
-          const sel = Swal.getPopup()!.querySelector(
-            'input[name="roleopt"]:checked',
-          ) as HTMLInputElement;
-          return sel ? sel.value : "";
-        },
-      }).then((r) => resolve(r.isConfirmed && r.value ? r.value : undefined));
-    });
+  get sedeOpciones(): MasterOption[] {
+    return this.sucursales.map((s) => ({
+      value: s.id,
+      label: s.name,
+      detail: s.code,
+      icon: "fa-solid fa-city",
+      color: "#7C3AED",
+    }));
   }
 
-private async pickIdSelect(
-      label: string,
-      options: { value: string; label: string }[],
-      currentId?: string,
-      /** Añade una opción vacía para poder dejar el campo sin asignar. */
-      opcional = false,
-    ): Promise<string | undefined> {
-      const lista = opcional ? [{ value: "", label: `Sin ${label.toLowerCase()}` }, ...options] : options;
-      const seleccion = lista.find((o) => o.value === currentId)?.value ?? (opcional ? "" : undefined);
-      const opts = lista
-        .map(
-          (o) =>
-            `<option value="${o.value}" ${o.value === seleccion ? "selected" : ""}>${o.label}</option>`,
-        )
-        .join("");
-    const { value } = await Swal.fire({
-      title: `Seleccione ${label}`,
-      html: `<select id="swal-select" class="select select-bordered select-sm w-full">${opts}</select>`,
-      focusConfirm: false,
-      showCancelButton: true,
-      preConfirm: () => {
-        const sel = Swal.getPopup()!.querySelector(
-          "#swal-select",
-        ) as HTMLSelectElement;
-        return sel.value === "" ? (opcional ? "" : undefined) : sel.value;
+  abrirEdicion(u: User): void {
+    this.editando = u;
+    this.verPassword = false;
+    this.edicion = {
+      corporateEmail: u.corporateEmailUser,
+      password: "",
+      roleName: u.role,
+      areaId: this.areas.find((a) => a.name === u.area)?.id ?? null,
+      sucursalId: u.sucursalId ?? this.sucursales.find((s) => s.name === u.sucursal)?.id ?? null,
+    };
+  }
+
+  cerrarEdicion(): void {
+    if (this.guardandoEdicion) return;
+    this.editando = null;
+  }
+
+  /** Correo con forma de correo y, si se escribe, contraseña de al menos 8 caracteres. */
+  get edicionValida(): boolean {
+    const e = this.edicion;
+    return (
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.corporateEmail.trim()) &&
+      !!e.roleName &&
+      !!e.areaId &&
+      (!e.password || e.password.length >= 8)
+    );
+  }
+
+  guardarEdicion(): void {
+    if (!this.editando || !this.edicionValida || this.guardandoEdicion) return;
+    const e = this.edicion;
+    const payload: RegisterRequest = {
+      corporateEmail: e.corporateEmail.trim(),
+      roleName: e.roleName,
+      areaId: e.areaId!,
+      sucursalId: e.sucursalId || null,
+    };
+    if (e.password) {
+      payload.password = e.password;
+    }
+    this.guardandoEdicion = true;
+    this.adminService.updateUser(this.editando.idUser, payload).subscribe({
+      next: () => {
+        this.guardandoEdicion = false;
+        this.editando = null;
+        this.loadUsers();
+        this.toastService.success("Usuario actualizado");
+      },
+      error: (err) => {
+        this.guardandoEdicion = false;
+        this.toastService.error(err?.error?.message || "No se pudo guardar");
       },
     });
-    return value;
   }
 
   // ============ Estado del stepper ============

@@ -2,12 +2,14 @@
 # Frontend Mesa de Servicios COAC: imagen de producción
 # ==============================================================================
 # Etapa 1 compila Angular con Node; etapa 2 sirve solo el resultado con Nginx
-# (sin Node, sin node_modules, sin código fuente).
+# sin privilegios (sin Node, sin node_modules, sin código fuente).
 #
-#   docker build -t mesa-servicios-frontend .
+#   docker build -t ghcr.io/<usuario>/mesa-servicios-frontend:1.0.0 .
 #
-# Necesita un contenedor llamado "backend" en la misma red (nginx.conf reenvía
-# /api a http://backend:8080). Ver docker-compose.yml en el repo del backend.
+# Necesita un contenedor llamado "backend" en la misma red de Docker (nginx.conf
+# reenvía /api a http://backend:8080). Ver Backend-Mesa-Servicios/despliegue/.
+# No lleva secretos: la configuración de producción (apiUrl '/api') es la misma
+# para cualquier dominio.
 # ==============================================================================
 
 # ---------- Etapa 1: compilación ----------
@@ -21,14 +23,25 @@ RUN npm ci --no-audit --no-fund
 
 COPY . .
 # Configuración "production": environment.prod.ts (apiUrl relativo '/api'),
-# hash en los nombres y presupuestos de tamaño.
+# hash en los nombres y presupuestos de tamaño. Sale en dist/mesa-ayuda-frontend
+# (builder "browser" de angular.json).
 RUN npx ng build --configuration production
 
 # ---------- Etapa 2: servidor ----------
-# Variante sin privilegios: Nginx corre con un usuario normal y escucha en 8080.
+# Variante sin privilegios: Nginx corre con el usuario nginx (uid 101) y
+# escucha en el 8080 del contenedor.
 FROM nginxinc/nginx-unprivileged:1.27-alpine
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+ARG VERSION=dev
+LABEL org.opencontainers.image.title="mesa-servicios-frontend" \
+      org.opencontainers.image.description="Mesa de Servicios COAC - frontend Angular servido con Nginx" \
+      org.opencontainers.image.source="https://github.com/IsmaelAndra/Frontend-Mesa-Servicios" \
+      org.opencontainers.image.version="${VERSION}"
+
+# nginx.conf es una plantilla: la imagen la pasa por envsubst al arrancar y
+# deja el resultado en /etc/nginx/conf.d/default.conf.
+ENV REAL_IP_FROM=172.16.0.0/12
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=compilacion /fuente/dist/mesa-ayuda-frontend /usr/share/nginx/html
 
 EXPOSE 8080

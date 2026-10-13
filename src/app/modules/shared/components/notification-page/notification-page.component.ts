@@ -239,6 +239,8 @@ export class NotificationPageComponent implements OnInit {
     const start = (this.currentPage - 1) * this.pageSize;
     const end = start + this.pageSize;
     this.notifications = filtered.slice(start, end);
+    this.grupos = this.agrupar();
+    this.calcularResumen();
   }
 
   // ============ Limpiar filtros ============
@@ -257,8 +259,78 @@ export class NotificationPageComponent implements OnInit {
     this.applyFilterAndPagination();
   }
 
+  // ============ Resumen y panel lateral ============
+  /**
+   * Se calculan al filtrar o paginar, no en getters: la barra superior fuerza
+   * detección de cambios cada segundo y una lista recreada en cada vuelta hacía
+   * que un clic cayera entre dos renderizados y se perdiera.
+   */
+  grupos: { label: string; items: Notification[] }[] = [];
+  resumen = { total: 0, sinLeer: 0, leidas: 0, hoy: 0 };
+  tiposConteo: { tipo: string; n: number }[] = [];
+
+  setEstado(estado: "LEIDA" | "NO_LEIDA" | "ALL"): void {
+    this.statusFilter = estado;
+    this.filterByStatus();
+  }
+
+  setTipo(tipo: string): void {
+    this.typeFilter = this.typeFilter === tipo ? "ALL" : tipo;
+    this.filterByStatus();
+  }
+
+  /** Canal de color daisyUI del tipo (para fondo tenue y texto). */
+  tonoTipo(tipo?: string): string {
+    const clase = notificationColor(tipo);
+    const mapa: Record<string, string> = {
+      // El azul de marca casi no se ve sobre el fondo oscuro: se usa info.
+      "bg-primary": "--in",
+      "bg-success": "--su",
+      "bg-info": "--in",
+      "bg-error": "--er",
+      "bg-warning": "--wa",
+      "bg-secondary": "--s",
+    };
+    return mapa[clase] ?? "--bc";
+  }
+
+  trackNotif(_: number, n: Notification): string {
+    return n.idNotification;
+  }
+
+  trackTipo(_: number, t: { tipo: string }): string {
+    return t.tipo;
+  }
+
+  trackGrupo(_: number, g: { label: string }): string {
+    return g.label;
+  }
+
+  private calcularResumen(): void {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const sinLeer = this.allNotifications.filter((n) => !n.readNotification).length;
+    this.resumen = {
+      total: this.allNotifications.length,
+      sinLeer,
+      leidas: this.allNotifications.length - sinLeer,
+      hoy: this.allNotifications.filter((n) => new Date(n.createdAtNotification).getTime() >= hoy.getTime()).length,
+    };
+    const conteo = new Map<string, number>();
+    this.allNotifications.forEach((n) => {
+      if (n.typeNotification) conteo.set(n.typeNotification, (conteo.get(n.typeNotification) ?? 0) + 1);
+    });
+    this.tiposConteo = Array.from(conteo.entries())
+      .map(([tipo, n]) => ({ tipo, n }))
+      .sort((a, b) => b.n - a.n);
+  }
+
   // ============ Agrupar por fecha ============
   get groupedNotifications(): { label: string; items: Notification[] }[] {
+    return this.grupos;
+  }
+
+  private agrupar(): { label: string; items: Notification[] }[] {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 

@@ -97,8 +97,10 @@ describe('notification-presentation', () => {
     });
   });
 
-  it('la etiqueta se lee sin guiones bajos', () => {
-    expect(notificationLabel('CHAT_MENSAJE')).toBe('CHAT MENSAJE');
+  it('la etiqueta sale en español y, si el tipo es nuevo, sin guiones bajos', () => {
+    expect(notificationLabel('CHAT_MENSAJE')).toBe('Mensaje en el chat');
+    expect(notificationLabel('SLA_WARNING')).toBe('SLA por vencer');
+    expect(notificationLabel('TIPO_NUEVO')).toBe('Tipo nuevo');
   });
 
   /**

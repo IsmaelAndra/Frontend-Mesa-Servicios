@@ -1,5 +1,5 @@
 <aside
-  class="overflow-y-auto card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
+  class="min-h-0 overflow-y-auto card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]"
 >
   <div class="card-body p-3 gap-3 text-sm">
     <ng-container *ngIf="editor.nodoActual() as nodo; else nadaSeleccionado">
@@ -277,43 +277,26 @@
 
         <!-- APPROVAL -->
         <ng-container *ngSwitchCase="'APPROVAL'">
+          <!-- Las aprobaciones las decide siempre un SUPER_ADMIN; quien provocó
+               el hecho (un ADMIN, por ejemplo) ve el resultado en "Mis solicitudes". -->
+          <div class="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2.5 text-xs">
+            <i class="fa-solid fa-user-shield text-primary mt-0.5" aria-hidden="true"></i>
+            <span>
+              Decide un <strong>Super administrador</strong>. Quien originó la
+              solicitud la sigue en Aprobaciones → Mis solicitudes.
+            </span>
+          </div>
           <label class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium opacity-70">
-              Rol que aprueba (o superior)
+              Super administrador concreto (opcional)
             </span>
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('rol')"
-            (change)="setConfig('rol', $any($event.target).value)"
-          >
-            <option
-              *ngFor="let r of roles"
-              [value]="r"
-              [selected]="'' + configDe('rol') === '' + r"
-            >
-              {{ r }}
-            </option>
-          </select>
-          <label class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium opacity-70">
-              Aprobador concreto (opcional)
-            </span>
-          </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('usuarioId')"
-            (change)="setConfig('usuarioId', $any($event.target).value)"
-          >
-            <option value="">— cualquiera con el rol —</option>
-            <option
-              *ngFor="let a of editor.agentes()"
-              [value]="a.idUser"
-              [selected]="'' + configDe('usuarioId') === '' + a.idUser"
-            >
-              {{ a.displayName || a.corporateEmailUser }}
-            </option>
-          </select>
+          <app-master-select
+            [ngModel]="configDe('usuarioId') || null"
+            (ngModelChange)="setConfig('usuarioId', $event ?? '')"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="opcAgentes()" icon="fa-solid fa-user" [allowEmpty]="true" emptyLabel="— cualquier super administrador —" placeholder="— cualquier super administrador —"
+          ></app-master-select>
           <div class="flex justify-between items-center">
             <label class="text-xs font-medium opacity-70"
               >Que se pide</label
@@ -544,58 +527,34 @@
               >Categoria</span
             >
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('categoriaId')"
-            (change)="setConfig('categoriaId', $any($event.target).value)"
-          >
-            <option value="">— por defecto —</option>
-            <option
-              *ngFor="let c of editor.lookups()?.categories ?? []"
-              [value]="c.id"
-              [selected]="'' + configDe('categoriaId') === '' + c.id"
-            >
-              {{ c.name }}
-            </option>
-          </select>
+          <app-master-select
+            [ngModel]="configDe('categoriaId') || null"
+            (ngModelChange)="setConfig('categoriaId', $event ?? '')"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="opcCategorias()" icon="fa-solid fa-tags" [allowEmpty]="true" emptyLabel="— por defecto —" placeholder="— por defecto —"
+          ></app-master-select>
           <label class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium opacity-70"
               >Prioridad</span
             >
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('prioridadId')"
-            (change)="setConfig('prioridadId', $any($event.target).value)"
-          >
-            <option value="">— por defecto —</option>
-            <option
-              *ngFor="let p of editor.lookups()?.priorities ?? []"
-              [value]="p.id"
-              [selected]="'' + configDe('prioridadId') === '' + p.id"
-            >
-              {{ p.name }}
-            </option>
-          </select>
+          <app-master-select
+            [ngModel]="configDe('prioridadId') || null"
+            (ngModelChange)="setConfig('prioridadId', $event ?? '')"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="opcPrioridades()" icon="fa-solid fa-flag" [allowEmpty]="true" emptyLabel="— por defecto —" placeholder="— por defecto —"
+          ></app-master-select>
           <label class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium opacity-70"
               >Tipo</span
             >
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('tipoId')"
-            (change)="setConfig('tipoId', $any($event.target).value)"
-          >
-            <option value="">— por defecto —</option>
-            <option
-              *ngFor="let t of editor.lookups()?.ticketTypes ?? []"
-              [value]="t.id"
-              [selected]="'' + configDe('tipoId') === '' + t.id"
-            >
-              {{ t.name }}
-            </option>
-          </select>
+          <app-master-select
+            [ngModel]="configDe('tipoId') || null"
+            (ngModelChange)="setConfig('tipoId', $event ?? '')"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="opcTipos()" icon="fa-solid fa-ticket" [allowEmpty]="true" emptyLabel="— por defecto —" placeholder="— por defecto —"
+          ></app-master-select>
           <p class="text-[10px] opacity-50 leading-relaxed">
             El ticket nace a nombre del autor del workflow. Su id queda en
             <code class="bg-base-200 px-1 rounded"
@@ -611,20 +570,12 @@
               >Agente</span
             >
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('agenteId')"
-            (change)="setConfig('agenteId', $any($event.target).value)"
-          >
-            <option value="">—</option>
-            <option
-              *ngFor="let a of editor.agentes()"
-              [value]="a.idUser"
-              [selected]="'' + configDe('agenteId') === '' + a.idUser"
-            >
-              {{ a.displayName || a.corporateEmailUser }}
-            </option>
-          </select>
+          <app-master-select
+            [ngModel]="configDe('agenteId') || null"
+            (ngModelChange)="setConfig('agenteId', $event ?? '')"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="opcAgentes()" icon="fa-solid fa-user" [allowEmpty]="true" emptyLabel="—" placeholder="—"
+          ></app-master-select>
           <div class="flex justify-between items-center">
             <label class="text-xs font-medium opacity-70">o variable</label>
             <ng-container
@@ -648,20 +599,12 @@
               >Equipo</span
             >
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('equipoId')"
-            (change)="setConfig('equipoId', $any($event.target).value)"
-          >
-            <option value="">—</option>
-            <option
-              *ngFor="let t of editor.lookups()?.teams ?? []"
-              [value]="t.id"
-              [selected]="'' + configDe('equipoId') === '' + t.id"
-            >
-              {{ t.name }}
-            </option>
-          </select>
+          <app-master-select
+            [ngModel]="configDe('equipoId') || null"
+            (ngModelChange)="setConfig('equipoId', $event ?? '')"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="opcEquipos()" icon="fa-solid fa-users" [allowEmpty]="true" emptyLabel="—" placeholder="—"
+          ></app-master-select>
           <div class="flex justify-between items-center">
             <label class="text-xs font-medium opacity-70">
               o variable (p. ej. la sugerencia de NEXA)
@@ -691,19 +634,12 @@
               >Estado</span
             >
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('estado')"
-            (change)="setConfig('estado', $any($event.target).value)"
-          >
-            <option
-              *ngFor="let e of editor.lookups()?.statuses ?? []"
-              [value]="e.name"
-              [selected]="'' + configDe('estado') === '' + e.name"
-            >
-              {{ e.name }}
-            </option>
-          </select>
+          <app-master-select
+            [ngModel]="configDe('estado') || null"
+            (ngModelChange)="setConfig('estado', $event ?? '')"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="opcEstados()" icon="fa-solid fa-circle-half-stroke"
+          ></app-master-select>
         </ng-container>
 
         <!-- TICKET_PRIORITY -->
@@ -713,20 +649,12 @@
               >Prioridad</span
             >
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('prioridadId')"
-            (change)="setConfig('prioridadId', $any($event.target).value)"
-          >
-            <option value="">—</option>
-            <option
-              *ngFor="let p of editor.lookups()?.priorities ?? []"
-              [value]="p.id"
-              [selected]="'' + configDe('prioridadId') === '' + p.id"
-            >
-              {{ p.name }}
-            </option>
-          </select>
+          <app-master-select
+            [ngModel]="configDe('prioridadId') || null"
+            (ngModelChange)="setConfig('prioridadId', $event ?? '')"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="opcPrioridades()" icon="fa-solid fa-flag" [allowEmpty]="true" emptyLabel="—" placeholder="—"
+          ></app-master-select>
           <div class="flex justify-between items-center">
             <label class="text-xs font-medium opacity-70">o variable</label>
             <ng-container
@@ -750,20 +678,12 @@
               >Categoria</span
             >
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('categoriaId')"
-            (change)="setConfig('categoriaId', $any($event.target).value)"
-          >
-            <option value="">—</option>
-            <option
-              *ngFor="let c of editor.lookups()?.categories ?? []"
-              [value]="c.id"
-              [selected]="'' + configDe('categoriaId') === '' + c.id"
-            >
-              {{ c.name }}
-            </option>
-          </select>
+          <app-master-select
+            [ngModel]="configDe('categoriaId') || null"
+            (ngModelChange)="setConfig('categoriaId', $event ?? '')"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="opcCategorias()" icon="fa-solid fa-tags" [allowEmpty]="true" emptyLabel="—" placeholder="—"
+          ></app-master-select>
           <div class="flex justify-between items-center">
             <label class="text-xs font-medium opacity-70">o variable</label>
             <ng-container
@@ -817,20 +737,12 @@
               >Politica</span
             >
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('politicaId')"
-            (change)="setConfig('politicaId', $any($event.target).value)"
-          >
-            <option value="">Recalcular segun las reglas de SLA</option>
-            <option
-              *ngFor="let p of editor.lookups()?.slaPolicies ?? []"
-              [value]="p.id"
-              [selected]="'' + configDe('politicaId') === '' + p.id"
-            >
-              {{ p.name }}
-            </option>
-          </select>
+          <app-master-select
+            [ngModel]="configDe('politicaId') || null"
+            (ngModelChange)="setConfig('politicaId', $event ?? '')"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="opcPoliticas()" icon="fa-solid fa-stopwatch" [allowEmpty]="true" emptyLabel="Recalcular segun las reglas de SLA" placeholder="Recalcular segun las reglas de SLA"
+          ></app-master-select>
           <p class="text-[10px] opacity-50 leading-relaxed">
             Los plazos cuentan desde la creacion del ticket.
           </p>
@@ -871,20 +783,12 @@
               Asignada a
             </span>
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('asignadoId')"
-            (change)="setConfig('asignadoId', $any($event.target).value)"
-          >
-            <option value="">— el agente del ticket —</option>
-            <option
-              *ngFor="let a of editor.agentes()"
-              [value]="a.idUser"
-              [selected]="'' + configDe('asignadoId') === '' + a.idUser"
-            >
-              {{ a.displayName || a.corporateEmailUser }}
-            </option>
-          </select>
+          <app-master-select
+            [ngModel]="configDe('asignadoId') || null"
+            (ngModelChange)="setConfig('asignadoId', $event ?? '')"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="opcAgentes()" icon="fa-solid fa-user" [allowEmpty]="true" emptyLabel="— el agente del ticket —" placeholder="— el agente del ticket —"
+          ></app-master-select>
           <label class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium opacity-70">
               Duracion (minutos)
@@ -1012,39 +916,45 @@
         >
           <i class="fa-solid fa-circle-info text-sm"></i>
         </div>
-        <h3 class="text-sm font-bold">Variables disponibles</h3>
+        <h3 class="text-base font-bold">Variables disponibles</h3>
       </div>
-      <p class="text-[11px] opacity-60 leading-relaxed">
+      <p class="text-[13px] opacity-70 leading-relaxed">
         Selecciona un nodo del lienzo para ver sus opciones. Mientras tanto,
         aqui estan las variables que puedes usar en los textos como
         <code class="bg-base-200 px-1 rounded">{{ "{{variable}}" }}</code>.
       </p>
 
       <div *ngIf="editor.disparadorActual() as d" class="space-y-2">
-        <p class="text-xs font-semibold opacity-70">
+        <p class="text-sm font-semibold opacity-70">
           De «{{ d.descripcion }}»
         </p>
-        <p class="text-[10px] opacity-50 leading-relaxed">
+        <p class="text-[12px] opacity-60 leading-relaxed">
           <code class="bg-base-200 px-1 rounded">ticket.*</code> y
           <code class="bg-base-200 px-1 rounded">usuario.*</code> se leen al
           dia; <code class="bg-base-200 px-1 rounded">evento.*</code> es la
           foto del momento del disparo.
         </p>
-        <div
-          *ngFor="let v of variables()"
-          class="flex flex-col gap-0.5 py-1.5 border-b border-base-200 last:border-0"
-        >
-          <code class="text-primary text-[11px] font-medium">{{
-            v.clave
-          }}</code>
-          <span class="text-[10px] opacity-60">{{ v.descripcion }}</span>
+        <!-- Sin altura propia: el panel ocupa lo mismo que la paleta y el lienzo y
+             hace scroll entero (con max-h-56 la lista quedaba en una cajita). -->
+        <div>
+          <div
+            *ngFor="let v of variables()"
+            class="flex flex-col gap-0.5 py-2 border-b border-base-200 last:border-0"
+          >
+            <code class="text-primary text-[13px] font-semibold">{{
+              v.clave
+            }}</code>
+            <span class="text-[12px] opacity-70 leading-snug">{{
+              v.descripcion
+            }}</span>
+          </div>
+          <p
+            *ngIf="variables().length === 0"
+            class="text-sm opacity-60 text-center py-4"
+          >
+            No hay variables disponibles todavía.
+          </p>
         </div>
-        <p
-          *ngIf="variables().length === 0"
-          class="text-xs opacity-50 text-center py-4"
-        >
-          No hay variables disponibles todavía.
-        </p>
       </div>
     </ng-template>
   </div>

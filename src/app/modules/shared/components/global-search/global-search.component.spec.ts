@@ -18,6 +18,7 @@ const RESPUESTA: GlobalSearchResponse = {
   teams: [],
   areas: [],
   workflows: [],
+  assets: [],
 };
 
 describe('GlobalSearchComponent', () => {
@@ -152,6 +153,35 @@ describe('GlobalSearchComponent', () => {
     tick();
     comp.onInputKeydown({ key: 'Escape', preventDefault: () => undefined } as unknown as KeyboardEvent);
     expect(comp.abierto).toBe(false);
+  }));
+
+  it('abrir un activo navega a su ficha y "Ver todos" al inventario', fakeAsync(() => {
+    globalSearch.buscar.and.returnValue(
+      of({
+        query: 'lap',
+        tickets: [],
+        agents: [],
+        users: [],
+        teams: [],
+        areas: [],
+        workflows: [],
+        assets: [
+          {
+            idAsset: 'a1',
+            codeAsset: 'TI-LAP-001',
+            nameAsset: 'Laptop Dell',
+            typeAsset: 'LAPTOP',
+            statusAsset: 'ASIGNADO',
+            assignedUserName: 'Ana',
+            area: 'TI',
+          },
+        ],
+      }),
+    );
+    abrirYBuscar('lap');
+    const fila = fixture.debugElement.query(By.css('[data-search-row]')).nativeElement as HTMLButtonElement;
+    fila.click();
+    expect(router.navigate).toHaveBeenCalledWith(['/activos', 'a1']);
   }));
 
   it('un grupo vacío no pinta cabecera', fakeAsync(() => {

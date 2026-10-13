@@ -25,9 +25,12 @@ export class AuditSistemaComponent implements OnInit {
   desde = '';
   hasta = '';
 
+  /** Bloque que se pide al servidor (máximo que acepta) y página dentro de él. */
   pagina = 0;
-  tamano = 100;
+  tamano = 200;
   total = 0;
+  paginaLocal = 0;
+  porPagina = 25;
 
   loading = false;
   /** Pide confirmación antes de lanzar una búsqueda amplia. */
@@ -105,6 +108,7 @@ export class AuditSistemaComponent implements OnInit {
         next: (f) => {
           this.filas = f;
           this.total = f.length;
+          this.paginaLocal = 0;
           this.loading = false;
         },
         error: (err) => {
@@ -134,36 +138,70 @@ export class AuditSistemaComponent implements OnInit {
     return this.filas.length >= this.tamano;
   }
 
+  /** Filas de la página visible (el paginador común trabaja sobre el bloque cargado). */
+  get filasPagina(): AuditRow[] {
+    const desde = this.paginaLocal * this.porPagina;
+    return this.filas.slice(desde, desde + this.porPagina);
+  }
+
+  cambiarPorPagina(n: number): void {
+    this.porPagina = n;
+    this.paginaLocal = 0;
+  }
+
+  trackFila(_: number, f: AuditRow): string {
+    return f.id;
+  }
+
   /** La IP de bucle local (IPv6 o IPv4) es el propio servidor o el equipo de desarrollo. */
   origen(ip: string | null | undefined): string {
     if (!ip) return '—';
     return IPS_LOCALES.has(ip) ? 'Local' : ip;
   }
 
-  /** Texto legible de la acción; si no está en el catálogo, el código tal cual. */
+  /**
+   * Texto legible de la acción. Si un código nuevo no está en el catálogo se
+   * traduce palabra a palabra, para que nunca salga en inglés.
+   */
   etiquetaAccion(accion: string): string {
-    return ETIQUETAS_ACCION[accion] ?? accion;
+    if (!accion) return '—';
+    const conocida = ETIQUETAS_ACCION[accion];
+    if (conocida) return conocida;
+    const texto = accion
+      .split('_')
+      .map((p) => PALABRAS[p] ?? p.toLowerCase())
+      .join(' ');
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
 
-  /** Colorea las acciones para que un fallo de acceso salte a la vista. */
-  colorAccion(accion: string): string {
-    if (!accion) return '';
+  /**
+   * Color e icono del badge (mismo patrón que los de estado: fondo tenue, borde
+   * y texto del color). Los fallos de acceso saltan a la vista en rojo.
+   */
+  metaAccion(accion: string): { color: string; icono: string } {
+    if (!accion) return TONOS.neutro;
     // Lo que salió bien no es una advertencia: antes un LOGIN correcto se
     // pintaba en amarillo, igual que los intentos sospechosos.
-    if (EXITOSAS.has(accion)) {
-      return 'badge-success';
-    }
+    if (EXITOSAS.has(accion)) return TONOS.exito;
     if (accion.includes('FAILED') || accion.includes('DENIED') || accion.includes('REUSE')
-        || accion === 'SUSPICIOUS_ACTIVITY' || accion === 'ALERTA_SEGURIDAD') {
-      return 'badge-error';
+        || accion.includes('REJECTED') || accion.includes('BLOCKED')
+        || accion === 'SUSPICIOUS_ACTIVITY' || accion === 'ALERTA_SEGURIDAD'
+        || accion === 'WORKFLOW_ERROR') {
+      return TONOS.error;
     }
     if (accion.startsWith('MFA_') || accion.startsWith('PASSWORD') || accion.startsWith('LOGIN')) {
-      return 'badge-warning';
+      return TONOS.seguridad;
     }
-    if (accion.includes('DELETE') || accion.includes('DISABLED') || accion.includes('SETTING')) {
-      return 'badge-info';
+    if (accion.includes('DELETE') || accion.includes('DISABLED') || accion.includes('PURGE')
+        || accion.includes('CANCEL')) {
+      return TONOS.baja;
     }
-    return 'badge-ghost';
+    if (accion.includes('CREATE') || accion.includes('ACTIVATE')) return TONOS.alta;
+    if (accion.includes('CONFIG') || accion.includes('SETTING')) return TONOS.config;
+    if (accion.includes('UPDATE') || accion.includes('CHANGE') || accion.includes('ASSIGN')) {
+      return TONOS.cambio;
+    }
+    return TONOS.neutro;
   }
 }
 
@@ -182,6 +220,31 @@ export interface AuditRow {
 }
 
 const IPS_LOCALES = new Set(['0:0:0:0:0:0:0:1', '::1', '127.0.0.1']);
+
+/** Tonos de los badges de acción: color de marca de cada tipo + icono. */
+const TONOS = {
+  exito: { color: '#16A34A', icono: 'fa-solid fa-circle-check' },
+  error: { color: '#DC2626', icono: 'fa-solid fa-triangle-exclamation' },
+  seguridad: { color: '#D97706', icono: 'fa-solid fa-key' },
+  baja: { color: '#BE185D', icono: 'fa-solid fa-trash-can' },
+  alta: { color: '#0D9488', icono: 'fa-solid fa-circle-plus' },
+  config: { color: '#7C3AED', icono: 'fa-solid fa-sliders' },
+  cambio: { color: '#2563EB', icono: 'fa-solid fa-pen' },
+  neutro: { color: '#64748B', icono: 'fa-solid fa-circle-info' }
+};
+
+/** Traducción palabra a palabra para códigos que aún no están en el catálogo. */
+const PALABRAS: Record<string, string> = {
+  CREATE: 'creación', CREATED: 'creado', UPDATE: 'actualización', UPDATED: 'actualizado',
+  DELETE: 'eliminación', DELETED: 'eliminado', CHANGE: 'cambio', STATUS: 'estado',
+  ASSIGN: 'asignación', UNASSIGN: 'devolución', ASSET: 'de activo', USER: 'usuario',
+  TICKET: 'ticket', CONFIG: 'configuración', FAILED: 'fallido', DENIED: 'denegado',
+  ACCESS: 'acceso', ADMIN: 'administración', REPORT: 'reporte', SETTING: 'ajuste',
+  WORKFLOW: 'automatización', APPROVAL: 'aprobación', DECIDED: 'resuelta', TEAM: 'equipo',
+  AREA: 'área', MAIL: 'correo', PASSWORD: 'contraseña', LOGIN: 'inicio de sesión',
+  ENABLED: 'activado', DISABLED: 'desactivado', REQUEST: 'solicitud', REQUESTED: 'solicitado',
+  EXPORT: 'exportación', IMPORT: 'importación', SYNC: 'sincronización', ERROR: 'error'
+};
 
 /** Acciones de acceso que terminaron bien. */
 const EXITOSAS = new Set(['LOGIN', 'LOGOUT', 'MFA_VERIFIED', 'MFA_ENROLLED']);
@@ -235,5 +298,12 @@ const ETIQUETAS_ACCION: Record<string, string> = {
   WORKFLOW_PURGE: 'Purga de ejecuciones',
   WORKFLOW_ERROR: 'Error de automatización',
   WORKFLOW_APROBACION: 'Aprobación solicitada',
-  WORKFLOW_APPROVAL_DECIDED: 'Aprobación resuelta'
+  WORKFLOW_APPROVAL_DECIDED: 'Aprobación resuelta',
+  WORKFLOW_STEP: 'Paso de automatización',
+  CREATE_ASSET: 'Activo registrado',
+  UPDATE_ASSET: 'Activo actualizado',
+  DELETE_ASSET: 'Activo eliminado',
+  ASSIGN_ASSET: 'Activo asignado',
+  UNASSIGN_ASSET: 'Activo devuelto',
+  CHANGE_ASSET_STATUS: 'Estado de activo cambiado'
 };

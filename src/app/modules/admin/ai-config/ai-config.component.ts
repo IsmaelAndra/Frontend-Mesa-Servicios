@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { MasterOption } from "../../shared/components/master-select/master-select.component";
 import { Component, DestroyRef, inject, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
@@ -26,6 +27,24 @@ export class AiConfigComponent implements OnInit {
     "ANTHROPIC",
     "OLLAMA",
   ];
+
+  /** Proveedores con el icono de su marca/modelo y su color, para el select. */
+  readonly providerOptions: MasterOption[] = [
+    { value: "GEMINI", label: "Google Gemini", icon: "fa-brands fa-google", color: "#4285F4" },
+    { value: "OPENAI", label: "OpenAI (GPT)", icon: "fa-brands fa-openai", color: "#10A37F" },
+    { value: "AZURE_OPENAI", label: "Azure OpenAI", icon: "fa-brands fa-microsoft", color: "#0078D4" },
+    { value: "ANTHROPIC", label: "Anthropic (Claude)", icon: "fa-brands fa-claude", color: "#D97757" },
+    { value: "OLLAMA", label: "Ollama (servidor propio)", icon: "fa-solid fa-server", color: "#475569" },
+  ];
+
+  metaProveedor(valor: string | null | undefined): { label: string; icon: string; color: string } {
+    const p = this.providerOptions.find((o) => o.value === valor);
+    return {
+      label: p?.label ?? valor ?? "—",
+      icon: p?.icon ?? "fa-solid fa-robot",
+      color: p?.color ?? "#64748B",
+    };
+  }
 
   readonly providerDefaults: {
     [k: string]: { model: string; baseUrl: string };

@@ -2,6 +2,7 @@ import { ActivatedRouteSnapshot, Router, Routes, UrlSegment } from '@angular/rou
 import { Subject } from 'rxjs';
 import { routes } from '../../../../app-routing.module';
 import { TICKETS_ROUTES } from '../../../tickets/tickets.routes';
+import { ASSETS_ROUTES } from '../../../assets/assets.routes';
 import { ADMIN_ROUTES } from '../../../admin/admin.routes';
 import { WORKFLOW_ROUTES } from '../../../admin/workflow.routes';
 import { REPORTS_ROUTES } from '../../../reports/reports.routes';
@@ -58,6 +59,7 @@ function segmentosDe(url: string): string[] {
  */
 const HIJAS_PEREZOSAS: Record<string, Routes> = {
   tickets: TICKETS_ROUTES,
+  activos: ASSETS_ROUTES,
   admin: ADMIN_ROUTES,
   workflows: WORKFLOW_ROUTES,
   reports: REPORTS_ROUTES,
@@ -106,6 +108,10 @@ const URLS_APP = [
   '/tickets/assigned',
   '/tickets/kanban',
   '/tickets/3f2a9c1e-5b7d-4e8f-9a0b-1c2d3e4f5a6b',
+  '/activos',
+  '/activos/new',
+  '/activos/3f2a9c1e-5b7d-4e8f-9a0b-1c2d3e4f5a6b',
+  '/activos/3f2a9c1e-5b7d-4e8f-9a0b-1c2d3e4f5a6b/editar',
   '/admin',
   '/admin/users',
   '/admin/teams',
@@ -175,11 +181,16 @@ describe('breadcrumb', () => {
     }
   });
 
-  it('los ids (uuid) se nombran segun su ruta y solo enlaza el de tickets', () => {
+  it('los ids (uuid) se nombran segun su ruta y enlazan solo tickets y activos', () => {
     const tickets = instanciar(['tickets', '3f2a9c1e-5b7d-4e8f-9a0b-1c2d3e4f5a6b']);
     const tac = tickets.crumbs[tickets.crumbs.length - 1];
     expect(tac.label).toBe('Detalle del ticket');
     expect(tac.enlazable).toBeTrue();
+
+    const activo = instanciar(['activos', '3f2a9c1e-5b7d-4e8f-9a0b-1c2d3e4f5a6b']);
+    const ficha = activo.crumbs[activo.crumbs.length - 1];
+    expect(ficha.label).toBe('Detalle del activo');
+    expect(ficha.enlazable).toBeTrue();
 
     const editar = instanciar(['workflows', '7e6d5c4b-3a29-4180-9f8e-7d6c5b4a3928', 'editar']);
     const proceso = editar.crumbs[editar.crumbs.length - 2];

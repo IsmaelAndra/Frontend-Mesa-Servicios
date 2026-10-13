@@ -152,6 +152,11 @@ export class WorkflowService {
   // ============================ Aprobaciones ============================
   // Fuera de /admin: quien aprueba puede ser un AGENT o un USER.
 
+  /** Las aprobaciones que provoqué y cómo se resolvieron. */
+  misSolicitudes(): Observable<WorkflowApproval[]> {
+    return this.http.get<WorkflowApproval[]>(`${environment.apiUrl}/workflows/aprobaciones/mias`);
+  }
+
   aprobacionesPendientes(): Observable<WorkflowApproval[]> {
     return this.http.get<WorkflowApproval[]>(`${environment.apiUrl}/workflows/aprobaciones`);
   }

@@ -629,7 +629,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
         return { minutos: 60 };
       case "APPROVAL":
         return {
-          rol: "ADMIN",
+          rol: "SUPER_ADMIN",
           mensaje: "Aprobar el paso del ticket #{{ticket.numero}}",
         };
       case "NOTIFY":
@@ -989,7 +989,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
             ? `Hasta ${c["hasta"]}`
             : "Sin plazo";
       case "APPROVAL":
-        return `Aprueba ${c["rol"] ?? "?"}${c["horas_limite"] ? ` · ${c["horas_limite"]} h` : ""}`;
+        return `Aprueba Super admin${c["horas_limite"] ? ` · ${c["horas_limite"]} h` : ""}`;
       case "NEXA":
         return String(c["accion"] ?? "CLASIFICAR");
       case "NOTIFY":

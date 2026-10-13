@@ -109,21 +109,27 @@
         <table class="table table-zebra table-sm">
           <thead>
             <tr>
-              <th>Fecha</th>
-              <th>Acción</th>
-              <th>Usuario</th>
-              <th>Origen</th>
-              <th>Sobre</th>
-              <th>Detalle</th>
+              <th class="text-center">Fecha</th>
+              <th class="text-center">Acción</th>
+              <th class="text-center">Usuario</th>
+              <th class="text-center">Origen</th>
+              <th class="text-center">Sobre</th>
+              <th class="text-center">Detalle</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let f of filas">
-              <td class="whitespace-nowrap font-mono text-xs">
+            <tr *ngFor="let f of filasPagina; trackBy: trackFila">
+              <td class="whitespace-nowrap font-mono text-xs text-center">
                 {{ f.fecha | date: 'dd/MM HH:mm:ss' }}
               </td>
-              <td>
-                <span class="badge badge-sm whitespace-nowrap" [ngClass]="colorAccion(f.accion)" [title]="f.accion">
+              <td class="text-center">
+                <span *ngIf="metaAccion(f.accion) as m"
+                  class="badge badge-sm kanban-tag border gap-1.5 font-medium whitespace-nowrap"
+                  [style.background-color]="m.color + '1F'"
+                  [style.border-color]="m.color"
+                  [style.color]="m.color" [style.--bc]="m.color"
+                  [title]="f.accion">
+                  <i class="text-[10px]" [class]="m.icono" aria-hidden="true"></i>
                   {{ etiquetaAccion(f.accion) }}
                 </span>
               </td>
@@ -144,22 +150,30 @@
         </table>
       </div>
 
-      <div *ngIf="!loading && filas.length > 0" class="flex items-center justify-between mt-3">
-        <span class="text-xs opacity-70">
-          Página {{ pagina + 1 }} · {{ filas.length }} registro(s)
-        </span>
-        <div class="join">
-          <button type="button" class="btn btn-sm join-item"
-                  [disabled]="!hayPaginaAnterior()"
-                  (click)="anterior()">
-            Anterior
-          </button>
-          <button type="button" class="btn btn-sm join-item"
-                  [disabled]="!hayPaginaSiguiente()"
-                  (click)="siguiente()">
-            Siguiente
-          </button>
-        </div>
+      <app-paginator
+        *ngIf="!loading && filas.length > 0"
+        [total]="filas.length"
+        [page]="paginaLocal"
+        [pageSize]="porPagina"
+        [pageSizes]="[10, 25, 50, 100]"
+        (pageChange)="paginaLocal = $event"
+        (pageSizeChange)="cambiarPorPagina($event)"
+      ></app-paginator>
+
+      <!-- Más allá de 200 registros se piden en bloques al servidor -->
+      <div *ngIf="!loading && (hayPaginaAnterior() || hayPaginaSiguiente())"
+           class="flex flex-wrap items-center justify-center gap-2 mt-2 text-xs opacity-80">
+        <button type="button" class="btn btn-xs btn-ghost gap-1" [disabled]="!hayPaginaAnterior()"
+                (click)="anterior()">
+          <i class="fa-solid fa-angles-left text-[10px]" aria-hidden="true"></i>
+          200 más recientes
+        </button>
+        <span>Bloque {{ pagina + 1 }}</span>
+        <button type="button" class="btn btn-xs btn-ghost gap-1" [disabled]="!hayPaginaSiguiente()"
+                (click)="siguiente()">
+          200 anteriores
+          <i class="fa-solid fa-angles-right text-[10px]" aria-hidden="true"></i>
+        </button>
       </div>
     </div>
   </div>

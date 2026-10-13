@@ -52,7 +52,7 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   get isUser(): boolean {
-    return this.userRole === 'USER';
+    return this.userRole === 'USER' || this.userRole === 'AREA_MANAGER';
   }
 
   /**

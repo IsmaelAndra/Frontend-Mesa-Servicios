@@ -119,7 +119,7 @@
           <button
             type="submit"
             class="btn btn-sm btn-primary gap-2"
-            [disabled]="loading || !newCategory.nameCategory || !newCategory.teamCategory?.idTeam"
+            [disabled]="loading || !newCategory.nameCategory?.trim() || !newTeamId"
           >
             <span *ngIf="loading" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
             <i *ngIf="!loading" class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
@@ -346,7 +346,6 @@
     [total]="categories.length"
     [page]="pagCategorias.page"
     [pageSize]="pagCategorias.pageSize"
-    [mostrarResumen]="false"
     (pageChange)="pagCategorias.cambiarPagina($event)"
     (pageSizeChange)="pagCategorias.cambiarTamano($event)"
     ></app-paginator>

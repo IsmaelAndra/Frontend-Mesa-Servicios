@@ -163,7 +163,8 @@
         [attr.aria-selected]="estado === f"
         (click)="cambiarEstado(f)"
       >
-        <i *ngIf="f" [class]="estadosMeta[f].icono" class="text-[10px]" aria-hidden="true"></i>
+        <i *ngIf="f" [class]="estadosMeta[f].icono" class="text-[10px]" aria-hidden="true"
+           [style.color]="estado !== f ? estadosMeta[f].color : null"></i>
         {{ f ? estadosMeta[f].etiqueta : "Todos" }}
       </button>
     </div>
@@ -172,7 +173,7 @@
       <table class="table table-sm">
         <thead>
           <tr>
-            <th>Estado</th>
+            <th class="text-center">Estado</th>
             <th>Destinatario</th>
             <th>Asunto</th>
             <th>Tipo</th>
@@ -185,11 +186,22 @@
         <tbody>
           <tr *ngFor="let c of correos; trackBy: trackCorreo" [class.opacity-60]="cargandoLista">
             <td>
-              <span class="badge badge-sm gap-1.5 font-medium whitespace-nowrap" [ngClass]="estadosMeta[c.status].clase">
-                <i [class]="estadosMeta[c.status].icono" class="text-[10px]" aria-hidden="true"></i>
-                {{ estadosMeta[c.status].etiqueta }}
-              </span>
-              <span *ngIf="c.priority < 5" class="badge badge-xs badge-outline ml-1" title="Prioridad alta: sale antes que el resto">Urgente</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="badge badge-sm kanban-tag border gap-1.5 font-medium whitespace-nowrap"
+                      [style.background-color]="estadosMeta[c.status].color + '1F'"
+                      [style.border-color]="estadosMeta[c.status].color"
+                      [style.color]="estadosMeta[c.status].color" [style.--bc]="estadosMeta[c.status].color">
+                  <i [class]="estadosMeta[c.status].icono" class="text-[10px]" aria-hidden="true"></i>
+                  {{ estadosMeta[c.status].etiqueta }}
+                </span>
+                <span *ngIf="c.priority < 5"
+                      class="badge badge-sm kanban-tag border gap-1 font-semibold whitespace-nowrap"
+                      style="background-color: #DC26261F; border-color: #DC2626; color: #DC2626; --bc: #DC2626"
+                      title="Prioridad alta: sale antes que el resto">
+                  <i class="fa-solid fa-bolt text-[10px]" aria-hidden="true"></i>
+                  Urgente
+                </span>
+              </div>
             </td>
             <td class="max-w-[14rem]"><span class="block truncate" [title]="c.to">{{ c.to }}</span></td>
             <td class="max-w-[22rem]">

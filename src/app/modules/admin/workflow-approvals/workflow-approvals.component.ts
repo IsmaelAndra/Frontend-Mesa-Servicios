@@ -6,14 +6,23 @@ import { ButtonModule } from "primeng/button";
 import { WorkflowService } from "../../../core/services/workflow.service";
 import { ToastService } from "../../../core/services/toast.service";
 import { WorkflowApproval } from "../../../models/workflow.model";
+import { AuthService } from "../../../core/services/auth.service";
+
+/** Estado de una solicitud, para el badge de "Mis solicitudes". */
+const ESTADOS_SOLICITUD: Record<string, { texto: string; icono: string; clase: string }> = {
+  PENDING: { texto: "En espera", icono: "fa-solid fa-hourglass-half", clase: "badge-warning text-warning-content" },
+  APPROVED: { texto: "Aprobada", icono: "fa-solid fa-circle-check", clase: "badge-success text-success-content" },
+  REJECTED: { texto: "Rechazada", icono: "fa-solid fa-circle-xmark", clase: "badge-error text-error-content" },
+  TIMEOUT: { texto: "Vencida", icono: "fa-regular fa-clock", clase: "badge-ghost text-base-content/70" },
+};
 
 /**
  * Bandeja de aprobaciones de las automatizaciones.
  *
- * <p>La ve cualquiera con sesión, pero cada uno solo recibe las que puede decidir:
- * el filtro lo hace el servidor con su rol (o con el aprobador concreto que fijó el
- * workflow). Ocultar botones aquí no protege nada; el backend vuelve a comprobarlo
- * al decidir.
+ * <p>Solo para ADMIN y SUPER_ADMIN. El SUPER_ADMIN decide ("Por decidir"); el
+ * ADMIN origina las solicitudes y espera a ver si se aceptaron ("Mis
+ * solicitudes"). Ocultar botones aquí no protege nada: el backend vuelve a
+ * comprobarlo al decidir.
  */
 @Component({
   selector: "app-workflow-approvals",
@@ -28,18 +37,55 @@ export class WorkflowApprovalsComponent implements OnInit {
   /** Tarjetas ya decididas que están saliendo (se animan antes de quitarlas). */
   readonly saliendo = signal<ReadonlySet<string>>(new Set());
   comentarios: Record<string, string> = {};
+  /** Solo el SUPER_ADMIN decide. */
+  readonly esAprobador: boolean;
+  readonly vista = signal<"decidir" | "mias">("mias");
+  readonly mias = signal<WorkflowApproval[]>([]);
 
   constructor(
     private workflowService: WorkflowService,
     private toast: ToastService,
-  ) {}
+    auth: AuthService,
+  ) {
+    this.esAprobador = auth.getRole() === "SUPER_ADMIN";
+    if (this.esAprobador) {
+      this.vista.set("decidir");
+    }
+  }
 
   ngOnInit(): void {
     this.cargar();
   }
 
+  verVista(v: "decidir" | "mias"): void {
+    if (v === "decidir" && !this.esAprobador) return;
+    this.vista.set(v);
+    this.cargar();
+  }
+
+  get pendientesMias(): number {
+    return this.mias().filter((m) => (m.status ?? "PENDING") === "PENDING").length;
+  }
+
+  estado(a: WorkflowApproval) {
+    return ESTADOS_SOLICITUD[a.status ?? "PENDING"] ?? ESTADOS_SOLICITUD["PENDING"];
+  }
+
   cargar(): void {
     this.cargando.set(true);
+    if (this.vista() === "mias") {
+      this.workflowService.misSolicitudes().subscribe({
+        next: (lista) => {
+          this.mias.set(lista);
+          this.cargando.set(false);
+        },
+        error: () => {
+          this.toast.error("No se pudieron cargar sus solicitudes");
+          this.cargando.set(false);
+        },
+      });
+      return;
+    }
     this.workflowService.aprobacionesPendientes().subscribe({
       next: (lista) => {
         this.pendientes.set(lista);

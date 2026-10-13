@@ -711,6 +711,8 @@ select.swal-daisy-input {
 /* Ventanas superpuestas (modales propios con *ngIf). El fondo entra con un
    fundido y el panel crece apenas desde el centro; nunca desde scale(0). */
 .overlay-backdrop {
+  position: fixed;
+  inset: 0;
   animation: fade-in var(--dur-base) var(--ease-out) both;
 }
 .overlay-panel {
@@ -906,6 +908,9 @@ select.swal-daisy-input {
 .cal-punto--proximo {
   background: #f59e0b;
   box-shadow: 0 0 0 2px rgb(255 255 255 / 0.85);
+  /* También late: el aviso de "por vencer" tiene que moverse igual que el de
+     vencido para que no parezca un simple adorno de color. */
+  animation: cal-latido 1.6s var(--ease-in-out) infinite;
 }
 .cal-hora {
   font-weight: 700;
@@ -915,7 +920,8 @@ select.swal-daisy-input {
   50% { opacity: 0.55; scale: 0.8; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cal-punto--vencido {
+  .cal-punto--vencido,
+  .cal-punto--proximo {
     animation: none;
   }
 }
@@ -993,18 +999,22 @@ select.swal-daisy-input {
 .page-head.flex {
   flex-wrap: wrap;
 }
+/* Ancho mínimo y no flex-basis: con flex-basis 18rem, en un encabezado en
+   columna (flex-col, el del editor de automatizaciones o cualquiera en móvil)
+   esos 18rem se volvían ALTURA y quedaba un hueco en blanco enorme. */
 .page-head > :first-child {
-  flex: 1 1 18rem;
-  min-width: 0;
+  flex: 1 1 auto;
+  min-width: min(18rem, 100%);
 }
 /* Algunas cabeceras empiezan por el icono (auditoría, contraseña): el icono
    no crece nunca y el espacio lo toma el bloque del título que le sigue. */
 .page-head > .page-head__icono:first-child {
   flex: 0 0 auto;
+  min-width: 0;
 }
 .page-head > .page-head__icono:first-child + * {
-  flex: 1 1 14rem;
-  min-width: 0;
+  flex: 1 1 auto;
+  min-width: min(14rem, 100%);
 }
 
 /* Un trazo del color institucional a la izquierda: marca el inicio de la página. */
@@ -1231,7 +1241,9 @@ main .ql-snow.ql-toolbar button.ql-active .ql-stroke {
   border: none;
   border-radius: 9999px;
   background-color: oklch(var(--b1));
-  color: oklch(var(--p));
+  /* Texto del color de base (no el primario): en el tema oscuro el azul de
+     marca sobre fondo oscuro no se leía. */
+  color: oklch(var(--bc));
   font-size: 10.5px;
   font-weight: 600;
   line-height: 18px;
@@ -1246,6 +1258,56 @@ main .ql-snow.ql-toolbar button.ql-active .ql-stroke {
     background-color: oklch(var(--p));
     color: oklch(var(--pc));
   }
+}
+
+/* ============ Calendario: fila "Todo el día" con sitio para el contador ============ */
+/* Toast UI fija el panel en 72 px (no hay opción para cambiarlo): caben dos filas
+   y media, y el "+N más" se colocaba encima de la tercera tapándola. Con una
+   fila más de alto el contador queda debajo de los eventos. */
+.calendar-wrap .toastui-calendar-panel.toastui-calendar-allday {
+  height: 96px !important;
+}
+
+/* ============ Calendario: "Todo el día" en dos líneas y centrado ============ */
+/* La plantilla alldayTitle devuelve "Todo<br>el día". Estas reglas estaban en
+   calendar.component.css y no se aplicaban (DOM de Toast UI, sin _ngcontent). */
+.calendar-wrap .toastui-calendar-panel-title {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+}
+.calendar-wrap .toastui-calendar-template-alldayTitle {
+  width: 100%;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: oklch(var(--bc) / 0.65);
+}
+
+/* ============ Calendario: un solo punto por evento ============ */
+/* En la vista de mes Toast UI pone su propio punto de color delante de los
+   eventos con hora; si el evento ya lleva el punto de urgencia animado
+   (.cal-punto, vencido o por vencer), salían dos. Se deja solo el animado. */
+.calendar-wrap .toastui-calendar-weekday-event-block:has(.cal-punto) .toastui-calendar-weekday-event-dot,
+.calendar-wrap .toastui-calendar-weekday-event:has(.cal-punto) .toastui-calendar-weekday-event-dot {
+  display: none;
+}
+
+/* ============ Calendario: número del día actual en blanco ============ */
+/* El día actual va sobre un círculo primario, así que el número va en blanco
+   fijo. Esta regla vivía en calendar.component.css y nunca se aplicaba: los
+   nodos de Toast UI no llevan el atributo _ngcontent, así que la hoja
+   encapsulada del componente no les llega. La base de Toast UI es
+   `.grid-cell-date .grid-date.decorator` (tres clases) y no lleva !important,
+   hay que ganarle en especificidad repitiendo la parte del ancestro. */
+.calendar-wrap
+  .toastui-calendar-grid-cell-date
+  .toastui-calendar-weekday-grid-date.toastui-calendar-weekday-grid-date-decorator {
+  background-color: oklch(var(--p)) !important;
+  color: #ffffff !important;
+  font-weight: 700;
 }
 
 /* ============ Cuerpo Markdown de la política de privacidad (.privacy-body) ============ */

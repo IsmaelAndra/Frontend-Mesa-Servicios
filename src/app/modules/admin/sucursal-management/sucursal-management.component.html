@@ -189,7 +189,8 @@
           >
             Cancelar
           </button>
-          <button type="submit" class="btn btn-primary btn-sm gap-2">
+          <button type="submit" class="btn btn-primary btn-sm gap-2"
+                  [disabled]="!newSucursal.codeSucursal?.trim() || !newSucursal.nameSucursal?.trim()">
             <i class="fa-solid fa-check text-[13px]" aria-hidden="true"></i>
             Crear sede
           </button>
@@ -300,8 +301,8 @@
                     class="w-1.5 h-1.5 rounded-full"
                     [ngClass]="
                       sucursal.statusSucursal
-                        ? 'bg-success-content'
-                        : 'bg-error-content'
+                        ? 'bg-primary-content animate-pulse'
+                        : 'bg-primary-content animate-pulse'
                     "
                   ></span>
                   {{ sucursal.statusSucursal ? "Activa" : "Inactiva" }}
@@ -463,6 +464,7 @@
                     </button>
                     <button
                       class="btn btn-sm btn-primary gap-1"
+                      [disabled]="!(editSucursal!.codeSucursal || '').trim() || !(editSucursal!.nameSucursal || '').trim()"
                       (click)="saveEdit()"
                     >
                       <i
@@ -508,7 +510,6 @@
     [total]="pagSucursales.total"
     [page]="pagSucursales.page"
     [pageSize]="pagSucursales.pageSize"
-    [mostrarResumen]="false"
     (pageChange)="pagSucursales.cambiarPagina($event)"
     (pageSizeChange)="pagSucursales.cambiarTamano($event)"
   ></app-paginator>

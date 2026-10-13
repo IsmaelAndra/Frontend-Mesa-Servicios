@@ -85,6 +85,25 @@ export class SettingsSoundsComponent implements OnDestroy {
 
   /** Secciones ya armadas, listas para la plantilla. */
   grupos: GrupoSonido[] = [];
+
+  /** Urgencia tipada del grupo (el contexto de ng-template llega sin tipo). */
+  urgenciaDe(g: GrupoSonido): GrupoSonido['urgencia'] {
+    return g.urgencia;
+  }
+
+  trackGrupo(_: number, g: GrupoSonido): string {
+    return g.urgencia;
+  }
+
+  /** Columna izquierda: Urgente arriba y Suave debajo. */
+  get gruposLaterales(): GrupoSonido[] {
+    return this.grupos.filter((g) => g.urgencia !== 'normal');
+  }
+
+  /** Columna derecha: Normal, la lista más larga. */
+  get gruposPrincipales(): GrupoSonido[] {
+    return this.grupos.filter((g) => g.urgencia === 'normal');
+  }
   /** Interruptor global, para mostrarlo y avisar si todo esta en silencio. */
   sonidoGlobal = true;
   /** Cuantos tipos tienen una preferencia propia (para el boton de restablecer). */

@@ -151,6 +151,21 @@
             <span class="opacity-60 tabular-nums shrink-0">{{ l.count }}</span>
           </li>
         </ul>
+
+        <!-- Qué significa el punto que llevan algunos eventos -->
+        <div class="border-t border-base-200 pt-3 space-y-1.5">
+          <h3 class="text-[11px] font-semibold uppercase tracking-wide opacity-60">Plazos</h3>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="cal-punto cal-punto--vencido shrink-0" aria-hidden="true"></span>
+            <span class="flex-1">Vencido</span>
+            <span class="opacity-60 tabular-nums">{{ urgentes.vencidos }}</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="cal-punto cal-punto--proximo shrink-0" aria-hidden="true"></span>
+            <span class="flex-1">Vence en menos de 24 h</span>
+            <span class="opacity-60 tabular-nums">{{ urgentes.proximos }}</span>
+          </div>
+        </div>
       </div>
     </aside>
   </div>
@@ -159,7 +174,7 @@
   <!-- Panel lateral: entra por la derecha y se cierra con Esc, la X o el fondo. -->
   <div
     *ngIf="seleccionado as ev"
-    class="overlay-backdrop fixed inset-0 z-50 flex justify-end bg-black/30"
+    class="overlay-backdrop fixed inset-0 !m-0 z-50 flex justify-end bg-black/30"
     (click)="cerrarDetalle()"
     role="dialog"
     aria-modal="true"

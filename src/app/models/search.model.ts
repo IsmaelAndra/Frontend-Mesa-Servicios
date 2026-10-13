@@ -44,6 +44,18 @@ export interface SearchWorkflowItem {
   statusWorkflow: string;
 }
 
+/** Activo de TI (equipo). Visible solo para personal, no para USER. */
+export interface SearchAssetItem {
+  idAsset: string;
+  codeAsset: string;
+  nameAsset: string;
+  typeAsset: string;
+  statusAsset: string;
+  assignedUser?: string;
+  assignedUserName?: string;
+  area?: string;
+}
+
 export interface GlobalSearchResponse {
   query: string;
   tickets: SearchTicketItem[];
@@ -52,4 +64,5 @@ export interface GlobalSearchResponse {
   teams: SearchTeamItem[];
   areas: SearchAreaItem[];
   workflows: SearchWorkflowItem[];
+  assets: SearchAssetItem[];
 }

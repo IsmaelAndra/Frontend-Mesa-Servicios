@@ -466,12 +466,32 @@ export class PagesSystemComponent implements OnInit {
     });
   }
 
-  private guardarPrivacidad(): void {
+  /**
+   * Quita la marca de borrador: elimina del texto el aviso "> **Borrador.**"
+   * que trae la plantilla y guarda aunque no haya más cambios. Antes no había
+   * forma de hacerlo sin tocar el texto, porque Guardar exige cambios.
+   */
+  publicarComoOficial(): void {
+    const lineas = (this.privacidad.privacyContent || "").split("\n");
+    const inicio = lineas.findIndex((l) => /^>\s*\**borrador/i.test(l.trim()));
+    if (inicio >= 0) {
+      let fin = inicio;
+      while (fin < lineas.length && lineas[fin].trim().startsWith(">")) fin++;
+      // También la línea en blanco que lo separaba del resto.
+      if (fin < lineas.length && !lineas[fin].trim()) fin++;
+      lineas.splice(inicio, fin - inicio);
+      this.privacidad.privacyContent = lineas.join("\n");
+      this.actualizarVistaPrevia();
+    }
+    this.guardarPrivacidad(true);
+  }
+
+  private guardarPrivacidad(forzar = false): void {
     if (!this.privacidad.privacyTitle.trim()) {
       this.toastService.error("El título de la política es obligatorio");
       return;
     }
-    if (!this.hayCambiosPrivacidad()) {
+    if (!forzar && !this.hayCambiosPrivacidad()) {
       this.toastService.info("No hay cambios que guardar");
       return;
     }
@@ -491,7 +511,9 @@ export class PagesSystemComponent implements OnInit {
           this.privacidadOriginal = JSON.stringify(this.privacidad);
           this.saving = false;
           this.actualizarVistaPrevia();
-          this.toastService.success("Política de privacidad guardada");
+          this.toastService.success(
+            forzar ? "Política publicada como oficial" : "Política de privacidad guardada",
+          );
         },
         error: (e) => {
           this.saving = false;

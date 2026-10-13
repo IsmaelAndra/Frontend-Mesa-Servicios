@@ -11,16 +11,18 @@ interface EstadoMeta {
   etiqueta: string;
   icono: string;
   clase: string;
+  /** Color del badge (fondo tenue, borde y texto), como los badges de estado del resto de tablas. */
+  color: string;
 }
 
 /** Presentación de cada estado: mismo patrón icono + color que el resto de badges. */
 export const ESTADOS_CORREO: Record<EstadoCorreo, EstadoMeta> = {
-  PENDIENTE: { etiqueta: 'Pendiente', icono: 'fa-solid fa-hourglass-half', clase: 'badge-warning text-warning-content' },
-  ENVIANDO: { etiqueta: 'Enviando', icono: 'fa-solid fa-paper-plane', clase: 'badge-info text-info-content' },
-  ENVIADO: { etiqueta: 'Enviado', icono: 'fa-solid fa-check', clase: 'badge-success text-success-content' },
-  AGRUPADO: { etiqueta: 'En resumen', icono: 'fa-solid fa-layer-group', clase: 'badge-secondary text-secondary-content' },
-  FALLIDO: { etiqueta: 'Fallido', icono: 'fa-solid fa-triangle-exclamation', clase: 'badge-error text-error-content' },
-  CANCELADO: { etiqueta: 'Cancelado', icono: 'fa-solid fa-ban', clase: 'badge-ghost' },
+  PENDIENTE: { etiqueta: 'Pendiente', icono: 'fa-solid fa-hourglass-half', clase: 'badge-warning text-warning-content', color: '#D97706' },
+  ENVIANDO: { etiqueta: 'Enviando', icono: 'fa-solid fa-paper-plane', clase: 'badge-info text-info-content', color: '#2563EB' },
+  ENVIADO: { etiqueta: 'Enviado', icono: 'fa-solid fa-check', clase: 'badge-success text-success-content', color: '#16A34A' },
+  AGRUPADO: { etiqueta: 'En resumen', icono: 'fa-solid fa-layer-group', clase: 'badge-secondary text-secondary-content', color: '#7C3AED' },
+  FALLIDO: { etiqueta: 'Fallido', icono: 'fa-solid fa-triangle-exclamation', clase: 'badge-error text-error-content', color: '#DC2626' },
+  CANCELADO: { etiqueta: 'Cancelado', icono: 'fa-solid fa-ban', clase: 'badge-ghost', color: '#64748B' },
 };
 
 /** Etiquetas legibles de los tipos de aviso. */
@@ -54,7 +56,9 @@ const REFRESCO_MS = 10_000;
 })
 export class MailOutboxComponent implements OnInit, OnDestroy {
   readonly estadosMeta = ESTADOS_CORREO;
-  readonly filtros: ('' | EstadoCorreo)[] = ['', 'PENDIENTE', 'ENVIANDO', 'ENVIADO', 'AGRUPADO', 'FALLIDO', 'CANCELADO'];
+  // ENVIANDO es un estado de segundos (el correo ya está reclamado por el envío):
+  // como filtro solo confundía, porque "Enviando" y "Enviado" se leían igual.
+  readonly filtros: ('' | EstadoCorreo)[] = ['', 'PENDIENTE', 'ENVIADO', 'AGRUPADO', 'FALLIDO', 'CANCELADO'];
 
   resumen: ResumenColaCorreo | null = null;
   correos: CorreoEnCola[] = [];

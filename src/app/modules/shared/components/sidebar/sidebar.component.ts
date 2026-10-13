@@ -72,6 +72,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
       roles: ['USER']
     },
     {
+      // Inventario de equipos. La lista la ve cualquiera con sesión: el servidor
+      // limita qué activos ve cada rol (USER solo los suyos).
+      label: 'Activos de TI',
+      seccion: 'principal',
+      route: '/activos',
+      icon: navIcon('activos'),
+      roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT', 'USER', 'AREA_MANAGER']
+    },
+    {
       label: 'Administración',
       seccion: 'gestion',
       route: '/admin',
@@ -104,13 +113,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
       ]
     },
     {
-      // Pasos de las automatizaciones que esperan una decisión. El servidor solo
-      // devuelve los que cada uno puede decidir.
+      // Pasos de las automatizaciones que esperan una decisión: el SUPER_ADMIN
+      // decide y el ADMIN sigue sus solicitudes. Nadie más entra.
       label: 'Aprobaciones',
       seccion: 'principal',
       route: '/aprobaciones',
       icon: navIcon('aprobaciones'),
-      roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT', 'USER']
+      roles: ['SUPER_ADMIN', 'ADMIN']
     },
     {
       label: 'Actividades',
@@ -361,11 +370,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   isVisible(item: NavItem): boolean {
-    return item.roles.includes(this.role);
+    const mios = this.authService.rolesEfectivos();
+    return item.roles.some((r) => mios.includes(r));
   }
 
   hasVisibleChildren(item: NavItem): boolean {
-    return item.children?.some(child => child.roles.includes(this.role)) ?? false;
+    return item.children?.some((child) => this.isVisible(child)) ?? false;
   }
 
   isActive(route: string): boolean {
@@ -402,6 +412,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       case 'ADMIN': return 'Administrador';
       case 'AGENT': return 'Agente';
       case 'USER': return 'Usuario';
+      case 'AREA_MANAGER': return 'Jefe de área';
       default: return this.role || '';
     }
   }

@@ -1,4 +1,28 @@
 /* ============================================================================
+   Menús del encabezado: estado y "Asignar a"
+   daisyUI pinta el hover y la opción activa de un .menu con su azul sólido,
+   igual para todos los estados. Aquí cada opción usa su color (--tono, que
+   pone la plantilla con el color del estado) con fondo translúcido, como los
+   badges. Sin --tono (menú de asignar), el color de marca.
+   ============================================================================ */
+.menu-colores li > a {
+  --tono: oklch(var(--p));
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.menu-colores li > a:hover,
+.menu-colores li > a:focus-visible {
+  background-color: color-mix(in srgb, var(--tono) 14%, transparent) !important;
+  background-image: none !important;
+  color: var(--tono) !important;
+}
+.menu-colores li > a.active {
+  background-color: color-mix(in srgb, var(--tono) 20%, transparent) !important;
+  background-image: none !important;
+  color: var(--tono) !important;
+  font-weight: 600;
+}
+
+/* ============================================================================
    Ficha 360° del solicitante
    Hoja aparte: ticket-detail.component.css ya está cerca del límite de 16 kB
    por hoja (anyComponentStyle) y el build de producción falla si lo pasa.

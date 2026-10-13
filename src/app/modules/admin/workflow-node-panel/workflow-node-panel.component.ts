@@ -3,6 +3,14 @@ import { Component, computed, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { WorkflowNode } from "../../../models/workflow.model";
 import { EDITOR_DE_WORKFLOW } from "../workflow-builder/editor-de-workflow";
+import { SharedModule } from "../../shared/shared.module";
+import { MasterOption } from "../../shared/components/master-select/master-select.component";
+import { environment } from "../../../../environments/environment";
+
+/** Maestro del catálogo con su icono y color, para app-master-select. */
+function opcion(x: { id: string; name: string; icon?: string; color?: string }): MasterOption {
+  return { value: x.id, label: x.name, icon: x.icon || undefined, color: x.color || undefined };
+}
 
 /**
  * Panel de propiedades del nodo seleccionado en el constructor de workflows.
@@ -16,7 +24,7 @@ import { EDITOR_DE_WORKFLOW } from "../workflow-builder/editor-de-workflow";
 @Component({
   selector: "app-workflow-node-panel",
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SharedModule],
   templateUrl: "./workflow-node-panel.component.html",
 })
 export class WorkflowNodePanelComponent {
@@ -27,6 +35,24 @@ export class WorkflowNodePanelComponent {
   readonly campoVariable = signal<string | null>(null);
   readonly placeholderTicketId = "{{nodos.ticket_create_1.ticketId}}";
   readonly roles = ["SUPER_ADMIN", "ADMIN", "AGENT", "USER"];
+
+  /** Opciones de los maestros con icono y color (mismo select que el resto de pantallas). */
+  readonly opcCategorias = computed(() => (this.editor.lookups()?.categories ?? []).map(opcion));
+  readonly opcPrioridades = computed(() => (this.editor.lookups()?.priorities ?? []).map(opcion));
+  readonly opcTipos = computed(() => (this.editor.lookups()?.ticketTypes ?? []).map(opcion));
+  readonly opcEquipos = computed(() => (this.editor.lookups()?.teams ?? []).map(opcion));
+  readonly opcEstados = computed(() => (this.editor.lookups()?.statuses ?? []).map(opcion));
+  readonly opcPoliticas = computed(() => (this.editor.lookups()?.slaPolicies ?? []).map(opcion));
+  readonly opcAgentes = computed<MasterOption[]>(() =>
+    this.editor.agentes().map((a) => ({
+      value: a.idUser,
+      label: a.displayName || a.corporateEmailUser,
+      detail: a.corporateEmailUser,
+      avatar: a.photoUrl ? (/^https?:\/\//i.test(a.photoUrl) ? a.photoUrl : environment.apiUrl + a.photoUrl) : null,
+      initials: (a.displayName || a.corporateEmailUser || "?").charAt(0).toUpperCase(),
+      sessionState: a.sessionState,
+    })),
+  );
 
   /** Variables que ofrece el selector: las del disparador y las que dejan los demás nodos. */
   readonly variables = computed(() => {

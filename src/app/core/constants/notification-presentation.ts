@@ -39,7 +39,9 @@ export const NOTIFICATION_ICONS: Record<string, string> = {
   SYSTEM: 'fa-solid fa-circle-info',
   SUCCESS: 'fa-solid fa-circle-check',
   ERROR: 'fa-solid fa-triangle-exclamation',
-  ALERT: 'fa-solid fa-triangle-exclamation'
+  ALERT: 'fa-solid fa-triangle-exclamation',
+  ALERTA_SEGURIDAD: 'fa-solid fa-shield-halved',
+  WORKFLOW_APROBACION: 'fa-solid fa-user-check'
 };
 
 /** Clases de fondo de daisyUI segun el tipo, para que el avatar sea el color. */
@@ -61,7 +63,9 @@ export const NOTIFICATION_COLORS: Record<string, string> = {
   SYSTEM: 'bg-neutral',
   SUCCESS: 'bg-success',
   ERROR: 'bg-error',
-  ALERT: 'bg-error'
+  ALERT: 'bg-error',
+  ALERTA_SEGURIDAD: 'bg-error',
+  WORKFLOW_APROBACION: 'bg-warning'
 };
 
 /** Icono del tipo, con la campana para lo que no este contemplatesdo. */
@@ -74,9 +78,39 @@ export function notificationColor(type?: string): string {
   return NOTIFICATION_COLORS[(type || '').toUpperCase()] ?? 'bg-neutral';
 }
 
-/** Etiqueta legible del tipo, para el title del icono. */
+/** Nombre en español de cada tipo (antes se mostraba el código: "SLA WARNING"). */
+export const NOTIFICATION_LABELS: Record<string, string> = {
+  TICKET: 'Ticket',
+  TICKET_CREADO: 'Ticket creado',
+  TICKET_ASIGNADO: 'Ticket asignado',
+  TICKET_ACTUALIZADO: 'Ticket actualizado',
+  TICKET_RESUELTO: 'Ticket resuelto',
+  TICKET_CERRADO: 'Ticket cerrado',
+  CHAT_MENSAJE: 'Mensaje en el chat',
+  ESCALATION: 'Escalación',
+  SLA_WARNING: 'SLA por vencer',
+  SLA_BREACHED: 'SLA vencido',
+  RATING_REQUEST: 'Calificación pendiente',
+  MONTHLY_EVALUATION: 'Evaluación mensual',
+  TASK_ASIGNADA: 'Tarea asignada',
+  MENTION: 'Mención',
+  SYSTEM: 'Sistema',
+  SISTEMA: 'Sistema',
+  SUCCESS: 'Confirmación',
+  ERROR: 'Error',
+  ALERT: 'Alerta',
+  ALERTA_SEGURIDAD: 'Alerta de seguridad',
+  WORKFLOW_APROBACION: 'Aprobación',
+  CREACION_USUARIO: 'Cuenta nueva',
+  RESET_PASSWORD: 'Restablecer contraseña',
+};
+
+/** Etiqueta legible del tipo, siempre en español. */
 export function notificationLabel(type?: string): string {
-  return (type || '').toUpperCase().replace(/_/g, ' ');
+  const clave = (type || '').toUpperCase();
+  if (NOTIFICATION_LABELS[clave]) return NOTIFICATION_LABELS[clave];
+  const texto = clave.replace(/_/g, ' ').toLowerCase();
+  return texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : 'Notificación';
 }
 
 /**

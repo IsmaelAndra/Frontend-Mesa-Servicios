@@ -8,7 +8,8 @@ export class RoleGuard implements CanActivate {
 
   canActivate(route: ActivatedRouteSnapshot): boolean | UrlTree {
     const allowed = route.data['roles'] as string[] | undefined;
-    if (!allowed || allowed.includes(this.authService.getRole())) {
+    const mios = this.authService.rolesEfectivos();
+    if (!allowed || allowed.some((r) => mios.includes(r))) {
       return true;
     }
     return this.router.createUrlTree(['/dashboard']);

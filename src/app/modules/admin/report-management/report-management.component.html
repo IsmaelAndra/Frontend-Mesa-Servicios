@@ -263,140 +263,16 @@
         </thead>
         <tbody>
           <tr *ngIf="loading">
-            <td colspan="5">
+            <td colspan="6">
               <app-skeleton tipo="filas" etiqueta="Cargando reportes..."></app-skeleton>
             </td>
           </tr>
 
           <ng-container *ngFor="let r of pagReportes.vista">
-            <!-- Modo edición -->
-            <tr
-              *ngIf="editReport && editReport.idReport === r.idReport"
-              class="bg-base-200/50 align-top"
-            >
-              <td colspan="5">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-2">
-                  <label class="form-control">
-                    <div class="label pt-0 pb-1">
-                      <span class="label-text text-xs font-medium">Título</span>
-                    </div>
-                    <input
-                      [(ngModel)]="editReport.titleReport"
-                      class="input input-bordered input-xs w-full"
-                    />
-                  </label>
-                  <label class="form-control">
-                    <div class="label pt-0 pb-1">
-                      <span class="label-text text-xs font-medium">Nombre</span>
-                    </div>
-                    <input
-                      [(ngModel)]="editReport.nameReport"
-                      class="input input-bordered input-xs w-full font-mono"
-                    />
-                  </label>
-                  <label class="form-control md:col-span-2">
-                    <div class="label pt-0 pb-1">
-                      <span class="label-text text-xs font-medium"
-                        >Descripción</span
-                      >
-                    </div>
-                    <input
-                      [(ngModel)]="editReport.descriptionReport"
-                      class="input input-bordered input-xs w-full"
-                    />
-                  </label>
-                  <label class="form-control md:col-span-2">
-                    <div class="label pt-0 pb-1">
-                      <span class="label-text text-xs font-medium"
-                        >Consulta SQL</span
-                      >
-                    </div>
-                    <textarea
-                      [(ngModel)]="editReport.querySql"
-                      class="textarea textarea-bordered textarea-xs w-full font-mono"
-                      rows="4"
-                    ></textarea>
-                  </label>
-                  <label class="flex items-center gap-2 py-1">
-                    <input
-                      type="checkbox"
-                      class="checkbox checkbox-primary checkbox-xs"
-                      [(ngModel)]="editReport.activeReport"
-                    />
-                    <span class="text-xs font-medium">Activo</span>
-                  </label>
-                  <div class="form-control">
-                    <div class="label pt-0 pb-1">
-                      <span class="label-text text-xs font-medium">Icono</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <span
-                        class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
-                        [style.background-color]="
-                          reportColor(editReport) + '22'
-                        "
-                        [style.color]="reportColor(editReport)"
-                        aria-hidden="true"
-                      >
-                        <i
-                          [class]="reportIcon(editReport)"
-                          class="text-[15px]"
-                        ></i>
-                      </span>
-                      <input
-                        [(ngModel)]="editReport.iconReport"
-                        class="input input-bordered input-xs w-full font-mono"
-                        placeholder="fa-solid fa-file-lines"
-                      />
-                    </div>
-                  </div>
-                  <div class="form-control">
-                    <div class="label pt-0 pb-1">
-                      <span class="label-text text-xs font-medium">Color</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <input
-                        type="color"
-                        [(ngModel)]="editReport.colorReport"
-                        class="w-9 h-7 shrink-0 cursor-pointer rounded-lg border border-base-300 p-0.5"
-                        aria-label="Color del reporte"
-                      />
-                      <input
-                        [(ngModel)]="editReport.colorReport"
-                        class="input input-bordered input-xs w-full font-mono"
-                      />
-                    </div>
-                  </div>
-                  <div class="flex gap-2 md:justify-end">
-                    <button
-                      class="btn btn-sm btn-ghost gap-1"
-                      (click)="cancelEdit()"
-                    >
-                      <i
-                        class="fa-solid fa-xmark text-[15px]"
-                        aria-hidden="true"
-                      ></i>
-                      Cancelar
-                    </button>
-                    <button
-                      class="btn btn-sm btn-primary gap-1"
-                      (click)="saveEdit()"
-                    >
-                      <i
-                        class="fa-solid fa-check text-sm"
-                        aria-hidden="true"
-                      ></i>
-                      Guardar
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-
             <!-- Modo lectura -->
             <tr
-              *ngIf="!editReport || editReport.idReport !== r.idReport"
               class="hover:bg-base-200/50"
+              [ngClass]="{ 'bg-primary/5': editReport?.idReport === r.idReport }"
             >
               <td>
                 <div class="flex items-center gap-2">
@@ -480,7 +356,7 @@
           </ng-container>
 
           <tr *ngIf="!loading && reports.length === 0">
-            <td colspan="5">
+            <td colspan="6">
               <div
                 class="flex flex-col items-center justify-center py-12 gap-3 opacity-70"
               >
@@ -507,8 +383,132 @@
     [total]="reports.length"
     [page]="pagReportes.page"
     [pageSize]="pagReportes.pageSize"
-    [mostrarResumen]="false"
     (pageChange)="pagReportes.cambiarPagina($event)"
     (pageSizeChange)="pagReportes.cambiarTamano($event)"
   ></app-paginator>
+</div>
+
+<!-- ============================================================ -->
+<!-- ============ MODAL: Editar reporte ========================= -->
+<!-- ============================================================ -->
+<!-- Antes se editaba en una fila de la tabla (colspan menor que las columnas):
+     el formulario quedaba apretado y la consulta SQL casi no se leía. -->
+<div
+  *ngIf="editReport as ed"
+  class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+  (click)="cancelEdit()"
+>
+  <div
+    class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] overflow-hidden flex flex-col"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="titulo-editar-reporte"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="flex items-center justify-between gap-3 px-6 py-4 border-b border-base-200 bg-base-200/30">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+              [style.background-color]="reportColor(ed) + '22'" [style.color]="reportColor(ed)" aria-hidden="true">
+          <i [class]="reportIcon(ed)" class="text-lg"></i>
+        </span>
+        <div class="min-w-0">
+          <h3 id="titulo-editar-reporte" class="text-lg font-bold leading-tight truncate">Editar reporte</h3>
+          <p class="text-xs opacity-60 truncate font-mono">{{ ed.nameReport }}</p>
+        </div>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="cancelEdit()" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-6 grid gap-6 lg:grid-cols-12">
+      <!-- Datos y apariencia -->
+      <section class="lg:col-span-5 space-y-4">
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Título <span class="text-error">*</span></span>
+          </div>
+          <input [(ngModel)]="ed.titleReport" class="input input-bordered input-sm w-full" maxlength="150" />
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Nombre (único) <span class="text-error">*</span></span>
+          </div>
+          <input [(ngModel)]="ed.nameReport" class="input input-bordered input-sm w-full font-mono" maxlength="100" />
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Descripción</span>
+          </div>
+          <textarea [(ngModel)]="ed.descriptionReport" class="textarea textarea-bordered textarea-sm w-full" rows="3"
+                    placeholder="Breve descripción que se muestra en la tarjeta del reporte"></textarea>
+        </label>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="form-control w-full">
+            <div class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Icono (Font Awesome)</span>
+            </div>
+            <input [(ngModel)]="ed.iconReport" class="input input-bordered input-sm w-full font-mono text-xs"
+                   placeholder="fa-solid fa-file-lines" />
+          </div>
+          <div class="form-control w-full">
+            <div class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Color</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="color" [(ngModel)]="ed.colorReport"
+                     class="w-10 h-8 shrink-0 cursor-pointer rounded-lg border border-base-300 p-0.5" aria-label="Color del reporte" />
+              <input [(ngModel)]="ed.colorReport" class="input input-bordered input-sm w-full font-mono text-xs" />
+            </div>
+          </div>
+        </div>
+
+        <label class="flex items-center justify-between gap-3 p-3 rounded-xl border border-base-200 cursor-pointer">
+          <span>
+            <span class="block text-sm font-medium">Activo</span>
+            <span class="block text-xs opacity-60">Visible en la sección Reportes</span>
+          </span>
+          <input type="checkbox" class="toggle toggle-primary toggle-sm" [(ngModel)]="ed.activeReport" />
+        </label>
+
+        <!-- Vista previa de la tarjeta -->
+        <div class="rounded-xl border border-base-200 p-4 flex items-start gap-3 bg-base-200/30">
+          <span class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                [style.background-color]="reportColor(ed) + '22'" [style.color]="reportColor(ed)" aria-hidden="true">
+            <i [class]="reportIcon(ed)"></i>
+          </span>
+          <span class="min-w-0">
+            <span class="block text-sm font-semibold truncate">{{ ed.titleReport || 'Sin título' }}</span>
+            <span class="block text-xs opacity-60 line-clamp-2">{{ ed.descriptionReport || 'Sin descripción' }}</span>
+          </span>
+        </div>
+      </section>
+
+      <!-- Consulta -->
+      <section class="lg:col-span-7 flex flex-col">
+        <div class="label pt-0 pb-1">
+          <span class="label-text text-xs font-medium">Consulta SQL <span class="text-error">*</span></span>
+          <span class="label-text-alt text-[11px] opacity-60">Solo SELECT</span>
+        </div>
+        <textarea [(ngModel)]="ed.querySql" spellcheck="false"
+                  class="textarea textarea-bordered w-full font-mono text-xs leading-relaxed flex-1 min-h-[22rem]"
+                  placeholder="SELECT ..."></textarea>
+      </section>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-base-200 bg-base-200/30">
+      <button type="button" class="btn btn-sm btn-ghost gap-1" (click)="cancelEdit()">
+        <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i>
+        Cancelar
+      </button>
+      <button type="button" class="btn btn-sm btn-primary gap-1" (click)="saveEdit()"
+              [disabled]="!(ed.titleReport || '').trim() || !(ed.nameReport || '').trim() || !(ed.querySql || '').trim()">
+        <i class="fa-solid fa-floppy-disk text-sm" aria-hidden="true"></i>
+        Guardar cambios
+      </button>
+    </div>
+  </div>
 </div>

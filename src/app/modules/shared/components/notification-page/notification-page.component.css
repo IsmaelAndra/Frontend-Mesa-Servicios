@@ -1,0 +1,21 @@
+/* Filas del panel lateral (bandeja y tipos). */
+.notif-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.85rem;
+  color: oklch(var(--bc) / 0.85);
+  transition: background-color 140ms ease-out, color 140ms ease-out;
+}
+.notif-nav:hover {
+  background: oklch(var(--bc) / 0.06);
+}
+.notif-nav--activo,
+.notif-nav--activo:hover {
+  background: oklch(var(--in) / 0.14);
+  color: oklch(var(--in));
+  font-weight: 600;
+}
