@@ -15,9 +15,9 @@ import { MasterOption } from "../../shared/components/master-select/master-selec
 })
 export class UserManagementComponent implements OnInit {
   users: User[] = [];
-  areas: { id: string; name: string }[] = [];
+  areas: { id: string; name: string; icon?: string; color?: string }[] = [];
   /** Sedes activas, del mismo catálogo público que usa el resto de selectores. */
-  sucursales: { id: string; code: string; name: string }[] = [];
+  sucursales: { id: string; code: string; name: string; icon?: string; color?: string }[] = [];
   roles = ["ADMIN", "AGENT", "AREA_MANAGER", "USER"];
   search = "";
   role = "";
@@ -225,7 +225,13 @@ export class UserManagementComponent implements OnInit {
 
   /** Opciones de área y sede para los selects con icono (app-master-select). */
   get areaOpciones(): MasterOption[] {
-    return this.areas.map((a) => ({ value: a.id, label: a.name, icon: "fa-solid fa-building", color: "#0E7490" }));
+    // Icono y color del maestro (Admin → Áreas), como el estado en el detalle del ticket.
+    return this.areas.map((a) => ({
+      value: a.id,
+      label: a.name,
+      icon: a.icon || "fa-solid fa-building",
+      color: a.color || undefined,
+    }));
   }
 
   get sedeOpciones(): MasterOption[] {
@@ -233,8 +239,8 @@ export class UserManagementComponent implements OnInit {
       value: s.id,
       label: s.name,
       detail: s.code,
-      icon: "fa-solid fa-city",
-      color: "#7C3AED",
+      icon: s.icon || "fa-solid fa-city",
+      color: s.color || undefined,
     }));
   }
 

@@ -612,9 +612,11 @@
               [(ngModel)]="newUser.areaId"
               class="radio radio-primary radio-sm"
             />
-            <span class="text-sm font-medium truncate min-w-0">{{
-              a.name
-            }}</span>
+            <span class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs"
+                  [style.background-color]="(a.color || '#64748B') + '1F'" [style.color]="a.color || '#64748B'" aria-hidden="true">
+              <i [class]="a.icon || 'fa-solid fa-building'"></i>
+            </span>
+            <span class="text-sm font-medium truncate min-w-0">{{ a.name }}</span>
           </label>
         </div>
       </div>
@@ -667,6 +669,10 @@
               [(ngModel)]="newUser.sucursalId"
               class="radio radio-primary radio-sm"
             />
+            <span class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs"
+                  [style.background-color]="(s.color || '#64748B') + '1F'" [style.color]="s.color || '#64748B'" aria-hidden="true">
+              <i [class]="s.icon || 'fa-solid fa-city'"></i>
+            </span>
             <span class="min-w-0">
               <span class="block text-sm font-medium truncate">{{ s.name }}</span>
               <span class="block text-[11px] font-mono opacity-60">{{ s.code }}</span>

@@ -149,7 +149,7 @@ interface MasterOptionView extends MasterOption {
           role="option"
           class="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer transition-colors"
           [class.bg-base-200]="view.viewIndex === highlighted && !colorHex(view.color)"
-          [style.background-color]="view.viewIndex === highlighted && colorHex(view.color) ? view.color + '1A' : null"
+          [style.background-color]="view.viewIndex === highlighted && colorHex(view.color) ? hex6(view.color) + '1A' : null"
           [attr.aria-selected]="view.value === value"
           (click)="select(view)"
           (mouseenter)="highlight(view.viewIndex)"
@@ -350,12 +350,19 @@ export class MasterSelectComponent implements ControlValueAccessor, OnChanges, O
   /** Color (#rrggbb) de la opción elegida: tiñe el fondo y el borde del botón, como el estado del ticket. */
   get tono(): string | null {
     if (this.personas || this.disabled) return null;
-    const c = this.selected?.color;
-    return this.colorHex(c) ? c! : null;
+    return this.hex6(this.selected?.color);
   }
 
   colorHex(c?: string | null): boolean {
-    return !!c && /^#[0-9a-f]{6}$/i.test(c);
+    return !!this.hex6(c);
+  }
+
+  /** Normaliza el color del maestro a #rrggbb (acepta #rgb); null si no es hexadecimal. */
+  hex6(c?: string | null): string | null {
+    const v = (c || '').trim();
+    if (/^#[0-9a-f]{6}$/i.test(v)) return v;
+    const m = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(v);
+    return m ? `#${m[1]}${m[1]}${m[2]}${m[2]}${m[3]}${m[3]}` : null;
   }
 
   get selected(): MasterOption | null {
