@@ -18,14 +18,9 @@
       <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
         <label class="form-control">
           <div class="label py-1"><span class="label-text text-xs">Acción</span></div>
-          <select
-            class="select select-bordered select-sm"
-            [(ngModel)]="accion"
-            (change)="cargar()"
-          >
-            <option value="">Todas</option>
-            <option *ngFor="let a of acciones" [value]="a">{{ etiquetaAccion(a) }}</option>
-          </select>
+          <app-master-select [(ngModel)]="accion" [options]="opcionesAccion" [allowEmpty]="true"
+            emptyLabel="Todas" placeholder="Todas" icon="fa-solid fa-filter" label="Acción"
+            (elegido)="cargar()"></app-master-select>
         </label>
 
         <label class="form-control">

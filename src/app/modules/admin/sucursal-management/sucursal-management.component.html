@@ -169,17 +169,10 @@
           </div>
         </label>
 
-        <label
-          class="form-control w-full md:col-span-3 flex-row items-center gap-2"
-        >
-          <input
-            type="checkbox"
-            [(ngModel)]="newSucursal.statusSucursal"
-            name="statusSucursal"
-            class="checkbox checkbox-sm checkbox-primary"
-          />
-          <span class="label-text text-xs">Sede activa</span>
-        </label>
+        <div class="form-control w-full">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Estado</span></div>
+          <app-estado-activo [(ngModel)]="newSucursal.statusSucursal" name="statusSucursal" [femenino]="true" etiqueta="Estado"></app-estado-activo>
+        </div>
 
         <div class="flex justify-end gap-2">
           <button
@@ -439,16 +432,10 @@
                   </label>
 
                   <!-- Activa -->
-                  <label
-                    class="form-control w-full sm:w-auto flex-row items-center gap-2 h-9"
-                  >
-                    <input
-                      type="checkbox"
-                      [(ngModel)]="editSucursal.statusSucursal"
-                      class="checkbox checkbox-sm checkbox-primary"
-                    />
-                    <span class="label-text text-xs">Activa</span>
-                  </label>
+                  <div class="form-control w-full sm:w-48">
+                    <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Estado</span></div>
+                    <app-estado-activo [(ngModel)]="editSucursal.statusSucursal" [femenino]="true" etiqueta="Estado"></app-estado-activo>
+                  </div>
 
                   <!-- Acciones -->
                   <div class="flex gap-2 ml-auto">

@@ -127,15 +127,8 @@
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">Método de asignación</span>
           </div>
-          <select
-            [(ngModel)]="newTeam.assignmentMethod"
-            name="assignmentMethod"
-            class="select select-bordered select-sm w-full"
-          >
-            <option value="ROUND_ROBIN">Rotativo</option>
-            <option value="LEAST_ASSIGNED">Menos asignados</option>
-            <option value="MANUAL">Manual</option>
-          </select>
+          <app-master-select [(ngModel)]="newTeam.assignmentMethod" name="assignmentMethod"
+            [options]="metodosAsignacion" icon="fa-solid fa-shuffle" label="Método de asignación"></app-master-select>
         </label>
 
         <!-- Icono -->
@@ -332,14 +325,8 @@
                     <div class="label pt-0 pb-1">
                       <span class="label-text text-xs font-medium">Método</span>
                     </div>
-                    <select
-                      [(ngModel)]="editTeam.assignmentMethod"
-                      class="select select-bordered select-sm w-full"
-                    >
-                      <option value="ROUND_ROBIN">Rotativo</option>
-                      <option value="LEAST_ASSIGNED">Menos asignados</option>
-                      <option value="MANUAL">Manual</option>
-                    </select>
+                    <app-master-select [(ngModel)]="editTeam.assignmentMethod"
+                      [options]="metodosAsignacion" icon="fa-solid fa-shuffle" label="Método de asignación"></app-master-select>
                   </div>
 
                   <!-- Icono -->
@@ -388,18 +375,7 @@
                     <div class="label pt-0 pb-1">
                       <span class="label-text text-xs font-medium">Estado</span>
                     </div>
-                    <label
-                      class="h-8 px-2 border border-base-300 rounded-lg flex items-center gap-2 cursor-pointer bg-base-100"
-                    >
-                      <input
-                        type="checkbox"
-                        class="checkbox checkbox-primary checkbox-sm"
-                        [(ngModel)]="editTeam.activeTeam"
-                      />
-                      <span class="text-sm">
-                        {{ editTeam.activeTeam ? 'Activo' : 'Inactivo' }}
-                      </span>
-                    </label>
+                    <app-estado-activo [(ngModel)]="editTeam.activeTeam" etiqueta="Estado"></app-estado-activo>
                   </div>
 
                   <!-- Acciones -->

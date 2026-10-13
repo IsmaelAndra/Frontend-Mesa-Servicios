@@ -263,17 +263,8 @@
                 Indicador de carga
               </span>
             </label>
-            <select
-              [(ngModel)]="b.config.loadingAnimation"
-              class="select select-bordered select-sm w-full"
-            >
-              <option
-                *ngFor="let a of b.loadingAnimaciones"
-                [ngValue]="a.value"
-              >
-                {{ a.label }}
-              </option>
-            </select>
+            <app-master-select [(ngModel)]="b.config.loadingAnimation" [options]="b.opcionesAnimacion"
+              icon="fa-solid fa-spinner" label="Animación"></app-master-select>
           </div>
 
           <div>

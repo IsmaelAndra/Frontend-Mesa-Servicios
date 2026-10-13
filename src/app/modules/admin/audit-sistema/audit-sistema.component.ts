@@ -1,3 +1,4 @@
+import { MasterOption } from '../../shared/components/master-select/master-select.component';
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -18,6 +19,9 @@ import { ToastService } from '../../../core/services/toast.service';
 export class AuditSistemaComponent implements OnInit {
   filas: AuditRow[] = [];
   acciones: string[] = [];
+
+  /** Opciones del filtro de acción, con el icono y color de su badge. */
+  opcionesAccion: MasterOption[] = [];
 
   /** Filtros. Todos opcionales: vacíos se envían para no filtrar. */
   accion = '';
@@ -60,7 +64,13 @@ export class AuditSistemaComponent implements OnInit {
     this.http
       .get<string[]>(`${environment.apiUrl}/admin/audit-sistema/acciones`)
       .subscribe({
-        next: (a) => (this.acciones = a),
+        next: (a) => {
+          this.acciones = a;
+          this.opcionesAccion = a.map((x) => {
+            const m = this.metaAccion(x);
+            return { value: x, label: this.etiquetaAccion(x), icon: m.icono, color: m.color };
+          });
+        },
         // No es crítico: la pantalla funciona igual escribiendo la acción a mano.
         error: () => (this.acciones = [])
       });

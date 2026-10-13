@@ -311,23 +311,8 @@
                 Sincronización de usuarios
               </span>
             </label>
-            <div class="relative">
-              <i
-                class="fa-solid fa-arrows-rotate text-[15px] opacity-40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
-                aria-hidden="true"
-              ></i>
-              <select
-                formControlName="syncIntervalMinutes"
-                class="select select-bordered select-sm w-full pl-9 focus:ring-2 focus:ring-primary/25"
-              >
-                <option
-                  *ngFor="let opt of syncIntervalOptions"
-                  [ngValue]="opt.value"
-                >
-                  {{ opt.label }}
-                </option>
-              </select>
-            </div>
+            <app-master-select formControlName="syncIntervalMinutes" [options]="opcionesIntervalo"
+                icon="fa-solid fa-arrows-rotate" label="Sincronización de usuarios"></app-master-select>
           </div>
         </div>
 
@@ -773,11 +758,11 @@
           <table class="table table-sm">
             <thead class="bg-base-200/50">
               <tr>
-                <th class="text-xs">Fecha</th>
-                <th class="text-xs">Usuario</th>
-                <th class="text-xs">Acción</th>
-                <th class="text-xs">Campos modificados</th>
-                <th class="text-xs">IP</th>
+                <th class="text-xs text-center">Fecha</th>
+                <th class="text-xs text-center">Usuario</th>
+                <th class="text-xs text-center">Acción</th>
+                <th class="text-xs text-center">Campos modificados</th>
+                <th class="text-xs text-center">IP</th>
               </tr>
             </thead>
             <tbody>
@@ -785,41 +770,35 @@
                 *ngFor="let item of pagAudit.vista"
                 class="hover:bg-base-200/30 transition-colors"
               >
-                <td class="whitespace-nowrap text-xs font-medium">
+                <td class="whitespace-nowrap text-xs font-medium text-center">
                   {{ item.createdAt | date: "dd/MM/yyyy HH:mm" }}
                 </td>
                 <td
-                  class="text-xs truncate max-w-[160px]"
+                  class="text-xs truncate max-w-[200px] text-center"
                   [title]="item.changedByEmail || 'ID ' + item.changedBy"
                 >
                   {{ item.changedByEmail || "ID " + item.changedBy }}
                 </td>
-                <td>
-                  <span
-                    class="badge badge-sm badge-audit gap-1 font-medium"
-                    [ngClass]="
-                      item.action === 'CREATED' ? 'badge-info' : 'badge-primary'
-                    "
+                <td class="text-center">
+                  <span *ngIf="accionAuditoria(item.action) as m"
+                    class="badge badge-sm kanban-tag border gap-1.5 font-medium whitespace-nowrap"
+                    [style.background-color]="m.color + '1F'"
+                    [style.border-color]="m.color"
+                    [style.color]="m.color"
+                    [style.--bc]="m.color"
+                    [title]="item.action"
                   >
-                    <i
-                      class="text-[10px]"
-                      [ngClass]="
-                        item.action === 'CREATED'
-                          ? 'fa-solid fa-plus'
-                          : 'fa-solid fa-pen'
-                      "
-                      aria-hidden="true"
-                    ></i>
-                    {{ item.action }}
+                    <i [class]="m.icono" class="text-[10px]" aria-hidden="true"></i>
+                    {{ m.texto }}
                   </span>
                 </td>
-                <td
-                  class="text-xs max-w-[280px] truncate"
-                  [title]="item.details"
-                >
-                  {{ item.details }}
+                <td class="text-xs max-w-[360px]" [title]="item.details">
+                  <div class="flex flex-wrap justify-center gap-1">
+                    <span *ngFor="let c of camposModificados(item.details)"
+                          class="badge badge-sm badge-ghost kanban-tag font-medium">{{ c }}</span>
+                  </div>
                 </td>
-                <td class="whitespace-nowrap text-xs font-mono opacity-70">
+                <td class="whitespace-nowrap text-xs font-mono opacity-70 text-center">
                   {{ item.ipAddress || "—" }}
                 </td>
               </tr>

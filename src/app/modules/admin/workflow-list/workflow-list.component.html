@@ -85,14 +85,8 @@
           <label class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">Disparador</span>
           </label>
-          <select
-            class="select select-bordered select-sm w-full focus:ring-2 focus:ring-primary/25"
-            [(ngModel)]="form.triggerType"
-          >
-            <option *ngFor="let d of disparadores()" [value]="d.valor">
-              {{ d.titulo }}
-            </option>
-          </select>
+          <app-master-select [(ngModel)]="form.triggerType" [options]="opcDisparadores()"
+            icon="fa-solid fa-bolt" label="Disparador"></app-master-select>
         </div>
 
         <!-- Programación (solo SCHEDULED) -->
@@ -101,14 +95,8 @@
             <label class="label pt-0 pb-1">
               <span class="label-text text-xs font-medium">Programación</span>
             </label>
-            <select
-              class="select select-bordered select-sm w-full focus:ring-2 focus:ring-primary/25"
-              [(ngModel)]="programacion.modo"
-            >
-              <option value="INTERVALO">Cada N minutos</option>
-              <option value="CRON">Expresión cron</option>
-              <option value="FECHA">Una sola vez</option>
-            </select>
+            <app-master-select [(ngModel)]="programacion.modo" [options]="modosProgramacion"
+              icon="fa-regular fa-clock" label="Programación"></app-master-select>
           </div>
 
           <div *ngIf="programacion.modo === 'INTERVALO'">

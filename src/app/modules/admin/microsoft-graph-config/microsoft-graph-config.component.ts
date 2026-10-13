@@ -1,4 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { opcionIntervalo } from '../../../core/utils/opciones-select.util';
+import { MasterOption } from '../../shared/components/master-select/master-select.component';
 import { Component, DestroyRef, inject, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
@@ -61,6 +63,34 @@ export class MicrosoftGraphConfigComponent implements OnInit {
     { value: 2880, label: "Cada 48 horas" },
     { value: 10080, label: "Cada 7 días" },
   ];
+
+  /** Intervalos con icono y color (más frecuente, más cálido). */
+  get opcionesIntervalo(): MasterOption[] {
+    const lista = this.syncIntervalOptions;
+    if (this.cacheIntervalos.length !== lista.length) {
+      this.cacheIntervalos = lista.map((o) => opcionIntervalo(o.value, o.label));
+    }
+    return this.cacheIntervalos;
+  }
+  private cacheIntervalos: MasterOption[] = [];
+
+  /** Acción de la auditoría en español, con icono y color (antes CREATED/UPDATED casi invisible). */
+  accionAuditoria(accion: string): { texto: string; icono: string; color: string } {
+    if (accion === 'CREATED') return { texto: 'Configuración creada', icono: 'fa-solid fa-circle-plus', color: '#0D9488' };
+    if (accion === 'UPDATED') return { texto: 'Configuración actualizada', icono: 'fa-solid fa-pen', color: '#2563EB' };
+    return { texto: accion || '—', icono: 'fa-solid fa-circle-info', color: '#64748B' };
+  }
+
+  /** Campos del detalle ("tenant_id; mail_enabled; ...") con su nombre en español. */
+  camposModificados(detalle: string | null | undefined): string[] {
+    const texto = (detalle || '').trim();
+    if (!texto || texto === 'sin cambios de valor') return ['Sin cambios de valor'];
+    return texto
+      .split(';')
+      .map((c) => c.trim())
+      .filter((c) => !!c)
+      .map((c) => CAMPOS_GRAPH[c.replace(/\s*\(.*\)$/, '')] ?? c);
+  }
 
   get syncIntervalOptions(): { value: number; label: string }[] {
     const current = this.form?.get("syncIntervalMinutes")?.value as number;
@@ -305,3 +335,17 @@ export class MicrosoftGraphConfigComponent implements OnInit {
       });
   }
 }
+
+/** Nombres en español de los campos que registra la auditoría de Microsoft Graph. */
+const CAMPOS_GRAPH: Record<string, string> = {
+  tenant_id: 'Tenant (directorio)',
+  client_id: 'Id de la aplicación',
+  client_secret: 'Secreto de la aplicación',
+  scope: 'Permisos (scope)',
+  grant_type: 'Tipo de concesión',
+  secret_expires_at: 'Vencimiento del secreto',
+  enabled: 'Integración activada',
+  sync_interval_minutes: 'Intervalo de sincronización',
+  mail_enabled: 'Envío de correo',
+  mail_from_account: 'Cuenta remitente',
+};

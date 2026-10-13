@@ -35,18 +35,9 @@
               Evento del sistema <span class="text-error">*</span>
             </span>
           </div>
-          <select
-            [(ngModel)]="newTemplate.nameTemplate"
-            (ngModelChange)="onEventChange()"
-            name="nameTemplate"
-            class="select select-bordered select-sm w-full"
-            required
-          >
-            <option [ngValue]="null" disabled>Seleccione el evento</option>
-            <option *ngFor="let e of systemEvents" [ngValue]="e">
-              {{ triggerLabels[e] }} ({{ e }})
-            </option>
-          </select>
+          <app-master-select [(ngModel)]="newTemplate.nameTemplate" name="nameTemplate"
+            [options]="opcionesEvento" icon="fa-solid fa-bolt" placeholder="Seleccione el evento" label="Evento"
+            (elegido)="onEventChange()"></app-master-select>
           <div class="label pt-1">
             <span class="label-text-alt text-xs opacity-60">
               El evento es la clave que dispara el envío: solo hay una plantilla por evento,
@@ -62,15 +53,8 @@
               Tipo <span class="text-error">*</span>
             </span>
           </div>
-          <select
-            [(ngModel)]="newTemplate.typeTemplate"
-            name="typeTemplate"
-            class="select select-bordered select-sm w-full"
-            required
-          >
-            <option [ngValue]="null" disabled>Seleccione tipo</option>
-            <option *ngFor="let t of types" [ngValue]="t">{{ t }}</option>
-          </select>
+          <app-master-select [(ngModel)]="newTemplate.typeTemplate" name="typeTemplate"
+            [options]="tiposPlantilla" icon="fa-solid fa-layer-group" placeholder="Seleccione tipo" label="Tipo"></app-master-select>
         </label>
 
         <!-- Icono -->
@@ -123,13 +107,8 @@
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">Destinatario del correo</span>
           </div>
-          <select
-            [(ngModel)]="newTemplate.recipientRule"
-            name="recipientRule"
-            class="select select-bordered select-sm w-full"
-          >
-            <option *ngFor="let r of recipientRules" [ngValue]="r.value">{{ r.label }}</option>
-          </select>
+          <app-master-select [(ngModel)]="newTemplate.recipientRule" name="recipientRule"
+            [options]="reglasDestinatario" icon="fa-solid fa-paper-plane" label="Destinatario"></app-master-select>
         </label>
 
         <!-- Correo personalizado -->
@@ -425,13 +404,8 @@
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">Destinatario del correo</span>
           </div>
-          <select
-            [(ngModel)]="editingTemplate.recipientRule"
-            name="editRecipientRule"
-            class="select select-bordered select-sm w-full"
-          >
-            <option *ngFor="let r of recipientRules" [ngValue]="r.value">{{ r.label }}</option>
-          </select>
+          <app-master-select [(ngModel)]="editingTemplate.recipientRule" name="editRecipientRule"
+            [options]="reglasDestinatario" icon="fa-solid fa-paper-plane" label="Destinatario"></app-master-select>
           <div class="label pt-1">
             <span class="label-text-alt text-xs opacity-60">
               Momento de envío: {{ triggerLabel($any(editingTemplate)) }}
@@ -454,18 +428,10 @@
         </label>
 
         <!-- Activación -->
-        <label class="flex items-center gap-3 p-3 rounded-lg border border-base-200 cursor-pointer md:col-span-2">
-          <input
-            [(ngModel)]="editingTemplate.activeTemplate"
-            name="editActiveTemplate"
-            type="checkbox"
-            class="checkbox checkbox-primary checkbox-sm"
-          />
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium">Plantilla activa</p>
-            <p class="text-xs opacity-60">Si está inactiva, se usa un texto por defecto para el evento</p>
-          </div>
-        </label>
+        <div class="form-control w-full md:col-span-2">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Estado de la plantilla</span></div>
+          <app-estado-activo [(ngModel)]="editingTemplate.activeTemplate" name="editActiveTemplate" [femenino]="true" descripcion="Si está inactiva, se usa un texto por defecto para el evento" etiqueta="Estado"></app-estado-activo>
+        </div>
 
         <!-- Imagen de la plantilla -->
         <div class="md:col-span-2">

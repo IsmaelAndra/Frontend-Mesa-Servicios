@@ -1,4 +1,7 @@
 import { CommonModule } from "@angular/common";
+import { SharedModule } from "../../shared/shared.module";
+import { MasterOption } from "../../shared/components/master-select/master-select.component";
+import { MODOS_PROGRAMACION, opcionDisparador } from "../../../core/utils/opciones-select.util";
 import {
   Component,
   ElementRef,
@@ -75,12 +78,18 @@ interface Arista {
     ButtonModule,
     WorkflowRunCanvasComponent,
     WorkflowNodePanelComponent,
+    SharedModule,
   ],
   templateUrl: "./workflow-builder.component.html",
   // El panel de propiedades recibe el constructor por este token (ver editor-de-workflow.ts).
   providers: [{ provide: EDITOR_DE_WORKFLOW, useExisting: forwardRef(() => WorkflowBuilderComponent) }],
 })
 export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWorkflow {
+  readonly modosProgramacion = MODOS_PROGRAMACION;
+  /** Disparadores del catálogo con icono y color. */
+  readonly opcDisparadores = computed<MasterOption[]>(() =>
+    (this.catalogo()?.disparadores ?? []).map((d) => opcionDisparador(d.tipo, d.descripcion)),
+  );
   @ViewChild("lienzo") lienzo?: ElementRef<HTMLDivElement>;
 
   /** El grafo que se está editando. Es la única fuente de verdad del lienzo. */

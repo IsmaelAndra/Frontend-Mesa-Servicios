@@ -1,4 +1,6 @@
 import { Component, OnInit } from "@angular/core";
+import { opcionAnimacion } from '../../../core/utils/opciones-select.util';
+import { MasterOption } from '../../shared/components/master-select/master-select.component';
 import {
   AdminService,
   BrandingConfig,
@@ -82,6 +84,9 @@ export class BrandingComponent implements OnInit {
   ];
 
   readonly loadingAnimaciones = LOADING_ANIMATIONS;
+
+  /** Animaciones con icono y color para app-master-select. */
+  readonly opcionesAnimacion: MasterOption[] = LOADING_ANIMATIONS.map((a) => opcionAnimacion(a.value, a.label));
 
   readonly loadingEfectosLogo = LOADING_LOGO_EFFECTS;
 

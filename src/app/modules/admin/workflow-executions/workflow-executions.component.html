@@ -42,15 +42,10 @@
       <div class="flex flex-wrap items-center gap-2">
         <!-- Filtro de workflow (solo en vista global) -->
         <div *ngIf="!workflowId" class="min-w-[200px]">
-          <select
-            class="select select-bordered select-sm w-full"
-            (change)="cambiarWorkflow($any($event.target).value)"
-          >
-            <option value="">Todos los workflows</option>
-            <option *ngFor="let w of workflows()" [value]="w.id">
-              {{ w.name }}
-            </option>
-          </select>
+          <app-master-select [ngModel]="filtroWorkflow()" (ngModelChange)="cambiarWorkflow($event ?? '')"
+            [ngModelOptions]="{ standalone: true }" [options]="opcWorkflows()" [allowEmpty]="true"
+            emptyLabel="Todos los workflows" placeholder="Todos los workflows" icon="fa-solid fa-diagram-project"
+            label="Workflow"></app-master-select>
         </div>
 
         <!-- Filtros de estado -->

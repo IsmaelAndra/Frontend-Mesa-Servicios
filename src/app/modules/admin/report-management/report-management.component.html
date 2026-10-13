@@ -163,15 +163,10 @@
           ></textarea>
         </label>
 
-        <label class="flex items-center gap-2 cursor-pointer p-2">
-          <input
-            type="checkbox"
-            class="checkbox checkbox-primary checkbox-sm"
-            [(ngModel)]="newReport.activeReport"
-            name="activeReport"
-          />
-          <span class="text-sm">Activo (visible en la sección Reportes)</span>
-        </label>
+        <div class="form-control w-full">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Estado</span></div>
+          <app-estado-activo [(ngModel)]="newReport.activeReport" name="activeReport" descripcion="Visible en la sección Reportes" etiqueta="Estado"></app-estado-activo>
+        </div>
 
         <div class="form-control w-full">
           <div class="label pt-0 pb-1">
@@ -466,13 +461,10 @@
           </div>
         </div>
 
-        <label class="flex items-center justify-between gap-3 p-3 rounded-xl border border-base-200 cursor-pointer">
-          <span>
-            <span class="block text-sm font-medium">Activo</span>
-            <span class="block text-xs opacity-60">Visible en la sección Reportes</span>
-          </span>
-          <input type="checkbox" class="toggle toggle-primary toggle-sm" [(ngModel)]="ed.activeReport" />
-        </label>
+        <div class="form-control w-full">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Estado</span></div>
+          <app-estado-activo [(ngModel)]="ed.activeReport" descripcion="Visible en la sección Reportes" etiqueta="Estado"></app-estado-activo>
+        </div>
 
         <!-- Vista previa de la tarjeta -->
         <div class="rounded-xl border border-base-200 p-4 flex items-start gap-3 bg-base-200/30">

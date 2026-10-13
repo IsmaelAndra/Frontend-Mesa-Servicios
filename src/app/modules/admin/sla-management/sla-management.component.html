@@ -209,13 +209,7 @@
                       <div class="label pt-0 pb-1">
                         <span class="label-text text-xs font-medium">Estado</span>
                       </div>
-                      <label class="h-8 px-2 border border-base-300 rounded-lg flex items-center gap-2 cursor-pointer bg-base-100">
-                        <input type="checkbox" class="checkbox checkbox-primary checkbox-sm"
-                          [(ngModel)]="editPolicy!.activeSlaPolicy" />
-                        <span class="text-sm">
-                          {{ editPolicy!.activeSlaPolicy ? 'Activa' : 'Inactiva' }}
-                        </span>
-                      </label>
+                      <app-estado-activo [(ngModel)]="editPolicy!.activeSlaPolicy" [femenino]="true" etiqueta="Estado"></app-estado-activo>
                     </div>
 
                     <div class="col-span-2 md:col-span-4 xl:col-span-6 flex justify-end gap-2 pt-2 border-t border-base-300">
@@ -490,18 +484,7 @@
                       <div class="label pt-0 pb-1">
                         <span class="label-text text-xs font-medium">Estado</span>
                       </div>
-                      <label
-                        class="h-8 px-2 border border-base-300 rounded-lg flex items-center gap-2 cursor-pointer bg-base-100"
-                      >
-                        <input
-                          type="checkbox"
-                          class="checkbox checkbox-primary checkbox-sm"
-                          [(ngModel)]="editRule!.activeSlaRule"
-                        />
-                        <span class="text-sm">
-                          {{ editRule!.activeSlaRule ? 'Activa' : 'Inactiva' }}
-                        </span>
-                      </label>
+                      <app-estado-activo [(ngModel)]="editRule!.activeSlaRule" [femenino]="true" etiqueta="Estado"></app-estado-activo>
                     </div>
 
                     <div class="col-span-2 md:col-span-3 xl:col-span-6 flex justify-end gap-2 pt-2 border-t border-base-300">

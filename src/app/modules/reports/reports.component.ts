@@ -1,4 +1,5 @@
 import { Component, OnInit } from "@angular/core";
+import { ORDEN_REPORTES, PERIODOS_REPORTE } from '../../core/utils/opciones-select.util';
 import { saveAs } from "file-saver";
 import { NotificationService } from "../../core/services/notification.service";
 import { AdminService } from "../../core/services/admin.service";
@@ -20,6 +21,8 @@ interface ReportItem {
   templateUrl: "./reports.component.html",
 })
 export class ReportsComponent implements OnInit {
+  readonly periodos = PERIODOS_REPORTE;
+  readonly ordenReportes = ORDEN_REPORTES;
   /** Los reportes los publica el backend; aquí no hay ninguna lista fija. */
   reports: ReportItem[] = [];
 

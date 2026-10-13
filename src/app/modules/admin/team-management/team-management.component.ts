@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { METODOS_ASIGNACION } from '../../../core/utils/opciones-select.util';
 import Swal from 'sweetalert2';
 import { AdminService, RoutingConfig, SupportTeam } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -10,6 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
   templateUrl: './team-management.component.html'
 })
 export class TeamManagementComponent implements OnInit {
+  readonly metodosAsignacion = METODOS_ASIGNACION;
   teams: SupportTeam[] = [];
   /** Paginacion en cliente: el endpoint devuelve la lista completa. */
   readonly pagTeams = new Paginacion<SupportTeam>(() => this.teams);

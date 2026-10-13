@@ -1,4 +1,6 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { REGLAS_DESTINATARIO, TIPOS_PLANTILLA, opcionEventoPlantilla } from '../../../core/utils/opciones-select.util';
+import { MasterOption } from '../../shared/components/master-select/master-select.component';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import Swal from 'sweetalert2';
 import { AdminService, NotificationTemplate } from '../../../core/services/admin.service';
@@ -56,6 +58,11 @@ export class TemplateManagementComponent implements OnInit {
    * elige un evento existente se sobrescribe su texto.
    */
   readonly systemEvents = Object.keys(this.triggerLabels);
+
+  /** Opciones con icono y color para los selects del formulario. */
+  readonly opcionesEvento: MasterOption[] = this.systemEvents.map((e) => opcionEventoPlantilla(e, this.triggerLabels[e]));
+  readonly tiposPlantilla = TIPOS_PLANTILLA;
+  readonly reglasDestinatario = REGLAS_DESTINATARIO;
 
   /** Icono y color por defecto según el evento elegido. */
   private eventDefaults: Record<string, { icon: string; color: string; type: string }> = {

@@ -138,25 +138,8 @@
         </div>
 
         <!-- Período -->
-        <div class="relative">
-          <i
-            class="fa-regular fa-calendar text-[15px] opacity-50 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
-            aria-hidden="true"
-          ></i>
-          <select
-            [(ngModel)]="period"
-            (ngModelChange)="applyPeriod()"
-            class="select select-bordered select-sm pl-9 w-full sm:w-44"
-            aria-label="Período del reporte"
-          >
-            <option value="HOY">Hoy</option>
-            <option value="MES">Este mes</option>
-            <option value="ANIO">Este año</option>
-            <option value="SEMESTRE">Últimos 6 meses</option>
-            <option value="PERSONALIZADO">Rango personalizado</option>
-            <option value="TODO">Todo el historial</option>
-          </select>
-        </div>
+        <app-master-select class="w-full sm:w-52" [(ngModel)]="period" [options]="periodos"
+          icon="fa-regular fa-calendar" label="Período del reporte" (elegido)="applyPeriod()"></app-master-select>
 
         <!-- Rango personalizado -->
         <div
@@ -204,20 +187,8 @@
           </div>
 
         <!-- Ordenamiento -->
-        <div class="relative">
-          <i
-            class="fa-solid fa-arrow-down-wide-short text-[15px] opacity-50 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10"
-            aria-hidden="true"
-          ></i>
-          <select
-            [(ngModel)]="sortBy"
-            class="select select-bordered select-sm pl-9 w-full sm:w-44"
-            aria-label="Ordenar reportes"
-          >
-            <option value="label">Nombre (A-Z)</option>
-            <option value="label-desc">Nombre (Z-A)</option>
-          </select>
-        </div>
+        <app-master-select class="w-full sm:w-48" [(ngModel)]="sortBy" [options]="ordenReportes"
+          icon="fa-solid fa-arrow-down-wide-short" label="Ordenar reportes"></app-master-select>
 
         <!-- Chips de filtros activos -->
         <div

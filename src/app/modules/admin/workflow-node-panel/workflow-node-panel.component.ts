@@ -7,6 +7,20 @@ import { SharedModule } from "../../shared/shared.module";
 import { MasterOption } from "../../shared/components/master-select/master-select.component";
 import { environment } from "../../../../environments/environment";
 
+/** Nombre e icono de cada operador de las condiciones. */
+const NOMBRES_OPERADOR: Record<string, string> = {
+  "==": "Igual a", "!=": "Distinto de", ">": "Mayor que", "<": "Menor que", ">=": "Mayor o igual",
+  "<=": "Menor o igual", contiene: "Contiene", empieza_con: "Empieza con", termina_con: "Termina con",
+  vacio: "Está vacío", no_vacio: "No está vacío", es_verdadero: "Es verdadero", es_falso: "Es falso",
+};
+const ICONOS_OPERADOR: Record<string, string> = {
+  "==": "fa-solid fa-equals", "!=": "fa-solid fa-not-equal", ">": "fa-solid fa-greater-than",
+  "<": "fa-solid fa-less-than", ">=": "fa-solid fa-greater-than-equal", "<=": "fa-solid fa-less-than-equal",
+  contiene: "fa-solid fa-magnifying-glass", empieza_con: "fa-solid fa-backward-step",
+  termina_con: "fa-solid fa-forward-step", vacio: "fa-regular fa-square", no_vacio: "fa-solid fa-square",
+  es_verdadero: "fa-solid fa-circle-check", es_falso: "fa-solid fa-circle-xmark",
+};
+
 /** Maestro del catálogo con su icono y color, para app-master-select. */
 function opcion(x: { id: string; name: string; icon?: string; color?: string }): MasterOption {
   return { value: x.id, label: x.name, icon: x.icon || undefined, color: x.color || undefined };
@@ -53,6 +67,57 @@ export class WorkflowNodePanelComponent {
       sessionState: a.sessionState,
     })),
   );
+
+  /** Operadores de la condición, con un icono que se lee de un vistazo. */
+  readonly opcOperadores = computed<MasterOption[]>(() =>
+    (this.editor.catalogo()?.operadores ?? []).map((op) => ({
+      value: op,
+      label: NOMBRES_OPERADOR[op] ? `${NOMBRES_OPERADOR[op]} (${op})` : op,
+      icon: ICONOS_OPERADOR[op] ?? "fa-solid fa-equals",
+      color: "#2563EB",
+    })),
+  );
+
+  readonly accionesNexa: MasterOption[] = [
+    { value: "CLASIFICAR", label: "Clasificar (prioridad, categoría, equipo)", icon: "fa-solid fa-tags", color: "#7C3AED" },
+    { value: "RESUMIR", label: "Resumir el ticket", icon: "fa-solid fa-align-left", color: "#0E7490" },
+    { value: "RESPONDER", label: "Proponer respuesta", icon: "fa-solid fa-reply", color: "#0D9488" },
+  ];
+
+  readonly destinosAviso: MasterOption[] = [
+    { value: "AGENTE", label: "Agente asignado", icon: "fa-solid fa-headset", color: "#0E7490" },
+    { value: "SOLICITANTE", label: "Solicitante", icon: "fa-regular fa-user", color: "#2563EB" },
+  ];
+
+  readonly opcRoles: MasterOption[] = [
+    { value: "SUPER_ADMIN", label: "Super administrador", icon: "fa-solid fa-crown", color: "#7C3AED" },
+    { value: "ADMIN", label: "Administrador", icon: "fa-solid fa-user-shield", color: "#2563EB" },
+    { value: "AGENT", label: "Agente", icon: "fa-solid fa-headset", color: "#0E7490" },
+    { value: "USER", label: "Usuario", icon: "fa-regular fa-user", color: "#64748B" },
+  ];
+
+  /** Nodos a los que puede ir un puerto (todos menos él mismo y el Inicio), con su icono y color. */
+  private destinosCache: { grafo: unknown; porNodo: Map<string, MasterOption[]> } = { grafo: null, porNodo: new Map() };
+  destinosPara(nodoId: string): MasterOption[] {
+    const grafo = this.editor.grafo();
+    if (this.destinosCache.grafo !== grafo) {
+      this.destinosCache = { grafo, porNodo: new Map() };
+    }
+    let lista = this.destinosCache.porNodo.get(nodoId);
+    if (!lista) {
+      lista = grafo.nodes
+        .filter((d) => d.id !== nodoId && d.type !== "INICIO")
+        .map((d) => ({
+          value: d.id,
+          label: d.name,
+          detail: this.editor.etiquetaTipo(d.type),
+          icon: this.editor.iconos[d.type] ?? "fa-solid fa-circle",
+          color: this.editor.colorDe(d.type),
+        }));
+      this.destinosCache.porNodo.set(nodoId, lista);
+    }
+    return lista;
+  }
 
   /** Variables que ofrece el selector: las del disparador y las que dejan los demás nodos. */
   readonly variables = computed(() => {

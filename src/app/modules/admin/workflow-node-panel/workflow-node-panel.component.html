@@ -139,19 +139,7 @@
               >Operador</span
             >
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('operador')"
-            (change)="setConfig('operador', $any($event.target).value)"
-          >
-            <option
-              *ngFor="let op of editor.catalogo()?.operadores ?? []"
-              [value]="op"
-              [selected]="'' + configDe('operador') === '' + op"
-            >
-              {{ op }}
-            </option>
-          </select>
+          <app-master-select [ngModel]="configDe('operador') || null" (ngModelChange)="setConfig('operador', $event ?? '')" [ngModelOptions]="{ standalone: true }" [options]="opcOperadores()" icon="fa-solid fa-equals"></app-master-select>
           <div class="flex justify-between items-center">
             <label class="text-xs font-medium opacity-70">Valor</label>
             <ng-container
@@ -341,17 +329,7 @@
               Que hace NEXA
             </span>
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('accion')"
-            (change)="setConfig('accion', $any($event.target).value)"
-          >
-            <option value="CLASIFICAR">
-              Clasificar (prioridad, categoría, equipo)
-            </option>
-            <option value="RESUMIR">Resumir el ticket</option>
-            <option value="RESPONDER">Proponer respuesta</option>
-          </select>
+          <app-master-select [ngModel]="configDe('accion') || null" (ngModelChange)="setConfig('accion', $event ?? '')" [ngModelOptions]="{ standalone: true }" [options]="accionesNexa" icon="fa-solid fa-robot"></app-master-select>
           <label class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium opacity-70">
               Criterios o instrucciones
@@ -380,34 +358,13 @@
               Destinatario del ticket
             </span>
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('destino')"
-            (change)="setConfig('destino', $any($event.target).value)"
-          >
-            <option value="">—</option>
-            <option value="AGENTE">Agente asignado</option>
-            <option value="SOLICITANTE">Solicitante</option>
-          </select>
+          <app-master-select [ngModel]="configDe('destino') || null" (ngModelChange)="setConfig('destino', $event ?? '')" [ngModelOptions]="{ standalone: true }" [options]="destinosAviso" icon="fa-solid fa-user" [allowEmpty]="true" emptyLabel="—" placeholder="—"></app-master-select>
           <label class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium opacity-70">
               y/o todas las cuentas del rol
             </span>
           </label>
-          <select
-            class="select select-bordered select-sm w-full"
-            [value]="configDe('rol')"
-            (change)="setConfig('rol', $any($event.target).value)"
-          >
-            <option value="">—</option>
-            <option
-              *ngFor="let r of roles"
-              [value]="r"
-              [selected]="'' + configDe('rol') === '' + r"
-            >
-              {{ r }}
-            </option>
-          </select>
+          <app-master-select [ngModel]="configDe('rol') || null" (ngModelChange)="setConfig('rol', $event ?? '')" [ngModelOptions]="{ standalone: true }" [options]="opcRoles" icon="fa-solid fa-shield-halved" [allowEmpty]="true" emptyLabel="—" placeholder="—"></app-master-select>
           <div class="flex justify-between items-center">
             <label class="text-xs font-medium opacity-70">
               y/o un correo de la mesa
@@ -885,24 +842,12 @@
           >
             {{ puerto }}
           </span>
-          <select
-            class="select select-bordered select-xs flex-1 min-w-0"
-            [value]="editor.destinoDe(nodo, puerto)"
-            (change)="
-              editor.conectarDesdeLista(nodo, puerto, $any($event.target).value)
-            "
-          >
-            <option value="">— sin conectar —</option>
-            <ng-container *ngFor="let d of editor.grafo().nodes">
-              <option
-                *ngIf="d.id !== nodo.id && d.type !== 'INICIO'"
-                [value]="d.id"
-                [selected]="'' + editor.destinoDe(nodo, puerto) === '' + d.id"
-              >
-                {{ d.name }}
-              </option>
-            </ng-container>
-          </select>
+          <app-master-select class="flex-1 min-w-0"
+            [ngModel]="editor.destinoDe(nodo, puerto) || null"
+            (ngModelChange)="editor.conectarDesdeLista(nodo, puerto, $event ?? '')"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="destinosPara(nodo.id)" [allowEmpty]="true" emptyLabel="— sin conectar —"
+            placeholder="— sin conectar —" icon="fa-solid fa-arrow-right"></app-master-select>
         </div>
       </div>
     </ng-container>

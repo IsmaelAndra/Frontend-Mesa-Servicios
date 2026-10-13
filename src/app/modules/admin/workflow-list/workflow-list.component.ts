@@ -1,6 +1,9 @@
 import { CommonModule } from "@angular/common";
+import { SharedModule } from "../../shared/shared.module";
+import { MasterOption } from "../../shared/components/master-select/master-select.component";
+import { MODOS_PROGRAMACION, opcionDisparador } from "../../../core/utils/opciones-select.util";
 import { SkeletonComponent } from "../../shared/components/skeleton/skeleton.component";
-import { Component, OnInit, signal } from "@angular/core";
+import { Component, OnInit, computed, signal } from "@angular/core";
 import { Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { ButtonModule } from "primeng/button";
@@ -25,7 +28,7 @@ import {
 @Component({
   selector: "app-workflow-list",
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, SkeletonComponent],
+  imports: [CommonModule, FormsModule, ButtonModule, SkeletonComponent, SharedModule],
   templateUrl: "./workflow-list.component.html",
 })
 export class WorkflowListComponent implements OnInit {
@@ -38,6 +41,12 @@ export class WorkflowListComponent implements OnInit {
   readonly disparadores = signal<{ valor: string; titulo: string }[]>([
     { valor: "TICKET_CREATED", titulo: "Ticket creado" },
   ]);
+
+  readonly modosProgramacion = MODOS_PROGRAMACION;
+  /** Disparadores con icono y color, para app-master-select. */
+  readonly opcDisparadores = computed<MasterOption[]>(() =>
+    this.disparadores().map((d) => opcionDisparador(d.valor, d.titulo)),
+  );
 
   /** Programación, solo para el disparador SCHEDULED. */
   programacion: ScheduleConfig = { modo: "INTERVALO", minutos: 60 };

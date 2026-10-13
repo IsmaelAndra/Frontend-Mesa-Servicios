@@ -9,6 +9,7 @@ import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.componen
 import { ToastContainerComponent } from './components/toast-container/toast-container.component';
 import { AiFloatButtonComponent } from './components/ai-float-button/ai-float-button.component';
 import { PaginatorComponent } from './components/paginator/paginator.component';
+import { EstadoActivoComponent } from './components/estado-activo/estado-activo.component';
 import { PresenceDotComponent } from './components/presence-dot/presence-dot.component';
 import { GlobalSearchComponent } from './components/global-search/global-search.component';
 import { DropzoneComponent } from './components/dropzone/dropzone.component';
@@ -17,9 +18,9 @@ import { PrimeNGModule } from './primeng.module';
 import { SkeletonComponent } from './components/skeleton/skeleton.component';
 
 @NgModule({
-  declarations: [NavbarComponent, SidebarComponent, StatusBadgeComponent, MasterSelectComponent, BreadcrumbComponent, ToastContainerComponent, AiFloatButtonComponent, PaginatorComponent, PresenceDotComponent, GlobalSearchComponent, DropzoneComponent],
+  declarations: [NavbarComponent, SidebarComponent, StatusBadgeComponent, MasterSelectComponent, BreadcrumbComponent, ToastContainerComponent, AiFloatButtonComponent, PaginatorComponent, PresenceDotComponent, GlobalSearchComponent, DropzoneComponent, EstadoActivoComponent],
   imports: [CommonModule, RouterModule, PrimeNGModule, SkeletonComponent],
-  exports: [NavbarComponent, SidebarComponent, StatusBadgeComponent, MasterSelectComponent, BreadcrumbComponent, ToastContainerComponent, AiFloatButtonComponent, PaginatorComponent, PresenceDotComponent, GlobalSearchComponent, DropzoneComponent, SkeletonComponent, CommonModule, RouterModule, PrimeNGModule]
+  exports: [NavbarComponent, SidebarComponent, StatusBadgeComponent, MasterSelectComponent, BreadcrumbComponent, ToastContainerComponent, AiFloatButtonComponent, PaginatorComponent, PresenceDotComponent, GlobalSearchComponent, DropzoneComponent, EstadoActivoComponent, SkeletonComponent, CommonModule, RouterModule, PrimeNGModule]
 })
 export class SharedModule {}
 

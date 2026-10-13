@@ -61,19 +61,12 @@
         </label>
 
         <!-- Estado -->
-        <label class="form-control w-full">
+        <div class="form-control w-full">
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">Estado</span>
           </div>
-          <select
-            [(ngModel)]="newArea.statusArea"
-            name="statusArea"
-            class="select select-bordered select-sm w-full"
-          >
-            <option [ngValue]="true">Activa</option>
-            <option [ngValue]="false">Inactiva</option>
-          </select>
-        </label>
+          <app-estado-activo [(ngModel)]="newArea.statusArea" name="statusArea" [femenino]="true" etiqueta="Estado"></app-estado-activo>
+        </div>
 
         <!-- Descripción -->
         <label class="form-control w-full md:col-span-2">
@@ -331,18 +324,7 @@
                     <div class="label pt-0 pb-1">
                       <span class="label-text text-xs font-medium">Estado</span>
                     </div>
-                    <label
-                      class="h-8 px-2 border border-base-300 rounded-lg flex items-center gap-2 cursor-pointer bg-base-100"
-                    >
-                      <input
-                        type="checkbox"
-                        class="checkbox checkbox-primary checkbox-sm"
-                        [(ngModel)]="editArea.statusArea"
-                      />
-                      <span class="text-sm">
-                        {{ editArea.statusArea ? 'Activa' : 'Inactiva' }}
-                      </span>
-                    </label>
+                    <app-estado-activo [(ngModel)]="editArea.statusArea" [femenino]="true" etiqueta="Estado"></app-estado-activo>
                   </div>
 
                   <!-- Acciones -->

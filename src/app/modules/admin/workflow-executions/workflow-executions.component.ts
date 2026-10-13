@@ -1,7 +1,9 @@
 import { CommonModule } from "@angular/common";
+import { MasterOption } from "../../shared/components/master-select/master-select.component";
+import { opcionDisparador } from "../../../core/utils/opciones-select.util";
 import { SkeletonComponent } from "../../shared/components/skeleton/skeleton.component";
 import { SharedModule } from "../../shared/shared.module";
-import { Component, OnDestroy, OnInit, signal } from "@angular/core";
+import { Component, OnDestroy, OnInit, computed, signal } from "@angular/core";
 import { ActivatedRoute, RouterModule } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { ButtonModule } from "primeng/button";
@@ -53,6 +55,10 @@ export class WorkflowExecutionsComponent implements OnInit, OnDestroy {
   tamano = 25;
   readonly filtro = signal<ExecutionStatus | "">("");
   readonly filtroWorkflow = signal<string | null>(null);
+  /** Workflows para el filtro, con el color e icono de su disparador. */
+  readonly opcWorkflows = computed<MasterOption[]>(() =>
+    this.workflows().map((w) => ({ ...opcionDisparador(w.triggerType, w.name), value: w.id, label: w.name })),
+  );
   readonly traza = signal<Traza | null>(null);
   readonly pasoAbierto = signal<string | null>(null);
   readonly cargando = signal(true);

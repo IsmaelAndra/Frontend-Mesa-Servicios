@@ -46,6 +46,17 @@ export class UserManagementComponent implements OnInit {
     AREA_MANAGER: "Como un usuario, y además ve y gestiona los activos de su área",
   };
 
+  /** Roles con su icono y color, para el filtro. */
+  get opcionesRol(): MasterOption[] {
+    if (!this.rolesOpciones.length) {
+      this.rolesOpciones = this.roles.map((r) => ({
+        value: r, label: this.getRoleLabel(r), icon: this.rolIcon(r), color: this.rolColor(r),
+      }));
+    }
+    return this.rolesOpciones;
+  }
+  private rolesOpciones: MasterOption[] = [];
+
   getRoleLabel(role: string): string {
     return this.roleLabels[role] || role;
   }
