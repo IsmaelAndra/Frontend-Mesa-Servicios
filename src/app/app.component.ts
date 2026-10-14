@@ -114,11 +114,27 @@ export class AppComponent implements OnInit, OnDestroy {
         this.loadingScreen = resolveLoadingScreen(b, this.title);
         applyBrandingTheme({ primaryColor: b.primaryColor, secondaryColor: b.secondaryColor });
         setChatBackground(b.chatBackgroundLightUrl || b.chatBackgroundUrl, b.chatBackgroundDarkUrl);
+        // El login no pedía el fondo y el logo hasta que acababa la pantalla de
+        // carga: en producción el fondo aparecía a los 4 s. Se empiezan a bajar
+        // ahora, en paralelo, y cuando el login los pide ya están en caché.
+        if (this.router.url.startsWith('/auth') || location.pathname.startsWith('/auth')) {
+          precargarImagenes([b.backgroundUrl, b.logoLoginUrl || b.logoUrl]);
+        }
         // La marca puede traer una duracion minima mayor que la inicial.
         if (this.booting) {
           this.armarSeguridad();
         }
       }
     });
+  }
+}
+
+/** Descarga imágenes en segundo plano para que estén en caché cuando se pinten. */
+function precargarImagenes(urls: (string | null | undefined)[]): void {
+  for (const url of urls) {
+    if (!url) continue;
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = url;
   }
 }
