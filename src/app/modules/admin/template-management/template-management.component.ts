@@ -409,8 +409,9 @@ return this.htmlPreview;
    * Rompe los valores de `src`/`href` que llevan comillas dobles dentro, para que
    * no se puedan cerrar el atributo y colar atributos propios como `onerror`.
    * <p>
-   * Se hace ANTES de resolver el logo, porque el `src` que genera `resolveVariables`
-   * es una URL que viene de la configuración de marca, no del textarea.
+   * Se hace ANTES de resolver las variables, porque el `src` que genera
+   * `resolveVariables` es una URL que viene de la configuración de marca, no del
+   * textarea.
    */
   private escaparUrlAtributo(html: string): string {
     return html.replace(
@@ -426,9 +427,10 @@ return this.htmlPreview;
    */
   private resolveVariables(body: string, imagenUrlCrudo: string = ''): string {
     if (body == null) return '';
-    const logoHtml = this.logoUrl
-      ? `<img src="${this.logoUrl}" alt="Mesa de Ayuda COAC" style="max-height:60px;max-width:220px;width:auto;height:auto;display:inline-block;" />`
-      : `<span style="font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:bold;color:#ffffff;">Mesa de Ayuda COAC</span>`;
+    // [logo] es la URL a secas, igual que [imagenUrl]: la etiqueta img la escribe
+    // el administrador en la plantilla. Resolverla aqui como etiqueta entera
+    // rompia el `src="[logo]"` de las plantillas al guardar.
+    const logo = this.logoUrl ? this.logoUrl.replace(/"/g, '&quot;') : '';
 
     // La imagen se recibe como parametro en vez de deducirla del formulario:
     // si se adivinara, la vista previa de la lista y el visor no tendrian forma
@@ -436,7 +438,7 @@ return this.htmlPreview;
     const imagenUrl = (imagenUrlCrudo || '').trim();
 
   let result = body
-        .replace(/\[logo\]/g, logoHtml)
+        .replace(/\[logo\]/g, logo)
         .replace(/\[appName\]/g, 'Mesa de Servicios')
         .replace(/\[fecha\]/g, new Date().toLocaleDateString('es-EC'))
         .replace(/\[hora\]/g, new Date().toTimeString().slice(0, 5))
@@ -466,7 +468,7 @@ return this.htmlPreview;
           case 'imageUrl':
             return imagenUrl;
           case 'logo':
-            return logoHtml;
+            return logo;
           case 'appName':
             return 'Mesa de Servicios';
           case 'fecha':

@@ -130,6 +130,37 @@ describe('Vista previa de plantillas', () => {
       expect(html).not.toContain('[imagenUrl]');
     });
 
+    it('[logo] se reemplaza por la URL, no por una etiqueta img entera', () => {
+      component.logoUrl = 'https://mesa.coac.gob.ec/api/uploads/publico/logo_abc.png';
+
+      const html = component.previewHtml('<td align="center">[logo]</td>');
+
+      // El backend entrega la URL a secas y la etiqueta la escribe el
+      // administrador: si aqui se metiera el <img> completo, al guardar la
+      // plantilla el src quedaria src="<img src=...>".
+      expect(html).toContain('https://mesa.coac.gob.ec/api/uploads/publico/logo_abc.png');
+      expect(html).not.toContain('<img src="https://mesa.coac.gob.ec/api/uploads');
+      expect(html).not.toContain('[logo]');
+    });
+
+    it('[logo] dentro del atributo src arma la etiqueta completa', () => {
+      component.logoUrl = 'https://mesa.coac.gob.ec/api/uploads/publico/logo_abc.png';
+
+      const html = component.previewHtml('<img src="[logo]" alt="Mesa de Ayuda COAC" />');
+
+      expect(html).toContain('<img src="https://mesa.coac.gob.ec/api/uploads/publico/logo_abc.png"');
+      expect(html).not.toContain('[logo]');
+    });
+
+    it('una URL de logo con comillas no cierra el atributo src', () => {
+      component.logoUrl = 'https://x/logo.png" onerror="alert(1)';
+
+      const html = component.previewHtml('<img src="[logo]" />');
+
+      expect(html).toContain('&quot;');
+      expect(html).not.toMatch(/onerror="alert/);
+    });
+
     it('la lista de variables ofrece [imagenUrl] en todos los tipos', () => {
       for (const tipo of ['TICKET', 'RATING', 'SLA', 'EVAL', 'TASK', 'CUENTA']) {
         const variables = component.variablesDe(tipo);
