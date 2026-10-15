@@ -13,6 +13,7 @@ import { SlaConfigComponent } from './sla-config/sla-config.component';
 import { TicketTypeManagementComponent } from './ticket-type-management/ticket-type-management.component';
 import { AiConfigComponent } from './ai-config/ai-config.component';
 import { MicrosoftGraphConfigComponent } from './microsoft-graph-config/microsoft-graph-config.component';
+import { TelefoniaConfigComponent } from './telefonia-config/telefonia-config.component';
 import { SessionConfigComponent } from './session-config/session-config.component';
 import { MfaConfigComponent } from './mfa-config/mfa-config.component';
 import { AuditSistemaComponent } from './audit-sistema/audit-sistema.component';
@@ -47,6 +48,7 @@ import { MailOutboxComponent } from './mail-outbox/mail-outbox.component';
     TicketTypeManagementComponent,
     AiConfigComponent,
     MicrosoftGraphConfigComponent,
+    TelefoniaConfigComponent,
     SessionConfigComponent,
     MfaConfigComponent,
     AuditSistemaComponent,
@@ -70,6 +72,7 @@ import { MailOutboxComponent } from './mail-outbox/mail-outbox.component';
     TicketTypeManagementComponent,
     AiConfigComponent,
     MicrosoftGraphConfigComponent,
+    TelefoniaConfigComponent,
     SessionConfigComponent,
     MfaConfigComponent,
     AuditSistemaComponent,

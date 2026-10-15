@@ -74,17 +74,17 @@ export class TicketHistorialComponent {
   timelineIconBg(action: string): string {
     switch (action) {
       case "CREATE":
-        return "bg-info text-info-content text-white";
+        return "bg-info text-white text-white";
       case "ASSIGN":
-        return "bg-secondary text-secondary-content text-white";
+        return "bg-secondary text-white text-white";
       case "STATUS_CHANGE":
-        return "bg-warning text-warning-content text-white";
+        return "bg-warning text-white text-white";
       case "ANSWER":
-        return "bg-primary text-primary-content text-white";
+        return "bg-primary text-white text-white";
       case "ATTACH":
         return "bg-neutral text-neutral-content text-white";
       case "RATING":
-        return "bg-success text-success-content text-white";
+        return "bg-success text-white text-white";
       default:
         return "bg-base-300 text-base-content text-white";
     }

@@ -27,7 +27,7 @@
       </div>
       <div *ngFor="let m of messages" class="chat" [ngClass]="m.from === 'user' ? 'chat-end' : 'chat-start'">
         <div *ngIf="m.from === 'user'"
-          class="chat-bubble chat-message chat-message-user bg-primary text-primary-content border border-primary/40 text-sm whitespace-pre-wrap">
+          class="chat-bubble chat-message chat-message-user bg-primary text-white border border-primary/40 text-sm whitespace-pre-wrap">
           {{ m.content }}
         </div>
         <div *ngIf="m.from === 'ai'"

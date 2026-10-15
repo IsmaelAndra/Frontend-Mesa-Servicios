@@ -103,6 +103,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: 'Autenticación MFA', route: '/admin/mfa', icon: navIcon('mfa'), roles: ['SUPER_ADMIN'] },
         { label: 'Inteligencia Artificial', route: '/admin/ai-config', icon: navIcon('ai-config'), roles: ['SUPER_ADMIN'] },
         { label: 'Microsoft Graph y Correo', route: '/admin/microsoft-graph', icon: navIcon('microsoft-graph'), roles: ['SUPER_ADMIN'] },
+        { label: 'Telefonía', route: '/admin/telefonia', icon: navIcon('telefonia'), roles: ['SUPER_ADMIN'] },
         { label: 'Seguridad de Sesión', route: '/admin/session-config', icon: navIcon('session-config'), roles: ['SUPER_ADMIN'] },
         { label: 'Acuses de Lectura', route: '/admin/chat-config', icon: navIcon('chat-config'), roles: ['SUPER_ADMIN'] },
         { label: 'Cola de correo', route: '/admin/mail-outbox', icon: navIcon('mail-outbox'), roles: ['SUPER_ADMIN'] },

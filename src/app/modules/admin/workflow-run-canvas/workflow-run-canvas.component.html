@@ -186,15 +186,15 @@
                 <span *ngIf="estadoDe(n.id) === 'EJECUTANDO'" class="loading loading-spinner loading-xs text-primary"></span>
                 <span
                   *ngIf="estadoDe(n.id) === 'COMPLETADO'"
-                  class="w-6 h-6 rounded-full bg-success text-success-content inline-flex items-center justify-center text-[11px] animate-check-pop"
+                  class="w-6 h-6 rounded-full bg-success text-white inline-flex items-center justify-center text-[11px] animate-check-pop"
                 ><i class="fa-solid fa-check"></i></span>
                 <span
                   *ngIf="estadoDe(n.id) === 'ERROR'"
-                  class="w-6 h-6 rounded-full bg-error text-error-content inline-flex items-center justify-center text-[11px] animate-pop-in"
+                  class="w-6 h-6 rounded-full bg-error text-white inline-flex items-center justify-center text-[11px] animate-pop-in"
                 ><i class="fa-solid fa-xmark"></i></span>
                 <span
                   *ngIf="estadoDe(n.id) === 'PAUSA'"
-                  class="run-reloj w-6 h-6 rounded-full bg-warning text-warning-content inline-flex items-center justify-center text-[11px]"
+                  class="run-reloj w-6 h-6 rounded-full bg-warning text-white inline-flex items-center justify-center text-[11px]"
                 ><i class="fa-solid fa-hourglass-half"></i></span>
               </span>
 

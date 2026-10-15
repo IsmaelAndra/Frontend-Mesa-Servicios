@@ -5,6 +5,7 @@ import { UserManagementComponent } from './user-management/user-management.compo
 import { SlaConfigComponent } from './sla-config/sla-config.component';
 import { AiConfigComponent } from './ai-config/ai-config.component';
 import { MicrosoftGraphConfigComponent } from './microsoft-graph-config/microsoft-graph-config.component';
+import { TelefoniaConfigComponent } from './telefonia-config/telefonia-config.component';
 import { SessionConfigComponent } from './session-config/session-config.component';
 import { MfaConfigComponent } from './mfa-config/mfa-config.component';
 import { AuditSistemaComponent } from './audit-sistema/audit-sistema.component';
@@ -44,6 +45,7 @@ export const ADMIN_ROUTES: Routes = [
   { path: 'ticket-types', component: TicketTypeManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN', 'ADMIN'] } },
   { path: 'ai-config', component: AiConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
   { path: 'microsoft-graph', component: MicrosoftGraphConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: 'telefonia', component: TelefoniaConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
   { path: 'session-config', component: SessionConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
   { path: 'mfa', component: MfaConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
   { path: 'audit-sistema', component: AuditSistemaComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },

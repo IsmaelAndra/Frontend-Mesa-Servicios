@@ -44,6 +44,7 @@ const LABELS: Record<string, string> = {
   mfa: 'Autenticación MFA',
   'ai-config': 'Inteligencia Artificial',
   'microsoft-graph': 'Microsoft Graph y Correo',
+  telefonia: 'Telefonía',
   'session-config': 'Seguridad de Sesión',
   'chat-config': 'Acuses de Lectura',
   'mail-outbox': 'Cola de correo',
