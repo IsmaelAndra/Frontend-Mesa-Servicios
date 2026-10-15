@@ -27,7 +27,9 @@ describe('Chat: pastilla de estado de lectura', () => {
     const sseService = jasmine.createSpyObj('SseService', ['connect', 'disconnect', 'on', 'off']);
     const browserNotif = jasmine.createSpyObj('BrowserNotificationService', ['show', 'requestPermission']);
     return new TicketDetailComponent(
-      route, ticketService, adminService, auth, toastService, sseService, browserNotif,
+      route, ticketService, adminService, auth, toastService, sseService,
+      jasmine.createSpyObj('TelefoniaService', ['habilitada', 'llamarAlSolicitante', 'estado']),
+      browserNotif,
       jasmine.createSpyObj('QuickReplyService', ['listar', 'crear', 'actualizar', 'eliminar'])
     );
   }

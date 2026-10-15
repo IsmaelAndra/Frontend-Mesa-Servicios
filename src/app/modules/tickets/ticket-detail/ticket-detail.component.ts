@@ -1,3 +1,4 @@
+import { TelefoniaService } from "../../../core/services/telefonia.service";
 import {
   Component,
   OnInit,
@@ -290,6 +291,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     private authService: AuthService,
     private toastService: ToastService,
     private sseService: SseService,
+    private telefonia: TelefoniaService,
     private browserNotif: BrowserNotificationService,
     private quickReplyService: QuickReplyService,
   ) {
@@ -311,6 +313,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.telefonia.habilitada().subscribe((h) => (this.telefoniaHabilitada = h));
     this.ticketId = this.route.snapshot.paramMap.get("id") ?? "";
     this.calificarPendiente =
       this.route.snapshot.queryParamMap.get("calificar") === "1";
@@ -1279,6 +1282,54 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
    * (aplicación o web) con la llamada lista para iniciar; antes era un tel: que
    * solo funcionaba si la ficha tenía teléfono y el equipo sabía marcarlo.
    */
+  // ============================ Telefonía (UCM) ============================
+  telefoniaHabilitada = false;
+  llamando = false;
+
+  /**
+   * Pide a la central que llame de la extensión del agente a la del
+   * solicitante. Suena primero el teléfono del agente; al contestar, la central
+   * marca al solicitante. Se sigue el estado unos segundos para avisar si el
+   * puente o la central fallaron.
+   */
+  llamarPorExtension(): void {
+    if (this.llamando || !this.ticketId) return;
+    this.llamando = true;
+    this.telefonia.llamarAlSolicitante(this.ticketId).subscribe({
+      next: (l) => {
+        this.toastService.info(`Conteste su teléfono (ext. ${l.origen}): la central llamará a la ext. ${l.destino}.`,
+          "Llamando…");
+        this.seguirLlamada(l.id, 0);
+      },
+      error: (e) => {
+        this.llamando = false;
+        this.toastService.error(e?.error?.message || "No se pudo iniciar la llamada");
+      },
+    });
+  }
+
+  private seguirLlamada(id: string, vuelta: number): void {
+    if (vuelta >= 20) {
+      this.llamando = false;
+      return;
+    }
+    setTimeout(() => {
+      this.telefonia.estado(id).subscribe({
+        next: (l) => {
+          if (l.estado === "REALIZADA") {
+            this.llamando = false;
+          } else if (l.estado === "ERROR" || l.estado === "VENCIDA") {
+            this.llamando = false;
+            this.toastService.error(l.error || "La central no pudo hacer la llamada", "Llamada no realizada");
+          } else {
+            this.seguirLlamada(id, vuelta + 1);
+          }
+        },
+        error: () => (this.llamando = false),
+      });
+    }, 1500);
+  }
+
   teamsLlamada(): string {
     const correo = this.ficha?.solicitante?.corporateEmailUser || "";
     return `https://teams.microsoft.com/l/call/0/0?users=${encodeURIComponent(correo)}`;

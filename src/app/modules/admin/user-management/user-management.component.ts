@@ -256,7 +256,8 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     roleName: string;
     areaId: string | null;
     sucursalId: string | null;
-  } = { corporateEmail: "", password: "", roleName: "", areaId: null, sucursalId: null };
+    extension: string;
+  } = { corporateEmail: "", password: "", roleName: "", areaId: null, sucursalId: null, extension: "" };
 
   /** Opciones de área y sede para los selects con icono (app-master-select). */
   get areaOpciones(): MasterOption[] {
@@ -288,7 +289,13 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       roleName: u.role,
       areaId: this.areas.find((a) => a.name === u.area)?.id ?? null,
       sucursalId: u.sucursalId ?? this.sucursales.find((s) => s.name === u.sucursal)?.id ?? null,
+      extension: u.extensionUser ?? "",
     };
+  }
+
+  /** La extensión solo admite números (hasta 10). Vacía = sin extensión. */
+  extensionInvalida(): boolean {
+    return !/^[0-9]{0,10}$/.test(this.edicion.extension.trim());
   }
 
   cerrarEdicion(): void {
@@ -303,6 +310,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.corporateEmail.trim()) &&
       !!e.roleName &&
       !!e.areaId &&
+      /^[0-9]{0,10}$/.test(e.extension.trim()) &&
       (!e.password || e.password.length >= 8)
     );
   }
@@ -315,6 +323,8 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       roleName: e.roleName,
       areaId: e.areaId!,
       sucursalId: e.sucursalId || null,
+      // "" quita la extensión; el backend solo acepta números.
+      extension: e.extension.trim(),
     };
     if (e.password) {
       payload.password = e.password;

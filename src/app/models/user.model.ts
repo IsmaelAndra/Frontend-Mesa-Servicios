@@ -34,6 +34,8 @@ export interface User {
   identificationUser?: string;
   corporateEmailUser: string;
   phoneUser?: string;
+  /** Extensión telefónica en la central (solo números). */
+  extensionUser?: string | null;
   statusUser: string;
   /** Estado de sesión calculado en el backend: EN_LINEA | RECIENTE | DESCONECTADO. */
   sessionState?: string;
@@ -120,6 +122,8 @@ roleName: string;
     areaId: string;
     /** Sede de la persona; opcional. */
     sucursalId?: string | null;
+    /** Extensión telefónica; "" la quita. */
+    extension?: string;
   }
 
 export interface Catalog {

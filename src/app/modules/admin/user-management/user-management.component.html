@@ -219,6 +219,11 @@
             {{ getRoleLabel(u.role) }}
           </span>
 
+          <span *ngIf="u.extensionUser" class="badge badge-sm badge-soft gap-1 font-medium" title="Extensión telefónica">
+            <i class="fa-solid fa-phone text-[10px]" aria-hidden="true"></i>
+            {{ u.extensionUser }}
+          </span>
+
           <span
             *ngIf="u.area"
             class="badge badge-sm badge-soft gap-1 font-medium"
@@ -801,6 +806,19 @@
           <div *ngIf="edicion.password && edicion.password.length < 8" class="label pb-0">
             <span class="label-text-alt text-error">Mínimo 8 caracteres</span>
           </div>
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Extensión telefónica</span>
+            <span class="label-text-alt text-[11px] opacity-60">Para llamar desde los tickets</span>
+          </div>
+          <label class="input input-bordered input-sm flex items-center gap-2 w-full focus-within:ring-2 focus-within:ring-primary/25"
+                 [class.input-error]="extensionInvalida()">
+            <i class="fa-solid fa-phone text-xs opacity-60" aria-hidden="true"></i>
+            <input type="text" name="extension" inputmode="numeric" maxlength="10" class="grow bg-transparent outline-none"
+                   placeholder="Ej. 182" [(ngModel)]="edicion.extension" />
+          </label>
         </label>
 
         <div class="flex items-center gap-2 text-sm font-semibold pt-2">

@@ -320,6 +320,19 @@
             <i class="fa-regular fa-envelope" aria-hidden="true"></i>
             Escribir
           </a>
+          <!-- Llamada por la central (UCM): suena tu extensión y, al contestar, marca la del solicitante -->
+          <button
+            *ngIf="telefoniaHabilitada && ficha.solicitante.extensionUser"
+            type="button"
+            class="btn btn-sm btn-ghost border border-base-300 gap-2"
+            [disabled]="llamando"
+            (click)="llamarPorExtension()"
+            [title]="'Llamar a la extensión ' + ficha.solicitante.extensionUser + ' desde tu teléfono'"
+          >
+            <span *ngIf="llamando" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+            <i *ngIf="!llamando" class="fa-solid fa-phone-volume text-success" aria-hidden="true"></i>
+            Llamar a la ext. {{ ficha.solicitante.extensionUser }}
+          </button>
           <!-- Llamada por Microsoft Teams al correo corporativo (abre la app o la web) -->
           <a
             *ngIf="ficha.solicitante.corporateEmailUser"
