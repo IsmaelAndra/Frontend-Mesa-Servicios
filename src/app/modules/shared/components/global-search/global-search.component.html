@@ -131,7 +131,7 @@
             <!-- Filas del grupo -->
             <div class="divide-y divide-base-200">
               <button
-                *ngFor="let fila of filasDelGrupo(grupo.clave)"
+                *ngFor="let fila of filasDelGrupo(grupo.clave); trackBy: trackFila"
                 type="button"
                 [attr.data-search-row]="fila.pos"
                 class="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors"

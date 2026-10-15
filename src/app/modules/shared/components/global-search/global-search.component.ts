@@ -68,6 +68,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
   @ViewChild('searchInput') private inputRef?: ElementRef<HTMLInputElement>;
 
   private filas: Fila[] = [];
+  private porGrupo = new Map<GrupoClave, Fila[]>();
   private terminoSubject = new Subject<string>();
   private searchSub?: Subscription;
   private actualSub?: Subscription;
@@ -75,8 +76,8 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
 
   readonly grupos: GrupoDef[] = [
     { clave: 'tickets', etiqueta: 'Tickets', icono: 'fa-solid fa-ticket', color: 'text-info' },
-    { clave: 'agents', etiqueta: 'Agentes', icono: 'fa-solid fa-headset', color: 'text-primary' },
-    { clave: 'users', etiqueta: 'Usuarios', icono: 'fa-regular fa-user', color: 'text-secondary' },
+    { clave: 'agents', etiqueta: 'Personal (agentes y administradores)', icono: 'fa-solid fa-headset', color: 'text-primary' },
+    { clave: 'users', etiqueta: 'Usuarios (crear ticket a su nombre)', icono: 'fa-regular fa-user', color: 'text-secondary' },
     { clave: 'teams', etiqueta: 'Equipos', icono: 'fa-solid fa-users', color: 'text-success' },
     { clave: 'areas', etiqueta: 'Áreas', icono: 'fa-solid fa-building-columns', color: 'text-warning' },
     { clave: 'assets', etiqueta: 'Activos de TI', icono: 'fa-solid fa-laptop', color: 'text-accent' },
@@ -149,6 +150,9 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
   /** Limpia el término desde el botón del modal. */
   limpiar(): void {
     this.termino = '';
+    // También se vacía el flujo de búsqueda: si no, al volver a escribir el mismo
+    // término distinctUntilChanged lo descartaba y no se buscaba nada.
+    this.terminoSubject.next('');
     this.respuesta = null;
     this.cargando = false;
     this.reconstruirFilas();
@@ -207,9 +211,17 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
     this.elegir(fila);
   }
 
-  /** Filas de un grupo, con su posición global intacta para el teclado. */
+  /**
+   * Filas de un grupo, con su posición global intacta para el teclado. Se
+   * calculan una vez por respuesta: el navbar refresca la vista cada segundo y
+   * un arreglo nuevo en cada vuelta hacía que un clic se perdiera.
+   */
   filasDelGrupo(clave: GrupoClave): Fila[] {
-    return this.filas.filter((f) => f.grupo === clave);
+    return this.porGrupo.get(clave) ?? [];
+  }
+
+  trackFila(_: number, f: Fila): string {
+    return `${f.grupo}:${f.pos}:${f.titulo}`;
   }
 
   /** Icono del grupo para las filas sin avatar (no es una persona). */
@@ -340,6 +352,10 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
       }
     }
     this.filas = filas.map((f, i) => ({ ...f, pos: i }));
+    this.porGrupo = new Map();
+    for (const f of this.filas) {
+      this.porGrupo.set(f.grupo, [...(this.porGrupo.get(f.grupo) ?? []), f]);
+    }
     this.indiceSeleccionado = -1;
   }
 

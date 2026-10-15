@@ -51,6 +51,14 @@ interface EstadoMensaje {
   titulo: string;
 }
 
+/** Criterios de la calificación (mismos nombres que RatingRequest del backend). */
+type CriterioCalificacion =
+  | "overallSatisfaction"
+  | "requirementsMet"
+  | "responseTimeRating"
+  | "resolutionQuality"
+  | "agentCommunication";
+
 /** Eventos que cambian datos del ticket abierto (no el chat). */
 const CAMBIOS_DEL_TICKET = new Set([
   "TICKET_STATUS_CHANGED",
@@ -1137,9 +1145,18 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         this.ratingCargado = true;
         this.intentarCalificarDesdeEnlace();
       },
-      error: () => {
-        // Sin saber si ya estaba calificado no se abre el diálogo: es preferible
-        // que el usuario use el botón manual a ofrecer una segunda calificación.
+      error: (err) => {
+        // 404 = todavía no está calificado: es el caso normal, no un error. Antes
+        // se trataba como fallo y ni el aviso ni el enlace "Califica tu
+        // experiencia" del correo llegaban a ofrecer la calificación.
+        if (err?.status === 404) {
+          this.rating = undefined;
+          this.ratingCargado = true;
+          this.intentarCalificarDesdeEnlace();
+          return;
+        }
+        // Sin saber si ya estaba calificado no se ofrece: mejor eso que permitir
+        // una segunda calificación.
         this.calificarPendiente = false;
       },
     });
@@ -1179,13 +1196,92 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     );
   }
 
+  /**
+   * Califica quien abrió el ticket, sea cual sea su rol (antes solo el rol
+   * USER: un jefe de área o alguien del personal no veía nunca el botón, aunque
+   * el backend sí se lo permitía), y solo cuando está resuelto o cerrado.
+   */
   get canRate(): boolean {
     return (
-      this.userRole === "USER" &&
+      !!this.myUserId &&
+      this.ticket?.userId === this.myUserId &&
       (this.ticket?.status === "RESUELTO" ||
         this.ticket?.status === "CERRADO") &&
+      this.ratingCargado &&
       !this.rating
     );
+  }
+
+  // ============================ Calificación ============================
+  readonly criteriosCalificacion: { clave: CriterioCalificacion; titulo: string; ayuda: string }[] = [
+    { clave: "overallSatisfaction", titulo: "Satisfacción general", ayuda: "¿Qué tan conforme quedó con la atención?" },
+    { clave: "requirementsMet", titulo: "Se resolvió lo que pidió", ayuda: "¿Se cumplió lo que necesitaba?" },
+    { clave: "responseTimeRating", titulo: "Tiempo de respuesta", ayuda: "¿Le atendieron a tiempo?" },
+    { clave: "resolutionQuality", titulo: "Calidad de la solución", ayuda: "¿La solución fue buena y duradera?" },
+    { clave: "agentCommunication", titulo: "Trato y comunicación", ayuda: "¿El agente fue claro y amable?" },
+  ];
+  readonly textoEstrellas = ["", "Muy mal", "Mal", "Regular", "Bien", "Excelente"];
+  readonly unoACinco = [1, 2, 3, 4, 5];
+  calificando = false;
+  enviandoCalificacion = false;
+  calif: Record<CriterioCalificacion, number> & { comentarios: string } = this.calificacionVacia();
+  /** Estrella bajo el puntero, para previsualizar antes de hacer clic. */
+  califHover: { clave: CriterioCalificacion; valor: number } | null = null;
+
+  private calificacionVacia(): Record<CriterioCalificacion, number> & { comentarios: string } {
+    return {
+      overallSatisfaction: 0,
+      requirementsMet: 0,
+      responseTimeRating: 0,
+      resolutionQuality: 0,
+      agentCommunication: 0,
+      comentarios: "",
+    };
+  }
+
+  estrellaLlena(clave: CriterioCalificacion, n: number): boolean {
+    const valor = this.califHover?.clave === clave ? this.califHover.valor : this.calif[clave];
+    return n <= valor;
+  }
+
+  get calificacionCompleta(): boolean {
+    return this.criteriosCalificacion.every((c) => this.calif[c.clave] > 0);
+  }
+
+  cerrarCalificacion(): void {
+    if (!this.enviandoCalificacion) this.calificando = false;
+  }
+
+  enviarCalificacion(): void {
+    if (!this.calificacionCompleta || this.enviandoCalificacion) return;
+    this.enviandoCalificacion = true;
+    this.ticketService
+      .rate(this.ticketId, {
+        requirementsMet: this.calif.requirementsMet,
+        allRequirementsMet: this.calif.requirementsMet === 5,
+        responseTimeRating: this.calif.responseTimeRating,
+        resolutionQuality: this.calif.resolutionQuality,
+        agentCommunication: this.calif.agentCommunication,
+        overallSatisfaction: this.calif.overallSatisfaction,
+        comments: this.calif.comentarios.trim(),
+      })
+      .subscribe({
+        next: () => {
+          this.enviandoCalificacion = false;
+          this.calificando = false;
+          this.loadRating();
+          this.toastService.success("¡Gracias por calificar la atención!");
+        },
+        error: (err) => {
+          this.enviandoCalificacion = false;
+          this.toastService.error(err?.error?.message || "No se pudo guardar la calificación");
+        },
+      });
+  }
+
+  /** Valor de un criterio de la calificación guardada (para pintar sus estrellas). */
+  valorCalificado(clave: CriterioCalificacion): number {
+    return (this.rating?.[clave] as number | undefined) ?? 0;
   }
 
   toggleFicha(): void {
@@ -2024,58 +2120,11 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  /** Abre el formulario de calificación con estrellas. */
   async rateTicket(): Promise<void> {
-    const { value: formValues } = await Swal.fire({
-      title: "Calificar ticket",
-      html: `
-        <div class="text-left space-y-2 text-sm">
-          <label>Requerimientos cumplidos (1-5)</label>
-          <input id="req" type="number" min="1" max="5" value="5" class="input input-bordered input-sm w-full"/>
-          <label>Tiempo de respuesta (1-5)</label>
-          <input id="respt" type="number" min="1" max="5" value="5" class="input input-bordered input-sm w-full"/>
-          <label>Calidad de resolución (1-5)</label>
-          <input id="qual" type="number" min="1" max="5" value="5" class="input input-bordered input-sm w-full"/>
-          <label>Comunicación del agente (1-5)</label>
-          <input id="comm" type="number" min="1" max="5" value="5" class="input input-bordered input-sm w-full"/>
-          <label>Satisfacción general (1-5)</label>
-          <input id="sat" type="number" min="1" max="5" value="5" class="input input-bordered input-sm w-full"/>
-          <label>Comentarios</label>
-          <textarea id="comments" class="textarea textarea-bordered textarea-sm w-full"></textarea>
-        </div>`,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: "Guardar calificación",
-      preConfirm: () => {
-        const g = (i: string) =>
-          Number(
-            (Swal.getPopup()!.querySelector(`#${i}`) as HTMLInputElement).value,
-          );
-        return {
-          requirementsMet: g("req"),
-          allRequirementsMet: g("req") === 5,
-          responseTimeRating: g("respt"),
-          resolutionQuality: g("qual"),
-          agentCommunication: g("comm"),
-          overallSatisfaction: g("sat"),
-          comments: (
-            Swal.getPopup()!.querySelector("#comments") as HTMLTextAreaElement
-          ).value,
-        };
-      },
-    });
-
-    if (formValues) {
-      this.ticketService.rate(this.ticketId, formValues).subscribe({
-        next: () => {
-          this.loadRating();
-          this.toastService.success("¡Gracias por calificar!");
-        },
-        error: (err) =>
-          this.toastService.error(
-            err?.error?.message || "No se pudo calificar",
-          ),
-      });
-    }
+    this.calif = this.calificacionVacia();
+    this.califHover = null;
+    this.calificando = true;
   }
 
   elegirAdjuntos(nuevos: File[]): void {

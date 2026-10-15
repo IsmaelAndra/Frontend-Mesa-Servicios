@@ -223,6 +223,40 @@
     </div>
   </header>
 
+  <!-- ============================ Calificación ============================ -->
+  <!-- Aviso visible para quien abrió el ticket cuando ya se puede calificar -->
+  <div *ngIf="canRate" class="flex flex-wrap items-center gap-3 p-4 rounded-2xl border border-warning/40 bg-warning/10">
+    <span class="p-2.5 rounded-xl bg-warning text-white shrink-0" aria-hidden="true"><i class="fa-solid fa-star"></i></span>
+    <div class="flex-1 min-w-0">
+      <p class="font-semibold text-sm">¿Cómo le atendimos?</p>
+      <p class="text-xs opacity-80">Su ticket está {{ ticket.status === 'CERRADO' ? 'cerrado' : 'resuelto' }}. Califique la atención con estrellas: toma menos de un minuto.</p>
+    </div>
+    <button type="button" class="btn btn-sm btn-warning text-white gap-2" (click)="rateTicket()">
+      <i class="fa-solid fa-star" aria-hidden="true"></i>
+      Calificar ahora
+    </button>
+  </div>
+
+  <!-- Calificación ya hecha: la ve el solicitante y el personal -->
+  <div *ngIf="rating" class="p-4 rounded-2xl border border-base-200 bg-base-100 shadow-sm space-y-3">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="p-2 rounded-xl bg-warning text-white" aria-hidden="true"><i class="fa-solid fa-star"></i></span>
+      <p class="font-semibold text-sm flex-1">Calificación del solicitante</p>
+      <span class="text-xs opacity-60">{{ rating.ratedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+      <div *ngFor="let c of criteriosCalificacion" class="rounded-xl bg-base-200/50 px-3 py-2">
+        <p class="text-[11px] opacity-70">{{ c.titulo }}</p>
+        <p class="text-warning text-sm" [attr.aria-label]="valorCalificado(c.clave) + ' de 5'">
+          <i *ngFor="let n of unoACinco" class="fa-star" [ngClass]="n <= valorCalificado(c.clave) ? 'fa-solid' : 'fa-regular opacity-40'" aria-hidden="true"></i>
+        </p>
+      </div>
+    </div>
+    <p *ngIf="rating.comments" class="text-sm rounded-xl bg-base-200/50 px-3 py-2">
+      <i class="fa-solid fa-quote-left text-[10px] opacity-50 mr-1" aria-hidden="true"></i>{{ rating.comments }}
+    </p>
+  </div>
+
   <!-- ============================ Ficha 360° del solicitante ============================ -->
   <!--
     Todo lo que un agente necesita saber de quien pide ayuda, de un vistazo:
@@ -324,13 +358,13 @@
           <button
             *ngIf="telefoniaHabilitada && ficha.solicitante.extensionUser"
             type="button"
-            class="btn btn-sm btn-ghost border border-base-300 gap-2"
+            class="btn btn-sm btn-success text-white gap-2"
             [disabled]="llamando"
             (click)="llamarPorExtension()"
             [title]="'Llamar a la extensión ' + ficha.solicitante.extensionUser + ' desde tu teléfono'"
           >
             <span *ngIf="llamando" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
-            <i *ngIf="!llamando" class="fa-solid fa-phone-volume text-success" aria-hidden="true"></i>
+            <i *ngIf="!llamando" class="fa-solid fa-phone-volume" aria-hidden="true"></i>
             Llamar a la ext. {{ ficha.solicitante.extensionUser }}
           </button>
           <!-- Llamada por Microsoft Teams al correo corporativo (abre la app o la web) -->
@@ -1740,3 +1774,57 @@
   [context]="aiContext"
   [session]="'detalle-' + (ticket?.idTicket || '')"
 ></app-ai-float-button>
+
+<!-- ============================ Modal: calificar con estrellas ============================ -->
+<div *ngIf="calificando" class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+     (click)="cerrarCalificacion()">
+  <div class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-xl max-h-[92vh] overflow-y-auto"
+       role="dialog" aria-modal="true" aria-labelledby="titulo-calificar" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 px-6 py-4 border-b border-base-200">
+      <span class="p-2.5 rounded-xl bg-warning text-white" aria-hidden="true"><i class="fa-solid fa-star"></i></span>
+      <div class="flex-1 min-w-0">
+        <h3 id="titulo-calificar" class="font-bold text-lg leading-tight">Califique la atención</h3>
+        <p class="text-xs opacity-70 truncate">Ticket #{{ ticket?.numberTicket }} · Toque las estrellas: 1 es muy mal y 5 excelente.</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="cerrarCalificacion()" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="px-6 py-4 space-y-4">
+      <div *ngFor="let c of criteriosCalificacion" class="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <div class="flex-1 min-w-[12rem]">
+          <p class="text-sm font-semibold">{{ c.titulo }}</p>
+          <p class="text-xs opacity-60">{{ c.ayuda }}</p>
+        </div>
+        <div class="flex items-center gap-1" role="radiogroup" [attr.aria-label]="c.titulo" (mouseleave)="califHover = null">
+          <button *ngFor="let n of unoACinco" type="button" role="radio" class="text-2xl leading-none p-0.5 transition-transform hover:scale-110"
+                  [attr.aria-checked]="calif[c.clave] === n" [attr.aria-label]="n + ' de 5: ' + textoEstrellas[n]"
+                  (mouseenter)="califHover = { clave: c.clave, valor: n }" (click)="calif[c.clave] = n">
+            <i class="fa-star" [ngClass]="estrellaLlena(c.clave, n) ? 'fa-solid text-warning' : 'fa-regular opacity-30'" aria-hidden="true"></i>
+          </button>
+          <span class="text-xs w-16 text-right opacity-70">{{ textoEstrellas[calif[c.clave]] }}</span>
+        </div>
+      </div>
+
+      <label class="form-control w-full">
+        <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Comentarios (opcional)</span></div>
+        <textarea class="textarea textarea-bordered textarea-sm w-full" rows="3" maxlength="1000"
+                  placeholder="¿Algo que debamos mejorar o agradecer?" [(ngModel)]="calif.comentarios"></textarea>
+      </label>
+    </div>
+
+    <div class="flex items-center justify-between gap-2 px-6 py-4 border-t border-base-200 bg-base-200/30">
+      <span class="text-xs opacity-60">{{ calificacionCompleta ? 'Listo para enviar' : 'Califique los cinco puntos' }}</span>
+      <div class="flex gap-2">
+        <button type="button" class="btn btn-sm btn-ghost" (click)="cerrarCalificacion()" [disabled]="enviandoCalificacion">Cancelar</button>
+        <button type="button" class="btn btn-sm btn-warning text-white gap-2" (click)="enviarCalificacion()"
+                [disabled]="!calificacionCompleta || enviandoCalificacion">
+          <span *ngIf="enviandoCalificacion" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+          <i *ngIf="!enviandoCalificacion" class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+          Enviar calificación
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
