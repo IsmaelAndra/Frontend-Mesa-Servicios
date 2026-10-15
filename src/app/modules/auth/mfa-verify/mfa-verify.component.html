@@ -1,135 +1,166 @@
-<div class="min-h-screen flex items-center justify-center bg-base-200 px-4 py-10">
-  <div class="w-full max-w-md">
-    <div class="card bg-base-100 shadow-xl">
-      <div class="card-body">
+<div class="relative min-h-screen flex items-center justify-center px-4 py-10 overflow-hidden">
+  <!-- Mismo fondo que el login: la persona sigue en el mismo proceso de acceso -->
+  <div *ngIf="fondoUrl" class="absolute inset-0 bg-cover bg-center bg-no-repeat"
+       [ngStyle]="{ 'background-image': 'url(' + fondoUrl + ')' }" aria-hidden="true"></div>
+  <div *ngIf="!fondoUrl" class="absolute inset-0 bg-gradient-to-br from-primary to-primary/80" aria-hidden="true"></div>
+  <div class="absolute inset-0 bg-black/35" aria-hidden="true"></div>
+
+  <div class="relative z-10 w-full" [ngClass]="esAlta && !codigosRecuperacion ? 'max-w-3xl' : 'max-w-md'">
+    <div class="card bg-base-100 shadow-2xl rounded-[1.75rem] border border-base-200 overflow-hidden">
+      <!-- Cabecera común: logo + candado -->
+      <div class="flex items-center gap-3 px-6 pt-6">
+        <img *ngIf="logoUrl" [src]="logoUrl" alt="" class="h-10 max-w-[9rem] object-contain" />
+        <span class="ml-auto p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+          <i class="fa-solid fa-shield-halved text-xl"></i>
+        </span>
+      </div>
+
+      <div class="card-body pt-4">
         <!-- ============ Códigos de recuperación: paso único ============ -->
         <ng-container *ngIf="codigosRecuperacion">
-          <h1 class="card-title text-xl">Guarde estos códigos</h1>
-          <div class="alert alert-warning mt-2">
-            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <h1 class="text-2xl font-bold">Guarde sus códigos de recuperación</h1>
+          <div class="flex items-start gap-3 p-3 rounded-xl border border-warning/40 bg-warning/10 text-sm mt-2">
+            <span class="p-1.5 rounded-lg bg-warning text-white shrink-0" aria-hidden="true">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </span>
             <span>
-              Es la única vez que se muestran. Si pierde el móvil y no los tiene,
-              no podrá entrar: pida ayuda a soporte para resetting su cuenta.
+              Es la única vez que se muestran. Si pierde el móvil y no los tiene, no podrá entrar
+              y tendrá que pedir a soporte que restablezca su doble factor.
             </span>
           </div>
 
           <ul class="mt-4 grid grid-cols-2 gap-2 font-mono text-sm">
             <li *ngFor="let codigo of codigosRecuperacion"
-                class="px-3 py-2 bg-base-200 rounded text-center tracking-wider">
+                class="px-3 py-2 bg-base-200 rounded-lg text-center tracking-wider">
               {{ codigo }}
             </li>
           </ul>
 
-          <p class="text-xs opacity-70 mt-3">
-            Cada código sirve una sola vez. Anótelos y guárdelos fuera del sistema.
-          </p>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button type="button" class="btn btn-sm btn-ghost border border-base-300 gap-2" (click)="copiarCodigos()">
+              <i class="fa-solid fa-copy" aria-hidden="true"></i>
+              Copiar todos
+            </button>
+          </div>
+          <p class="text-xs opacity-70 mt-2">Cada código sirve una sola vez. Guárdelos fuera del sistema (por ejemplo en Passbolt).</p>
 
-          <button type="button" class="btn btn-primary mt-4" (click)="continuar()">
+          <button type="button" class="btn btn-primary text-white mt-4" (click)="continuar()">
             Los he guardado, continuar
           </button>
         </ng-container>
 
         <!-- ============ Alta: escanear y luego código ============ -->
-        <ng-container *ngIf="!codigosRecuperacion && esAlta">
-          <h1 class="card-title text-xl">Configure su doble factor</h1>
-          <p class="text-sm opacity-70 mt-1">
-            Escanee el código con
-            <b>Microsoft Authenticator</b> o <b>Passbolt</b>.
-          </p>
+        <form *ngIf="!codigosRecuperacion && esAlta" (ngSubmit)="confirmar()" class="space-y-4">
+          <div>
+            <h1 class="text-2xl font-bold">Active la verificación en dos pasos</h1>
+            <p class="text-sm opacity-70 mt-1">Protege su cuenta: además de la contraseña, pediremos un código de su móvil.</p>
+          </div>
 
-          <div class="flex justify-center my-4">
-            <img
-              *ngIf="qrDataUrl"
-              [src]="qrDataUrl"
-              alt="Código QR para configurar el doble factor"
-              class="w-56 h-56 bg-white p-2 rounded-lg"
-            />
-            <div *ngIf="!qrDataUrl && !qrError" class="w-56 h-56 flex items-center justify-center">
-              <span class="loading loading-spinner loading-lg"></span>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <!-- Pasos -->
+            <ol class="space-y-4">
+              <li class="flex gap-3">
+                <span class="w-7 h-7 rounded-full bg-primary text-white text-sm font-bold flex items-center justify-center shrink-0">1</span>
+                <div>
+                  <p class="font-semibold text-sm">Instale una app de autenticación</p>
+                  <p class="text-xs opacity-70">Microsoft Authenticator, Google Authenticator o Passbolt.</p>
+                </div>
+              </li>
+              <li class="flex gap-3">
+                <span class="w-7 h-7 rounded-full bg-primary text-white text-sm font-bold flex items-center justify-center shrink-0">2</span>
+                <div>
+                  <p class="font-semibold text-sm">Escanee el código QR</p>
+                  <p class="text-xs opacity-70">En la app: "Agregar cuenta" → "Escanear código QR".</p>
+                </div>
+              </li>
+              <li class="flex gap-3">
+                <span class="w-7 h-7 rounded-full bg-primary text-white text-sm font-bold flex items-center justify-center shrink-0">3</span>
+                <div class="min-w-0">
+                  <p class="font-semibold text-sm">Escriba el código de 6 dígitos</p>
+                  <p class="text-xs opacity-70">El que muestra la app para <b>{{ challenge?.emisor || 'la mesa de servicios' }}</b>.</p>
+                </div>
+              </li>
+            </ol>
+
+            <!-- QR -->
+            <div class="flex flex-col items-center gap-3">
+              <div class="p-3 rounded-2xl border border-base-200 bg-white shadow-sm">
+                <img *ngIf="qrDataUrl" [src]="qrDataUrl" alt="Código QR para configurar la verificación en dos pasos"
+                     class="w-52 h-52" />
+                <div *ngIf="!qrDataUrl && !qrError" class="w-52 h-52 flex items-center justify-center">
+                  <span class="loading loading-spinner loading-lg text-primary"></span>
+                </div>
+              </div>
+              <div *ngIf="qrError" class="text-sm text-warning">{{ qrError }}</div>
+              <details class="w-full text-center">
+                <summary class="text-xs link link-primary no-underline cursor-pointer">¿No puede escanear? Use la clave manual</summary>
+                <div class="mt-2 p-3 rounded-xl bg-base-200">
+                  <p class="font-mono text-sm tracking-wider break-all select-all">{{ challenge?.claveManual }}</p>
+                  <button type="button" class="btn btn-ghost btn-xs mt-1 gap-1" (click)="copiarClaveManual()">
+                    <i class="fa-solid fa-copy" aria-hidden="true"></i>
+                    Copiar
+                  </button>
+                </div>
+              </details>
             </div>
           </div>
 
-          <div *ngIf="qrError" class="alert alert-warning text-sm">
-            <span>{{ qrError }}</span>
-          </div>
-
-          <div class="bg-base-200 rounded-lg p-3 mt-2">
-            <p class="text-xs opacity-70 mb-1">
-              ¿No lee el QR? Teclee esta clave a mano en la app:
-            </p>
-            <p class="font-mono text-sm tracking-wider break-all select-all">
-              {{ challenge?.claveManual }}
-            </p>
-            <button type="button" class="btn btn-ghost btn-xs mt-2" (click)="copiarClaveManual()">
-              <i class="fa-solid fa-copy" aria-hidden="true"></i>
-              Copiar
-            </button>
-          </div>
-
-          <div class="divider my-4 text-xs">Luego, el código de 6 dígitos</div>
-
           <ng-container *ngTemplateOutlet="casillas"></ng-container>
 
-          <div class="mt-4 flex gap-2">
-            <button type="button" class="btn btn-ghost btn-sm flex-1"
-                    [disabled]="loading"
-                    (click)="volverAlAcceso()">
+          <div class="flex gap-2 pt-1">
+            <button type="button" class="btn btn-ghost flex-1" [disabled]="loading" (click)="volverAlAcceso()">
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
               Atrás
             </button>
-            <button type="button" class="btn btn-primary flex-1"
-                    [disabled]="!puedeConfirmar"
-                    (click)="confirmar()">
+            <button type="submit" class="btn btn-primary text-white flex-1 gap-2" [disabled]="!puedeConfirmar">
               <span *ngIf="loading" class="loading loading-spinner loading-sm"></span>
+              <i *ngIf="!loading" class="fa-solid fa-check" aria-hidden="true"></i>
               Activar
             </button>
           </div>
-        </ng-container>
+        </form>
 
         <!-- ============ Verificación ============ -->
-        <ng-container *ngIf="!codigosRecuperacion && !esAlta">
-          <h1 class="card-title text-xl">Verificación en dos pasos</h1>
-          <p class="text-sm opacity-70 mt-1">
-            Introduzca el código de 6 dígitos de su app de autenticación para
-            <b>{{ challenge?.emisor || 'su cuenta' }}</b>.
-          </p>
+        <form *ngIf="!codigosRecuperacion && !esAlta" (ngSubmit)="confirmar()" class="space-y-4">
+          <div>
+            <h1 class="text-2xl font-bold">Verificación en dos pasos</h1>
+            <p class="text-sm opacity-70 mt-1">
+              {{ usandoRecuperacion
+                ? 'Escriba uno de los códigos de recuperación que guardó al activar el doble factor.'
+                : 'Abra su app de autenticación y escriba el código de 6 dígitos de ' }}
+              <b *ngIf="!usandoRecuperacion">{{ challenge?.emisor || 'la mesa de servicios' }}</b>
+            </p>
+          </div>
 
           <ng-container *ngIf="!usandoRecuperacion">
             <ng-container *ngTemplateOutlet="casillas"></ng-container>
           </ng-container>
 
-          <div *ngIf="usandoRecuperacion" class="form-control mt-4">
-            <div class="label">
-              <span class="label-text">Código de recuperación</span>
-            </div>
-            <input
-              type="text"
-              class="input input-bordered font-mono tracking-wider"
-              [ngModel]="codigoRecuperacion"
-              (ngModelChange)="codigoRecuperacion = $event"
-              placeholder="XXXXX-XXXXX"
-              maxlength="11"
-              autocomplete="off"
-            />
-          </div>
+          <label *ngIf="usandoRecuperacion" class="form-control w-full">
+            <div class="label pt-0 pb-1"><span class="label-text text-sm font-medium">Código de recuperación</span></div>
+            <input type="text" name="codigoRecuperacion"
+                   class="input input-bordered w-full text-center font-mono text-lg tracking-widest"
+                   [ngModel]="codigoRecuperacion" (ngModelChange)="codigoRecuperacion = $event"
+                   placeholder="XXXXX-XXXXX" maxlength="11" autocomplete="off" autofocus />
+          </label>
 
-          <button type="button" class="btn btn-primary mt-4 w-full"
-                  [disabled]="!puedeConfirmar"
-                  (click)="confirmar()">
+          <button type="submit" class="btn btn-primary text-white w-full gap-2" [disabled]="!puedeConfirmar">
             <span *ngIf="loading" class="loading loading-spinner loading-sm"></span>
+            <i *ngIf="!loading" class="fa-solid fa-unlock-keyhole" aria-hidden="true"></i>
             Verificar
           </button>
 
-          <button type="button" class="btn btn-ghost btn-sm mt-2 w-full"
-                  (click)="alternarRecuperacion()">
-            {{ usandoRecuperacion ? 'Usar el código de la app' : 'No tengo mi móvil: usar un código de recuperación' }}
-          </button>
-
-          <button type="button" class="btn btn-ghost btn-xs mt-1 w-full"
-                  [disabled]="loading"
-                  (click)="volverAlAcceso()">
-            Volver al acceso
-          </button>
-        </ng-container>
+          <div class="flex flex-col items-center gap-1 pt-1">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="alternarRecuperacion()">
+              <i class="fa-solid" [ngClass]="usandoRecuperacion ? 'fa-mobile-screen' : 'fa-key'" aria-hidden="true"></i>
+              {{ usandoRecuperacion ? 'Usar el código de la app' : 'No tengo mi móvil: usar un código de recuperación' }}
+            </button>
+            <button type="button" class="btn btn-ghost btn-xs opacity-70" [disabled]="loading" (click)="volverAlAcceso()">
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+              Volver al acceso
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -137,11 +168,11 @@
 
 <!--
   Las seis casillas están en un ng-template porque aparecen en dos sitios
-  (alta y verificación) y no tiene sentido duplicar el marcado: si mañana hay que
-  cambiar el teclado o el pegado, se toca una vez.
+  (alta y verificación). Van dentro de un <form>: Enter envía siempre, y al
+  completar los seis dígitos se verifica solo.
 -->
 <ng-template #casillas>
-  <div class="flex justify-between gap-2 mt-4" (paste)="onPaste($event)">
+  <div class="flex justify-center gap-2 sm:gap-3" (paste)="onPaste($event)">
     <input
       #digito
       *ngFor="let i of posiciones; let pos = index"
@@ -150,12 +181,12 @@
       autocomplete="one-time-code"
       pattern="[0-9]*"
       maxlength="1"
+      [name]="'digito' + i"
       [id]="'code-' + (i + 1)"
       [value]="digitos[i]"
       [disabled]="loading || usandoRecuperacion"
-      [attr.data-focus-input-next]="i < 5 ? 'code-' + (i + 2) : null"
-      [attr.data-focus-input-prev]="i > 0 ? 'code-' + i : null"
-      class="input input-bordered w-12 h-14 text-center text-2xl font-mono px-0"
+      class="input input-bordered w-11 h-14 sm:w-12 sm:h-16 text-center text-2xl font-mono px-0 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/30"
+      [class.border-primary]="digitos[i] !== ''"
       [attr.aria-label]="'Dígito ' + (i + 1) + ' de 6'"
       (input)="onInput(i, $event)"
       (keydown)="onKeydown(i, $event)"

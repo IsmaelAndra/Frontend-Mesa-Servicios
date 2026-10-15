@@ -2,6 +2,7 @@ import { Component, ElementRef, OnDestroy, QueryList, ViewChildren } from '@angu
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AdminService } from '../../../core/services/admin.service';
 import * as QRCode from 'qrcode';
 
 /**
@@ -40,11 +41,26 @@ export class MfaVerifyComponent implements OnDestroy {
 
   @ViewChildren('digito') campos!: QueryList<ElementRef<HTMLInputElement>>;
 
+  /** Fondo y logo del login (la marca guardada pinta al instante; la respuesta la actualiza). */
+  fondoUrl = '';
+  logoUrl = '';
+
   constructor(
     private auth: AuthService,
     private toast: ToastService,
-    private router: Router
+    private router: Router,
+    admin: AdminService
   ) {
+    const marca = admin.brandingGuardado();
+    this.fondoUrl = marca?.backgroundUrl || '';
+    this.logoUrl = marca?.logoLoginUrl || marca?.logoUrl || '';
+    admin.getBranding().subscribe({
+      next: (b) => {
+        this.fondoUrl = b.backgroundUrl || '';
+        this.logoUrl = b.logoLoginUrl || b.logoUrl || '';
+      },
+      error: () => undefined,
+    });
     // Sin desafío no hay nada que hacer aquí: se vuelve al acceso. Puede pasar si
     // el usuario recarga la página en medio del proceso.
     if (!this.challenge) {
@@ -110,6 +126,14 @@ export class MfaVerifyComponent implements OnDestroy {
     this.digitos = ['', '', '', '', '', ''];
     nuevos.forEach((d, i) => (this.digitos[i] = d));
     this.enfocar(nuevos.length < 6 ? nuevos.length : 5);
+    this.confirmarSiCompleto();
+  }
+
+  /** Con los seis dígitos ya escritos se verifica sin pulsar nada. */
+  private confirmarSiCompleto(): void {
+    if (!this.usandoRecuperacion && this.puedeConfirmar) {
+      setTimeout(() => this.confirmar());
+    }
   }
 
   onInput(index: number, event: Event): void {
@@ -128,6 +152,7 @@ export class MfaVerifyComponent implements OnDestroy {
       }
     });
     this.enfocar(Math.min(index + cifras.length, 5));
+    this.confirmarSiCompleto();
   }
 
   onKeydown(index: number, event: KeyboardEvent): void {
@@ -140,10 +165,9 @@ export class MfaVerifyComponent implements OnDestroy {
     } else if (event.key === 'ArrowRight' && index < 5) {
       event.preventDefault();
       this.enfocar(index + 1);
-    } else if (event.key === 'Enter' && this.puedeConfirmar) {
-      event.preventDefault();
-      this.confirmar();
     }
+    // Enter lo gestiona el <form> (ngSubmit): funciona en cualquier campo,
+    // también en el del código de recuperación.
   }
 
   private enfocar(index: number): void {
@@ -218,13 +242,22 @@ export class MfaVerifyComponent implements OnDestroy {
     this.router.navigate(['/auth/login']);
   }
 
+  copiarCodigos(): void {
+    const texto = (this.codigosRecuperacion || []).join('\n');
+    if (!texto || typeof navigator === 'undefined' || !navigator.clipboard) return;
+    navigator.clipboard.writeText(texto).then(
+      () => this.toast.success('Códigos copiados'),
+      () => this.toast.error('No se pudo copiar; anótelos a mano')
+    );
+  }
+
   copiarClaveManual(): void {
     const clave = (this.challenge?.claveManual || '').replace(/\s/g, '');
     if (!clave) return;
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(clave).then(
         () => this.toast.success('Clave copiada'),
-        () => this.toast.error('No se pudo copiar; téchela a mano')
+        () => this.toast.error('No se pudo copiar; tecléela a mano')
       );
     }
   }

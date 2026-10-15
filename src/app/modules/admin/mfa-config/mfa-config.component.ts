@@ -35,6 +35,9 @@ export class MfaConfigComponent implements OnInit {
 
   private configOriginal: MfaSettingAdmin = { ...this.config };
 
+  /** Nombres cortos y reconocibles para la app autenticadora. */
+  readonly nombresSugeridos = ['Mesa de Servicios COAC', 'COAC Magisterio', 'Mesa de Ayuda COAC'];
+
   constructor(
     private adminService: AdminService,
     private toast: ToastService,
