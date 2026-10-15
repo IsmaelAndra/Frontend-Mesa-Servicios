@@ -111,7 +111,7 @@ describe('GlobalSearchComponent', () => {
     expect(comp.abierto).toBe(false);
   }));
 
-  it('abrir un agente lleva a la gestión con su correo como término', fakeAsync(() => {
+  it('elegir a una persona abre un ticket nuevo a su nombre', fakeAsync(() => {
     globalSearch.buscar.and.returnValue(
       of({
         ...RESPUESTA,
@@ -124,8 +124,8 @@ describe('GlobalSearchComponent', () => {
     abrirYBuscar('ana');
     const fila = fixture.debugElement.query(By.css('[data-search-row]')).nativeElement as HTMLButtonElement;
     fila.click();
-    expect(router.navigate).toHaveBeenCalledWith(['/admin/users'], {
-      queryParams: { search: 'ana@coac.local' },
+    expect(router.navigate).toHaveBeenCalledWith(['/tickets/new'], {
+      queryParams: { solicitante: '10', nombre: 'Ana Lopez', correo: 'ana@coac.local' },
     });
   }));
 

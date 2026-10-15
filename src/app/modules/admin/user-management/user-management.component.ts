@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import Swal from "sweetalert2";
 import { ActivatedRoute } from "@angular/router";
 import { AdminService } from "../../../core/services/admin.service";
@@ -13,7 +13,13 @@ import { MasterOption } from "../../shared/components/master-select/master-selec
   selector: "app-user-management",
   templateUrl: "./user-management.component.html",
 })
-export class UserManagementComponent implements OnInit {
+export class UserManagementComponent implements OnInit, OnDestroy {
+  /**
+   * El estado de sesión (en línea / reciente / desconectado) se calculaba solo
+   * al cargar la página. Cada 30 s se vuelve a pedir, sin parpadeo: solo se
+   * actualiza sessionState de las tarjetas que ya están.
+   */
+  private presenciaTimer?: ReturnType<typeof setInterval>;
   users: User[] = [];
   areas: { id: string; name: string; icon?: string; color?: string }[] = [];
   /** Sedes activas, del mismo catálogo público que usa el resto de selectores. */
@@ -163,6 +169,7 @@ export class UserManagementComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.presenciaTimer = setInterval(() => this.refrescarPresencia(), 30_000);
     // La búsqueda global llega con el término aplicado (?search=...).
     const searchParam = this.route.snapshot.queryParams?.['search'];
     if (searchParam) this.search = searchParam;
@@ -170,6 +177,23 @@ export class UserManagementComponent implements OnInit {
     this.adminService
       .catalog()
       .subscribe({ next: (c: Catalog) => { this.areas = c.areas; this.sucursales = c.sucursales || []; } });
+  }
+
+  ngOnDestroy(): void {
+    if (this.presenciaTimer) clearInterval(this.presenciaTimer);
+  }
+
+  private refrescarPresencia(): void {
+    if (document.hidden) return;
+    this.adminService.users(this.role, this.status, this.search).subscribe({
+      next: (lista) => {
+        const porId = new Map(lista.map((x) => [x.idUser, x.sessionState]));
+        this.users.forEach((u) => {
+          if (porId.has(u.idUser)) u.sessionState = porId.get(u.idUser);
+        });
+      },
+      error: () => undefined,
+    });
   }
 
   loadUsers(): void {

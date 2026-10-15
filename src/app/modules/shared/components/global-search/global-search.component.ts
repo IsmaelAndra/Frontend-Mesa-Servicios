@@ -353,9 +353,15 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
       titulo: p.displayName || p.corporateEmailUser,
       detalle,
       foto: this.fotoUrl(p),
+      // Elegir a una persona abre un ticket nuevo a su nombre (lo pidió la mesa:
+      // es lo que se hace cuando alguien llama o escribe para reportar algo).
       navegar: () =>
-        this.router.navigate(['/admin/users'], {
-          queryParams: { search: p.corporateEmailUser },
+        this.router.navigate(['/tickets/new'], {
+          queryParams: {
+            solicitante: p.idUser,
+            nombre: p.displayName || p.corporateEmailUser,
+            correo: p.corporateEmailUser,
+          },
         }),
     };
   }

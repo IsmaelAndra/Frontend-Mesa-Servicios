@@ -35,6 +35,8 @@ export interface TicketRequest {
   typeId?: string;
   /** Sede del caso; si no se manda, se toma la del solicitante. */
   sucursalId?: string;
+  /** Solicitante cuando el personal abre el ticket a nombre de otra persona. */
+  requesterId?: string;
 }
 
 export interface TicketQuery {

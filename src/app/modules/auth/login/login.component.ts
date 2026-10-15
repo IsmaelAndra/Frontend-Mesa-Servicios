@@ -53,14 +53,21 @@ toggleTheme(): void {
   }
 
   loadBranding(): void {
+    // Se pinta enseguida la última marca conocida; la respuesta del servidor
+    // la reemplaza si cambió.
+    const guardada = this.adminService.brandingGuardado();
+    if (guardada) {
+      this.logoUrl = guardada.logoLoginUrl || guardada.logoUrl || '';
+      this.backgroundUrl = guardada.backgroundUrl || '';
+    }
     this.adminService.getBranding().subscribe({
       next: (b) => {
         this.logoUrl = b.logoLoginUrl || b.logoUrl || '';
         this.backgroundUrl = b.backgroundUrl || '';
       },
       error: () => {
-        this.logoUrl = '';
-        this.backgroundUrl = '';
+        // Se conserva lo que ya hubiera (la marca guardada) en vez de dejar la
+        // pantalla en blanco.
       }
     });
   }

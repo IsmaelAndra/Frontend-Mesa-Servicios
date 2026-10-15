@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of, throwError, timer } from 'rxjs';
+import { catchError, retry, tap } from 'rxjs/operators';
+
+/** Última configuración de marca recibida (logo, fondos, colores), por si la red falla al entrar. */
+const CLAVE_MARCA = 'mesa_ayuda_branding';
 import { environment } from '../../../environments/environment';
 import { Catalog, RegisterRequest, Sucursal, User } from '../../models/user.model';
 import { MonthlyEvaluation } from '../../models/dashboard.model';
@@ -340,8 +344,42 @@ export class AdminService {
     return this.http.get<Catalog>(`${this.url}/catalog`);
   }
 
+  /**
+   * Configuración de marca. Si la primera petición falla (servidor reiniciándose,
+   * red que tarda en conectar) se reintenta hasta 3 veces; antes la pantalla se
+   * quedaba sin logo ni fondo hasta recargar. Si aun así falla, se usa la última
+   * marca que se recibió en este navegador.
+   */
   getBranding(): Observable<BrandingConfig> {
-    return this.http.get<BrandingConfig>(`${this.url}/branding`);
+    return this.http.get<BrandingConfig>(`${this.url}/branding`).pipe(
+      retry({
+        count: 3,
+        delay: (error: { status?: number }, intento: number) =>
+          // Solo errores de red o del servidor; un 4xx no se arregla reintentando.
+          !error?.status || error.status >= 500 ? timer(700 * intento) : throwError(() => error),
+      }),
+      tap((b) => {
+        try {
+          localStorage.setItem(CLAVE_MARCA, JSON.stringify(b));
+        } catch {
+          // sin almacenamiento disponible: no pasa nada
+        }
+      }),
+      catchError((error) => {
+        const guardada = this.brandingGuardado();
+        return guardada ? of(guardada) : throwError(() => error);
+      }),
+    );
+  }
+
+  /** La última marca recibida, para pintar el logo y el fondo sin esperar a la red. */
+  brandingGuardado(): BrandingConfig | null {
+    try {
+      const texto = localStorage.getItem(CLAVE_MARCA);
+      return texto ? (JSON.parse(texto) as BrandingConfig) : null;
+    } catch {
+      return null;
+    }
   }
 
   updateBranding(data: BrandingConfig): Observable<BrandingConfig> {

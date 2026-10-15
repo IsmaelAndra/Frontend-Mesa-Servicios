@@ -1,7 +1,7 @@
 import { markdownToHtml } from '../../../core/utils/markdown.util';
 import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import Quill from 'quill';
 import { AdminService } from '../../../core/services/admin.service';
 import { TicketService } from '../../../core/services/ticket.service';
@@ -28,15 +28,35 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
   userRole = '';
   quill: Quill | null = null;
 
+  /** Solicitante cuando el personal abre el ticket a nombre de otra persona. */
+  aNombreDe: { id: string; nombre: string; correo: string } | null = null;
+
+  /** Quitar la persona elegida: el ticket vuelve a ser propio. */
+  quitarSolicitante(): void {
+    this.aNombreDe = null;
+    this.router.navigate([], { queryParams: {} , replaceUrl: true });
+  }
+
   constructor(
     private fb: FormBuilder,
     private adminService: AdminService,
     private ticketService: TicketService,
     private authService: AuthService,
     private router: Router,
-    private toastService: ToastService
+    private toastService: ToastService,
+    route: ActivatedRoute
   ) {
     this.userRole = this.authService.getRole();
+    // Ticket a nombre de otra persona (desde la búsqueda global). Solo el
+    // personal: el backend lo vuelve a comprobar y responde 403 a un solicitante.
+    const q = route.snapshot.queryParamMap;
+    if (q.get('solicitante') && ['AGENT', 'ADMIN', 'SUPER_ADMIN'].includes(this.userRole ?? '')) {
+      this.aNombreDe = {
+        id: q.get('solicitante')!,
+        nombre: q.get('nombre') || q.get('correo') || 'otra persona',
+        correo: q.get('correo') || '',
+      };
+    }
     const controls: Record<string, unknown> = {
       title: ['', [Validators.required, Validators.maxLength(255)]],
       description: ['', Validators.required],
@@ -255,7 +275,8 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
       categoryId: this.form.value.categoryId ?? undefined,
       typeId: this.form.value.typeId ?? undefined,
       priorityId: this.form.value.priorityId ?? undefined,
-      sucursalId: this.form.value.sucursalId ?? undefined
+      sucursalId: this.form.value.sucursalId ?? undefined,
+      requesterId: this.aNombreDe?.id
     };
     this.ticketService.create(payload).subscribe({
       next: (t) => {

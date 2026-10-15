@@ -17,6 +17,23 @@
     </a>
   </header>
 
+  <!-- Ticket a nombre de otra persona (elegida en la búsqueda global) -->
+  <div *ngIf="aNombreDe" class="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-primary/30 bg-primary/5">
+    <span class="p-2 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+      <i class="fa-solid fa-user-pen"></i>
+    </span>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-semibold truncate">Ticket a nombre de {{ aNombreDe.nombre }}</p>
+      <p class="text-xs opacity-70 truncate">
+        {{ aNombreDe.correo }} figurará como solicitante y recibirá los avisos del ticket.
+      </p>
+    </div>
+    <button type="button" class="btn btn-sm btn-ghost gap-1.5" (click)="quitarSolicitante()">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      Crearlo a mi nombre
+    </button>
+  </div>
+
   <!-- Formulario a la izquierda y consejos a la derecha (en pantallas anchas). -->
   <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
   <!-- Formulario -->
