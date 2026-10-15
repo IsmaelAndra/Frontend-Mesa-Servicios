@@ -167,6 +167,7 @@ private sseService: SseService,
         // El sonido se engancha solo aquí, y no al evento de ticket ni al sondeo
         // de respaldo: una misma acción genera los dos, y sonaría dos veces.
         this.notificationSound.playFor(evento?.type ?? undefined);
+        this.avisarEnPantalla(evento);
       });
       this.sseTicketSub = this.sseService.ticketEvent$.subscribe(() =>
         this.loadNotifications(),
@@ -184,6 +185,26 @@ private sseService: SseService,
     interval(60_000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.loadNotifications());
+  }
+
+  /**
+   * Aviso emergente de la notificación que acaba de llegar. Antes solo cambiaba
+   * el número de la campana y sonaba, y quien no miraba la campana no se
+   * enteraba. Un mensaje del chat del ticket que se está viendo no se repite:
+   * ese aviso ya lo da el propio chat.
+   */
+  private avisarEnPantalla(evento: { type?: string; subject?: string; ticketId?: string | null } | null): void {
+    if (!evento?.subject) return;
+    const enEseTicket = !!evento.ticketId && this.router.url.startsWith(`/tickets/${evento.ticketId}`);
+    if (enEseTicket && evento.type === "CHAT_MENSAJE") return;
+    const destino = notificationTarget({
+      typeNotification: evento.type,
+      ticketId: evento.ticketId ?? undefined,
+    } as Parameters<typeof notificationTarget>[0]);
+    this.toastService.info(evento.subject, "Nueva notificación", {
+      duration: 7000,
+      action: destino && !enEseTicket ? { label: "Ver", route: destino } : undefined,
+    });
   }
 
   ngOnDestroy(): void {

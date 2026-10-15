@@ -50,6 +50,14 @@ interface EstadoMensaje {
   titulo: string;
 }
 
+/** Eventos que cambian datos del ticket abierto (no el chat). */
+const CAMBIOS_DEL_TICKET = new Set([
+  "TICKET_STATUS_CHANGED",
+  "TICKET_ASSIGNED",
+  "TICKET_UPDATED",
+  "TICKET_ATTACHMENT",
+]);
+
 @Component({
   selector: "app-ticket-detail",
   templateUrl: "./ticket-detail.component.html",
@@ -187,6 +195,17 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
           !(this.myUserId && e.actorId === this.myUserId)
         ) {
           this.refrescarMensajes();
+          return;
+        }
+        // Cambios del propio ticket hechos por otra persona (estado, agente,
+        // prioridad, categoría, adjuntos): antes se ignoraban y había que salir y
+        // volver a entrar para verlos.
+        if (
+          e.ticketId === this.ticketId &&
+          CAMBIOS_DEL_TICKET.has(e.type) &&
+          !(this.myUserId && e.actorId === this.myUserId)
+        ) {
+          this.refrescarTicketSilencioso(e);
           return;
         }
         if (e.type !== "TICKET_ANSWERED" || e.ticketId !== this.ticketId)
@@ -434,6 +453,37 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       reader.readAsDataURL(file);
     };
     input.click();
+  }
+
+  /**
+   * Vuelve a leer el ticket sin tocar el chat ni el editor: cabecera (estado,
+   * agente, prioridad), historial y, si hace falta, adjuntos y calificación.
+   */
+  private refrescarTicketSilencioso(e: { type: string; actorName?: string; status?: string | null }): void {
+    const estadoAntes = this.ticket?.status;
+    this.ticketService.getById(this.ticketId).subscribe({
+      next: (t) => {
+        this.ticket = t;
+        this.loadAudit();
+        if (e.type === "TICKET_ATTACHMENT") {
+          this.loadAttachments();
+        }
+        if ((t.status === "RESUELTO" || t.status === "CERRADO") && t.status !== estadoAntes) {
+          this.loadRating();
+        }
+        const quien = e.actorName || "Alguien";
+        const texto =
+          e.type === "TICKET_STATUS_CHANGED" && t.status !== estadoAntes
+            ? `${quien} cambió el estado a ${t.status}`
+            : e.type === "TICKET_ASSIGNED"
+              ? `${quien} cambió el agente asignado`
+              : e.type === "TICKET_ATTACHMENT"
+                ? `${quien} añadió un adjunto`
+                : `${quien} actualizó el ticket`;
+        this.toastService.info(texto, `Ticket #${t.numberTicket ?? ""}`);
+      },
+      error: () => undefined,
+    });
   }
 
   load(): void {
