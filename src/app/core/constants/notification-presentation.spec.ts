@@ -128,9 +128,9 @@ describe('notification-presentation', () => {
         .toEqual(['/admin/sla-config']);
     });
 
-    it('la tarea asignada, que tampoco tiene ticket, va al dashboard', () => {
+    it('la tarea asignada, que tampoco tiene ticket, va a Actividades', () => {
       expect(notificationTarget({ ticketId: null, typeNotification: 'TASK_ASIGNADA' }))
-        .toEqual(['/dashboard']);
+        .toEqual(['/activities']);
     });
 
     it('devuelve null cuando no hay ni ticket ni destino conocido', () => {

@@ -176,7 +176,8 @@ export function notificationUrgency(type?: string | null): NotificationUrgency {
  */
 export const NOTIFICATION_TARGETS: Record<string, (string | number)[]> = {
   MONTHLY_EVALUATION: ['/admin/sla-config'],
-  TASK_ASIGNADA: ['/dashboard']
+  // Las tareas se gestionan en Actividades (tablero), no en el inicio.
+  TASK_ASIGNADA: ['/activities']
 };
 
 /**

@@ -431,6 +431,20 @@ private sseService: SseService,
    * Agrupa las notificaciones del navbar por fecha.
    * Solo agrupa las que ya están en `this.notifications` (máx. 20).
    */
+  /**
+   * trackBy de la campana. El navbar fuerza la detección de cambios cada segundo
+   * (reloj de sesión) y gruposNavbar() devuelve objetos nuevos en cada llamada:
+   * sin trackBy, Angular destruía y recreaba los avisos cada segundo y el clic
+   * que caía en medio se perdía, por eso a veces no redirigía.
+   */
+  trackGrupoNotif(_: number, grupo: { label: string }): string {
+    return grupo.label;
+  }
+
+  trackNotif(_: number, n: Notification): string {
+    return n.idNotification;
+  }
+
   gruposNavbar(): { label: string; items: Notification[] }[] {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
