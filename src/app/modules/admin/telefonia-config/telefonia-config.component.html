@@ -174,7 +174,7 @@
                 {{ config?.tokenConfigurado ? 'Generado ' + (config?.tokenCreado | date: 'dd/MM/yyyy') : 'Sin generar' }}
               </span>
             </div>
-            <button type="button" class="btn btn-sm btn-outline btn-primary w-full gap-2 text-white" (click)="generarToken()" [disabled]="generando">
+            <button type="button" class="btn btn-sm btn-outline btn-primary w-full gap-2" (click)="generarToken()" style="color: white !important" [disabled]="generando">
               <span *ngIf="generando" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
               <i *ngIf="!generando" class="fa-solid fa-key" aria-hidden="true"></i>
               {{ config?.tokenConfigurado ? 'Generar token nuevo' : 'Generar token' }}
