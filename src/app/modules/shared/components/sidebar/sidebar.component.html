@@ -11,9 +11,13 @@
   [style.z-index]="isMobile ? '50' : 'auto'"
   aria-label="Menú principal"
 >
+  <!-- Adornos del tema de temporada: solo se ven con data-temporada (styles.css). -->
+  <span class="temporada-cinta temporada-cinta--sb" aria-hidden="true"></span>
+
   <!-- ============ Marca ============ -->
   <div class="sb__marca">
-    <a routerLink="/dashboard" class="flex items-center gap-3 min-w-0" aria-label="Ir al inicio">
+    <a routerLink="/dashboard" class="relative flex items-center gap-3 min-w-0" aria-label="Ir al inicio">
+      <span class="temporada-adorno temporada-adorno--sb" aria-hidden="true"></span>
       <span class="sb__logo">
         <img *ngIf="iconUrl || logoUrl" [src]="iconUrl || logoUrl" alt="" class="w-full h-full object-contain" />
         <span *ngIf="!logoUrl && !iconUrl" class="font-bold text-sm">COAC</span>

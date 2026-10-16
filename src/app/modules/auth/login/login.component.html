@@ -140,13 +140,16 @@
 
         <!-- ============ Card del formulario (con [ngClass] condicional) ============ -->
         <div
-          class="backdrop-blur-md rounded-2xl px-6 py-8 sm:px-8 shadow-2xl border transition-colors"
+          class="relative backdrop-blur-md rounded-2xl px-6 py-8 sm:px-8 shadow-2xl border transition-colors"
           [ngClass]="
             isDark
               ? 'bg-slate-800/80 border-slate-700/60'
               : 'bg-white/80 border-white/50'
           "
         >
+          <!-- Adornos del tema de temporada (solo con data-temporada; ver styles.css). -->
+          <span class="temporada-cinta temporada-cinta--login" aria-hidden="true"></span>
+          <span class="temporada-esquina" aria-hidden="true"></span>
           <h1
             class="text-2xl sm:text-3xl font-bold mb-2 text-center transition-colors"
             [ngClass]="isDark ? 'text-slate-50' : 'text-slate-900'"

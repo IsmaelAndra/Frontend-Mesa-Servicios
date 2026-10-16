@@ -1608,6 +1608,205 @@ main .ql-snow.ql-toolbar button.ql-active .ql-stroke {
   to   { transform: translate3d(-0.8rem, -115vh, 0); }
 }
 
+/* ============================================================================
+   Adornos fijos: sidebar, recuadro del login, perfil y avatar del navbar.
+   Los elementos están siempre en la plantilla y solo se ven con data-temporada.
+   Cada tema define sus colores y su gorro con variables:
+     --tmp-colores   lista de colores de la cinta
+     --tmp-esquina   adorno de la esquina del login
+     --gorro-cono / --gorro-ala / --gorro-pompon / --gorro-ala-margen
+   ============================================================================ */
+.temporada-cinta,
+.temporada-esquina,
+.temporada-gorro,
+.temporada-adorno--sb {
+  display: none;
+}
+
+/* Cinta de color (sidebar, login, portada del perfil) */
+[data-temporada] .temporada-cinta {
+  display: block;
+  position: absolute;
+  pointer-events: none;
+  z-index: 3;
+}
+[data-temporada] .temporada-cinta--sb {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--tmp-colores));
+  opacity: 0.9;
+}
+[data-temporada] .temporada-cinta--login {
+  top: 0;
+  left: 1.25rem;
+  right: 1.25rem;
+  height: 4px;
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(90deg, var(--tmp-colores));
+}
+[data-temporada] .temporada-cinta--portada {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  /* Por debajo de la foto, que sube sobre la portada y va después en el DOM. */
+  z-index: 0;
+  background: linear-gradient(90deg, var(--tmp-colores));
+}
+
+/* Adorno junto al logo del sidebar (colgando, quieto) */
+[data-temporada] .temporada-adorno--sb {
+  display: inline-block;
+  position: absolute;
+  left: 1.9rem;
+  top: -0.45rem;
+  margin: 0;
+  font-size: 0.95rem;
+  animation: none;
+  transform: rotate(12deg);
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35));
+}
+
+/* Adorno en la esquina del recuadro del login: se balancea dos veces y queda quieto */
+[data-temporada] .temporada-esquina {
+  display: block;
+  position: absolute;
+  top: -1.1rem;
+  right: -0.6rem;
+  z-index: 3;
+  font-size: 2rem;
+  line-height: 1;
+  pointer-events: none;
+  transform-origin: 50% 0;
+  animation: temporada-balanceo 2.6s ease-in-out 2;
+  filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.3));
+}
+[data-temporada] .temporada-esquina::before {
+  content: var(--tmp-esquina, "✨");
+}
+
+/* Gorro sobre la foto (perfil y avatar del navbar). Tamaño relativo a la foto. */
+[data-temporada] .temporada-gorro {
+  display: block;
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 0;
+  width: 78%;
+  aspect-ratio: 1;
+  transform: translate(-22%, -66%) rotate(-16deg);
+  pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.3));
+}
+/* Cono */
+[data-temporada] .temporada-gorro::before {
+  content: "";
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  top: 0;
+  bottom: 14%;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  background: var(--gorro-cono, #062e86);
+}
+/* Ala o ribete */
+[data-temporada] .temporada-gorro::after {
+  content: "";
+  position: absolute;
+  left: var(--gorro-ala-margen, 12%);
+  right: var(--gorro-ala-margen, 12%);
+  bottom: 4%;
+  height: 20%;
+  border-radius: 9999px;
+  background: var(--gorro-ala, transparent);
+}
+/* Pompón */
+[data-temporada] .temporada-gorro__pompon {
+  position: absolute;
+  top: -8%;
+  left: 50%;
+  width: 22%;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  transform: translateX(-50%);
+  background: var(--gorro-pompon, transparent);
+}
+
+/* ---------- Colores y gorro de cada tema ---------- */
+[data-temporada="halloween"] {
+  --tmp-colores: #f97316, #a855f7, #f97316;
+  --tmp-esquina: "🎃";
+  /* Sombrero de bruja: negro con banda morada y ala ancha */
+  --gorro-cono: linear-gradient(to top, #1f2937 0 12%, #a855f7 12% 24%, #111827 24% 100%);
+  --gorro-ala: #111827;
+  --gorro-ala-margen: -8%;
+}
+[data-temporada="navidad"] {
+  --tmp-colores: #dc2626, #16a34a, #facc15, #dc2626;
+  --tmp-esquina: "🔔";
+  /* Gorro navideño: rojo con ribete y pompón blancos */
+  --gorro-cono: linear-gradient(160deg, #ef4444, #b91c1c);
+  --gorro-ala: #ffffff;
+  --gorro-pompon: #ffffff;
+}
+/* Navidad: en el login la cinta es nieve acumulada sobre el borde del recuadro */
+[data-temporada="navidad"] .temporada-cinta--login {
+  top: -6px;
+  left: 0.75rem;
+  right: 0.75rem;
+  height: 12px;
+  border-radius: 0;
+  background: radial-gradient(circle at 8px 8px, #ffffff 7px, transparent 7.5px) repeat-x;
+  background-size: 15px 12px;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.15));
+}
+[data-temporada="fiestas_quito"] {
+  --tmp-colores: #dc2626, #2563eb, #dc2626, #2563eb;
+  --tmp-esquina: "🎉";
+  --gorro-cono: repeating-linear-gradient(135deg, #dc2626 0 12%, #2563eb 12% 24%);
+  --gorro-pompon: #facc15;
+}
+[data-temporada="fin_anio"] {
+  --tmp-colores: #fbbf24, #e5e7eb, #fbbf24;
+  --tmp-esquina: "🥂";
+  --gorro-cono: repeating-linear-gradient(135deg, #f59e0b 0 12%, #fde68a 12% 18%, #9ca3af 18% 30%);
+  --gorro-pompon: #fcd34d;
+}
+[data-temporada="carnaval"] {
+  --tmp-colores: #f43f5e, #facc15, #22c55e, #3b82f6, #a855f7;
+  --tmp-esquina: "🎊";
+  --gorro-cono: repeating-linear-gradient(135deg, #f43f5e 0 10%, #facc15 10% 20%, #22c55e 20% 30%, #3b82f6 30% 40%);
+  --gorro-pompon: #a855f7;
+}
+/* Carnaval: en vez de gorro, un antifaz 🎭 en la esquina de la foto */
+[data-temporada="carnaval"] .temporada-gorro {
+  width: 55%;
+  container-type: inline-size;
+  transform: translate(20%, -45%) rotate(14deg);
+}
+[data-temporada="carnaval"] .temporada-gorro::before {
+  clip-path: none;
+  background: none;
+  content: "🎭";
+  inset: 0;
+  font-size: 80cqw;
+  line-height: 1;
+  text-align: center;
+}
+[data-temporada="carnaval"] .temporada-gorro::after,
+[data-temporada="carnaval"] .temporada-gorro__pompon {
+  display: none;
+}
+[data-temporada="aniversario"] {
+  --tmp-colores: #ea9a15, #06308a, #ab1c24, #ea9a15;
+  --tmp-esquina: "🎀";
+  /* Gorro de fiesta con los colores del logo */
+  --gorro-cono: repeating-linear-gradient(135deg, #ea9a15 0 12%, #06308a 12% 24%, #ab1c24 24% 36%);
+  --gorro-pompon: #ffffff;
+}
+
 /* Sin movimiento: las partículas quedan quietas repartidas por la pantalla. */
 @media (prefers-reduced-motion: reduce) {
   .temporada-particula {
@@ -1615,7 +1814,8 @@ main .ql-snow.ql-toolbar button.ql-active .ql-stroke {
     transform: translateY(var(--y, 20vh));
   }
   .temporada-adorno,
-  [data-temporada] .nav::after {
+  [data-temporada] .nav::after,
+  [data-temporada] .temporada-esquina {
     animation: none;
   }
   [data-temporada="aniversario"] .temporada-particula {

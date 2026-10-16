@@ -19,6 +19,7 @@
         class="absolute inset-0 bg-gradient-to-r from-[#062e86]/95 via-[#062e86]/70 to-[#062e86]/20"
         aria-hidden="true"
       ></div>
+      <span class="temporada-cinta temporada-cinta--portada" aria-hidden="true"></span>
     </div>
 
     <div class="px-5 sm:px-8 pb-6">
@@ -26,6 +27,8 @@
       <div class="flex flex-wrap items-start gap-x-5 gap-y-3">
         <!-- Foto -->
         <div class="relative shrink-0 self-start -mt-12 sm:-mt-14">
+          <!-- Gorro del tema de temporada sobre la foto (solo con data-temporada). -->
+          <span class="temporada-gorro" aria-hidden="true"><span class="temporada-gorro__pompon"></span></span>
           <img
             *ngIf="photoSrc"
             [src]="photoSrc"
