@@ -8,6 +8,8 @@ export interface TemaActual {
   backgroundUrl: string | null;
   /** Logo propio; null = el de Marca. */
   logoUrl: string | null;
+  /** Imagen de fondo del encabezado del inicio; null = el degradado de siempre. */
+  dashboardUrl: string | null;
 }
 
 /** Un tema en la pantalla de administración. */
@@ -23,6 +25,7 @@ export interface TemaTemporada {
   greeting: string | null;
   backgroundUrl: string | null;
   logoUrl: string | null;
+  dashboardUrl: string | null;
   /** Si hoy cae entre sus fechas. */
   vigenteHoy: boolean;
   /** CARNAVAL si las fechas se calculan solas cada año (entonces no se editan). */

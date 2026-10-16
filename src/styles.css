@@ -1553,13 +1553,72 @@ main .ql-snow.ql-toolbar button.ql-active .ql-stroke {
     radial-gradient(circle at 25px 4px, #3b82f6 3px, transparent 3.5px);
 }
 
+/* ---------- Partículas dentro del encabezado del inicio ---------- */
+.temporada-escena--hero {
+  z-index: 0;
+  border-radius: inherit;
+  opacity: 0.55;
+}
+.temporada-escena--hero .temporada-particula {
+  font-size: calc(var(--tam, 1.25rem) * 0.9);
+  animation-duration: calc(var(--dur, 14s) * 1.6);
+}
+
+/* ---------- Halloween: la guirnalda son focos de calavera y calabaza ---------- */
+[data-temporada="halloween"] .nav::after {
+  content: "💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃 💀 🎃";
+  background-image: none;
+  height: 16px;
+  bottom: -14px;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: center;
+  animation: temporada-parpadeo 2.4s ease-in-out infinite;
+}
+@keyframes temporada-parpadeo {
+  0%, 100% { opacity: 0.95; }
+  50%      { opacity: 0.55; }
+}
+
+/* ---------- Aniversario de la cooperativa (colores del logo) ---------- */
+/* Globos y confeti que SUBEN desde abajo, en naranja, azul y rojo del logo. */
+[data-temporada="aniversario"] .temporada-particula {
+  top: auto;
+  bottom: -3rem;
+  animation-name: temporada-subir;
+}
+[data-temporada="aniversario"] .temporada-particula::before { content: "●"; color: #EA9A15; }
+[data-temporada="aniversario"] .temporada-particula:nth-child(3n)::before { content: "●"; color: #1D4ED8; }
+[data-temporada="aniversario"] .temporada-particula:nth-child(3n+1)::before { content: "●"; color: #B91C1C; }
+[data-temporada="aniversario"] .temporada-particula:nth-child(4n)::before { content: "🎈"; }
+[data-temporada="aniversario"] .temporada-particula:nth-child(7n)::before { content: "🎉"; }
+[data-temporada="aniversario"] .temporada-adorno::before { content: "🎂"; }
+[data-temporada="aniversario"] .nav::after {
+  background-image:
+    radial-gradient(circle at 5px 4px, #EA9A15 3px, transparent 3.5px),
+    radial-gradient(circle at 14px 4px, #ffffff 3px, transparent 3.5px),
+    radial-gradient(circle at 23px 4px, #B91C1C 3px, transparent 3.5px);
+}
+@keyframes temporada-subir {
+  from { transform: translate3d(0, 0, 0); }
+  50%  { transform: translate3d(1.2rem, -55vh, 0); }
+  to   { transform: translate3d(-0.8rem, -115vh, 0); }
+}
+
 /* Sin movimiento: las partículas quedan quietas repartidas por la pantalla. */
 @media (prefers-reduced-motion: reduce) {
   .temporada-particula {
     animation: none;
     transform: translateY(var(--y, 20vh));
   }
-  .temporada-adorno {
+  .temporada-adorno,
+  [data-temporada] .nav::after {
     animation: none;
+  }
+  [data-temporada="aniversario"] .temporada-particula {
+    transform: translateY(calc(var(--y, 20vh) * -1));
   }
 }

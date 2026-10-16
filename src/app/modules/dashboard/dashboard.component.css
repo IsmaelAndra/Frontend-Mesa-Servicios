@@ -8,6 +8,51 @@
     radial-gradient(120% 140% at 100% 0%, oklch(var(--a) / 0.35) 0%, transparent 45%),
     linear-gradient(135deg, oklch(var(--p)) 0%, oklch(var(--p) / 0.82) 100%);
 }
+/* Imagen del tema de temporada: se ve detrás con un velo azul para que el
+   texto blanco se siga leyendo. */
+.dash-hero--con-imagen {
+  background:
+    linear-gradient(135deg, oklch(var(--p) / 0.88) 0%, oklch(var(--p) / 0.55) 100%),
+    var(--dash-hero-imagen) center / cover no-repeat;
+}
+
+/* Aniversario: logo y años, compactos, en la esquina superior derecha (los
+   botones del encabezado quedan abajo y no se tapan). */
+.dash-aniversario {
+  position: absolute;
+  right: 1.5rem;
+  top: 1.25rem;
+  z-index: 11;
+  display: none;
+  align-items: center;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+@media (min-width: 1024px) {
+  .dash-aniversario { display: flex; }
+}
+.dash-aniversario__logo {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  padding: 0.2rem;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.25);
+}
+.dash-aniversario__anios {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #fcd34d;
+  text-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
+}
+.dash-aniversario__texto {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
 .dash-hero::after {
   content: '';
   position: absolute;

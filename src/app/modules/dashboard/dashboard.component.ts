@@ -97,8 +97,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   readonly horas = Array.from({ length: 24 }, (_, i) => i);
 
-  /** Tema de temporada visible (saludo del encabezado), o null. */
+  /** Tema de temporada visible (saludo, imagen y adornos del encabezado), o null. */
   tema: TemaActual | null = null;
+  /** Partículas del encabezado: pocas, es una pantalla que se mira todo el día. */
+  readonly particulasHero = Array.from({ length: 8 }, (_, i) => i);
+  /** Años de la cooperativa (fundada el 11 de noviembre de 1968). */
+  readonly aniosCooperativa = new Date().getFullYear() - 1968;
   private readonly temaTemporada = inject(TemaTemporadaService);
 
   constructor(

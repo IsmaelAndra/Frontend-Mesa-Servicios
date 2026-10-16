@@ -109,9 +109,9 @@
             </div>
 
             <!-- Imágenes propias del tema -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-base-200 pt-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-base-200 pt-4">
               <div>
-                <p class="text-xs font-medium mb-1.5">Fondo del login <span class="opacity-60 font-normal">(opcional)</span></p>
+                <p class="text-xs font-medium mb-1.5">Fondo del login y del MFA <span class="opacity-60 font-normal">(opcional)</span></p>
                 <div *ngIf="t.backgroundUrl" class="relative rounded-xl overflow-hidden border border-base-200 mb-2">
                   <img [src]="t.backgroundUrl" alt="Fondo del login del tema" class="w-full h-28 object-cover" />
                   <button type="button" class="btn btn-xs btn-circle absolute top-1.5 right-1.5" [disabled]="guardando"
@@ -135,6 +135,19 @@
                 <app-dropzone [compacta]="true" accept="image/png,image/jpeg,image/webp,image/gif" [disabled]="guardando"
                               hint="Login y barra superior · sin él se usa el de Marca"
                               (archivos)="subirImagen(t.id, 'logo', $event)"></app-dropzone>
+              </div>
+              <div>
+                <p class="text-xs font-medium mb-1.5">Imagen del inicio <span class="opacity-60 font-normal">(opcional)</span></p>
+                <div *ngIf="t.dashboardUrl" class="relative rounded-xl overflow-hidden border border-base-200 mb-2">
+                  <img [src]="t.dashboardUrl" alt="Imagen del inicio del tema" class="w-full h-28 object-cover" />
+                  <button type="button" class="btn btn-xs btn-circle absolute top-1.5 right-1.5" [disabled]="guardando"
+                          (click)="quitarImagen(t.id, 'inicio')" title="Quitar (vuelve el azul de siempre)" aria-label="Quitar la imagen del inicio">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <app-dropzone [compacta]="true" accept="image/png,image/jpeg,image/webp,image/gif" [disabled]="guardando"
+                              hint="Fondo del encabezado del inicio, con velo azul"
+                              (archivos)="subirImagen(t.id, 'inicio', $event)"></app-dropzone>
               </div>
             </div>
 
@@ -225,9 +238,9 @@
             <h2 class="font-semibold">Qué se ve</h2>
           </div>
           <ul class="list-disc ml-5 space-y-1 opacity-80 leading-relaxed">
-            <li>Login: el fondo del tema (si tiene) y adornos que caen.</li>
+            <li>Login y MFA: el fondo del tema (si tiene) y adornos.</li>
             <li>Barra superior: un adorno junto al logo y una guirnalda.</li>
-            <li>Inicio: el saludo del tema.</li>
+            <li>Inicio: el saludo, adornos en el encabezado y su imagen de fondo (si tiene).</li>
             <li>Notificaciones: los sonidos de la temporada, si subiste alguno.</li>
             <li>Los tickets, el chat y los reportes no cambian.</li>
             <li>Cada persona puede ocultar las decoraciones desde su menú.</li>

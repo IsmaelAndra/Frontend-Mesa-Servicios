@@ -3,6 +3,9 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AdminService } from '../../../core/services/admin.service';
+import { TemaTemporadaService } from '../../../core/services/tema-temporada.service';
+import { TemaActual } from '../../../models/tema-temporada.model';
+import { Subscription } from 'rxjs';
 import * as QRCode from 'qrcode';
 
 /**
@@ -44,22 +47,38 @@ export class MfaVerifyComponent implements AfterViewInit, OnDestroy {
   /** Fondo y logo del login (la marca guardada pinta al instante; la respuesta la actualiza). */
   fondoUrl = '';
   logoUrl = '';
+  /**
+   * Los del tema de temporada mandan sobre los de Marca, igual que en el
+   * login: antes el MFA se quedaba con el fondo anterior aunque el login ya
+   * mostrara el del tema.
+   */
+  private marcaFondo = '';
+  private marcaLogo = '';
+  private tema: TemaActual | null = null;
+  private temaSub?: Subscription;
 
   constructor(
     private auth: AuthService,
     private toast: ToastService,
     private router: Router,
-    admin: AdminService
+    admin: AdminService,
+    temaTemporada: TemaTemporadaService
   ) {
     const marca = admin.brandingGuardado();
-    this.fondoUrl = marca?.backgroundUrl || '';
-    this.logoUrl = marca?.logoLoginUrl || marca?.logoUrl || '';
+    this.marcaFondo = marca?.backgroundUrl || '';
+    this.marcaLogo = marca?.logoLoginUrl || marca?.logoUrl || '';
+    this.aplicarImagenes();
     admin.getBranding().subscribe({
       next: (b) => {
-        this.fondoUrl = b.backgroundUrl || '';
-        this.logoUrl = b.logoLoginUrl || b.logoUrl || '';
+        this.marcaFondo = b.backgroundUrl || '';
+        this.marcaLogo = b.logoLoginUrl || b.logoUrl || '';
+        this.aplicarImagenes();
       },
       error: () => undefined,
+    });
+    this.temaSub = temaTemporada.temaVisible$.subscribe((t) => {
+      this.tema = t;
+      this.aplicarImagenes();
     });
     // Sin desafío no hay nada que hacer aquí: se vuelve al acceso. Puede pasar si
     // el usuario recarga la página en medio del proceso.
@@ -83,6 +102,12 @@ export class MfaVerifyComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.codigosRecuperacion = null;
+    this.temaSub?.unsubscribe();
+  }
+
+  private aplicarImagenes(): void {
+    this.fondoUrl = this.tema?.backgroundUrl || this.marcaFondo;
+    this.logoUrl = this.tema?.logoUrl || this.marcaLogo;
   }
 
   /**

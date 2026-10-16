@@ -17,6 +17,9 @@ import { NotificationSoundService } from './notification-sound.service';
  * marca no cambian. Cada persona puede ocultar las decoraciones (se recuerda en
  * su navegador).
  */
+/** fondo = login y MFA; logo = login y barra superior; inicio = encabezado del dashboard. */
+export type TipoImagenTema = 'fondo' | 'logo' | 'inicio';
+
 @Injectable({ providedIn: 'root' })
 export class TemaTemporadaService {
   private static readonly CLAVE_OCULTAR = 'ocultarDecoraciones';
@@ -109,13 +112,13 @@ export class TemaTemporadaService {
     });
   }
 
-  subirImagen(id: string, tipo: 'fondo' | 'logo', archivo: File): Observable<TemaTemporada> {
+  subirImagen(id: string, tipo: TipoImagenTema, archivo: File): Observable<TemaTemporada> {
     const datos = new FormData();
     datos.append('file', archivo, archivo.name);
     return this.http.post<TemaTemporada>(`${this.base}/admin/temas-temporada/${id}/imagen/${tipo}`, datos);
   }
 
-  quitarImagen(id: string, tipo: 'fondo' | 'logo'): Observable<TemaTemporada> {
+  quitarImagen(id: string, tipo: TipoImagenTema): Observable<TemaTemporada> {
     return this.http.delete<TemaTemporada>(`${this.base}/admin/temas-temporada/${id}/imagen/${tipo}`);
   }
 

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
-import { TemaTemporadaService } from '../../../core/services/tema-temporada.service';
+import { TemaTemporadaService, TipoImagenTema } from '../../../core/services/tema-temporada.service';
 import { NotificationSoundService } from '../../../core/services/notification-sound.service';
 import { SonidosGlobalesService } from '../../../core/services/sonidos-globales.service';
 import { NotificationUrgency } from '../../../core/constants/notification-presentation';
@@ -20,6 +20,7 @@ const ASPECTO: Record<string, { icono: string; color: string; adorno: string }> 
   FIESTAS_QUITO: { icono: 'fa-solid fa-landmark', color: '#DC2626', adorno: '🎉' },
   FIN_ANIO: { icono: 'fa-solid fa-champagne-glasses', color: '#CA8A04', adorno: '🥂' },
   CARNAVAL: { icono: 'fa-solid fa-masks-theater', color: '#DB2777', adorno: '🎭' },
+  ANIVERSARIO: { icono: 'fa-solid fa-cake-candles', color: '#EA9A15', adorno: '🎂' },
 };
 
 /** Las tres urgencias, para los sonidos de cada temporada. */
@@ -189,14 +190,16 @@ export class TemasTemporadaComponent implements OnInit {
     });
   }
 
-  subirImagen(id: string, tipo: 'fondo' | 'logo', archivos: File[]): void {
+  subirImagen(id: string, tipo: TipoImagenTema, archivos: File[]): void {
     const archivo = archivos[0];
     if (!archivo) return;
     this.guardando = true;
     this.temas.subirImagen(id, tipo, archivo).subscribe({
       next: () => {
         this.guardando = false;
-        this.toast.success(tipo === 'fondo' ? 'Fondo del login guardado' : 'Logo guardado');
+        this.toast.success(
+          tipo === 'fondo' ? 'Fondo del login guardado' : tipo === 'inicio' ? 'Imagen del inicio guardada' : 'Logo guardado',
+        );
         this.recargarSinSpinner();
       },
       error: (err) => {
@@ -206,7 +209,7 @@ export class TemasTemporadaComponent implements OnInit {
     });
   }
 
-  quitarImagen(id: string, tipo: 'fondo' | 'logo'): void {
+  quitarImagen(id: string, tipo: TipoImagenTema): void {
     this.guardando = true;
     this.temas.quitarImagen(id, tipo).subscribe({
       next: () => {
