@@ -51,6 +51,8 @@ export interface SonidosGlobales {
   tipos: Record<string, { urgency?: NotificationUrgency | null; audio?: string | null; fileName?: string | null }>;
   /** Audio general de cada urgencia; sin él suena el tono sintetizado. */
   urgencias: Partial<Record<NotificationUrgency, { audio: string; fileName?: string | null }>>;
+  /** Audios de cada tema de temporada por urgencia (NAVIDAD → urgent...). */
+  temporadas?: Record<string, Partial<Record<NotificationUrgency, { audio: string; fileName?: string | null }>>>;
 }
 
 /**
@@ -170,12 +172,40 @@ export class NotificationSoundService {
     const global = this.globalesSubject.value.tipos[clave];
     const urgency = global?.urgency ?? notificationUrgency(clave);
     const config: SonidoConfig = { enabled: local?.enabled ?? true, urgency };
-    // El audio propio del tipo manda; si no tiene, el general de su urgencia.
-    const sample = global?.audio ?? this.globalesSubject.value.urgencias[urgency]?.audio;
+    // El audio propio del tipo manda; si no tiene, el de la temporada en curso
+    // para su urgencia; y si tampoco, el general de su urgencia.
+    const sample = global?.audio ?? this.audioDeUrgencia(urgency);
     if (sample) {
       config.sample = sample;
     }
     return config;
+  }
+
+  /** Tema de temporada en curso (código), o null: sus audios mandan sobre los generales. */
+  private temporada: string | null = null;
+
+  /** Lo llama TemaTemporadaService al aplicar el tema (null si no hay o se ocultó). */
+  setTemporada(codigo: string | null): void {
+    if (this.temporada === codigo) return;
+    this.temporada = codigo;
+    this.overridesSubject.next({ ...this.overridesSubject.value });
+  }
+
+  /** Audio de una urgencia: el de la temporada en curso o, si no hay, el general. */
+  private audioDeUrgencia(urgencia: NotificationUrgency): string | undefined {
+    const g = this.globalesSubject.value;
+    const deTemporada = this.temporada ? g.temporadas?.[this.temporada]?.[urgencia]?.audio : undefined;
+    return deTemporada ?? g.urgencias[urgencia]?.audio;
+  }
+
+  /** Suena el audio de una urgencia de un tema (pantalla de temas), o el tono si no tiene. */
+  previewTemporada(codigo: string, urgencia: NotificationUrgency): void {
+    const audio = this.globalesSubject.value.temporadas?.[codigo]?.[urgencia]?.audio;
+    if (audio) {
+      this.previewSample(audio);
+      return;
+    }
+    this.preview(urgencia);
   }
 
   /** Sonidos globales recibidos del servidor. */
@@ -257,7 +287,7 @@ export class NotificationSoundService {
    */
   preview(urgencia: NotificationUrgency = 'normal'): void {
     this.forzarProximo = true;
-    const audio = this.globalesSubject.value.urgencias[urgencia]?.audio;
+    const audio = this.audioDeUrgencia(urgencia);
     if (audio) {
       this.tocarMuestra(audio);
       return;

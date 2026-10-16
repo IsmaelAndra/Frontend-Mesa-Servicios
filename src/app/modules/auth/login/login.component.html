@@ -14,6 +14,15 @@
     aria-hidden="true"
   ></div>
 
+  <!--
+    Adornos del tema de temporada (data-temporada en <html>). Solo CSS: cada
+    <span> es una partícula (copo, calabaza...) y styles.css decide cómo se ve.
+    Con "reducir movimiento" quedan quietas.
+  -->
+  <div *ngIf="tema" class="temporada-escena" aria-hidden="true">
+    <span *ngFor="let i of particulas" class="temporada-particula"></span>
+  </div>
+
   <!-- ============ Toggle de tema (light / dark) ============ -->
   <button
     type="button"

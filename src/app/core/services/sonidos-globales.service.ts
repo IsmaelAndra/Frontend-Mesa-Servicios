@@ -7,7 +7,7 @@ import { environment } from '../../../environments/environment';
 import { NotificationUrgency } from '../constants/notification-presentation';
 import { NotificationSoundService, SonidosGlobales } from './notification-sound.service';
 
-export type AmbitoSonido = 'URGENCIA' | 'TIPO';
+export type AmbitoSonido = 'URGENCIA' | 'TIPO' | 'TEMPORADA';
 
 /** Una fila de GET /sounds (sin el audio). */
 export interface SonidoServidor {
@@ -64,7 +64,7 @@ export class SonidosGlobalesService {
       map((r) => {
         const anteriores = this.urls;
         this.urls = [];
-        const globales: SonidosGlobales = { tipos: {}, urgencias: {} };
+        const globales: SonidosGlobales = { tipos: {}, urgencias: {}, temporadas: {} };
         const audioDe = new Map<SonidoServidor, string | null>();
         r.conAudio.forEach((f, i) => {
           const url = r.audios[i] ?? null;
@@ -76,6 +76,13 @@ export class SonidosGlobalesService {
           if (f.scope === 'URGENCIA') {
             if (audio) {
               globales.urgencias[f.key as NotificationUrgency] = { audio, fileName: f.fileName };
+            }
+          } else if (f.scope === 'TEMPORADA') {
+            // Clave "NAVIDAD:urgent".
+            const [tema, urgencia] = f.key.split(':');
+            if (audio && tema && urgencia) {
+              const porTema = (globales.temporadas![tema] ??= {});
+              porTema[urgencia as NotificationUrgency] = { audio, fileName: f.fileName };
             }
           } else {
             globales.tipos[f.key] = { urgency: f.urgency, audio, fileName: f.fileName };

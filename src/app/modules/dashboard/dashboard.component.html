@@ -10,6 +10,11 @@
         <h1 class="text-2xl sm:text-3xl font-bold mt-1 tracking-tight">
           {{ saludo }}<span *ngIf="nombre">, {{ nombre }}</span>
         </h1>
+        <!-- Saludo del tema de temporada (Halloween, Navidad...), si lo hay. -->
+        <p *ngIf="tema?.greeting" class="temporada-saludo mt-2 inline-flex items-center gap-2 text-sm font-medium rounded-full px-3 py-1">
+          <span class="temporada-adorno temporada-adorno--saludo" aria-hidden="true"></span>
+          {{ tema?.greeting }}
+        </p>
         <p class="text-sm opacity-80 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
           <span class="inline-flex items-center gap-1.5">
             <i class="fa-solid fa-layer-group text-xs" aria-hidden="true"></i>

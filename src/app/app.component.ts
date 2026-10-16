@@ -1,3 +1,4 @@
+import { TemaTemporadaService } from './core/services/tema-temporada.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -35,12 +36,15 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private adminService: AdminService,
-    private authService: AuthService
+    private authService: AuthService,
+    private temaTemporada: TemaTemporadaService
   ) {}
 
   ngOnInit(): void {
     this.isAuthPage = this.router.url.startsWith('/auth');
     this.loadBrandingIcons();
+    // Tema de temporada (Halloween, Navidad...): público, vale también en el login.
+    this.temaTemporada.cargar().subscribe();
     this.routerSub = this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(event => {
       const url = (event as NavigationEnd).url;
       this.isAuthPage = url.startsWith('/auth');

@@ -382,6 +382,33 @@ describe('NotificationSoundService', () => {
       expect(stub.notas).toBe(0);
     });
 
+    it('durante una temporada suena su audio en vez del general', () => {
+      servicio.aplicarGlobales({
+        tipos: {},
+        urgencias: { urgent: { audio: 'blob:general' } },
+        temporadas: { NAVIDAD: { urgent: { audio: 'blob:campanas' } } },
+      });
+
+      expect(servicio.tipoConfig('SLA_BREACHED').sample).toBe('blob:general');
+      servicio.setTemporada('NAVIDAD');
+      expect(servicio.tipoConfig('SLA_BREACHED').sample).toBe('blob:campanas');
+      // Una urgencia sin audio de temporada sigue con lo de siempre.
+      expect(servicio.tipoConfig('CHAT_MENSAJE').sample).toBeUndefined();
+      servicio.setTemporada(null);
+      expect(servicio.tipoConfig('SLA_BREACHED').sample).toBe('blob:general');
+    });
+
+    it('el audio propio de un tipo manda sobre el de la temporada', () => {
+      servicio.aplicarGlobales({
+        tipos: { SLA_BREACHED: { audio: 'blob:propio' } },
+        urgencias: {},
+        temporadas: { NAVIDAD: { urgent: { audio: 'blob:campanas' } } },
+      });
+      servicio.setTemporada('NAVIDAD');
+
+      expect(servicio.tipoConfig('SLA_BREACHED').sample).toBe('blob:propio');
+    });
+
     it('un MP3 guardado en el navegador por la version anterior ya no se usa', () => {
       localStorage.setItem(
         'notificationSoundTypes',

@@ -103,6 +103,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: 'Tipos de Ticket', route: '/admin/ticket-types', icon: navIcon('categories'), roles: ['SUPER_ADMIN'] },
         { label: 'Plantillas', route: '/admin/templates', icon: navIcon('templates'), roles: ['SUPER_ADMIN'] },
         { label: 'Configuración de Marca', route: '/admin/branding', icon: navIcon('branding'), roles: ['SUPER_ADMIN'] },
+        { label: 'Temas de temporada', route: '/admin/temas-temporada', icon: navIcon('temas-temporada'), roles: ['SUPER_ADMIN'] },
         { label: 'Páginas del Sistema', route: '/admin/pages-system', icon: navIcon('pages-system'), roles: ['SUPER_ADMIN'] },
         { label: 'Autenticación MFA', route: '/admin/mfa', icon: navIcon('mfa'), roles: ['SUPER_ADMIN'] },
         { label: 'Inteligencia Artificial', route: '/admin/ai-config', icon: navIcon('ai-config'), roles: ['SUPER_ADMIN'] },

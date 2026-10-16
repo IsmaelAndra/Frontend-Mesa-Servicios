@@ -7,6 +7,8 @@ import { AuthService } from '../../../core/services/auth.service';
 import { AdminService } from '../../../core/services/admin.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TemaTemporadaService } from '../../../core/services/tema-temporada.service';
+import { TemaActual } from '../../../models/tema-temporada.model';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -20,6 +22,13 @@ export class LoginComponent implements OnInit, OnDestroy {
   isDark = false;
   logoUrl = '';
   backgroundUrl = '';
+  /** Tema de temporada visible (adornos del login), o null. */
+  tema: TemaActual | null = null;
+  /** Copos, calabazas...: cantidad fija, la animación es solo CSS. */
+  readonly particulas = Array.from({ length: 14 }, (_, i) => i);
+  private marcaLogo = '';
+  private marcaFondo = '';
+  private temaSub?: Subscription;
   currentYear = new Date().getFullYear();
   private themeSub?: Subscription;
 
@@ -29,7 +38,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     private router: Router,
     private adminService: AdminService,
     private themeService: ThemeService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private temaTemporada: TemaTemporadaService
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -38,6 +48,10 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.temaSub = this.temaTemporada.temaVisible$.subscribe((t) => {
+      this.tema = t;
+      this.aplicarImagenes();
+    });
     this.themeSub = this.themeService.theme.subscribe((theme) => {
       this.isDark = theme === 'dark';
     });
@@ -46,6 +60,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.themeSub?.unsubscribe();
+    this.temaSub?.unsubscribe();
   }
 
 toggleTheme(): void {
@@ -57,19 +72,27 @@ toggleTheme(): void {
     // la reemplaza si cambió.
     const guardada = this.adminService.brandingGuardado();
     if (guardada) {
-      this.logoUrl = guardada.logoLoginUrl || guardada.logoUrl || '';
-      this.backgroundUrl = guardada.backgroundUrl || '';
+      this.marcaLogo = guardada.logoLoginUrl || guardada.logoUrl || '';
+      this.marcaFondo = guardada.backgroundUrl || '';
+      this.aplicarImagenes();
     }
     this.adminService.getBranding().subscribe({
       next: (b) => {
-        this.logoUrl = b.logoLoginUrl || b.logoUrl || '';
-        this.backgroundUrl = b.backgroundUrl || '';
+        this.marcaLogo = b.logoLoginUrl || b.logoUrl || '';
+        this.marcaFondo = b.backgroundUrl || '';
+        this.aplicarImagenes();
       },
       error: () => {
         // Se conserva lo que ya hubiera (la marca guardada) en vez de dejar la
         // pantalla en blanco.
       }
     });
+  }
+
+  /** El fondo y el logo del tema de temporada, si los tiene, mandan sobre los de Marca. */
+  private aplicarImagenes(): void {
+    this.logoUrl = this.tema?.logoUrl || this.marcaLogo;
+    this.backgroundUrl = this.tema?.backgroundUrl || this.marcaFondo;
   }
 
   forgotPassword(): void {

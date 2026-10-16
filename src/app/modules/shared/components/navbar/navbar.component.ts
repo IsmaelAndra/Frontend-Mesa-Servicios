@@ -13,6 +13,8 @@ import { NotificationService } from "../../../../core/services/notification.serv
   import { NotificationSoundService } from "../../../../core/services/notification-sound.service";
 import { SseService } from "../../../../core/services/sse.service";
 import { SonidosGlobalesService } from "../../../../core/services/sonidos-globales.service";
+import { TemaTemporadaService } from "../../../../core/services/tema-temporada.service";
+import { TemaActual } from "../../../../models/tema-temporada.model";
 import { ThemeService } from "../../../../core/services/theme.service";
 import { ToastService } from "../../../../core/services/toast.service";
 import { GlobalSearchService } from "../../../../core/services/global-search.service";
@@ -91,6 +93,7 @@ private sseService: SseService,
       private globalSearchService: GlobalSearchService,
       public notificationSound: NotificationSoundService,
       private sonidosGlobales: SonidosGlobalesService,
+      public temaTemporada: TemaTemporadaService,
     ) {
     this.role = this.authService.getRole();
     this.email = this.authService.getEmail();
@@ -124,11 +127,22 @@ private sseService: SseService,
     }
   }
 
+  /** Tema de temporada visible (adorno junto al logo y logo propio), o null. */
+  tema: TemaActual | null = null;
+
+  /** Muestra u oculta los adornos de temporada para esta persona. */
+  toggleDecoraciones(): void {
+    this.temaTemporada.setOcultas(!this.temaTemporada.ocultas);
+  }
+
   ngOnInit(): void {
     this.loadUser();
     this.loadNotifications();
     // Sonidos que el SUPER_ADMIN configuró para todos (audios por urgencia y por tipo).
     this.sonidosGlobales.cargar().pipe(takeUntil(this.destroy$)).subscribe();
+    this.temaTemporada.temaVisible$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((t) => (this.tema = t));
 
     // Conexión SSE de toda la aplicación: mantiene vivos el chat y las
     // notificaciones sin depender de qué pantalla esté abierta.

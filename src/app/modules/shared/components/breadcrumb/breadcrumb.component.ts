@@ -45,6 +45,7 @@ const LABELS: Record<string, string> = {
   'ai-config': 'Inteligencia Artificial',
   'microsoft-graph': 'Microsoft Graph y Correo',
   telefonia: 'Telefonía',
+  'temas-temporada': 'Temas de temporada',
   'session-config': 'Seguridad de Sesión',
   'chat-config': 'Acuses de Lectura',
   'mail-outbox': 'Cola de correo',

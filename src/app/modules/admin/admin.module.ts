@@ -14,6 +14,7 @@ import { TicketTypeManagementComponent } from './ticket-type-management/ticket-t
 import { AiConfigComponent } from './ai-config/ai-config.component';
 import { MicrosoftGraphConfigComponent } from './microsoft-graph-config/microsoft-graph-config.component';
 import { TelefoniaConfigComponent } from './telefonia-config/telefonia-config.component';
+import { TemasTemporadaComponent } from './temas-temporada/temas-temporada.component';
 import { SessionConfigComponent } from './session-config/session-config.component';
 import { MfaConfigComponent } from './mfa-config/mfa-config.component';
 import { AuditSistemaComponent } from './audit-sistema/audit-sistema.component';
@@ -49,6 +50,7 @@ import { MailOutboxComponent } from './mail-outbox/mail-outbox.component';
     AiConfigComponent,
     MicrosoftGraphConfigComponent,
     TelefoniaConfigComponent,
+    TemasTemporadaComponent,
     SessionConfigComponent,
     MfaConfigComponent,
     AuditSistemaComponent,
@@ -73,6 +75,7 @@ import { MailOutboxComponent } from './mail-outbox/mail-outbox.component';
     AiConfigComponent,
     MicrosoftGraphConfigComponent,
     TelefoniaConfigComponent,
+    TemasTemporadaComponent,
     SessionConfigComponent,
     MfaConfigComponent,
     AuditSistemaComponent,

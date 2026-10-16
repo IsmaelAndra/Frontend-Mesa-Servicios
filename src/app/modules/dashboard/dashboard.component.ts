@@ -1,4 +1,6 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { TemaTemporadaService } from '../../core/services/tema-temporada.service';
+import { TemaActual } from '../../models/tema-temporada.model';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ChartData, ChartOptions } from 'chart.js';
 import { DashboardService, EvaluationService } from '../../core/services/dashboard.service';
@@ -95,6 +97,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   readonly horas = Array.from({ length: 24 }, (_, i) => i);
 
+  /** Tema de temporada visible (saludo del encabezado), o null. */
+  tema: TemaActual | null = null;
+  private readonly temaTemporada = inject(TemaTemporadaService);
+
   constructor(
     private dashboardService: DashboardService,
     private evaluationService: EvaluationService,
@@ -106,6 +112,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.subscriptions.push(this.temaTemporada.temaVisible$.subscribe((t) => (this.tema = t)));
     this.rol = this.authService.getRole();
     this.isAgent = this.rol === 'AGENT';
     // Un agente solo ve su propia información: la operación en tiempo real es

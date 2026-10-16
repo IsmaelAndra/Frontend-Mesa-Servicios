@@ -34,8 +34,10 @@
 
   <!-- ============ Centro: logo del sistema ============ -->
   <a routerLink="/dashboard" class="nav__marca" aria-label="Ir al inicio">
-    <img *ngIf="logoUrl" [src]="logoUrl" alt="Logo del sistema" class="nav__logo" />
-    <span *ngIf="!logoUrl" class="nav__marca-texto">Mesa de Servicios</span>
+    <img *ngIf="tema?.logoUrl || logoUrl" [src]="tema?.logoUrl || logoUrl" alt="Logo del sistema" class="nav__logo" />
+    <span *ngIf="!(tema?.logoUrl || logoUrl)" class="nav__marca-texto">Mesa de Servicios</span>
+    <!-- Adorno del tema de temporada (el dibujo lo pone styles.css según data-temporada). -->
+    <span *ngIf="tema" class="temporada-adorno" [title]="tema.name" aria-hidden="true"></span>
   </a>
 
   <!-- ============ Derecha ============ -->
@@ -678,6 +680,19 @@
                 <i class="fa-solid fa-music text-xs" aria-hidden="true"></i>
                 Configurar sonidos
               </a>
+            </li>
+
+            <!-- Decoraciones de temporada: solo cuando hay un tema hoy. -->
+            <li *ngIf="temaTemporada.tema">
+              <button type="button" class="gap-3" (click)="toggleDecoraciones()"
+                      [attr.aria-pressed]="!temaTemporada.ocultas">
+                <i [class]="temaTemporada.ocultas ? 'fa-solid fa-wand-magic-sparkles text-xs opacity-50' : 'fa-solid fa-wand-magic-sparkles text-xs'"
+                   aria-hidden="true"></i>
+                Decoraciones de {{ temaTemporada.tema.name }}
+                <span class="text-[10px] opacity-50 ml-auto">
+                  {{ temaTemporada.ocultas ? "Ocultas" : "Visibles" }}
+                </span>
+              </button>
             </li>
 
             <!-- Logout -->

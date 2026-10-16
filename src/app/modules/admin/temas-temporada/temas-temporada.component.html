@@ -1,0 +1,240 @@
+<div class="space-y-6 w-full">
+  <!-- ============================ HEADER ============================ -->
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="page-head__icono p-3 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary shrink-0 ring-1 ring-primary/10"
+           aria-hidden="true">
+        <i class="fa-solid fa-wand-magic-sparkles text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">Temas de temporada</h1>
+        <p class="text-sm opacity-70">Adornos de Halloween, Navidad y otras fechas, sin cambiar los colores de marca</p>
+      </div>
+    </div>
+
+    <span *ngIf="panel" class="badge badge-lg gap-2 font-semibold self-start sm:self-center shrink-0 py-3 px-4 border"
+          [style.background-color]="(panel.actual ? aspecto(panel.actual.code).color : '#64748B') + '1F'"
+          [style.border-color]="panel.actual ? aspecto(panel.actual.code).color : '#64748B'"
+          [style.color]="panel.actual ? aspecto(panel.actual.code).color : '#64748B'"
+          [style.--bc]="panel.actual ? aspecto(panel.actual.code).color : '#64748B'">
+      <i class="fa-solid" [ngClass]="panel.actual ? aspecto(panel.actual.code).icono : 'fa-circle-pause'" aria-hidden="true"></i>
+      {{ panel.actual ? 'Hoy: ' + panel.actual.name : 'Hoy no hay tema' }}
+    </span>
+  </header>
+
+  <div *ngIf="cargando" class="flex justify-center py-12" role="status">
+    <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+  </div>
+
+  <div *ngIf="!cargando && panel" class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+    <!-- ============================ TEMAS ============================ -->
+    <div class="xl:col-span-8 space-y-6">
+      <div *ngFor="let t of panel.temas; trackBy: trackTema"
+           class="card bg-base-100 shadow-md border border-base-200 border-t-4 rounded-[1.5rem]"
+           [style.border-top-color]="aspecto(t.code).color">
+        <div class="card-body gap-4">
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl shrink-0"
+                  [style.background-color]="aspecto(t.code).color + '1F'" aria-hidden="true">
+              {{ aspecto(t.code).adorno }}
+            </span>
+            <div class="min-w-0 flex-1">
+              <h2 class="font-semibold text-lg leading-tight">{{ t.name }}</h2>
+              <p class="text-xs opacity-60">
+                Del {{ rango(t) }} · {{ t.rule ? 'la fecha cambia cada año (se calcula sola)' : 'cada año' }}
+              </p>
+            </div>
+            <span *ngIf="t.vigenteHoy && t.active" class="badge badge-sm kanban-tag border gap-1.5 font-medium"
+                  style="background-color: #16A34A1F; border-color: #16A34A; color: #16A34A; --bc: #16A34A">
+              <i class="fa-solid fa-circle-check text-[10px]" aria-hidden="true"></i>
+              Activo hoy
+            </span>
+            <span *ngIf="panel.forcedCode === t.code" class="badge badge-sm kanban-tag border gap-1.5 font-medium"
+                  style="background-color: #D977061F; border-color: #D97706; color: #D97706; --bc: #D97706">
+              <i class="fa-solid fa-flask text-[10px]" aria-hidden="true"></i>
+              Forzado
+            </span>
+          </div>
+
+          <ng-container *ngIf="edicion[t.id] as e">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label class="form-control w-full">
+                <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Nombre</span></div>
+                <input class="input input-bordered input-sm w-full" [(ngModel)]="e.name" maxlength="80" />
+              </label>
+              <div>
+                <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Estado</span></div>
+                <app-estado-activo [(ngModel)]="e.active" [ngModelOptions]="{ standalone: true }"
+                                   descripcion="Si está inactivo no sale aunque sea su fecha"></app-estado-activo>
+              </div>
+
+              <p *ngIf="t.rule" class="md:col-span-2 text-xs rounded-xl bg-info/10 border border-info/25 px-3 py-2">
+                <i class="fa-solid fa-calendar-check mr-1 text-info" aria-hidden="true"></i>
+                El Carnaval depende de la Semana Santa: el sistema calcula cada año del sábado al martes de
+                carnaval. El próximo va del {{ rango(t) }}.
+              </p>
+              <div *ngIf="!t.rule">
+                <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Empieza</span></div>
+                <div class="flex gap-2">
+                  <input type="number" min="1" max="31" class="input input-bordered input-sm w-20 tabular-nums"
+                         [(ngModel)]="e.startDay" aria-label="Día de inicio" />
+                  <div class="flex-1">
+                    <app-master-select [ngModel]="e.startMonth" (ngModelChange)="e.startMonth = $any($event)"
+                                       [ngModelOptions]="{ standalone: true }" [options]="opcionesMes"
+                                       icon="fa-regular fa-calendar"></app-master-select>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="!t.rule">
+                <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Termina</span></div>
+                <div class="flex gap-2">
+                  <input type="number" min="1" max="31" class="input input-bordered input-sm w-20 tabular-nums"
+                         [(ngModel)]="e.endDay" aria-label="Día de fin" />
+                  <div class="flex-1">
+                    <app-master-select [ngModel]="e.endMonth" (ngModelChange)="e.endMonth = $any($event)"
+                                       [ngModelOptions]="{ standalone: true }" [options]="opcionesMes"
+                                       icon="fa-regular fa-calendar"></app-master-select>
+                  </div>
+                </div>
+              </div>
+
+              <label class="form-control w-full md:col-span-2">
+                <div class="label pt-0 pb-1">
+                  <span class="label-text text-xs font-medium">Saludo en el inicio</span>
+                  <span class="label-text-alt text-[11px] opacity-60">{{ (e.greeting || '').length }}/200</span>
+                </div>
+                <input class="input input-bordered input-sm w-full" [(ngModel)]="e.greeting" maxlength="200"
+                       placeholder="Ej. ¡Felices fiestas! Gracias por este año." />
+              </label>
+            </div>
+
+            <!-- Imágenes propias del tema -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-base-200 pt-4">
+              <div>
+                <p class="text-xs font-medium mb-1.5">Fondo del login <span class="opacity-60 font-normal">(opcional)</span></p>
+                <div *ngIf="t.backgroundUrl" class="relative rounded-xl overflow-hidden border border-base-200 mb-2">
+                  <img [src]="t.backgroundUrl" alt="Fondo del login del tema" class="w-full h-28 object-cover" />
+                  <button type="button" class="btn btn-xs btn-circle absolute top-1.5 right-1.5" [disabled]="guardando"
+                          (click)="quitarImagen(t.id, 'fondo')" title="Quitar (se usa el de Marca)" aria-label="Quitar el fondo">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <app-dropzone [compacta]="true" accept="image/png,image/jpeg,image/webp,image/gif" [disabled]="guardando"
+                              hint="PNG, JPG o WebP · sin él se usa el de Marca"
+                              (archivos)="subirImagen(t.id, 'fondo', $event)"></app-dropzone>
+              </div>
+              <div>
+                <p class="text-xs font-medium mb-1.5">Logo <span class="opacity-60 font-normal">(opcional)</span></p>
+                <div *ngIf="t.logoUrl" class="relative rounded-xl border border-base-200 mb-2 bg-primary p-3 flex justify-center">
+                  <img [src]="t.logoUrl" alt="Logo del tema" class="h-14 object-contain" />
+                  <button type="button" class="btn btn-xs btn-circle absolute top-1.5 right-1.5" [disabled]="guardando"
+                          (click)="quitarImagen(t.id, 'logo')" title="Quitar (se usa el de Marca)" aria-label="Quitar el logo">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <app-dropzone [compacta]="true" accept="image/png,image/jpeg,image/webp,image/gif" [disabled]="guardando"
+                              hint="Login y barra superior · sin él se usa el de Marca"
+                              (archivos)="subirImagen(t.id, 'logo', $event)"></app-dropzone>
+              </div>
+            </div>
+
+            <!-- Sonidos de la temporada: mientras dure el tema reemplazan al sonido general de cada urgencia. -->
+            <div class="border-t border-base-200 pt-4">
+              <p class="text-xs font-medium mb-1">
+                Sonidos de notificaciones <span class="opacity-60 font-normal">(opcional)</span>
+              </p>
+              <p class="text-[11px] opacity-60 mb-2">
+                Mientras dure {{ t.name }} reemplazan al sonido general de cada urgencia. Un tipo con audio propio
+                sigue sonando con el suyo.
+              </p>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div *ngFor="let u of urgencias"
+                     class="flex items-center gap-1.5 rounded-xl border border-base-200 px-2.5 py-2 text-xs min-w-0">
+                  <span class="w-2 h-2 rounded-full shrink-0" [style.background-color]="u.color" aria-hidden="true"></span>
+                  <div class="min-w-0 flex-1">
+                    <p class="font-semibold">{{ u.etiqueta }}</p>
+                    <p class="opacity-60 truncate" [title]="audioTemporada(t.code, u.urgencia) || 'Sonido general'">
+                      {{ audioTemporada(t.code, u.urgencia) || 'Sonido general' }}
+                    </p>
+                  </div>
+                  <button type="button" class="btn btn-xs btn-ghost btn-square" (click)="probarSonido(t.code, u.urgencia)"
+                          [attr.aria-label]="'Probar el sonido ' + u.etiqueta + ' de ' + t.name" title="Probar">
+                    <i class="fa-solid fa-play text-[10px]" aria-hidden="true"></i>
+                  </button>
+                  <label class="btn btn-xs btn-ghost btn-square cursor-pointer" [class.btn-disabled]="guardando"
+                         [title]="'Subir el sonido ' + u.etiqueta + ' de ' + t.name">
+                    <i class="fa-solid fa-upload text-[10px]" aria-hidden="true"></i>
+                    <input type="file" class="hidden" accept="audio/mpeg,.mp3,audio/wav,.wav,audio/ogg,.ogg"
+                           (change)="subirSonido(t.code, u.urgencia, $event)"
+                           [attr.aria-label]="'Subir el sonido ' + u.etiqueta + ' de ' + t.name" />
+                  </label>
+                  <button *ngIf="audioTemporada(t.code, u.urgencia)" type="button"
+                          class="btn btn-xs btn-ghost btn-square text-error" [disabled]="guardando"
+                          (click)="quitarSonido(t.code, u.urgencia)" title="Quitar (vuelve al sonido general)"
+                          aria-label="Quitar el sonido de temporada">
+                    <i class="fa-solid fa-xmark text-[10px]" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-1">
+              <button type="button" class="btn btn-sm btn-primary text-white gap-2" [disabled]="guardando"
+                      (click)="guardarTema(t.id)">
+                <span *ngIf="guardando" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+                <i *ngIf="!guardando" class="fa-solid fa-check text-[13px]" aria-hidden="true"></i>
+                Guardar {{ t.name }}
+              </button>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================ LATERAL ============================ -->
+    <aside class="xl:col-span-4 space-y-4">
+      <div class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]">
+        <div class="card-body gap-4">
+          <div class="flex items-center gap-2">
+            <span class="p-2 rounded-xl bg-primary/10 text-primary" aria-hidden="true"><i class="fa-solid fa-power-off"></i></span>
+            <h2 class="font-semibold">General</h2>
+          </div>
+          <app-estado-activo [ngModel]="panel.enabled" (ngModelChange)="cambiarGeneral($event)"
+                             [ngModelOptions]="{ standalone: true }"
+                             descripcion="Apagado, ningún tema se muestra aunque sea su fecha"></app-estado-activo>
+
+          <div class="border-t border-base-200 pt-4">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Probar un tema ahora</span></div>
+            <app-master-select [ngModel]="panel.forcedCode" (elegido)="forzar($event)"
+                               [ngModelOptions]="{ standalone: true }" [options]="opcionesForzado"
+                               [allowEmpty]="true" emptyLabel="Según la fecha (normal)"
+                               placeholder="Según la fecha (normal)" icon="fa-solid fa-flask"
+                               [disabled]="guardando || !panel.enabled"></app-master-select>
+            <p class="text-[11px] opacity-60 mt-2 leading-relaxed">
+              Un tema forzado se ve <b>para todos</b> aunque no sea su fecha. Vuelve a
+              «Según la fecha» cuando termines de probar.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]">
+        <div class="card-body gap-2 text-xs">
+          <div class="flex items-center gap-2 text-sm">
+            <span class="p-2 rounded-xl bg-primary/10 text-primary" aria-hidden="true"><i class="fa-solid fa-circle-info"></i></span>
+            <h2 class="font-semibold">Qué se ve</h2>
+          </div>
+          <ul class="list-disc ml-5 space-y-1 opacity-80 leading-relaxed">
+            <li>Login: el fondo del tema (si tiene) y adornos que caen.</li>
+            <li>Barra superior: un adorno junto al logo y una guirnalda.</li>
+            <li>Inicio: el saludo del tema.</li>
+            <li>Notificaciones: los sonidos de la temporada, si subiste alguno.</li>
+            <li>Los tickets, el chat y los reportes no cambian.</li>
+            <li>Cada persona puede ocultar las decoraciones desde su menú.</li>
+            <li>Con «reducir movimiento» en el equipo, los adornos quedan quietos.</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

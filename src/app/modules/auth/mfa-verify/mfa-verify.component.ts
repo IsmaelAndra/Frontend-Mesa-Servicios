@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, QueryList, ViewChildren } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, QueryList, ViewChildren } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -17,7 +17,7 @@ import * as QRCode from 'qrcode';
   selector: 'app-mfa-verify',
   templateUrl: './mfa-verify.component.html'
 })
-export class MfaVerifyComponent implements OnDestroy {
+export class MfaVerifyComponent implements AfterViewInit, OnDestroy {
   /** Estado devuelto por el login: ENROLAR o VERIFICAR. */
   challenge = this.auth.mfaPendiente;
 
@@ -70,6 +70,15 @@ export class MfaVerifyComponent implements OnDestroy {
     if (this.challenge.status === 'ENROLAR' && this.challenge.qrUri) {
       this.pintarQr(this.challenge.qrUri);
     }
+  }
+
+  /**
+   * Foco en la primera casilla al abrir la pantalla: así se escribe el código
+   * directamente, sin hacer clic antes. El setTimeout espera a que el
+   * ng-template de las casillas esté pintado.
+   */
+  ngAfterViewInit(): void {
+    setTimeout(() => this.enfocar(0));
   }
 
   ngOnDestroy(): void {
@@ -184,6 +193,8 @@ export class MfaVerifyComponent implements OnDestroy {
       this.digitos = ['', '', '', '', '', ''];
     } else {
       this.codigoRecuperacion = '';
+      // De vuelta al código de la app: el foco vuelve a la primera casilla.
+      setTimeout(() => this.enfocar(0));
     }
   }
 
@@ -209,7 +220,9 @@ export class MfaVerifyComponent implements OnDestroy {
       error: (err) => {
         this.loading = false;
         this.digitos = ['', '', '', '', '', ''];
-        this.enfocar(0);
+        // Tras el error las casillas siguen deshabilitadas hasta el siguiente
+        // ciclo de detección de cambios: sin el setTimeout el foco no entraba.
+        setTimeout(() => this.enfocar(0));
         this.toast.error(err?.error?.message || 'El código no es correcto');
       }
     });

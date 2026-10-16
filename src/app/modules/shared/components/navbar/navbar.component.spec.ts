@@ -1,3 +1,4 @@
+import { TemaTemporadaService } from '../../../../core/services/tema-temporada.service';
 import { SonidosGlobalesService } from '../../../../core/services/sonidos-globales.service';
 import { CommonModule } from '@angular/common';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
@@ -86,6 +87,10 @@ describe('NavbarComponent: aviso sonoro de las notificaciones', () => {
       providers: [
         { provide: AdminService, useValue: { getBranding: () => vacio } },
         { provide: SonidosGlobalesService, useValue: { cargar: () => of(undefined) } },
+        {
+          provide: TemaTemporadaService,
+          useValue: { temaVisible$: of(null), tema: null, ocultas: false, setOcultas: () => {} },
+        },
         {
           provide: AuthService,
           useValue: {

@@ -54,6 +54,7 @@ export const NAV_ICONS: Record<string, string> = {
   'ai-config': 'fa-solid fa-bolt',
   'microsoft-graph': 'fa-solid fa-share-nodes',
   telefonia: 'fa-solid fa-phone-volume',
+  'temas-temporada': 'fa-solid fa-wand-magic-sparkles',
   'session-config': 'fa-solid fa-shield-halved',
   'chat-config': 'fa-solid fa-check-double',
   'mail-outbox': 'fa-solid fa-paper-plane',
