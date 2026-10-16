@@ -266,12 +266,12 @@ describe('NotificationSoundService', () => {
       expect(servicio.tipoConfig('TICKET_ASIGNADO').enabled).toBe(true);
     });
 
-    it('la preferencia se conserva en el navegador', () => {
+    it('el silencio se conserva en el navegador; la urgencia no (es global)', () => {
       servicio.updateTipoConfig('CHAT_MENSAJE', { enabled: false, urgency: 'normal' });
 
       expect(new NotificationSoundService().tipoConfig('CHAT_MENSAJE')).toEqual({
         enabled: false,
-        urgency: 'normal',
+        urgency: 'soft',
       });
     });
 
@@ -306,11 +306,11 @@ describe('NotificationSoundService', () => {
       expect(stub.notas).toBe(0);
     });
 
-    it('una urgencia forzada por el usuario cambia el tono del tipo', () => {
-      // La conversacion es suave por defecto (una nota); al forzar urgente
-      // debe tocar dos notas.
+    it('una urgencia configurada por el SUPER_ADMIN cambia el tono del tipo', () => {
+      // La conversacion es suave por defecto (una nota); con urgente en la
+      // configuracion global debe tocar dos notas.
       const stub = instalarAudio();
-      servicio.updateTipoConfig('CHAT_MENSAJE', { enabled: true, urgency: 'urgent' });
+      servicio.aplicarGlobales({ tipos: { CHAT_MENSAJE: { urgency: 'urgent' } }, urgencias: {} });
 
       servicio.playFor('CHAT_MENSAJE');
 
@@ -337,46 +337,60 @@ describe('NotificationSoundService', () => {
     });
   });
 
-  describe('MP3 propio', () => {
-    it('un MP3 subido reemplaza al tono sintetizado de ese tipo', () => {
-      const stub = instalarAudio();
+  describe('audios configurados por el SUPER_ADMIN', () => {
+    function espiarAudio(): jasmine.SpyObj<HTMLAudioElement> {
       const audio = jasmine.createSpyObj('HTMLAudioElement', ['play']);
       audio.play.and.returnValue(Promise.resolve());
       (window as unknown as { Audio?: unknown }).Audio =
         (function () {
           return audio;
         }) as unknown as typeof Audio;
+      return audio;
+    }
 
-      servicio.updateTipoConfig('SLA_BREACHED', {
-        enabled: true,
-        urgency: 'urgent',
-        sample: 'data:audio/mpeg;base64,AAAA',
-      });
+    it('el audio propio de un tipo reemplaza al tono sintetizado', () => {
+      const stub = instalarAudio();
+      const audio = espiarAudio();
+      servicio.aplicarGlobales({ tipos: { SLA_BREACHED: { audio: 'blob:propio' } }, urgencias: {} });
 
       servicio.playFor('SLA_BREACHED');
 
-      // El tono sintetizado no se toca: se reproduce el MP3.
       expect(stub.notas).toBe(0);
       expect(audio.play).toHaveBeenCalled();
     });
 
-    it('el MP3 se conserva en el navegador y resetTipo lo limpia', () => {
-      (window as unknown as { Audio?: unknown }).Audio =
-        (function () {
-          return {};
-        }) as unknown as typeof Audio;
+    it('sin audio propio suena el audio general de su urgencia', () => {
+      const stub = instalarAudio();
+      espiarAudio();
+      servicio.aplicarGlobales({ tipos: {}, urgencias: { urgent: { audio: 'blob:general' } } });
 
-      servicio.updateTipoConfig('CHAT_MENSAJE', {
-        enabled: true,
-        urgency: 'soft',
-        sample: 'data:audio/mpeg;base64,QUJD',
-      });
+      expect(servicio.tipoConfig('SLA_BREACHED').sample).toBe('blob:general');
+      // Un tipo de otra urgencia sigue con su tono.
+      expect(servicio.tipoConfig('CHAT_MENSAJE').sample).toBeUndefined();
+      servicio.playFor('SLA_BREACHED');
+      expect(stub.notas).toBe(0);
+    });
+
+    it('probar una urgencia usa su audio general', () => {
+      const stub = instalarAudio();
+      const audio = espiarAudio();
+      servicio.aplicarGlobales({ tipos: {}, urgencias: { soft: { audio: 'blob:suave' } } });
+
+      servicio.preview('soft');
+
+      expect(audio.play).toHaveBeenCalled();
+      expect(stub.notas).toBe(0);
+    });
+
+    it('un MP3 guardado en el navegador por la version anterior ya no se usa', () => {
+      localStorage.setItem(
+        'notificationSoundTypes',
+        JSON.stringify({ CHAT_MENSAJE: { enabled: true, urgency: 'urgent', sample: 'data:audio/mpeg;base64,QUJD' } }),
+      );
 
       const recargado = new NotificationSoundService();
-      expect(recargado.tipoConfig('CHAT_MENSAJE').sample).toBe('data:audio/mpeg;base64,QUJD');
 
-      recargado.resetTipo('CHAT_MENSAJE');
-      expect(recargado.tipoConfig('CHAT_MENSAJE').sample).toBeUndefined();
+      expect(recargado.tipoConfig('CHAT_MENSAJE')).toEqual({ enabled: true, urgency: 'soft' });
     });
   });
 });

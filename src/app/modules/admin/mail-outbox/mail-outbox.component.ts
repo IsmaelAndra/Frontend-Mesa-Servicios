@@ -222,6 +222,19 @@ export class MailOutboxComponent implements OnInit, OnDestroy {
   }
 
   // ---------------- Presentación
+  /** Reintentar (fallido o cancelado) o cancelar (pendiente o fallido). */
+  tieneAcciones(c: { status: string }): boolean {
+    return ['PENDIENTE', 'FALLIDO', 'CANCELADO'].includes(c.status);
+  }
+
+  /**
+   * La columna Acciones solo aparece si algún correo de la página admite una.
+   * Con todo enviado o agrupado quedaba una columna vacía sin nada que pulsar.
+   */
+  get hayAcciones(): boolean {
+    return this.correos.some((c) => this.tieneAcciones(c));
+  }
+
   get estadoEnvio(): { texto: string; detalle: string; clase: string; icono: string } {
     const r = this.resumen;
     if (!r) return { texto: 'Cargando…', detalle: '', clase: 'cc-estado--neutro', icono: 'fa-solid fa-circle-notch fa-spin' };

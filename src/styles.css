@@ -874,6 +874,33 @@ select.swal-daisy-input {
   width: 100% !important;
 }
 
+/* Campos daisyUI dentro de un diálogo: la letra es la del tema, no el gris
+   del texto del diálogo. En modo oscuro el campo salía con fondo oscuro y
+   letra gris oscura (p. ej. "Restablecer contraseña" del login). */
+.swal2-popup .input,
+.swal2-popup .textarea,
+.swal2-popup .select {
+  color: var(--fallback-bc, oklch(var(--bc))) !important;
+}
+
+/* En modo oscuro el diálogo entero va en oscuro, como el resto de la app. */
+:root[data-theme="dark"] .swal2-popup {
+  background: var(--fallback-b1, oklch(var(--b1))) !important;
+  color: var(--fallback-bc, oklch(var(--bc))) !important;
+  border: 1px solid var(--fallback-b3, oklch(var(--b3)));
+}
+:root[data-theme="dark"] .swal2-title {
+  color: #7aa7ff !important;
+}
+:root[data-theme="dark"] .swal2-popup .input::placeholder,
+:root[data-theme="dark"] .swal2-input::placeholder {
+  color: #94a3b8 !important;
+}
+:root[data-theme="dark"] .swal2-input {
+  background: var(--fallback-b2, oklch(var(--b2))) !important;
+  color: var(--fallback-bc, oklch(var(--bc))) !important;
+}
+
 .swal2-input:focus {
   border-color: var(--fallback-p, oklch(var(--p))) !important;
   box-shadow: 0 0 0 3px

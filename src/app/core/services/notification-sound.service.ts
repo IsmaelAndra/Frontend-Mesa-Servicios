@@ -43,6 +43,17 @@ export interface SonidoConfig {
 }
 
 /**
+ * Sonidos que el SUPER_ADMIN configura para todos (vienen del servidor, ver
+ * SonidosGlobalesService). `audio` es una URL lista para reproducir (blob:).
+ */
+export interface SonidosGlobales {
+  /** Ajuste de un tipo: otra urgencia y/o un audio propio. */
+  tipos: Record<string, { urgency?: NotificationUrgency | null; audio?: string | null; fileName?: string | null }>;
+  /** Audio general de cada urgencia; sin él suena el tono sintetizado. */
+  urgencias: Partial<Record<NotificationUrgency, { audio: string; fileName?: string | null }>>;
+}
+
+/**
  * Sonido de aviso cuando llega una notificación.
  *
  * Los tonos se generan con Web Audio en vez de cargar un fichero: no hay ningún
@@ -104,8 +115,14 @@ export class NotificationSoundService {
   private desbloqueoRegistrado = false;
   /** Cuando se pidió una muestra manual, el antirrebote no debe silenciarla. */
   private forzarProximo = false;
-  /** Solo las preferencias que el usuario ha cambiado, por tipo. */
+  /**
+   * Preferencias de esta persona por tipo: solo si lo silenció. El tono y el
+   * audio no se guardan aquí: los configura el SUPER_ADMIN para todos y llegan
+   * del servidor (antes se guardaban en el navegador del administrador y solo
+   * le sonaban a él).
+   */
   private overridesSubject = new BehaviorSubject<Record<string, SonidoConfig>>(this.leerOverrides());
+  private globalesSubject = new BehaviorSubject<SonidosGlobales>({ tipos: {}, urgencias: {} });
 
   constructor() {
     this.enabledSubject.next(this.leerPreferencia());
@@ -149,12 +166,32 @@ export class NotificationSoundService {
    */
   tipoConfig(type?: string | null): SonidoConfig {
     const clave = (type || '').toUpperCase();
-    return (
-      this.overridesSubject.value[clave] ?? {
-        enabled: true,
-        urgency: notificationUrgency(clave),
-      }
-    );
+    const local = this.overridesSubject.value[clave];
+    const global = this.globalesSubject.value.tipos[clave];
+    const urgency = global?.urgency ?? notificationUrgency(clave);
+    const config: SonidoConfig = { enabled: local?.enabled ?? true, urgency };
+    // El audio propio del tipo manda; si no tiene, el general de su urgencia.
+    const sample = global?.audio ?? this.globalesSubject.value.urgencias[urgency]?.audio;
+    if (sample) {
+      config.sample = sample;
+    }
+    return config;
+  }
+
+  /** Sonidos globales recibidos del servidor. */
+  get globales(): SonidosGlobales {
+    return this.globalesSubject.value;
+  }
+
+  get globales$(): Observable<SonidosGlobales> {
+    return this.globalesSubject.asObservable();
+  }
+
+  /** Aplica la configuración global (la llama SonidosGlobalesService). */
+  aplicarGlobales(globales: SonidosGlobales): void {
+    this.globalesSubject.next(globales);
+    // Para que la pantalla de sonidos se reconstruya con los valores nuevos.
+    this.overridesSubject.next({ ...this.overridesSubject.value });
   }
 
   /** Preferencias cambiadas por el usuario, para que la pantalla se refresque. */
@@ -168,7 +205,11 @@ export class NotificationSoundService {
    */
   updateTipoConfig(tipo: string, config: SonidoConfig): void {
     const clave = (tipo || '').toUpperCase();
-    const actuales = { ...this.overridesSubject.value, [clave]: { ...config } };
+    // Solo se guarda el silencio: tono y audio son de la configuración global.
+    const actuales = {
+      ...this.overridesSubject.value,
+      [clave]: { enabled: config.enabled, urgency: config.urgency },
+    };
     this.overridesSubject.next(actuales);
     this.guardarOverrides(actuales);
   }
@@ -216,6 +257,11 @@ export class NotificationSoundService {
    */
   preview(urgencia: NotificationUrgency = 'normal'): void {
     this.forzarProximo = true;
+    const audio = this.globalesSubject.value.urgencias[urgencia]?.audio;
+    if (audio) {
+      this.tocarMuestra(audio);
+      return;
+    }
     this.tocar(urgencia);
   }
 
@@ -373,11 +419,11 @@ export class NotificationSoundService {
           typeof valor.enabled === 'boolean' &&
           (urgencia === 'urgent' || urgencia === 'normal' || urgencia === 'soft')
         ) {
-          const config: SonidoConfig = { enabled: valor.enabled, urgency: urgencia };
-          if (typeof valor.sample === 'string' && valor.sample.trim() && valor.sample.startsWith('data:')) {
-            config.sample = valor.sample;
+          // Solo el silencio: un MP3 o una urgencia guardados aquí por la versión
+          // anterior ya no se usan (ahora son globales, del servidor).
+          if (!valor.enabled) {
+            resultado[tipo] = { enabled: false, urgency: urgencia };
           }
-          resultado[tipo] = config;
         }
       }
       return resultado;

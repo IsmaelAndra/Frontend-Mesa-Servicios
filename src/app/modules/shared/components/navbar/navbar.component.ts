@@ -12,6 +12,7 @@ import { AdminService } from "../../../../core/services/admin.service";
 import { NotificationService } from "../../../../core/services/notification.service";
   import { NotificationSoundService } from "../../../../core/services/notification-sound.service";
 import { SseService } from "../../../../core/services/sse.service";
+import { SonidosGlobalesService } from "../../../../core/services/sonidos-globales.service";
 import { ThemeService } from "../../../../core/services/theme.service";
 import { ToastService } from "../../../../core/services/toast.service";
 import { GlobalSearchService } from "../../../../core/services/global-search.service";
@@ -89,6 +90,7 @@ private sseService: SseService,
       private toastService: ToastService,
       private globalSearchService: GlobalSearchService,
       public notificationSound: NotificationSoundService,
+      private sonidosGlobales: SonidosGlobalesService,
     ) {
     this.role = this.authService.getRole();
     this.email = this.authService.getEmail();
@@ -125,6 +127,8 @@ private sseService: SseService,
   ngOnInit(): void {
     this.loadUser();
     this.loadNotifications();
+    // Sonidos que el SUPER_ADMIN configuró para todos (audios por urgencia y por tipo).
+    this.sonidosGlobales.cargar().pipe(takeUntil(this.destroy$)).subscribe();
 
     // Conexión SSE de toda la aplicación: mantiene vivos el chat y las
     // notificaciones sin depender de qué pantalla esté abierta.

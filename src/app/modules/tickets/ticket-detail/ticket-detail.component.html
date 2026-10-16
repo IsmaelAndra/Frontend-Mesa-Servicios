@@ -116,6 +116,7 @@
             <img
               *ngIf="agentPhoto(assignedAgent())"
               [src]="agentPhoto(assignedAgent())"
+              (error)="fotoRota($event)"
               alt=""
               class="w-6 h-6 rounded-full object-cover ring-1 ring-base-300 shrink-0"
             />
@@ -182,6 +183,7 @@
                 <img
                   *ngIf="agentPhoto(a)"
                   [src]="agentPhoto(a)"
+              (error)="fotoRota($event)"
                   alt=""
                   class="w-6 h-6 rounded-full object-cover ring-1 ring-base-300 shrink-0"
                 />
@@ -284,6 +286,7 @@
             <img
               *ngIf="solicitantePhoto()"
               [src]="solicitantePhoto()"
+              (error)="fotoRota($event)"
               alt=""
               class="w-full h-full object-cover"
             />
@@ -681,6 +684,7 @@
               <img
                 *ngIf="agentAssignedPhoto()"
                 [src]="agentAssignedPhoto()"
+              (error)="fotoRota($event)"
                 alt=""
                 class="w-7 h-7 rounded-full object-cover"
               />
@@ -1221,6 +1225,7 @@
               <img
                 *ngIf="avatarSrc(a)"
                 [src]="avatarSrc(a)"
+              (error)="fotoRota($event)"
                 [alt]="authorLabel(a)"
                 class="w-8 h-8 rounded-full object-cover ring-2 ring-base-100 block"
               />

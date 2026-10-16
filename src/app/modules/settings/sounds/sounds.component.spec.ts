@@ -2,7 +2,10 @@ import { CommonModule } from '@angular/common';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { of } from 'rxjs';
+
 import { NotificationSoundService } from '../../../core/services/notification-sound.service';
+import { SonidosGlobalesService } from '../../../core/services/sonidos-globales.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SettingsSoundsComponent } from './sounds.component';
 
@@ -44,6 +47,7 @@ describe('SettingsSoundsComponent', () => {
   let fixture: ComponentFixture<SettingsSoundsComponent>;
   let component: SettingsSoundsComponent;
   let audio: AudioContextStub;
+  let globales: jasmine.SpyObj<SonidosGlobalesService> & { filas: unknown[] };
 
   beforeEach(() => {
     // localStorage real pero limpio entre pruebas, como hace el spec del servicio.
@@ -54,12 +58,26 @@ describe('SettingsSoundsComponent', () => {
       return audio;
     };
 
+    globales = Object.assign(
+      jasmine.createSpyObj<SonidosGlobalesService>('SonidosGlobalesService', [
+        'cargar', 'subirAudio', 'quitarAudio', 'cambiarUrgencia', 'restablecer', 'restablecerTodo',
+      ]),
+      { filas: [] as unknown[] },
+    );
+    globales.cargar.and.returnValue(of(undefined));
+    globales.subirAudio.and.returnValue(of(undefined));
+    globales.quitarAudio.and.returnValue(of(undefined));
+    globales.cambiarUrgencia.and.returnValue(of(undefined));
+    globales.restablecer.and.returnValue(of(undefined));
+    globales.restablecerTodo.and.returnValue(of(undefined));
+
     TestBed.configureTestingModule({
       declarations: [SettingsSoundsComponent],
       imports: [CommonModule],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         NotificationSoundService,
+        { provide: SonidosGlobalesService, useValue: globales },
         {
           provide: AuthService,
           useValue: { getRole: () => 'SUPER_ADMIN' },
@@ -115,22 +133,16 @@ describe('SettingsSoundsComponent', () => {
       expect(audio.notas).toBeGreaterThan(antes);
     });
 
-    it('cambiar el tono graba la urgencia y lo previsualiza', () => {
+    it('cambiar el tono lo guarda en el servidor para todos', () => {
       const chat = componenteFila(component, 'CHAT_MENSAJE');
-      const antes = audio.notas;
 
       component.cambiarUrgencia(chat!.tipo, chat!.config, 'urgent');
 
-      expect(component.notificationSound.tipoConfig('CHAT_MENSAJE').urgency).toBe('urgent');
-      // El tono urgente son dos notas; el anterior, una.
-      expect(audio.notas).toBe(antes + 2);
+      expect(globales.cambiarUrgencia).toHaveBeenCalledWith('CHAT_MENSAJE', 'urgent');
     });
 
     it('previsualizar toca el tono configurado del tipo', () => {
-      component.notificationSound.updateTipoConfig('CHAT_MENSAJE', {
-        enabled: true,
-        urgency: 'urgent',
-      });
+      component.notificationSound.aplicarGlobales({ tipos: { CHAT_MENSAJE: { urgency: 'urgent' } }, urgencias: {} });
       const antes = audio.notas;
 
       component.previsualizar('CHAT_MENSAJE');
@@ -138,35 +150,32 @@ describe('SettingsSoundsComponent', () => {
       expect(audio.notas).toBe(antes + 2);
     });
 
-    it('restablecer un tipo lo devuelve al valor por defecto', () => {
-      component.notificationSound.updateTipoConfig('CHAT_MENSAJE', {
-        enabled: false,
-        urgency: 'urgent',
-      });
-
+    it('restablecer un tipo lo pide al servidor', () => {
       component.restablecer('CHAT_MENSAJE');
 
-      expect(component.notificationSound.tipoConfig('CHAT_MENSAJE')).toEqual({
-        enabled: true,
-        urgency: 'soft',
-      });
+      expect(globales.restablecer).toHaveBeenCalledWith('TIPO', 'CHAT_MENSAJE');
     });
 
-    it('los cambios cuentan para habilitar el boton de restablecer todo', () => {
-      component.notificationSound.updateTipoConfig('ERROR', {
-        enabled: true,
-        urgency: 'soft',
-      });
+    it('los ajustes globales cuentan para habilitar el boton de restablecer todo', () => {
+      globales.filas = [{ scope: 'TIPO', key: 'ERROR', urgency: 'soft', hasAudio: false, fileName: null, updatedAt: '' }];
+      component.notificationSound.aplicarGlobales({ tipos: { ERROR: { urgency: 'soft' } }, urgencias: {} });
 
       expect(component.cambios).toBe(1);
+      // El tipo pasa a la sección de su nueva urgencia.
+      expect(component.grupos.find((g) => g.urgencia === 'soft')?.tipos.some((t) => t.tipo === 'ERROR')).toBe(true);
 
       component.restablecerTodo();
 
-      expect(component.cambios).toBe(0);
-      expect(component.notificationSound.tipoConfig('ERROR')).toEqual({
-        enabled: true,
-        urgency: 'urgent',
-      });
+      expect(globales.restablecerTodo).toHaveBeenCalled();
+    });
+
+    it('subir un audio general de una urgencia lo envía al servidor', () => {
+      const archivo = new File([new Uint8Array([0x49, 0x44, 0x33])], 'alarma.mp3', { type: 'audio/mpeg' });
+      const evento = { target: { files: [archivo], value: 'x' } } as unknown as Event;
+
+      component.onAudioGeneral(evento, 'urgent');
+
+      expect(globales.subirAudio).toHaveBeenCalledWith('URGENCIA', 'urgent', archivo);
     });
   });
 
@@ -178,12 +187,15 @@ describe('SettingsSoundsComponent', () => {
 
       component.cambiarUrgencia(chat!.tipo, chat!.config, 'urgent');
       component.quitarMuestra('CHAT_MENSAJE');
+      component.quitarAudioGeneral('soft');
       component.restablecer('CHAT_MENSAJE');
       component.restablecerTodo();
 
-      expect(component.notificationSound.tipoConfig('CHAT_MENSAJE').urgency).toBe('soft');
+      expect(globales.cambiarUrgencia).not.toHaveBeenCalled();
+      expect(globales.quitarAudio).not.toHaveBeenCalled();
+      expect(globales.restablecer).not.toHaveBeenCalled();
+      expect(globales.restablecerTodo).not.toHaveBeenCalled();
       expect(audio.notas).toBe(antes);
-      expect(component.cambios).toBe(0);
     });
 
     it('el interruptor por tipo si funciona para cualquier rol', () => {

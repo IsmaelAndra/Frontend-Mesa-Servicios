@@ -142,7 +142,20 @@
               {{ user.phoneUser || "No registrado" }}
             </dd>
           </div>
-          <div class="perfil-dato sm:col-span-2">
+          <!--
+            Extensión telefónica: solo lectura. La asigna un administrador en
+            Usuarios, porque las llamadas salen desde ese teléfono: si cada uno
+            pudiera cambiarla, podría hacer sonar el teléfono de otra persona.
+          -->
+          <div class="perfil-dato">
+            <dt>Extensión</dt>
+            <dd [class.perfil-dato--vacio]="!user.extensionUser" class="tabular-nums"
+                [title]="user.extensionUser ? 'Extensión de su teléfono IP' : 'La asigna un administrador en Usuarios'">
+              <i *ngIf="user.extensionUser" class="fa-solid fa-phone text-[11px] opacity-60 mr-1" aria-hidden="true"></i>
+              {{ user.extensionUser || "No asignada" }}
+            </dd>
+          </div>
+          <div class="perfil-dato sm:col-span-1">
             <dt>Correo corporativo</dt>
             <dd class="break-all">{{ user.corporateEmailUser }}</dd>
           </div>

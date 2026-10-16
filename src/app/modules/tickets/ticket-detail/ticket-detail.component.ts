@@ -1466,9 +1466,27 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   agentPhoto(a: AgentOption | null): string | null {
-    const url = a?.photoUrl;
+    return this.resolverFoto(a?.photoUrl);
+  }
+
+  /** URLs de fotos que no cargaron (archivo ausente en el servidor). */
+  private fotosRotas = new Set<string>();
+
+  /**
+   * URL absoluta de una foto, o null si no hay o ya falló. Sin esto, una foto
+   * cuyo archivo no está en el servidor se pintaba como imagen rota en vez de
+   * caer a la inicial.
+   */
+  private resolverFoto(url: string | null | undefined): string | null {
     if (!url) return null;
-    return /^https?:\/\//i.test(url) ? url : `${environment.apiUrl}${url}`;
+    const abs = /^https?:\/\//i.test(url) ? url : `${environment.apiUrl}${url}`;
+    return this.fotosRotas.has(abs) ? null : abs;
+  }
+
+  /** (error) de las fotos: se recuerda y se muestra la inicial. */
+  fotoRota(evento: Event): void {
+    const src = (evento.target as HTMLImageElement | null)?.getAttribute('src');
+    if (src) this.fotosRotas.add(src);
   }
 
   agentInitial(a: AgentOption | null): string {
@@ -1497,9 +1515,8 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   solicitantePhoto(): string | null {
-    const url = this.ficha?.solicitante?.photoUrl;
-    if (!url) return null;
-    return /^https?:\/\//i.test(url) ? url : `${environment.apiUrl}${url}`;
+    // Mientras la ficha carga (o si no se pudo cargar) vale la del propio ticket.
+    return this.resolverFoto(this.ficha?.solicitante?.photoUrl || this.ticket?.userPhotoUrl);
   }
 
   maximoTickets(): number {
@@ -1641,9 +1658,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   avatarSrc(a: Answer): string | null {
-    if (!a.userPhotoUrl) return null;
-    if (/^https?:\/\//i.test(a.userPhotoUrl)) return a.userPhotoUrl;
-    return `${environment.apiUrl}${a.userPhotoUrl}`;
+    return this.resolverFoto(a.userPhotoUrl);
   }
 
   /**
@@ -1817,9 +1832,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     const a = this.agents.find(
       (x) => x.corporateEmailUser === this.ticket?.agent,
     );
-    const url = a?.photoUrl;
-    if (!url) return null;
-    return /^https?:\/\//i.test(url) ? url : `${environment.apiUrl}${url}`;
+    return this.resolverFoto(a?.photoUrl);
   }
 
   /**

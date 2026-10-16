@@ -42,7 +42,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
   role = '';
   isOpen = true;
   isMobile = false;
-  collapsed = false;
+  /**
+   * Contraído o completo, recordado entre recargas y sesiones (localStorage).
+   * Antes cada recarga volvía al menú completo aunque se hubiera contraído.
+   */
+  collapsed = SidebarComponent.leerContraido();
   currentRoute = '';
   logoUrl = '';
   iconUrl = '';
@@ -156,6 +160,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
       ]
     }
   ];
+
+  private static readonly CLAVE_CONTRAIDO = 'sidebarContraido';
+
+  private static leerContraido(): boolean {
+    try {
+      return localStorage.getItem(SidebarComponent.CLAVE_CONTRAIDO) === '1';
+    } catch {
+      return false;
+    }
+  }
 
   constructor(
     public authService: AuthService,
@@ -307,6 +321,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.isOpen = !this.isOpen;
     } else {
       this.collapsed = !this.collapsed;
+      try {
+        localStorage.setItem(SidebarComponent.CLAVE_CONTRAIDO, this.collapsed ? '1' : '0');
+      } catch {
+        // Sin almacenamiento (modo privado): se recuerda solo en esta página.
+      }
       this.grupoFlotante = null;
       this.flotante = null;
     }

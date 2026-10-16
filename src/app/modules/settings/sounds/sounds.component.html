@@ -13,8 +13,8 @@
         <p class="text-sm opacity-70">
           {{
             esSuperAdmin
-              ? 'Elige qué tipos de aviso suenan y con qué tono, o sube un MP3 propio para cada tipo'
-              : 'Activa o desactiva el sonido de cada tipo de aviso'
+              ? 'Configura para todos un sonido general por urgencia y, si quieres, uno propio para cada tipo de aviso'
+              : 'Los sonidos los configura la organización; aquí puedes silenciar los tipos de aviso que no quieras oír'
           }}
         </p>
       </div>
@@ -206,8 +206,41 @@
         </span>
       </div>
 
+      <!-- Sonido general de la urgencia: suena en todos sus tipos sin audio propio -->
+      <div class="flex items-center gap-2 flex-wrap px-5 py-2.5 border-b border-base-200 bg-base-200/30 text-xs">
+        <i class="fa-solid fa-sliders opacity-50" aria-hidden="true"></i>
+        <span class="font-semibold">Sonido general:</span>
+        <span class="opacity-70 truncate max-w-[14rem]" [title]="grupo.audioGeneral || 'Tono predeterminado'">
+          <i *ngIf="grupo.audioGeneral" class="fa-solid fa-music text-[10px] text-primary mr-0.5" aria-hidden="true"></i>
+          {{ grupo.audioGeneral || "Tono predeterminado" }}
+        </span>
+        <div class="flex items-center gap-1 ml-auto">
+          <button type="button" class="btn btn-xs btn-ghost btn-square" (click)="probarUrgencia(grupo.urgencia)"
+                  title="Probar el sonido general" [attr.aria-label]="'Probar el sonido general ' + grupo.titulo">
+            <i class="fa-solid fa-play text-[10px]" aria-hidden="true"></i>
+          </button>
+          <label *ngIf="esSuperAdmin" class="btn btn-xs btn-ghost gap-1 cursor-pointer" [class.btn-disabled]="guardando"
+                 [title]="grupo.audioGeneral ? 'Reemplazar el audio general' : 'Subir un audio general para esta urgencia'">
+            <i class="fa-solid fa-upload text-[10px]" aria-hidden="true"></i>
+            {{ grupo.audioGeneral ? "Cambiar" : "Subir audio" }}
+            <input type="file" class="hidden" accept="audio/mpeg,.mp3,audio/wav,.wav,audio/ogg,.ogg"
+                   (change)="onAudioGeneral($event, grupo.urgencia)"
+                   [attr.aria-label]="'Subir el audio general de ' + grupo.titulo" />
+          </label>
+          <button *ngIf="esSuperAdmin && grupo.audioGeneral" type="button"
+                  class="btn btn-xs btn-ghost btn-square text-error hover:bg-error/10" [disabled]="guardando"
+                  (click)="quitarAudioGeneral(grupo.urgencia)" title="Volver al tono predeterminado"
+                  aria-label="Quitar el audio general">
+            <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
       <!-- Filas de tipos -->
       <div class="divide-y divide-base-200">
+        <p *ngIf="!grupo.tipos.length" class="px-5 py-4 text-xs opacity-60">
+          Ningún tipo usa esta urgencia ahora mismo.
+        </p>
         <div
           *ngFor="let item of grupo.tipos"
           class="px-5 py-3 transition-colors hover:bg-base-200/30"
@@ -240,12 +273,12 @@
                     {{ item.etiqueta }}
                   </p>
                   <span
-                    *ngIf="item.config.sample"
+                    *ngIf="item.audioPropio"
                     class="badge badge-xs badge-primary gap-1"
-                    title="Tiene un MP3 propio subido"
+                    [title]="'Audio propio: ' + (item.archivo || 'subido')"
                   >
                     <i class="fa-solid fa-music text-[8px]" aria-hidden="true"></i>
-                    MP3
+                    Audio propio
                   </span>
                 </div>
                 <p
@@ -264,8 +297,8 @@
               <div
                 *ngIf="esSuperAdmin"
                 class="join"
-                [class.opacity-40]="!item.config.enabled"
-                [class.pointer-events-none]="!item.config.enabled"
+                [class.opacity-40]="guardando"
+                [class.pointer-events-none]="guardando"
               >
                 <button
                   type="button"
@@ -315,36 +348,36 @@
               <div
                 *ngIf="esSuperAdmin"
                 class="flex items-center gap-1"
-                [class.opacity-40]="!item.config.enabled"
-                [class.pointer-events-none]="!item.config.enabled"
+                [class.opacity-40]="guardando"
+                [class.pointer-events-none]="guardando"
               >
                 <label
                   class="btn btn-xs btn-ghost gap-1 cursor-pointer"
-                  [ngClass]="item.config.sample ? 'text-primary' : ''"
+                  [ngClass]="item.audioPropio ? 'text-primary' : ''"
                   [title]="
-                    item.config.sample
-                      ? 'Reemplazar el MP3 propio de ' + item.etiqueta
-                      : 'Subir un MP3 propio para ' + item.etiqueta
+                    item.audioPropio
+                      ? 'Reemplazar el audio propio de ' + item.etiqueta
+                      : 'Subir un audio propio para ' + item.etiqueta
                   "
                 >
                   <i class="fa-solid fa-upload text-[11px]" aria-hidden="true"></i>
-                  MP3
+                  Audio
                   <input
                     type="file"
-                    accept="audio/mpeg,.mp3,audio/mp3"
+                    accept="audio/mpeg,.mp3,audio/wav,.wav,audio/ogg,.ogg"
                     class="hidden"
                     (change)="onFileSeleccionado($event, item)"
-                    [attr.aria-label]="'Subir un MP3 para ' + item.etiqueta"
+                    [attr.aria-label]="'Subir un audio para ' + item.etiqueta"
                   />
                 </label>
 
                 <button
-                  *ngIf="item.config.sample"
+                  *ngIf="item.audioPropio"
                   type="button"
                   class="btn btn-xs btn-ghost btn-square text-error hover:bg-error/10"
                   (click)="quitarMuestra(item.tipo)"
-                  [title]="'Volver al tono predeterminado de ' + item.etiqueta"
-                  aria-label="Quitar MP3 propio"
+                  [title]="'Volver al sonido general de ' + item.etiqueta"
+                  aria-label="Quitar el audio propio"
                 >
                   <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
                 </button>
@@ -389,9 +422,11 @@
       <i class="fa-solid fa-circle-info text-sm text-white"></i>
     </div>
     <p class="opacity-80 leading-relaxed">
-      Los botones <b>Urgente</b> / <b>Normal</b> / <b>Suave</b> solo se usan si el
-      tipo no tiene un MP3 propio. El MP3 se guarda en tu navegador (hasta 1 MB
-      por tipo).
+      Los sonidos se guardan en el servidor y suenan igual para <b>todos</b>.
+      Cada tipo usa su audio propio; si no tiene, el sonido general de su urgencia
+      (<b>Urgente</b> / <b>Normal</b> / <b>Suave</b>); y si tampoco hay, el tono
+      predeterminado. Audios MP3, WAV u OGG de hasta 1 MB. Cada persona puede
+      silenciar los tipos que no quiera oír.
     </p>
   </div>
 
@@ -400,10 +435,10 @@
     <p class="text-xs opacity-60">
       <span *ngIf="cambios === 0">Sin cambios respecto a los valores por defecto.</span>
       <span *ngIf="cambios === 1">
-        <b>{{ cambios }}</b> tipo tiene una preferencia propia.
+        <b>{{ cambios }}</b> {{ esSuperAdmin ? "ajuste propio de la organización." : "tipo silenciado." }}
       </span>
       <span *ngIf="cambios > 1">
-        <b>{{ cambios }}</b> tipos tienen una preferencia propia.
+        <b>{{ cambios }}</b> {{ esSuperAdmin ? "ajustes propios de la organización." : "tipos silenciados." }}
       </span>
     </p>
 
@@ -412,7 +447,7 @@
       type="button"
       class="btn btn-sm btn-ghost gap-2"
       (click)="restablecerTodo()"
-      [disabled]="!cambios"
+      [disabled]="!cambios || guardando"
     >
       <i class="fa-solid fa-rotate-left text-[15px]" aria-hidden="true"></i>
       Restablecer por defecto

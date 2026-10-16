@@ -1,9 +1,10 @@
+import { SonidosGlobalesService } from '../../../../core/services/sonidos-globales.service';
 import { CommonModule } from '@angular/common';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, of } from 'rxjs';
 
 import { AdminService } from '../../../../core/services/admin.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -84,6 +85,7 @@ describe('NavbarComponent: aviso sonoro de las notificaciones', () => {
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         { provide: AdminService, useValue: { getBranding: () => vacio } },
+        { provide: SonidosGlobalesService, useValue: { cargar: () => of(undefined) } },
         {
           provide: AuthService,
           useValue: {
