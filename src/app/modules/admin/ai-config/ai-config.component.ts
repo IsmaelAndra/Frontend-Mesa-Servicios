@@ -19,8 +19,11 @@ export class AiConfigComponent implements OnInit {
   showApiKey = false;
   /** Si hay clave configurada. El backend no la devuelve ni enmascarada. */
   apiKeyConfigured = false;
+  /** Consultas a la IA hechas hoy (para mostrarlas junto al límite). */
+  usadasHoy: number | null = null;
 
   readonly providers = [
+    "GROQ",
     "GEMINI",
     "OPENAI",
     "AZURE_OPENAI",
@@ -30,6 +33,7 @@ export class AiConfigComponent implements OnInit {
 
   /** Proveedores con el icono de su marca/modelo y su color, para el select. */
   readonly providerOptions: MasterOption[] = [
+    { value: "GROQ", label: "GroqCloud (gratuito)", icon: "fa-solid fa-bolt", color: "#F55036" },
     { value: "GEMINI", label: "Google Gemini", icon: "fa-brands fa-google", color: "#4285F4" },
     { value: "OPENAI", label: "OpenAI (GPT)", icon: "fa-brands fa-openai", color: "#10A37F" },
     { value: "AZURE_OPENAI", label: "Azure OpenAI", icon: "fa-brands fa-microsoft", color: "#0078D4" },
@@ -49,6 +53,9 @@ export class AiConfigComponent implements OnInit {
   readonly providerDefaults: {
     [k: string]: { model: string; baseUrl: string };
   } = {
+    // GroqCloud: API compatible con OpenAI. llama-3.1-8b-instant es rápido y su
+    // capa gratuita sobra para unas decenas de consultas al día.
+    GROQ: { model: "llama-3.1-8b-instant", baseUrl: "https://api.groq.com/openai/v1" },
     GEMINI: {
       model: "gemini-3.6-flash",
       baseUrl: "https://generativelanguage.googleapis.com/v1beta",
@@ -63,6 +70,7 @@ export class AiConfigComponent implements OnInit {
   };
 
   readonly providerIcons: { [k: string]: string } = {
+    GROQ: "⚡",
     GEMINI: "✨",
     OPENAI: "◎",
     AZURE_OPENAI: "☁",
@@ -86,6 +94,7 @@ export class AiConfigComponent implements OnInit {
       providerIcon: [""],
       rulesText: [""],
       enabledActions: ["SUMMARY,ANSWER"],
+      dailyLimit: [50, [Validators.min(0), Validators.max(100000)]],
     });
   }
 
@@ -188,7 +197,9 @@ export class AiConfigComponent implements OnInit {
             apiKey: "",
             rulesText: config.rulesText || "",
             enabledActions: config.enabledActions || "SUMMARY,ANSWER",
+            dailyLimit: config.dailyLimit ?? 0,
           });
+          this.usadasHoy = config.usedToday ?? null;
           this.isLoading = false;
         },
         error: () => {

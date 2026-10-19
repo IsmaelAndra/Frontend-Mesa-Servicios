@@ -1807,6 +1807,42 @@ main .ql-snow.ql-toolbar button.ql-active .ql-stroke {
   --gorro-pompon: #ffffff;
 }
 
+/* ---------- Día de los Difuntos (morado de la colada y naranja) ---------- */
+/* Respetuoso: velas, flores y pétalos que caen despacio; sin calaveras burlonas. */
+[data-temporada="difuntos"] {
+  --tmp-colores: #7c3aed, #f59e0b, #7c3aed;
+  --tmp-esquina: "🕯️";
+}
+[data-temporada="difuntos"] .temporada-particula::before { content: "🌼"; }
+[data-temporada="difuntos"] .temporada-particula:nth-child(3n)::before { content: "🕯️"; }
+[data-temporada="difuntos"] .temporada-particula:nth-child(2n)::before { content: "✿"; color: #c4b5fd; }
+[data-temporada="difuntos"] .temporada-particula { animation-duration: calc(var(--dur, 14s) * 1.4); }
+[data-temporada="difuntos"] .temporada-adorno::before { content: "🕯️"; }
+[data-temporada="difuntos"] .nav::after {
+  background-image:
+    radial-gradient(circle at 7px 4px, #8b5cf6 3px, transparent 3.5px),
+    radial-gradient(circle at 21px 4px, #f59e0b 3px, transparent 3.5px);
+}
+/* En la foto, una flor (corona de flores) en lugar de gorro. */
+[data-temporada="difuntos"] .temporada-gorro {
+  width: 48%;
+  container-type: inline-size;
+  transform: translate(30%, -45%) rotate(10deg);
+}
+[data-temporada="difuntos"] .temporada-gorro::before {
+  clip-path: none;
+  background: none;
+  content: "🌼";
+  inset: 0;
+  font-size: 80cqw;
+  line-height: 1;
+  text-align: center;
+}
+[data-temporada="difuntos"] .temporada-gorro::after,
+[data-temporada="difuntos"] .temporada-gorro__pompon {
+  display: none;
+}
+
 /* Sin movimiento: las partículas quedan quietas repartidas por la pantalla. */
 @media (prefers-reduced-motion: reduce) {
   .temporada-particula {

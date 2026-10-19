@@ -497,6 +497,22 @@
           />
         </label>
 
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Extensión telefónica</span>
+            <span class="label-text-alt text-[11px] opacity-60">Opcional · para llamar desde los tickets</span>
+          </div>
+          <label class="input input-bordered input-sm flex items-center gap-2 w-full focus-within:ring-2 focus-within:ring-primary/25"
+                 [class.input-error]="extensionNuevaInvalida()">
+            <i class="fa-solid fa-phone text-xs opacity-60" aria-hidden="true"></i>
+            <input type="text" inputmode="numeric" maxlength="10" class="grow bg-transparent outline-none"
+                   placeholder="Ej. 182" [(ngModel)]="newUser.extension" aria-label="Extensión telefónica" />
+          </label>
+          <div *ngIf="extensionNuevaInvalida()" class="label pb-0">
+            <span class="label-text-alt text-error">Solo números, hasta 10 dígitos</span>
+          </div>
+        </label>
+
         <div
           class="flex items-start gap-2 text-xs p-3 rounded-xl bg-info/5 border border-info/20 text-base-content/80"
         >

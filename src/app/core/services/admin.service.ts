@@ -175,6 +175,8 @@ export interface AiConfigAdmin {
         rulesText?: string;
         /** Acciones habilitadas: SUMMARY, SUGGEST, CHAT. */
         enabledActions?: string;
+        /** Consultas máximas por día (0 = sin límite). */
+        dailyLimit?: number | null;
       }
 
 export interface AiConfigAdminResponse {
@@ -188,6 +190,9 @@ export interface AiConfigAdminResponse {
         providerIcon: string | null;
         rulesText: string;
         enabledActions: string;
+        /** Consultas máximas por día (null = sin límite) y las usadas hoy. */
+        dailyLimit: number | null;
+        usedToday: number | null;
       }
 
 export interface AuditEvent {
@@ -470,6 +475,8 @@ export class AdminService {
     firstName?: string;
     lastName?: string;
     displayName?: string;
+    /** Código del doble factor, si la cuenta lo tiene configurado. */
+    codigoMfa?: string | null;
   }): Observable<User> {
     return this.http.put<User>(`${environment.apiUrl}/users/me`, data);
   }

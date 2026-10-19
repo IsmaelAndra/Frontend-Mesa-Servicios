@@ -75,6 +75,13 @@ export class SettingsPasswordComponent {
   readonly newPassword = signal("");
   readonly confirmPassword = signal("");
   readonly loading = signal(false);
+  /** La cuenta tiene doble factor: el cambio se confirma con el código de la app. */
+  readonly pideCodigoMfa = signal(false);
+  readonly codigoMfa = signal("");
+
+  constructor() {
+    this.authService.pideCodigoMfa?.().subscribe((pide) => this.pideCodigoMfa.set(pide));
+  }
   readonly submitted = signal(false);
 
   // ─── Visibilidad de contraseñas ───
@@ -111,7 +118,8 @@ export class SettingsPasswordComponent {
       this.currentPassword().length > 0 &&
       this.newPassword().length >= MIN_PASSWORD_LENGTH &&
       this.passwordsMatch() &&
-      this.isNewPasswordDifferent()
+      this.isNewPasswordDifferent() &&
+      (!this.pideCodigoMfa() || /^[0-9]{6}$/.test(this.codigoMfa().trim()))
     );
   });
 
@@ -159,6 +167,7 @@ export class SettingsPasswordComponent {
     this.currentPassword.set("");
     this.newPassword.set("");
     this.confirmPassword.set("");
+    this.codigoMfa.set("");
     this.showCurrent.set(false);
     this.showNew.set(false);
     this.showConfirm.set(false);
@@ -196,7 +205,7 @@ export class SettingsPasswordComponent {
 
     this.loading.set(true);
 
-    this.authService.changePassword(current, newPwd).subscribe({
+    this.authService.changePassword(current, newPwd, this.codigoMfa().trim() || undefined).subscribe({
       next: () => {
         this.loading.set(false);
         this.authService.clearMustChangePassword();

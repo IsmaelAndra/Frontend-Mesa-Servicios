@@ -137,9 +137,27 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
         this.ticketTypes = c.ticketTypes || [];
         this.priorities = c.priorities || [];
           this.sucursales = c.sucursales || [];
+        // Prioridad MEDIA por defecto: casi todo lo es, y la persona (o NEXA, si
+        // la automatización está activa) la cambia si hace falta.
+        const media = this.priorities.find((p) => (p.name || '').trim().toUpperCase() === 'MEDIA');
+        if (media && !this.form.get('priorityId')?.value) {
+          this.form.patchValue({ priorityId: media.id });
+        }
       },
       error: () => this.toastService.warn('No se pudieron cargar los catálogos')
     });
+    // Sede de la persona por defecto (se puede cambiar). No aplica cuando el
+    // personal abre el ticket a nombre de otra persona: su sede puede ser otra.
+    if (!this.aNombreDe) {
+      this.authService.me().subscribe({
+        next: (u) => {
+          if (u?.sucursalId && !this.form.get('sucursalId')?.value) {
+            this.form.patchValue({ sucursalId: u.sucursalId });
+          }
+        },
+        error: () => undefined,
+      });
+    }
   }
 
   /**

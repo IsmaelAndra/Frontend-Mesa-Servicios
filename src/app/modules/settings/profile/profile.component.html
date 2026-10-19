@@ -196,6 +196,23 @@
             </label>
           </div>
 
+
+            <!-- Código del doble factor: solo si la cuenta lo tiene configurado. -->
+            <label *ngIf="pideCodigoMfa" class="form-control w-full ">
+              <div class="label pt-0 pb-1.5">
+                <span class="label-text text-sm font-medium">
+                  <i class="fa-solid fa-shield-halved text-[11px] text-primary mr-1" aria-hidden="true"></i>
+                  Código de tu app de autenticación <span class="text-error">*</span>
+                </span>
+              </div>
+              <input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+                     class="input input-bordered input-sm w-40 text-center font-mono tracking-[0.3em]"
+                     placeholder="000000" [(ngModel)]="codigoMfa" name="codigoMfa" aria-label="Código de 6 dígitos" />
+              <div class="label pb-0">
+                <span class="label-text-alt text-[11px] opacity-60">Por seguridad, este cambio se confirma con el doble factor.</span>
+              </div>
+            </label>
+
           <p class="text-xs opacity-60 flex items-start gap-2">
             <i class="fa-solid fa-circle-info mt-0.5" aria-hidden="true"></i>
             <span>

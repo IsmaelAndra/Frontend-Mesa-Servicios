@@ -1514,6 +1514,15 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.solicitanteActivo() ? "Activo" : "Inactivo";
   }
 
+  /**
+   * Foto del solicitante en la información del ticket. Antes se usaba la ruta
+   * tal cual ("/uploads/..."), sin el prefijo de la API: en producción apuntaba
+   * a una dirección que no existe y la foto no salía.
+   */
+  fotoTicketSolicitante(): string | null {
+    return this.resolverFoto(this.ticket?.userPhotoUrl);
+  }
+
   solicitantePhoto(): string | null {
     // Mientras la ficha carga (o si no se pudo cargar) vale la del propio ticket.
     return this.resolverFoto(this.ficha?.solicitante?.photoUrl || this.ticket?.userPhotoUrl);

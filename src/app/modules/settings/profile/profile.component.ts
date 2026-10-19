@@ -15,11 +15,15 @@ export class SettingsProfileComponent implements OnInit {
   loading = false;
   editMode = false;
   form: Partial<User> = {};
+  /** La cuenta tiene doble factor: guardar los datos pide el código de la app. */
+  pideCodigoMfa = false;
+  codigoMfa = '';
   coverUrl = 'https://images.unsplash.com/photo-1499336315816-097655dcfbda?auto=format&fit=crop&w=1920&q=80';
 
   constructor(private authService: AuthService, private adminService: AdminService, private toastService: ToastService) {}
 
   ngOnInit(): void {
+    this.authService.pideCodigoMfa().subscribe((pide) => (this.pideCodigoMfa = pide));
     this.adminService.getBranding().subscribe({
       next: (b) => { if (b.profileCoverUrl) this.coverUrl = b.profileCoverUrl; },
       error: () => undefined
@@ -106,7 +110,8 @@ export class SettingsProfileComponent implements OnInit {
       phoneUser: (this.form.phoneUser || '').trim(),
       firstName: (this.form.firstName || '').trim(),
       lastName: (this.form.lastName || '').trim(),
-      displayName: (this.form.displayName || '').trim()
+      displayName: (this.form.displayName || '').trim(),
+      codigoMfa: this.pideCodigoMfa ? this.codigoMfa.trim() : null
     };
 
     this.adminService.updateMyProfile(payload).subscribe({
@@ -115,6 +120,7 @@ export class SettingsProfileComponent implements OnInit {
         this.editMode = false;
         this.user = u;
         this.form = { ...u };
+        this.codigoMfa = '';
         this.toastService.success('Perfil actualizado');
       },
       error: (e) => {

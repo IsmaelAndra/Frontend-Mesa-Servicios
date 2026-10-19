@@ -638,13 +638,14 @@
             -->
             <span class="relative inline-flex shrink-0">
               <img
-                *ngIf="ticket.userPhotoUrl"
-                [src]="ticket.userPhotoUrl"
+                *ngIf="fotoTicketSolicitante()"
+                [src]="fotoTicketSolicitante()"
+                (error)="fotoRota($event)"
                 [alt]="'Foto de ' + (ticket.userDisplayName || ticket.user)"
                 class="w-7 h-7 rounded-full object-cover"
               />
               <span
-                *ngIf="!ticket.userPhotoUrl"
+                *ngIf="!fotoTicketSolicitante()"
                 class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold"
                 style="background: #4f46e51f; color: #4f46e5"
                 aria-hidden="true"

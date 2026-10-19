@@ -107,6 +107,13 @@
 
           <ng-container *ngTemplateOutlet="casillas"></ng-container>
 
+          <!-- Recordar el equipo: no volver a pedir el código aquí durante 30 días. -->
+          <label class="flex items-center justify-center gap-2 text-xs cursor-pointer select-none">
+            <input type="checkbox" class="checkbox checkbox-xs checkbox-primary" name="recordarEquipo"
+                   [(ngModel)]="recordarEquipo" />
+            <span>Recordar este equipo 30 días <span class="opacity-60">(no lo marques en un equipo compartido)</span></span>
+          </label>
+
           <div class="flex gap-2 pt-1">
             <button type="button" class="btn btn-ghost flex-1" [disabled]="loading" (click)="volverAlAcceso()">
               <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
@@ -142,6 +149,13 @@
                    class="input input-bordered w-full text-center font-mono text-lg tracking-widest"
                    [ngModel]="codigoRecuperacion" (ngModelChange)="codigoRecuperacion = $event"
                    placeholder="XXXXX-XXXXX" maxlength="11" autocomplete="off" autofocus />
+          </label>
+
+          <!-- Recordar el equipo: no volver a pedir el código aquí durante 30 días. -->
+          <label class="flex items-center justify-center gap-2 text-xs cursor-pointer select-none">
+            <input type="checkbox" class="checkbox checkbox-xs checkbox-primary" name="recordarEquipo"
+                   [(ngModel)]="recordarEquipo" />
+            <span>Recordar este equipo 30 días <span class="opacity-60">(no lo marques en un equipo compartido)</span></span>
           </label>
 
           <button type="submit" class="btn btn-primary text-white w-full gap-2" [disabled]="!puedeConfirmar">

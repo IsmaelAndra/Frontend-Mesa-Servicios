@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, of, tap, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, of, tap, throwError } from 'rxjs';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { environment } from '../../../environments/environment';
 import {
@@ -192,12 +192,14 @@ restoreSession(): Promise<void> {
     * que devolvió el login: el backend lo tiene marcado como de un solo uso y no
     * vale dos veces.
     */
-   confirmarMfa(codigo: string, codigoRecuperacion?: string): Observable<AuthResponse> {
+   confirmarMfa(codigo: string, codigoRecuperacion?: string, recordar = true): Observable<AuthResponse> {
      const desafio = this.desafioMfa;
      if (!desafio) {
        return throwError(() => new Error('No hay ningún desafío pendiente'));
      }
-     const cuerpo: Record<string, string> = { challenge: desafio.challenge };
+     // recordar: el backend deja el equipo recordado 30 días (cookie) y no vuelve
+     // a pedir el código en él.
+     const cuerpo: Record<string, string | boolean> = { challenge: desafio.challenge, recordar };
      if (codigoRecuperacion) {
        cuerpo['codigoRecuperacion'] = codigoRecuperacion;
      } else {
@@ -234,6 +236,19 @@ restoreSession(): Promise<void> {
       { token, nuevaPassword });
   }
 
+  /**
+   * Si la cuenta tiene el doble factor activo y configurado: entonces los
+   * cambios sensibles (contraseña, datos personales) piden el código de la app.
+   */
+  pideCodigoMfa(): Observable<boolean> {
+    return this.http
+      .get<{ mfaEnabled: boolean; enrolled: boolean }>(`${environment.apiUrl}/auth/mfa/estado`)
+      .pipe(
+        map((e) => !!e?.mfaEnabled && !!e?.enrolled),
+        catchError(() => of(false)),
+      );
+  }
+
   me(): Observable<User> {
     return this.http.get<User>(`${environment.apiUrl}/users/me`);
   }
@@ -243,9 +258,10 @@ restoreSession(): Promise<void> {
    * este y de otros dispositivos) y devuelve una sesión nueva para este, que se
    * guarda aquí; la cookie del refresh nuevo llega con la respuesta.
    */
-  changePassword(currentPassword: string, newPassword: string): Observable<AuthResponse | null> {
+  changePassword(currentPassword: string, newPassword: string, codigoMfa?: string): Observable<AuthResponse | null> {
     return this.http
-      .post<AuthResponse | null>(`${environment.apiUrl}/auth/change-password`, { currentPassword, newPassword })
+      .post<AuthResponse | null>(`${environment.apiUrl}/auth/change-password`,
+        { currentPassword, newPassword, codigoMfa: codigoMfa || null })
       .pipe(tap((res) => { if (res?.token) this.storeSession(res); }));
   }
 

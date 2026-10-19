@@ -21,6 +21,7 @@ const ASPECTO: Record<string, { icono: string; color: string; adorno: string }> 
   FIN_ANIO: { icono: 'fa-solid fa-champagne-glasses', color: '#CA8A04', adorno: '🥂' },
   CARNAVAL: { icono: 'fa-solid fa-masks-theater', color: '#DB2777', adorno: '🎭' },
   ANIVERSARIO: { icono: 'fa-solid fa-cake-candles', color: '#EA9A15', adorno: '🎂' },
+  DIFUNTOS: { icono: 'fa-solid fa-fire-flame-simple', color: '#7C3AED', adorno: '🕯️' },
 };
 
 /** Las tres urgencias, para los sonidos de cada temporada. */

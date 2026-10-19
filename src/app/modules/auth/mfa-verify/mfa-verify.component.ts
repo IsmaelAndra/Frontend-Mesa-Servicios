@@ -36,6 +36,8 @@ export class MfaVerifyComponent implements AfterViewInit, OnDestroy {
   codigoRecuperacion = '';
 
   loading = false;
+  /** Recordar este equipo 30 días: el login no vuelve a pedir el código en él. */
+  recordarEquipo = true;
   /** Se guarda una sola vez, para poder avisar de que no hay vuelta atrás. */
   codigosRecuperacion: string[] | null = null;
 
@@ -227,8 +229,8 @@ export class MfaVerifyComponent implements AfterViewInit, OnDestroy {
     if (!this.puedeConfirmar) return;
     this.loading = true;
     const llamada = this.usandoRecuperacion
-      ? this.auth.confirmarMfa('', this.codigoRecuperacion)
-      : this.auth.confirmarMfa(this.codigoCompleto);
+      ? this.auth.confirmarMfa('', this.codigoRecuperacion, this.recordarEquipo)
+      : this.auth.confirmarMfa(this.codigoCompleto, undefined, this.recordarEquipo);
 
     llamada.subscribe({
       next: (res) => {

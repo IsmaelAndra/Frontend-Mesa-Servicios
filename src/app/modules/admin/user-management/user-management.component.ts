@@ -355,8 +355,11 @@ newUser: {
       areaId: string | null;
       /** Sede de la persona; opcional. */
       sucursalId: string | null;
+      /** Extensión telefónica; opcional. */
+      extension: string;
     } = {
       corporateEmail: "",
+      extension: "",
       roleName: "",
       areaId: null,
       sucursalId: null,
@@ -368,6 +371,7 @@ newUser: {
     this.step = 1;
 this.newUser = {
         corporateEmail: "",
+        extension: "",
         roleName: "",
         areaId: null,
         sucursalId: null,
@@ -397,12 +401,17 @@ nextStep(): void {
   /** Valida si se puede avanzar del paso actual */
   canGoNext(): boolean {
     if (this.step === 1) {
-      return !!this.newUser.corporateEmail;
+      return !!this.newUser.corporateEmail && !this.extensionNuevaInvalida();
     }
     if (this.step === 2) {
       return !!this.newUser.roleName;
     }
     return true;
+  }
+
+  /** La extensión del alta: vacía o solo números (hasta 10), como en el backend. */
+  extensionNuevaInvalida(): boolean {
+    return !/^[0-9]{0,10}$/.test((this.newUser.extension || "").trim());
   }
 
   /** Valida si se puede enviar el formulario */
@@ -425,6 +434,7 @@ const payload: RegisterRequest = {
           roleName: this.newUser.roleName,
           areaId: this.newUser.areaId!,
           sucursalId: this.newUser.sucursalId,
+          extension: (this.newUser.extension || "").trim(),
         };
 
     this.adminService.createUser(payload).subscribe({
