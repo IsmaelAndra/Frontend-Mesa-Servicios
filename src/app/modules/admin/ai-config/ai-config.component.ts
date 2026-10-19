@@ -53,9 +53,9 @@ export class AiConfigComponent implements OnInit {
   readonly providerDefaults: {
     [k: string]: { model: string; baseUrl: string };
   } = {
-    // GroqCloud: API compatible con OpenAI. llama-3.1-8b-instant es rápido y su
-    // capa gratuita sobra para unas decenas de consultas al día.
-    GROQ: { model: "llama-3.1-8b-instant", baseUrl: "https://api.groq.com/openai/v1" },
+    // GroqCloud: API compatible con OpenAI. openai/gpt-oss-20b es el recomendado
+    // por Groq para su capa gratuita (1.000 consultas y 200.000 tokens al día).
+    GROQ: { model: "openai/gpt-oss-20b", baseUrl: "https://api.groq.com/openai/v1" },
     GEMINI: {
       model: "gemini-3.6-flash",
       baseUrl: "https://generativelanguage.googleapis.com/v1beta",
