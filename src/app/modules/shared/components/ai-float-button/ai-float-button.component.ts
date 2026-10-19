@@ -15,6 +15,8 @@ export interface AiTicketFill {
   descripcion?: string;
   categoria?: string;
   prioridad?: string;
+  /** Tipo de ticket (INCIDENTE, REQUERIMIENTO, CONSULTA...). */
+  tipo?: string;
 }
 
 @Component({
@@ -177,7 +179,8 @@ export class AiFloatButtonComponent implements OnInit {
           titulo: typeof data.titulo === 'string' ? data.titulo.trim() : undefined,
           descripcion: typeof data.descripcion === 'string' ? data.descripcion.trim() : undefined,
           categoria: typeof data.categoria === 'string' ? data.categoria.trim() : undefined,
-          prioridad: typeof data.prioridad === 'string' ? data.prioridad.trim() : undefined
+          prioridad: typeof data.prioridad === 'string' ? data.prioridad.trim() : undefined,
+          tipo: typeof data.tipo === 'string' ? data.tipo.trim() : undefined
         };
         return { cleaned: text.replace(match[0], '').trim(), fill };
       }

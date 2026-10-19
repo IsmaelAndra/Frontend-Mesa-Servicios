@@ -657,6 +657,33 @@
           />
         </ng-container>
 
+        <!-- TICKET_TYPE -->
+        <ng-container *ngSwitchCase="'TICKET_TYPE'">
+          <label class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium opacity-70">Tipo</span>
+          </label>
+          <app-master-select
+            [ngModel]="configDe('tipoId') || null"
+            (ngModelChange)="setConfig('tipoId', $event ?? '')"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="opcTipos()" icon="fa-solid fa-shapes" [allowEmpty]="true" emptyLabel="—" placeholder="—"
+          ></app-master-select>
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-medium opacity-70">o variable</label>
+            <ng-container
+              *ngTemplateOutlet="
+                botonVar;
+                context: { $implicit: 'tipoId' }
+              "
+            ></ng-container>
+          </div>
+          <input
+            class="input input-bordered input-sm w-full text-xs font-mono"
+            [value]="configDe('tipoId')"
+            (input)="setConfig('tipoId', $any($event.target).value)"
+          />
+        </ng-container>
+
         <!-- TICKET_COMMENT -->
         <ng-container *ngSwitchCase="'TICKET_COMMENT'">
           <div class="flex justify-between items-center">

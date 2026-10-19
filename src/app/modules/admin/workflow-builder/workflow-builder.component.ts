@@ -293,6 +293,15 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
       ports: ["NEXT"],
     },
     {
+      type: "TICKET_TYPE",
+      label: "Cambiar tipo",
+      description: "Cambia el tipo (incidente, requerimiento...).",
+      color: "#2563eb",
+      group: "ticket",
+      configurable: true,
+      ports: ["NEXT"],
+    },
+    {
       type: "TICKET_COMMENT",
       label: "Comentar",
       description: "Añade un comentario o nota interna.",
@@ -372,6 +381,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
     TICKET_STATUS: "fa-solid fa-arrows-rotate",
     TICKET_PRIORITY: "fa-solid fa-arrow-up-wide-short",
     TICKET_CATEGORY: "fa-solid fa-tags",
+    TICKET_TYPE: "fa-solid fa-shapes",
     TICKET_COMMENT: "fa-solid fa-comment",
     TICKET_CLOSE: "fa-solid fa-lock",
     TICKET_REOPEN: "fa-solid fa-lock-open",
@@ -1011,6 +1021,8 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
         return nombre(l?.priorities, c["prioridadId"]);
       case "TICKET_CATEGORY":
         return nombre(l?.categories, c["categoriaId"]);
+      case "TICKET_TYPE":
+        return nombre(l?.ticketTypes, c["tipoId"]);
       case "TICKET_ASSIGN_TEAM":
         return nombre(l?.teams, c["equipoId"]);
       case "TICKET_ASSIGN": {

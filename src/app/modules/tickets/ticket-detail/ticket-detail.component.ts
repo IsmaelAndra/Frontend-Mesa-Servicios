@@ -1854,7 +1854,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     const t = this.ticket;
     const sb = [
-      `TICKET #${t.idTicket}`,
+      `TICKET #${t.numberTicket}`,
       `Título: ${t.titleTicket}`,
       `Estado: ${t.status} · Prioridad: ${t.priority}`,
       `Solicitante: ${t.user}`,

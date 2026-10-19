@@ -81,14 +81,30 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
    * formulario; el usuario solo revisa y presiona Enviar.
    */
   get aiContext(): string {
+    // Se le pasan los catálogos REALES: sin ellos la IA adivinaba un nombre
+    // genérico y siempre caía en "Soporte Técnico", MEDIA e INCIDENTE.
+    const nombres = (l: { name: string }[]) => (l || []).map((x) => x.name).join(', ') || '(sin datos)';
+    // "Correo (Problemas con correo corporativo)": con la descripción que el
+    // administrador escribe en cada categoría y tipo, la IA elige la específica.
+    const conDescripcion = (l: { name: string; description?: string }[]) =>
+      (l || []).map((x) => (x.description ? `${x.name} (${x.description})` : x.name)).join('; ') || '(sin datos)';
     return 'Estás ayudando a crear un NUEVO ticket de la mesa de servicios COAC. '
       + 'Haz al usuario preguntas cortas para reunir: título breve del problema, descripción '
-      + 'detallada (qué pasó, qué se intentó, impacto), categoría y prioridad. '
+      + 'detallada (qué pasó, desde cuándo, qué se intentó, a cuántas personas o agencias afecta). '
+      + 'Con esa información decide tú la categoría, el tipo y la prioridad; no se los preguntes al usuario. '
+      + `Categorías permitidas: ${conDescripcion(this.categories)}. Elige la MÁS ESPECÍFICA que encaje `
+      + '(por ejemplo, un problema de correo o de su contraseña va en la de correo, no en una genérica); '
+      + 'usa una genérica solo si ninguna otra corresponde. '
+      + `Tipos permitidos: ${conDescripcion(this.ticketTypes)}. `
+      + `Prioridades permitidas: ${nombres(this.priorities)}. CRITICA = cae un sistema core, una agencia `
+      + 'entera sin servicio o hay riesgo de fraude o seguridad; ALTA = un área o varias personas no pueden '
+      + 'trabajar; MEDIA = una persona afectada o hay alternativa; BAJA = consulta o algo que puede esperar. '
       + 'Cuando tengas la información suficiente, confirma en español que el formulario quedó '
       + 'prellenado y que el usuario debe revisar y presionar ENVIAR para crear el ticket. '
       + 'Además, al final de tu respuesta añade un bloque JSON entre ```json y ``` con la forma: '
       + '{"titulo": "texto breve", "descripcion": "descripción completa en markdown", '
-      + '"categoria": "nombre de la categoría", "prioridad": "BAJA, MEDIA, ALTA o CRITICA"}. '
+      + '"categoria": "una categoría permitida", "tipo": "un tipo permitido", "prioridad": "una prioridad permitida"}. '
+      + 'Escribe categoría, tipo y prioridad exactamente como aparecen en las listas. '
       + 'No inventes datos que el usuario no haya confirmado. El JSON debe ser válido, de una sola '
       + 'línea, y la descripción no debe contener llaves ni comillas dobles literales.';
   }
@@ -110,6 +126,7 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     }
     this.matchSelect(d.categoria, this.categories, 'categoryId');
+    this.matchSelect(d.tipo, this.ticketTypes, 'typeId');
     this.matchSelect(d.prioridad, this.priorities, 'priorityId');
     if (d.titulo || d.descripcion) {
       this.toastService.info(

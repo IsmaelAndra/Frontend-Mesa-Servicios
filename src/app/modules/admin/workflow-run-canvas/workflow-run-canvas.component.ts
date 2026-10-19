@@ -41,7 +41,7 @@ const ICONOS: Record<string, string> = {
   NEXA: 'fa-solid fa-robot', NOTIFY: 'fa-solid fa-bell', EMAIL: 'fa-solid fa-envelope',
   TICKET_CREATE: 'fa-solid fa-ticket', TICKET_ASSIGN: 'fa-solid fa-user-tag', TICKET_ASSIGN_TEAM: 'fa-solid fa-users',
   TICKET_STATUS: 'fa-solid fa-arrows-rotate', TICKET_PRIORITY: 'fa-solid fa-arrow-up-wide-short',
-  TICKET_CATEGORY: 'fa-solid fa-tags', TICKET_COMMENT: 'fa-solid fa-comment', TICKET_CLOSE: 'fa-solid fa-lock',
+  TICKET_CATEGORY: 'fa-solid fa-tags', TICKET_TYPE: 'fa-solid fa-shapes', TICKET_COMMENT: 'fa-solid fa-comment', TICKET_CLOSE: 'fa-solid fa-lock',
   TICKET_REOPEN: 'fa-solid fa-lock-open', SLA_APPLY: 'fa-solid fa-stopwatch', TASK_CREATE: 'fa-solid fa-list-check',
   AUDIT: 'fa-solid fa-shield-halved',
 };

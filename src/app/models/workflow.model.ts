@@ -50,6 +50,7 @@ export type WorkflowNodeType =
   | 'TICKET_COMMENT'
   | 'TICKET_PRIORITY'
   | 'TICKET_CATEGORY'
+  | 'TICKET_TYPE'
   | 'TICKET_CLOSE'
   | 'TICKET_REOPEN'
   | 'TICKET_ASSIGN_TEAM'

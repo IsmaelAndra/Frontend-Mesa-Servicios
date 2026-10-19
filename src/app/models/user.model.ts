@@ -134,7 +134,7 @@ export interface Catalog {
   statuses: { id: string; name: string; icon?: string; color?: string }[];
   priorities: { id: string; name: string; level: number; icon?: string; color?: string }[];
   teams: { id: string; name: string; method: string; icon?: string; color?: string }[];
-  categories: { id: string; name: string; teamId: string | null; icon?: string; color?: string }[];
+  categories: { id: string; name: string; description?: string; teamId: string | null; icon?: string; color?: string }[];
   ticketTypes: { id: string; name: string; description?: string; icon?: string; color?: string }[];
   /**
    * Políticas SLA vigentes. `icon` y `color` los edita la pantalla de gestión de
