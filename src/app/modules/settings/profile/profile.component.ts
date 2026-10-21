@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdminService } from '../../../core/services/admin.service';
 import { User } from '../../../models/user.model';
-import { environment } from '../../../../environments/environment';
 import { ToastService } from '../../../core/services/toast.service';
+import { urlDelApi } from '../../../core/utils/url-api.util';
 
 @Component({
   selector: 'app-profile',
@@ -92,7 +92,7 @@ export class SettingsProfileComponent implements OnInit {
   get photoSrc(): string | null {
     if (!this.user?.photoUrl) return null;
     if (/^https?:\/\//i.test(this.user.photoUrl)) return this.user.photoUrl;
-    return `${environment.apiUrl}${this.user.photoUrl}`;
+    return urlDelApi(this.user.photoUrl);
   }
 
   toggleEdit(): void { this.editMode = !this.editMode; if (this.editMode) this.form = { ...this.user! }; }

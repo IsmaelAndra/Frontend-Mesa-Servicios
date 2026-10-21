@@ -17,7 +17,7 @@ import {
   TicketAtencion,
   TicketEvent
 } from '../../models/dashboard.model';
-import { environment } from '../../../environments/environment';
+import { urlDelApi } from '../../core/utils/url-api.util';
 
 /** Periodos rápidos del selector; null = el último año (lo que el backend usa por defecto). */
 type Periodo = 7 | 30 | 90 | null | 'personalizado';
@@ -462,7 +462,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   fotoAgente(a: AgentLoad): string | null {
     if (!a.photoUrl) return null;
-    return /^https?:\/\//i.test(a.photoUrl) ? a.photoUrl : `${environment.apiUrl}${a.photoUrl}`;
+    return urlDelApi(a.photoUrl);
   }
 
   iniciales(nombre: string): string {

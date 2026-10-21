@@ -36,8 +36,8 @@ import {
 import { duracionLegible } from "../../../core/utils/duracion.util";
 import { SolicitanteResumen } from "../../../models/user.model";
 import { Catalog } from "../../../models/user.model";
-import { environment } from "../../../../environments/environment";
 import { MasterOption } from "../../shared/components/master-select/master-select.component";
+import { urlDelApi } from '../../../core/utils/url-api.util';
 
 /** Mensajes que se piden en cada tanda al chat. */
 const TAMANO_PAGINA_CHAT = 20;
@@ -1592,7 +1592,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   private resolverFoto(url: string | null | undefined): string | null {
     if (!url) return null;
-    const abs = /^https?:\/\//i.test(url) ? url : `${environment.apiUrl}${url}`;
+    const abs = urlDelApi(url);
     return this.fotosRotas.has(abs) ? null : abs;
   }
 

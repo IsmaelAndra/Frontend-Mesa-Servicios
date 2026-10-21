@@ -7,13 +7,13 @@ import {
   PrivacyPolicy,
 } from "../../../core/services/admin.service";
 import { ToastService } from "../../../core/services/toast.service";
-import { environment } from "../../../../environments/environment";
 import {
   resolveErrorPage,
   ErrorStatus,
   ERROR_STATUSES,
 } from "../../../core/utils/error-page.util";
 import { markdownToHtml } from "../../../core/utils/markdown.util";
+import { urlDelApi } from '../../../core/utils/url-api.util';
 
 type TabId = "mantenimiento" | "404" | "403" | "500" | "503" | "privacidad";
 
@@ -251,7 +251,7 @@ export class PagesSystemComponent implements OnInit {
 
   private absoluta(url: string): string {
     if (!url) return "";
-    return /^https?:\/\//i.test(url) ? url : `${environment.apiUrl}${url}`;
+    return urlDelApi(url);
   }
 
   // ────────────────────────────────────────────────────────────────

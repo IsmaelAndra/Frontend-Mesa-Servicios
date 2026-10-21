@@ -129,9 +129,11 @@
             <dt>Nombre para mostrar</dt>
             <dd>{{ user.displayName || fullName }}</dd>
           </div>
-          <div class="perfil-dato">
+          <!-- Solo si hay datos: las cuentas creadas sin nombres (como el
+               superadmin inicial) ya se identifican por el nombre para mostrar. -->
+          <div *ngIf="nombresCompletos" class="perfil-dato">
             <dt>Nombres y apellidos</dt>
-            <dd [class.perfil-dato--vacio]="!nombresCompletos">{{ nombresCompletos || "No registrado" }}</dd>
+            <dd>{{ nombresCompletos }}</dd>
           </div>
           <div class="perfil-dato">
             <dt>Identificación</dt>

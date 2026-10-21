@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { AdminService, BrandingConfig, PrivacyPolicy } from '../../../core/services/admin.service';
-import { environment } from '../../../../environments/environment';
 import { markdownToHtml } from '../../../core/utils/markdown.util';
+import { urlDelApi } from '../../../core/utils/url-api.util';
 
 /**
  * Política de privacidad, pagina publica y sin sesion.
@@ -83,7 +83,7 @@ export class PrivacyComponent implements OnInit {
 
   private absoluta(url: string): string {
     if (!url) return '';
-    return /^https?:\/\//i.test(url) ? url : `${environment.apiUrl}${url}`;
+    return urlDelApi(url);
   }
 
   volver(): void {

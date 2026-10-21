@@ -57,7 +57,7 @@ const LABELS: Record<string, string> = {
   aprobaciones: 'Aprobaciones',
   editar: 'Editar',
   mantenimiento: 'Mantenimiento',
-  activities: 'Tablero de tareas',
+  activities: 'Actividades',
   calendar: 'Calendario',
   settings: 'Configuración',
   profile: 'Perfil',

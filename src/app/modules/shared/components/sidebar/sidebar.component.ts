@@ -5,10 +5,10 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { AdminService } from '../../../../core/services/admin.service';
 import { SseService } from '../../../../core/services/sse.service';
 import { User } from '../../../../models/user.model';
-import { environment } from '../../../../../environments/environment';
 import { navIcon } from '../../../../core/constants/nav-icons';
 import { GlobalSearchService } from '../../../../core/services/global-search.service';
 import { metaSesion, normalizarSesion, SessionState } from '../../../../core/utils/session-presence.util';
+import { urlDelApi } from '../../../../core/utils/url-api.util';
 
 interface NavItem {
   label: string;
@@ -281,7 +281,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   get photoSrc(): string | null {
     if (!this.user?.photoUrl) return null;
     if (/^https?:\/\//i.test(this.user.photoUrl)) return this.user.photoUrl;
-    return `${environment.apiUrl}${this.user.photoUrl}`;
+    return urlDelApi(this.user.photoUrl);
   }
 
   get displayName(): string {

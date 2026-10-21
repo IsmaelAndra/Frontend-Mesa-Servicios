@@ -13,7 +13,7 @@ import {
   GlobalSearchResponse,
   SearchUserItem,
 } from '../../../../models/search.model';
-import { environment } from '../../../../../environments/environment';
+import { urlDelApi } from '../../../../core/utils/url-api.util';
 
 type GrupoClave =
   | 'tickets'
@@ -386,8 +386,6 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
     if (!p.photoUrl) {
       return '';
     }
-    return /^https?:\/\//i.test(p.photoUrl)
-      ? p.photoUrl
-      : `${environment.apiUrl}${p.photoUrl}`;
+    return urlDelApi(p.photoUrl);
   }
 }

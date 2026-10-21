@@ -7,7 +7,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { TaskItem, TaskRequest, TaskStatus, KANBAN_STATUSES } from '../../../models/task.model';
 import { User } from '../../../models/user.model';
 import { ToastService } from '../../../core/services/toast.service';
-import { environment } from '../../../../environments/environment';
+import { urlDelApi } from '../../../core/utils/url-api.util';
 
 @Component({
   selector: 'app-kanban',
@@ -101,7 +101,7 @@ export class KanbanComponent implements OnInit {
     if (!url) {
       return null;
     }
-    return /^https?:\/\//i.test(url) ? url : `${environment.apiUrl}${url}`;
+    return urlDelApi(url);
   }
 
   /**
@@ -188,9 +188,7 @@ export class KanbanComponent implements OnInit {
       .map((a) => {
         const selected = preseleccionado != null && a.idUser === preseleccionado;
         const url = a.photoUrl
-          ? /^https?:\/\//i.test(a.photoUrl)
-            ? a.photoUrl
-            : `${environment.apiUrl}${a.photoUrl}`
+          ? urlDelApi(a.photoUrl)
           : '';
         const initial = (a.corporateEmailUser || '?').charAt(0).toUpperCase();
         const avatar = url

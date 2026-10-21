@@ -4,10 +4,10 @@ import { ActivatedRoute } from "@angular/router";
 import { AdminService } from "../../../core/services/admin.service";
 import { Catalog, RegisterRequest, User } from "../../../models/user.model";
 import { ToastService } from "../../../core/services/toast.service";
-import { environment } from "../../../../environments/environment";
 import { metaSesion } from "../../../core/utils/session-presence.util";
 import { Paginacion } from "../../../core/utils/pagination.util";
 import { MasterOption } from "../../shared/components/master-select/master-select.component";
+import { urlDelApi } from '../../../core/utils/url-api.util';
 
 @Component({
   selector: "app-user-management",
@@ -459,7 +459,7 @@ const payload: RegisterRequest = {
     if (!url) {
       return null;
     }
-    return /^https?:\/\//i.test(url) ? url : `${environment.apiUrl}${url}`;
+    return urlDelApi(url);
   }
 
   /** Ante error de carga de imagen, limpia la foto para mostrar la inicial. */

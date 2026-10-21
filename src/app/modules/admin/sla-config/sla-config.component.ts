@@ -6,8 +6,8 @@ import { Catalog } from "../../../models/user.model";
 import { MonthlyEvaluation } from "../../../models/dashboard.model";
 import { ToastService } from "../../../core/services/toast.service";
 import { Paginacion } from "../../../core/utils/pagination.util";
-import { environment } from "../../../../environments/environment";
 import { duracionLegible } from "../../../core/utils/duracion.util";
+import { urlDelApi } from '../../../core/utils/url-api.util';
 
 @Component({
   selector: "app-sla-config",
@@ -131,7 +131,7 @@ export class SlaConfigComponent implements OnInit {
     const foto = (e.agentPhotoUrl || "").trim();
     if (!foto) return null;
     if (/^https?:\/\//i.test(foto)) return foto;
-    return `${environment.apiUrl}${foto}`;
+    return urlDelApi(foto);
   }
 
   /** Nombre del agente, cayendo al correo si el backend no lo manda. */

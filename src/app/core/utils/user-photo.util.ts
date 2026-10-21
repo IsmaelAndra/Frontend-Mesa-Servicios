@@ -1,4 +1,4 @@
-import { environment } from '../../../environments/environment';
+import { urlDelApi } from './url-api.util';
 
 /**
  * URL absoluta de una foto de usuario.
@@ -13,7 +13,7 @@ export function urlFotoUsuario(photoUrl?: string | null): string | null {
   if (!url) return null;
   return /^https?:\/\//i.test(url) || url.startsWith('data:')
     ? url
-    : `${environment.apiUrl}${url}`;
+    : urlDelApi(url);
 }
 
 /**

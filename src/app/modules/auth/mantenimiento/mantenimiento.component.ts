@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AdminService, BrandingConfig, ErrorPageTexts } from '../../../core/services/admin.service';
-import { environment } from '../../../../environments/environment';
 import {
   ERROR_GENERICO,
   ResolvedErrorPage,
   resolveErrorPage,
   resolveMaintenance,
 } from '../../../core/utils/error-page.util';
+import { urlDelApi } from '../../../core/utils/url-api.util';
 
 /**
  * Pantalla publica de error: 404, 403, 500 y 503, mas el aviso de
@@ -135,7 +135,7 @@ export class MantenimientoComponent implements OnInit {
 
   private absoluta(url: string): string {
     if (!url) return '';
-    return /^https?:\/\//i.test(url) ? url : `${environment.apiUrl}${url}`;
+    return urlDelApi(url);
   }
 
   /**

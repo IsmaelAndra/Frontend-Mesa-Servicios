@@ -13,7 +13,7 @@ import {
 import { Ticket } from '../../../models/ticket.model';
 import { Catalog } from '../../../models/user.model';
 import { MasterOption } from '../../shared/components/master-select/master-select.component';
-import { environment } from '../../../../environments/environment';
+import { urlDelApi } from '../../../core/utils/url-api.util';
 
 interface TicketColumn {
   key: string;
@@ -365,6 +365,6 @@ export class TicketKanbanComponent implements OnInit {
     if (!url) {
       return null;
     }
-    return /^https?:\/\//i.test(url) ? url : `${environment.apiUrl}${url}`;
+    return urlDelApi(url);
   }
 }

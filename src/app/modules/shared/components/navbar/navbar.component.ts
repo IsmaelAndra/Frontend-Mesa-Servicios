@@ -20,7 +20,6 @@ import { ToastService } from "../../../../core/services/toast.service";
 import { GlobalSearchService } from "../../../../core/services/global-search.service";
 import { Notification } from "../../../../models/notification.model";
 import { User } from "../../../../models/user.model";
-import { environment } from "../../../../../environments/environment";
 import {
   notificationColor,
   notificationIcon,
@@ -32,6 +31,7 @@ import {
   SESION_PUNTO_NAVBAR,
   type SessionState,
 } from "../../../../core/utils/session-presence.util";
+import { urlDelApi } from '../../../../core/utils/url-api.util';
 
 @Component({
   selector: "app-navbar",
@@ -451,7 +451,7 @@ private sseService: SseService,
   get photoSrc(): string | null {
     if (!this.user?.photoUrl) return null;
     if (/^https?:\/\//i.test(this.user.photoUrl)) return this.user.photoUrl;
-    return `${environment.apiUrl}${this.user.photoUrl}`;
+    return urlDelApi(this.user.photoUrl);
   }
 
   logout(): void {
