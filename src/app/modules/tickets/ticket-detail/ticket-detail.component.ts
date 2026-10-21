@@ -31,7 +31,9 @@ import {
   Attach,
   AuditLog,
   Rating,
+  TicketSla,
 } from "../../../models/ticket.model";
+import { duracionLegible } from "../../../core/utils/duracion.util";
 import { SolicitanteResumen } from "../../../models/user.model";
 import { Catalog } from "../../../models/user.model";
 import { environment } from "../../../../environments/environment";
@@ -310,6 +312,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy(): void {
     this.sseSub?.unsubscribe();
+    if (this.relojSla) clearInterval(this.relojSla);
     if (this.typingTimer) clearTimeout(this.typingTimer);
     if (this.quill) {
       // Quill 2 no declara destroy en sus tipos; algunas builds lo traen.
@@ -477,6 +480,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       next: (t) => {
         this.ticket = t;
         this.loadAudit();
+        this.loadSla();
         if (e.type === "TICKET_ATTACHMENT") {
           this.loadAttachments();
         }
@@ -524,6 +528,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         this.loadAnswers();
         this.loadAttachments();
         this.loadAudit();
+        this.loadSla();
         if (t.status === "RESUELTO" || t.status === "CERRADO") {
           this.loadRating();
         }
@@ -1160,6 +1165,84 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     this.ticketService
       .audit(this.ticketId)
       .subscribe({ next: (a) => (this.audit = a) });
+  }
+
+  /** Plazos del SLA de este ticket (vencimiento y cuenta regresiva). */
+  sla: TicketSla | null = null;
+  /** Hora de referencia de la cuenta regresiva; se refresca cada 30 s. */
+  ahoraSla = Date.now();
+  private relojSla?: ReturnType<typeof setInterval>;
+  /**
+   * Respuesta y resolución ya calculadas. Es una propiedad y no un getter: un
+   * array nuevo en cada detección de cambios recrearía las filas sin parar.
+   */
+  plazosSla: {
+    nombre: string;
+    vence: string | null;
+    estado: { texto: string; clase: string; icono: string } | null;
+  }[] = [];
+
+  private loadSla(): void {
+    this.ticketService.sla(this.ticketId).subscribe({
+      next: (s) => {
+        this.sla = s;
+        this.actualizarPlazosSla();
+        if (s && !this.relojSla) {
+          this.relojSla = setInterval(() => {
+            this.ahoraSla = Date.now();
+            this.actualizarPlazosSla();
+          }, 30_000);
+        }
+      },
+      error: () => {
+        this.sla = null;
+        this.plazosSla = [];
+      },
+    });
+  }
+
+  private actualizarPlazosSla(): void {
+    const s = this.sla;
+    this.plazosSla = !s
+      ? []
+      : [
+          { nombre: "Respuesta", vence: s.respuestaVence,
+            estado: this.plazoSla(s.respuestaVence, s.respondidoEn, s.respuestaVencida) },
+          { nombre: "Resolución", vence: s.resolucionVence,
+            estado: this.plazoSla(s.resolucionVence, s.resueltoEn, s.resolucionVencida) },
+        ];
+  }
+
+  /**
+   * Estado de un plazo para pintarlo: cumplido, vencido o cuánto falta.
+   * Devuelve null si no hay plazo.
+   */
+  plazoSla(
+    vence: string | null,
+    cumplido: string | null,
+    vencido: boolean,
+  ): { texto: string; clase: string; icono: string } | null {
+    if (!vence) return null;
+    const limite = new Date(vence).getTime();
+    if (cumplido) {
+      const aTiempo = new Date(cumplido).getTime() <= limite;
+      return aTiempo
+        ? { texto: "Cumplido a tiempo", clase: "text-success", icono: "fa-solid fa-circle-check" }
+        : { texto: "Cumplido fuera de plazo", clase: "text-error", icono: "fa-solid fa-circle-exclamation" };
+    }
+    const resta = (limite - this.ahoraSla) / 60_000;
+    if (vencido || resta <= 0) {
+      return {
+        texto: `Venció hace ${duracionLegible(-resta)}`,
+        clase: "text-error",
+        icono: "fa-solid fa-triangle-exclamation",
+      };
+    }
+    return {
+      texto: `Vence en ${duracionLegible(resta)}`,
+      clase: resta <= 120 ? "text-warning" : "text-base-content/70",
+      icono: "fa-regular fa-hourglass-half",
+    };
   }
 
   private loadRating(): void {

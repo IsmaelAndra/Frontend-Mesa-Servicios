@@ -19,7 +19,7 @@
     <a routerLink="/dashboard" class="relative flex items-center gap-3 min-w-0" aria-label="Ir al inicio">
       <span class="temporada-adorno temporada-adorno--sb" aria-hidden="true"></span>
       <span class="sb__logo">
-        <img *ngIf="iconUrl || logoUrl" [src]="iconUrl || logoUrl" alt="" class="w-full h-full object-contain" />
+        <img *ngIf="iconUrl || logoUrl" [src]="iconUrl || logoUrl" alt="Logo del sistema" class="w-full h-full object-contain" />
         <span *ngIf="!logoUrl && !iconUrl" class="font-bold text-sm">COAC</span>
       </span>
       <span class="sb__texto min-w-0">
@@ -79,6 +79,7 @@
             (mouseleave)="ocultarEtiqueta()"
             (blur)="ocultarEtiqueta()"
             [attr.aria-current]="isActive(item.route) ? 'page' : null"
+            [attr.aria-label]="contraido ? item.label : null"
           >
             <span class="sb__ico"><i [class]="item.icon" aria-hidden="true"></i></span>
             <span class="sb__texto truncate">{{ item.label }}</span>
@@ -93,6 +94,7 @@
               [class.sb__link--flotante-abierto]="grupoFlotante?.item === item"
               [attr.aria-expanded]="contraido ? grupoFlotante?.item === item : !!item.expanded"
               [attr.aria-haspopup]="contraido ? 'menu' : null"
+              [attr.aria-label]="contraido ? item.label : null"
               (click)="toggleChild(item, $event)"
               (mouseenter)="mostrarEtiqueta($event, item.label)"
               (focus)="mostrarEtiqueta($event, item.label)"

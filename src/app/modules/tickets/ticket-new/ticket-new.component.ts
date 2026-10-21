@@ -318,6 +318,9 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
       categoryId: this.form.value.categoryId ?? undefined,
       typeId: this.form.value.typeId ?? undefined,
       priorityId: this.form.value.priorityId ?? undefined,
+      // Solo cuenta como elegida si la persona tocó el selector (no la MEDIA
+      // por defecto ni la que propuso el asistente).
+      priorityManual: !!this.form.get('priorityId')?.dirty && !!this.form.value.priorityId,
       sucursalId: this.form.value.sucursalId ?? undefined,
       requesterId: this.aNombreDe?.id
     };

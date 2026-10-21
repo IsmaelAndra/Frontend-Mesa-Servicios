@@ -26,7 +26,19 @@ function esDesafioMfa(
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-private readonly TOKEN_KEY = 'mesa_ayuda_token';
+  /**
+   * Clave donde vivía el token de acceso. Ya no se guarda en localStorage (lo
+   * puede leer cualquier script de la página): vive en memoria. Se conserva la
+   * clave para recoger una sesión abierta antes del cambio y borrarla.
+   */
+  private readonly TOKEN_KEY_LEGADO = 'mesa_ayuda_token';
+  /** Token de acceso, solo en memoria de esta pestaña. */
+  private tokenMemoria: string | null = null;
+  /**
+   * Canal entre pestañas: comparten el token (una pestaña nueva no tiene que
+   * renovar) y se enteran del cierre de sesión.
+   */
+  private canal: BroadcastChannel | null = null;
     /**
      * Clave antigua del refresh token. Se conserva SOLO para borrarla: si alguien
      * tiene la app abierta desde antes de este cambio, su localStorage todavía
@@ -69,9 +81,63 @@ private readonly TOKEN_KEY = 'mesa_ayuda_token';
   private idleListenerPuesto = false;
 
   constructor(private http: HttpClient) {
+    // Sesión abierta con una versión anterior: se recoge el token y se borra de
+    // localStorage.
+    try {
+      const legado = localStorage.getItem(this.TOKEN_KEY_LEGADO);
+      if (legado) {
+        this.tokenMemoria = legado;
+        localStorage.removeItem(this.TOKEN_KEY_LEGADO);
+      }
+    } catch {
+      // sin almacenamiento: nada que migrar
+    }
+    this.abrirCanal();
     // La sesión puede seguir viva entre recargas: el reloj se reanuda con el
     // expirado que quedó guardado, para que el contador no aparezca en cero.
     this.tick();
+  }
+
+  private abrirCanal(): void {
+    if (typeof BroadcastChannel === 'undefined') return;
+    try {
+      this.canal = new BroadcastChannel('mesa-ayuda-sesion');
+    } catch {
+      return;
+    }
+    this.canal.onmessage = (e: MessageEvent) => {
+      const m = e.data as { tipo?: string; token?: string } | null;
+      if (!m?.tipo) return;
+      if (m.tipo === 'pedir' && this.tokenMemoria && !this.jwtHelper.isTokenExpired(this.tokenMemoria)) {
+        this.canal?.postMessage({ tipo: 'token', token: this.tokenMemoria });
+      } else if (m.tipo === 'token' && m.token) {
+        this.tokenMemoria = m.token;
+        this.cierreAvisado = false;
+      } else if (m.tipo === 'salir' && this.tokenMemoria) {
+        // Otra pestaña cerró la sesión: esta también, con su aviso.
+        this.cierreAvisado = true;
+        this.clearSession(false);
+        this.sesionCerrada$.next('expirada');
+      }
+    };
+  }
+
+  /** Pregunta a las otras pestañas por un token vigente; espera poco. */
+  private pedirTokenAOtrasPestanas(): Promise<string | null> {
+    if (!this.canal) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      const canal = new BroadcastChannel('mesa-ayuda-sesion');
+      const fin = setTimeout(() => { canal.close(); resolve(null); }, 250);
+      canal.onmessage = (e: MessageEvent) => {
+        const m = e.data as { tipo?: string; token?: string } | null;
+        if (m?.tipo === 'token' && m.token && !this.jwtHelper.isTokenExpired(m.token)) {
+          clearTimeout(fin);
+          canal.close();
+          resolve(m.token);
+        }
+      };
+      canal.postMessage({ tipo: 'pedir' });
+    });
   }
 
   /**
@@ -113,15 +179,24 @@ restoreSession(): Promise<void> {
           this.hydrateFromToken(resolve);
           return;
         }
-        // Token caducado o ausente pero con cookie: se intenta renovar. Con la
-        // cookie dentro, un refresh fallido significa que la sesión ya no vale.
+        // Token caducado o ausente pero con cookie. El token vive en memoria,
+        // así que al recargar o abrir otra pestaña no lo hay: primero se pregunta
+        // a las pestañas abiertas y, si ninguna lo tiene, se renueva con la
+        // cookie. Un refresh fallido significa que la sesión ya no vale.
         if (this.tieneCookieRefresh()) {
-          this.refreshSession().subscribe({
-            next: () => this.hydrateFromToken(resolve),
-            error: () => {
-              this.logout();
-              resolve();
+          this.pedirTokenAOtrasPestanas().then((compartido) => {
+            if (compartido) {
+              this.tokenMemoria = compartido;
+              this.hydrateFromToken(resolve);
+              return;
             }
+            this.refreshSession().subscribe({
+              next: () => this.hydrateFromToken(resolve),
+              error: () => {
+                this.logout();
+                resolve();
+              }
+            });
           });
           return;
         }
@@ -314,9 +389,35 @@ restoreSession(): Promise<void> {
     if (!this.tieneCookieRefresh()) {
       return throwError(() => new Error('Sin refresh token'));
     }
-    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/refresh`, {},
+    const anterior = this.tokenMemoria;
+    const pedir = () => this.http.post<AuthResponse>(`${environment.apiUrl}/auth/refresh`, {},
       { withCredentials: true, headers: this.csrfHeader() })
       .pipe(tap((res) => this.storeSession(res)));
+    const locks = typeof navigator !== 'undefined'
+      ? (navigator as Navigator & { locks?: LockManager }).locks : undefined;
+    if (!locks) return pedir();
+    // Una sola pestaña renueva a la vez. El refresh token rota en cada uso y el
+    // backend trata dos usos del mismo como robo (cierra todas las sesiones):
+    // con dos pestañas renovando a la vez, la segunda echaba a la persona. Si
+    // mientras se esperaba el turno otra pestaña ya renovó (y compartió el
+    // token), se usa ese.
+    return new Observable<AuthResponse>((sub) => {
+      locks.request('mesa-ayuda-refresh', async () => {
+        const actual = this.tokenMemoria;
+        if (actual && actual !== anterior && !this.jwtHelper.isTokenExpired(actual, 30)) {
+          sub.next({ token: actual } as AuthResponse);
+          sub.complete();
+          return;
+        }
+        await new Promise<void>((fin) => {
+          pedir().subscribe({
+            next: (r) => sub.next(r),
+            error: (e) => { sub.error(e); fin(); },
+            complete: () => { sub.complete(); fin(); },
+          });
+        });
+      }).catch((e: unknown) => sub.error(e));
+    });
   }
 
   /**
@@ -366,7 +467,7 @@ restoreSession(): Promise<void> {
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return this.tokenMemoria;
   }
 
   /**
@@ -616,7 +717,8 @@ restoreSession(): Promise<void> {
   }
 
 private storeSession(res: AuthResponse): void {
-      localStorage.setItem(this.TOKEN_KEY, res.token);
+      this.tokenMemoria = res.token;
+      this.canal?.postMessage({ tipo: 'token', token: res.token });
       // El refresh token ya no se guarda: viene en cookie HttpOnly. Se borra la
       // clave vieja por si esta sesión venía de una versión anterior.
       localStorage.removeItem(this.REFRESH_KEY_LEGADO);
@@ -687,8 +789,12 @@ private storeSession(res: AuthResponse): void {
     });
   }
 
-  private clearSession(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
+  private clearSession(avisarPestanas = true): void {
+    if (avisarPestanas && this.tokenMemoria) {
+      this.canal?.postMessage({ tipo: 'salir' });
+    }
+    this.tokenMemoria = null;
+    localStorage.removeItem(this.TOKEN_KEY_LEGADO);
     // La cookie la borra el backend en /auth/logout; desde aquí no se puede,
     // y no hace falta intentarlo.
     localStorage.removeItem(this.REFRESH_KEY_LEGADO);

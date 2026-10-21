@@ -626,6 +626,18 @@
             [value]="configDe('prioridadId')"
             (input)="setConfig('prioridadId', $any($event.target).value)"
           />
+          <!-- Por defecto se respeta la prioridad que eligió la persona. -->
+          <label class="label cursor-pointer justify-start gap-2 py-1">
+            <input
+              type="checkbox"
+              class="checkbox checkbox-sm checkbox-primary"
+              [checked]="nodo.config['forzar'] === true"
+              (change)="setConfig('forzar', $any($event.target).checked)"
+            />
+            <span class="label-text text-xs">
+              Cambiarla aunque la haya elegido el usuario
+            </span>
+          </label>
         </ng-container>
 
         <!-- TICKET_CATEGORY -->

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   Answer, AnswerPage, AnswerRequest, Attach, AuditLog, Rating, RatingRequest,
-  Ticket, TicketPage, TicketQuery, TicketRequest
+  Ticket, TicketPage, TicketQuery, TicketRequest, TicketSla
 } from '../../models/ticket.model';
 import { SolicitanteResumen } from '../../models/user.model';
 
@@ -104,6 +104,11 @@ uploadAttachment(id: string, file: File, answerId?: string): Observable<Attach> 
 
   audit(id: string): Observable<AuditLog[]> {
     return this.http.get<AuditLog[]>(`${this.url}/${id}/audit`);
+  }
+
+  /** Plazos del SLA; null si el ticket no tiene (204). */
+  sla(id: string): Observable<TicketSla | null> {
+    return this.http.get<TicketSla | null>(`${this.url}/${id}/sla`);
   }
 
   rate(id: string, data: RatingRequest): Observable<Rating> {

@@ -37,6 +37,21 @@ export interface TicketRequest {
   sucursalId?: string;
   /** Solicitante cuando el personal abre el ticket a nombre de otra persona. */
   requesterId?: string;
+  /** La persona eligió la prioridad a mano: NEXA no la cambia después. */
+  priorityManual?: boolean;
+}
+
+/** Plazos del SLA de un ticket (GET /tickets/{id}/sla). */
+export interface TicketSla {
+  politica: string | null;
+  respuestaVence: string | null;
+  resolucionVence: string | null;
+  respondidoEn: string | null;
+  resueltoEn: string | null;
+  respuestaVencida: boolean;
+  resolucionVencida: boolean;
+  pausadoDesde: string | null;
+  prioridadManual: boolean;
 }
 
 export interface TicketQuery {

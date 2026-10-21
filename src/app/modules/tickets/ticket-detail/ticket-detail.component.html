@@ -750,6 +750,40 @@
             </span>
           </div>
 
+          <!-- Plazos del SLA: vencimiento y cuenta regresiva de este ticket. -->
+          <div *ngIf="sla" class="rounded-xl border border-base-300 p-2.5 flex flex-col gap-1.5">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center bg-info/10 text-info" aria-hidden="true">
+                <i class="fa-solid fa-stopwatch text-sm"></i>
+              </span>
+              <span class="opacity-60">SLA:</span>
+              <span class="font-medium truncate" [title]="sla.politica || ''">{{ sla.politica || "—" }}</span>
+              <span *ngIf="sla.pausadoDesde" class="badge badge-sm badge-ghost gap-1 ml-auto">
+                <i class="fa-solid fa-pause text-[10px]" aria-hidden="true"></i> En pausa
+              </span>
+            </div>
+            <!-- Respuesta y resolución en dos columnas apiladas: en una sola
+                 fila no cabían en la columna de información. -->
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <ng-container *ngFor="let p of plazosSla">
+                <div *ngIf="p.estado" class="min-w-0 rounded-lg bg-base-200/60 px-2 py-1.5">
+                  <p class="opacity-60">{{ p.nombre }}</p>
+                  <p [class]="p.estado.clase" class="font-medium flex items-start gap-1 leading-snug">
+                    <i [class]="p.estado.icono" class="mt-0.5" aria-hidden="true"></i>
+                    <span>{{ p.estado.texto }}</span>
+                  </p>
+                  <p class="opacity-50 tabular-nums" [title]="'Vence: ' + (p.vence | date: 'dd/MM/yyyy HH:mm')">
+                    {{ p.vence | date: "dd/MM/yyyy HH:mm" }}
+                  </p>
+                </div>
+              </ng-container>
+            </div>
+            <p *ngIf="sla.prioridadManual" class="text-[11px] opacity-60">
+              <i class="fa-solid fa-hand-pointer me-1" aria-hidden="true"></i>
+              Prioridad elegida por una persona: las automatizaciones no la cambian.
+            </p>
+          </div>
+
           <!-- Sede del caso (puede no ser la del solicitante). -->
           <div *ngIf="ticket.sucursal" class="flex items-center gap-2">
             <span
