@@ -365,6 +365,12 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  /** Icono y color de la sede, del maestro de sedes (como el área). */
+  sucursalMeta(id: string | null | undefined): { icon: string; color: string } {
+    const s = (this.catalog?.sucursales || []).find((x) => x.id === id);
+    return { icon: s?.icon || "fa-solid fa-location-dot", color: s?.color || "#0d9488" };
+  }
+
   areaMeta(name: string): { icon: string; color: string } {
     return this.meta(name, this.catalog?.areas);
   }

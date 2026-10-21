@@ -620,7 +620,12 @@ restoreSession(): Promise<void> {
     }
   }
 
-  private readonly onActividad = (): void => {
+  private readonly onActividad = (e?: Event): void => {
+    // Un clic en el aviso de cierre no cuenta: lo que decide son sus botones
+    // ("Seguir conectado" / "Cerrar sesión"). Si contara, el aviso se cerraría
+    // antes de que llegara el clic en "Cerrar sesión".
+    const destino = e?.target as Element | null;
+    if (destino && typeof destino.closest === 'function' && destino.closest('.swal2-container')) return;
     const ahora = Date.now();
     if (ahora - this.ultimoRegistroActividad < this.ACTIVIDAD_MIN_MS) return;
     this.ultimoRegistroActividad = ahora;

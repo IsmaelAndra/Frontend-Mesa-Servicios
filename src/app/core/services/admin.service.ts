@@ -73,7 +73,7 @@ export type ChatBackgroundMode = 'light' | 'dark';
 
 export interface Area { idArea: string; nameArea: string; descriptionArea?: string; priorityLevel: number; statusArea: boolean; iconArea?: string; colorArea?: string; }
 export interface Category { idCategory: string; nameCategory: string; descriptionCategory?: string; iconCategory?: string; colorCategory?: string; teamCategory?: SupportTeam; }
-export interface SupportTeam { idTeam: string; nameTeam: string; descriptionTeam?: string; assignmentMethod: string; activeTeam: boolean; iconTeam?: string; colorTeam?: string; }
+export interface SupportTeam { idTeam: string; nameTeam: string; descriptionTeam?: string; assignmentMethod: string; activeTeam: boolean; iconTeam?: string; colorTeam?: string; /** Incluye automáticamente a todos los agentes activos. */ autoMembersTeam?: boolean; }
 export interface SlaPolicy { idSlaPolicy: string; nameSlaPolicy: string; descriptionSlaPolicy?: string; responseTimeMinutes: number; resolutionTimeMinutes: number; activeSlaPolicy: boolean; iconSlaPolicy?: string; colorSlaPolicy?: string; }
 export interface SlaRule { idSlaRule: string; slaPolicyId: string; areaId: string; priorityId: string; categoryId?: string; typeId?: string; activeSlaRule: boolean; }
 export interface SlaEscalation { idEscalation: string; slaPolicyId: string; triggerPercentage: number; actionType: string; destinationTeamId?: string; destinationUserId?: string; notificationTemplateId?: string; }
@@ -595,7 +595,8 @@ agents(): Observable<AgentOption[]> {
       method: data.assignmentMethod ?? 'ROUND_ROBIN',
       active: data.activeTeam ?? true,
       icon: data.iconTeam ?? '',
-      color: data.colorTeam ?? ''
+      color: data.colorTeam ?? '',
+      autoMembers: !!data.autoMembersTeam
     };
   }
 

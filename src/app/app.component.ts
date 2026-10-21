@@ -6,6 +6,7 @@ import { filter } from 'rxjs/operators';
 import { AdminService } from './core/services/admin.service';
 import { AuthService } from './core/services/auth.service';
 import { ToastService } from './core/services/toast.service';
+import Swal from 'sweetalert2';
 import { applyBrandingTheme, setChatBackground } from './core/utils/branding-theme.util';
 import {
   LoadingScreenView,
@@ -62,7 +63,9 @@ export class AppComponent implements OnInit, OnDestroy {
     // El reloj de la sesión vive en la raíz: así el contador del navbar no se
     // reinicia al navegar entre pantallas.
     this.authService.startSessionClock();
+    this.avisoSub = this.authService.idleRemaining$.subscribe((ms) => this.revisarAvisoCierre(ms));
     this.cierreSub = this.authService.sesionCerrada$.subscribe((motivo) => {
+      this.cerrarAvisoCierre();
       if (this.router.url.startsWith('/auth')) return;
       this.toast.warn(
         motivo === 'inactividad'
@@ -76,6 +79,60 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private cierreSub?: Subscription;
+  private avisoSub?: Subscription;
+  /** Segundos que quedan, para el texto del aviso (se actualiza cada segundo). */
+  private avisoRestante = 0;
+  private avisoAbierto = false;
+
+  /**
+   * Avisa un minuto antes de cerrar la sesión por inactividad, con cuenta atrás
+   * y la opción de seguir. Antes la sesión se cerraba sin más: el contador del
+   * navbar cambiaba de color, pero nadie lo mira mientras lee un ticket.
+   */
+  private revisarAvisoCierre(ms: number): void {
+    const enMargen = ms > 0 && ms <= AppComponent.AVISO_CIERRE_MS && !!this.authService.getToken()
+      && !this.router.url.startsWith('/auth');
+    if (!enMargen) {
+      // Hubo actividad (aquí o en otra pestaña): el aviso sobra.
+      if (this.avisoAbierto && ms > AppComponent.AVISO_CIERRE_MS) this.cerrarAvisoCierre();
+      return;
+    }
+    this.avisoRestante = Math.ceil(ms / 1000);
+    const contador = document.getElementById('aviso-cierre-segundos');
+    if (contador) contador.textContent = String(this.avisoRestante);
+    if (this.avisoAbierto) return;
+    this.avisoAbierto = true;
+    Swal.fire({
+      icon: 'warning',
+      title: 'Tu sesión está por cerrarse',
+      html: 'Por inactividad, la sesión se cerrará en <b id="aviso-cierre-segundos">'
+        + this.avisoRestante + '</b> segundos.',
+      showCancelButton: true,
+      confirmButtonText: 'Seguir conectado',
+      cancelButtonText: 'Cerrar sesión',
+      reverseButtons: true,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+    }).then((r) => {
+      if (!this.avisoAbierto) return;
+      this.avisoAbierto = false;
+      if (r.isConfirmed) {
+        this.authService.reiniciarInactividad();
+      } else if (r.dismiss === Swal.DismissReason.cancel) {
+        this.authService.logout();
+        this.router.navigate(['/auth/login']);
+      }
+    });
+  }
+
+  private cerrarAvisoCierre(): void {
+    if (!this.avisoAbierto) return;
+    this.avisoAbierto = false;
+    Swal.close();
+  }
+
+  /** Cuánto antes del cierre por inactividad aparece el aviso. */
+  private static readonly AVISO_CIERRE_MS = 60_000;
 
   ngOnDestroy(): void {
     if (this.hideTimer) clearTimeout(this.hideTimer);
@@ -83,6 +140,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.routerSub?.unsubscribe();
     this.brandingSub?.unsubscribe();
     this.cierreSub?.unsubscribe();
+    this.avisoSub?.unsubscribe();
   }
 
   /**
