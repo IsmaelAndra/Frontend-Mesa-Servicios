@@ -573,7 +573,7 @@
         <img
           *ngIf="photoSrc"
           [src]="photoSrc"
-          [alt]="displayName"
+          [alt]="displayName || 'Foto de perfil'"
           class="w-9 h-9 rounded-xl object-cover"
         />
         <span
@@ -610,7 +610,7 @@
           <img
             *ngIf="photoSrc"
             [src]="photoSrc"
-            [alt]="displayName"
+            [alt]="displayName || 'Foto de perfil'"
             class="w-10 h-10 rounded-full object-cover ring-2 ring-primary/30 shrink-0"
           />
           <div

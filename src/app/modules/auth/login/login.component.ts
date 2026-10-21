@@ -161,6 +161,14 @@ this.loading = true;
           return;
         }
         this.toastService.success('Bienvenido');
+        // Si la sesión se cerró sola, se vuelve a la pantalla donde estaba.
+        // Solo rutas internas: nunca otra web ("//sitio") ni el propio login.
+        const volver = this.router.parseUrl(this.router.url).queryParams['volver'];
+        if (typeof volver === 'string' && volver.startsWith('/') && !volver.startsWith('//')
+            && !volver.startsWith('/auth')) {
+          this.router.navigateByUrl(volver);
+          return;
+        }
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {

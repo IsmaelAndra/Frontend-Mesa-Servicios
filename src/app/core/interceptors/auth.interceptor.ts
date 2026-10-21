@@ -143,8 +143,9 @@ if (url.includes('/auth/login') || url.includes('/auth/register')
   }
 
   private expireSession(): Observable<never> {
-    this.authService.logout();
-    this.router.navigate(['/auth/login']);
+    // El aviso y la redirección los hace la raíz (AppComponent) una sola vez,
+    // aunque caduquen a la vez todas las peticiones de la pantalla.
+    this.authService.cerrarSesion('expirada');
     return throwError(() => new Error('Sesión expirada'));
   }
 }

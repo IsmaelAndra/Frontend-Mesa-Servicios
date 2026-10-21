@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, map, of, shareReplay, tap, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, catchError, map, of, shareReplay, tap, throwError } from 'rxjs';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { environment } from '../../../environments/environment';
 import {
@@ -72,6 +72,25 @@ private readonly TOKEN_KEY = 'mesa_ayuda_token';
     // La sesión puede seguir viva entre recargas: el reloj se reanuda con el
     // expirado que quedó guardado, para que el contador no aparezca en cero.
     this.tick();
+  }
+
+  /**
+   * Avisa de que la sesión se cerró sola (inactividad o sesión caducada). La
+   * raíz lo escucha, muestra el aviso y lleva al login. Antes el cierre solo
+   * borraba el token: la pantalla seguía abierta y, al volver al día
+   * siguiente, cada acción salía con error sin decir por qué.
+   */
+  readonly sesionCerrada$ = new Subject<'inactividad' | 'expirada'>();
+  private cierreAvisado = false;
+
+  /** Cierra la sesión y avisa una sola vez, aunque fallen varias peticiones a la vez. */
+  cerrarSesion(motivo: 'inactividad' | 'expirada'): void {
+    if (this.cierreAvisado) return;
+    this.cierreAvisado = true;
+    // logout() y no solo limpiar: la cookie de renovación también tiene que
+    // morir, o la siguiente petición resucitaría la sesión a medias.
+    this.logout();
+    this.sesionCerrada$.next(motivo);
   }
 
   /**
@@ -471,7 +490,19 @@ restoreSession(): Promise<void> {
     this.ponerEscuchaActividad();
     this.tick();
     this.clock = setInterval(() => this.tick(), 1000);
+    // Al volver a la pestaña (o despertar el equipo) se comprueba enseguida:
+    // los temporizadores se congelan con el equipo suspendido y el primer clic
+    // del día siguiente llegaba antes que el cierre.
+    if (typeof document !== 'undefined' && !this.escuchaVuelta) {
+      this.escuchaVuelta = true;
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') this.tick();
+      });
+      window.addEventListener('focus', () => this.tick());
+    }
   }
+
+  private escuchaVuelta = false;
 
   private clockStarted = false;
   private clock?: ReturnType<typeof setInterval>;
@@ -546,7 +577,8 @@ restoreSession(): Promise<void> {
    * y no dependa de que el token de acceso se este renovando.
    */
   private tickIdle(): void {
-    if (!this.idleHabilitado()) {
+    // Sin sesión no hay nada que cerrar (p. ej. en el login).
+    if (!this.idleHabilitado() || !this.getToken()) {
       this.idleRemainingMs.next(0);
       return;
     }
@@ -570,8 +602,8 @@ restoreSession(): Promise<void> {
    * logout no intente revocarlo por red: la sesion ya se dio por terminada.
    */
   private cerrarPorInactividad(): void {
-    this.clearSession();
     this.logoutLocalPorInactividad = true;
+    this.cerrarSesion('inactividad');
   }
 
   private logoutLocalPorInactividad = false;
@@ -625,6 +657,7 @@ private storeSession(res: AuthResponse): void {
     // Cada login arranca un reloj de inactividad nuevo.
     localStorage.setItem(this.IDLE_LAST_KEY, String(Date.now()));
     this.logoutLocalPorInactividad = false;
+    this.cierreAvisado = false;
     this.tick();
     this.currentUser.next({
       idUser: res.userId,

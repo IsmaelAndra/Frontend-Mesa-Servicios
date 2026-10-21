@@ -264,7 +264,14 @@
         <span class="dash-panel__icono bg-error/10 text-error" aria-hidden="true"><i class="fa-solid fa-bell"></i></span>
         <div class="min-w-0">
           <h2 class="dash-panel__titulo">Requieren atención</h2>
-          <p class="dash-panel__sub">SLA vencido primero, luego lo que vence antes</p>
+          <p class="dash-panel__sub">
+            SLA vencido primero, luego lo que vence antes
+            <!-- Es un resumen: se dice cuántos se ven de los que hay. -->
+            <ng-container *ngIf="(stats.attention?.length ?? 0) < stats.slaBreachedOpen + stats.slaAtRisk">
+              · se muestran los {{ stats.attention?.length ?? 0 }} más urgentes de
+              {{ stats.slaBreachedOpen + stats.slaAtRisk }}
+            </ng-container>
+          </p>
         </div>
         <div class="ml-auto flex flex-wrap gap-1.5">
           <span *ngIf="stats.slaBreachedOpen > 0" class="badge badge-error gap-1.5 font-medium text-error-content">
@@ -431,7 +438,7 @@
           <li *ngFor="let a of stats.agentLoad" class="flex items-center gap-3">
             <span class="avatar shrink-0">
               <span class="w-9 h-9 rounded-full overflow-hidden bg-primary/10 text-primary inline-flex items-center justify-center text-xs font-bold">
-                <img *ngIf="fotoAgente(a) as f" [src]="f" [alt]="a.name" class="w-full h-full object-cover" />
+                <img *ngIf="fotoAgente(a) as f" [src]="f" [alt]="a.name || 'Foto del agente'" class="w-full h-full object-cover" />
                 <span *ngIf="!fotoAgente(a)">{{ iniciales(a.name) }}</span>
               </span>
             </span>

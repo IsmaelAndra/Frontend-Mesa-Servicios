@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { AdminService } from './core/services/admin.service';
 import { AuthService } from './core/services/auth.service';
+import { ToastService } from './core/services/toast.service';
 import { applyBrandingTheme, setChatBackground } from './core/utils/branding-theme.util';
 import {
   LoadingScreenView,
@@ -37,7 +38,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private router: Router,
     private adminService: AdminService,
     private authService: AuthService,
-    private temaTemporada: TemaTemporadaService
+    private temaTemporada: TemaTemporadaService,
+    private toast: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -60,13 +62,27 @@ export class AppComponent implements OnInit, OnDestroy {
     // El reloj de la sesión vive en la raíz: así el contador del navbar no se
     // reinicia al navegar entre pantallas.
     this.authService.startSessionClock();
+    this.cierreSub = this.authService.sesionCerrada$.subscribe((motivo) => {
+      if (this.router.url.startsWith('/auth')) return;
+      this.toast.warn(
+        motivo === 'inactividad'
+          ? `Tu sesión se cerró tras ${this.authService.idleMinutos()} minutos sin actividad. Vuelve a iniciar sesión.`
+          : 'Tu sesión expiró. Vuelve a iniciar sesión para continuar.',
+        'Sesión cerrada',
+        { duration: 10_000 },
+      );
+      this.router.navigate(['/auth/login'], { queryParams: { volver: this.router.url } });
+    });
   }
+
+  private cierreSub?: Subscription;
 
   ngOnDestroy(): void {
     if (this.hideTimer) clearTimeout(this.hideTimer);
     if (this.safetyTimer) clearTimeout(this.safetyTimer);
     this.routerSub?.unsubscribe();
     this.brandingSub?.unsubscribe();
+    this.cierreSub?.unsubscribe();
   }
 
   /**

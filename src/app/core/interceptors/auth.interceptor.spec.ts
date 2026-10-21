@@ -16,6 +16,7 @@ import { AuthService } from '../services/auth.service';
 describe('AuthInterceptor', () => {
   let refreshCalls: number;
   let logoutCalls: number;
+  let motivos: string[];
   let navigateCalls: number;
   let interceptor: AuthInterceptor;
   let authStub: any;
@@ -27,6 +28,7 @@ describe('AuthInterceptor', () => {
   beforeEach(() => {
     refreshCalls = 0;
     logoutCalls = 0;
+    motivos = [];
     navigateCalls = 0;
     currentToken = 'token-caducado';
 
@@ -37,7 +39,9 @@ describe('AuthInterceptor', () => {
         currentToken = 'token-nuevo';
         return of({ token: 'token-nuevo' });
       },
-      logout: () => { logoutCalls++; }
+      logout: () => { logoutCalls++; },
+      // cerrarSesion cierra (logout) y avisa a la raíz, que lleva al login.
+      cerrarSesion: (motivo: string) => { logoutCalls++; motivos.push(motivo); }
     };
     routerStub = { navigate: () => { navigateCalls++; } };
 
@@ -122,7 +126,10 @@ describe('AuthInterceptor', () => {
       .subscribe({ error: () => {} });
 
     expect(logoutCalls).toBe(1);
-    expect(navigateCalls).toBe(1);
+    expect(motivos).toEqual(['expirada']);
+    // La redirección ya no la hace el interceptor sino AppComponent, una sola
+    // vez aunque fallen varias peticiones a la vez.
+    expect(navigateCalls).toBe(0);
   });
 
   it('no intenta refrescar en las rutas de autenticación', () => {
