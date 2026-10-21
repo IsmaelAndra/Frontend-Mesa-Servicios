@@ -6,7 +6,7 @@ import {
   OnDestroy,
 } from "@angular/core";
 import { Router } from "@angular/router";
-import { Subject, Subscription, interval, takeUntil } from "rxjs";
+import { Subject, Subscription, catchError, debounceTime, interval, of, switchMap, takeUntil } from "rxjs";
 import { AuthService } from "../../../../core/services/auth.service";
 import { AdminService } from "../../../../core/services/admin.service";
 import { NotificationService } from "../../../../core/services/notification.service";
@@ -80,7 +80,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   private sseSub?: Subscription;
-  private sseTicketSub?: Subscription;
 
   constructor(
     public authService: AuthService,
@@ -136,6 +135,7 @@ private sseService: SseService,
   }
 
   ngOnInit(): void {
+    this.escucharPedidosDeNotificaciones();
     this.loadUser();
     this.loadNotifications();
     // Sonidos que el SUPER_ADMIN configuró para todos (audios por urgencia y por tipo).
@@ -187,9 +187,10 @@ private sseService: SseService,
         this.notificationSound.playFor(evento?.type ?? undefined);
         this.avisarEnPantalla(evento);
       });
-      this.sseTicketSub = this.sseService.ticketEvent$.subscribe(() =>
-        this.loadNotifications(),
-      );
+      // Los eventos de ticket ya no recargan la campana: cada acción emite
+      // también el evento "notification" para quien deba enterarse, y el
+      // superadmin recibe los eventos de TODOS los tickets. Recargar con los dos
+      // lanzaba decenas de peticiones a /notifications por pantalla.
 
     // Cuando se marca algo como leido desde la pagina de notificaciones, esta
     // barra tiene que enterarse: antes solo se actualizaba al llegar un evento
@@ -227,7 +228,6 @@ private sseService: SseService,
 
   ngOnDestroy(): void {
     this.sseSub?.unsubscribe();
-    this.sseTicketSub?.unsubscribe();
     this.sseService.close();
     this.destroy$.next();
     this.destroy$.complete();
@@ -240,20 +240,39 @@ private sseService: SseService,
     });
   }
 
+  /**
+   * Pide la lista de notificaciones. Las peticiones que llegan seguidas (SSE,
+   * conexión, lectura, sondeo) se juntan en una sola y una nueva cancela la que
+   * siguiera en curso: antes cada aviso lanzaba la suya y se acumulaban
+   * "pendientes".
+   */
   loadNotifications(): void {
-    this.notificationService.myNotifications().subscribe({
-      next: (list) => {
+    this.pedirNotificaciones$.next();
+  }
+
+  private readonly pedirNotificaciones$ = new Subject<void>();
+
+  private escucharPedidosDeNotificaciones(): void {
+    this.pedirNotificaciones$
+      .pipe(
+        debounceTime(400),
+        switchMap(() =>
+          this.notificationService.myNotifications().pipe(catchError(() => of(null))),
+        ),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((list) => {
+        if (list === null) {
+          this.notifications = [];
+          this.notificationsCount = 0;
+          return;
+        }
         const todas = list || [];
         this.notifications = todas.slice(0, 20);
         const sinLeer = todas.filter((n) => !n.readNotification).length;
         if (sinLeer > this.notificationsCount) this.pulsoContador++;
         this.notificationsCount = sinLeer;
-      },
-      error: () => {
-        this.notifications = [];
-        this.notificationsCount = 0;
-      },
-    });
+      });
   }
 
   /** Al abrir una notificación se marca como leída y se actualiza el contador. */

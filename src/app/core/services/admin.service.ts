@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, throwError, timer } from 'rxjs';
-import { catchError, retry, tap } from 'rxjs/operators';
+import { catchError, retry, shareReplay, tap } from 'rxjs/operators';
 
 /** Última configuración de marca recibida (logo, fondos, colores), por si la red falla al entrar. */
 const CLAVE_MARCA = 'mesa_ayuda_branding';
@@ -356,6 +356,20 @@ export class AdminService {
    * marca que se recibió en este navegador.
    */
   getBranding(): Observable<BrandingConfig> {
+    // Varias piezas (app, guard de mantenimiento, login...) la piden al cargar:
+    // durante unos segundos comparten la misma respuesta.
+    const ahora = Date.now();
+    if (!this.marcaCompartida || ahora - this.marcaDesde > 5000) {
+      this.marcaDesde = ahora;
+      this.marcaCompartida = this.pedirBranding().pipe(shareReplay({ bufferSize: 1, refCount: false }));
+    }
+    return this.marcaCompartida;
+  }
+
+  private marcaCompartida?: Observable<BrandingConfig>;
+  private marcaDesde = 0;
+
+  private pedirBranding(): Observable<BrandingConfig> {
     return this.http.get<BrandingConfig>(`${this.url}/branding`).pipe(
       retry({
         count: 3,
@@ -388,6 +402,7 @@ export class AdminService {
   }
 
   updateBranding(data: BrandingConfig): Observable<BrandingConfig> {
+    this.marcaCompartida = undefined;
     return this.http.put<BrandingConfig>(`${this.url}/branding`, data);
   }
 

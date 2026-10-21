@@ -221,7 +221,7 @@
           <button
             type="submit"
             class="btn btn-sm btn-primary gap-2 order-1 sm:order-2"
-            [disabled]="loading || form.invalid"
+            [disabled]="loading"
           >
             <span *ngIf="loading" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
             <i *ngIf="!loading" class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>

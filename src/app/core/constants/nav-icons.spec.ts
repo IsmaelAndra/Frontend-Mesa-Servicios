@@ -13,7 +13,7 @@ describe('nav-icons', () => {
    * llega a la pantalla desde el menú.
    */
   const RUTAS_MENU: [string, string][] = [
-    ['dashboard', 'Dashboard'],
+    ['dashboard', 'Inicio'],
     ['kanban', 'Tablero de Tickets'],
     ['mine', 'Mis Tickets'],
     ['admin', 'Administración'],

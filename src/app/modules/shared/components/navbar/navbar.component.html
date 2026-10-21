@@ -129,7 +129,7 @@
         [title]="indicadorTiempo.tooltip"
         (click)="seguirActivo()"
         [disabled]="inactividadRenovando || sesionRenovando"
-        aria-label="Tiempo de sesión"
+        [attr.aria-label]="'Tiempo de sesión restante: ' + indicadorTiempo.texto"
       >
         <!-- Icono de reloj/refresh según estado -->
         <i
@@ -140,7 +140,9 @@
         ></i>
 
         <!-- Texto del tiempo -->
+        <!-- "Sesión:" delante: solo con la hora parecía un reloj. -->
         <span class="text-xs font-medium tabular-nums leading-none">
+          <span class="hidden sm:inline opacity-70 font-normal">Sesión:</span>
           {{ indicadorTiempo.texto }}
         </span>
 

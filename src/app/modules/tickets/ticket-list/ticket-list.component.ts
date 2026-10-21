@@ -112,10 +112,12 @@ export class TicketListComponent implements OnInit {
 
   private filterClient(list: Ticket[]): Ticket[] {
     const kw = this.keyword?.trim().toLowerCase() || '';
+    // Se busca por título o por número visible (43 o #43), nunca por el uuid.
+    const numero = kw.replace(/^#/, '');
     return list.filter((t) => {
       const matchKw = !kw
         || t.titleTicket?.toLowerCase().includes(kw)
-        || String(t.idTicket).includes(kw);
+        || (!!numero && String(t.numberTicket ?? '') === numero);
 const matchStatus = !this.status || t.status === this.status;
         const matchSucursal = !this.sucursalId || t.sucursalId === this.sucursalId;
         return matchKw && matchStatus && matchSucursal;

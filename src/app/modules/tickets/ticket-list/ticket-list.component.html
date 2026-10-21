@@ -80,7 +80,6 @@
           <tr>
             <th class="text-center">#</th>
             <th class="text-center">Título</th>
-            <th class="text-center">Área</th>
             <th class="text-center">Sede</th>
             <th class="text-center">Categoría</th>
             <th class="text-center">Prioridad</th>
@@ -113,21 +112,6 @@
                 </div>
                 <span class="font-medium truncate" [title]="t.titleTicket">{{ t.titleTicket }}</span>
               </div>
-            </td>
-
-            <!-- Área -->
-            <td class="text-center">
-              <span
-                class="badge badge-sm kanban-tag min-w-0 shrink border"
-                [style.background-color]="areaMeta(t.area).color + '22'"
-                [style.--bc]="areaMeta(t.area).color || null"
-                [style.color]="areaMeta(t.area).color || ''"
-                [style.border-color]="areaMeta(t.area).color || ''"
-                [title]="t.area"
-              >
-                <i [class]="areaMeta(t.area).icon" class="shrink-0" aria-hidden="true"></i>
-                <span class="truncate">{{ t.area }}</span>
-              </span>
             </td>
 
             <!-- Sede -->

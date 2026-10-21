@@ -10,6 +10,8 @@ import {
 /**
  * Paginador reutilizable.
  * Es presentacional: el padre hace el slice de la lista y le pasa el total.
+ * Sin resultados no pinta nada: el vacío lo explica cada tabla (antes salían
+ * dos mensajes, el de la tabla y "Sin resultados para mostrar").
  */
 @Component({
   selector: 'app-paginator',
@@ -17,7 +19,7 @@ import {
   template: `
     <!-- ============================ CON CONTENIDO ============================ -->
     <div
-      *ngIf="total > 0; else sinDatos"
+      *ngIf="total > 0"
       class="mt-3 flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-base-100 rounded-2xl border border-base-200 shadow-sm"
     >
       <!-- ============ Izquierda: resumen + selector ============ -->
@@ -149,27 +151,6 @@ import {
       </nav>
     </div>
 
-    <!-- ============================ ESTADO VACÍO ============================ -->
-    <ng-template #sinDatos>
-      <div
-        class="mt-3 flex flex-col sm:flex-row items-center justify-center gap-3 px-4 py-4 bg-base-100 rounded-2xl border border-dashed border-base-300"
-        role="status"
-        aria-live="polite"
-      >
-        <div
-          class="p-2 rounded-full bg-base-200 text-base-content/40"
-          aria-hidden="true"
-        >
-          <i class="fa-regular fa-folder-open text-base"></i>
-        </div>
-        <div class="text-center sm:text-left">
-          <p class="text-sm font-medium">Sin resultados para mostrar</p>
-          <p class="text-xs opacity-60 mt-0.5">
-            Ajusta los filtros o cambia el tamaño de página
-          </p>
-        </div>
-      </div>
-    </ng-template>
   `,
 })
 export class PaginatorComponent implements OnChanges {

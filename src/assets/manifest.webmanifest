@@ -1,33 +1,21 @@
 {
   "name": "Mesa de Servicios COAC",
   "short_name": "Mesa COAC",
-  "description": "Sistema de mesa de ayuda y gestion de tickets.",
+  "description": "Sistema de mesa de ayuda y gestión de tickets.",
   "lang": "es",
   "dir": "ltr",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#f3f4f6",
   "theme_color": "#062e86",
   "icons": [
     {
-      "src": "assets/icons/icon-192.png",
-      "sizes": "192x192",
+      "src": "/assets/icons/favicon-app.png",
+      "sizes": "1500x1500",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "assets/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "assets/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ]
 }

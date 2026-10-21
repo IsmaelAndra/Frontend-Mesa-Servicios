@@ -1,6 +1,6 @@
 import { markdownToHtml } from '../../../core/utils/markdown.util';
 import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import Quill from 'quill';
 import { AdminService } from '../../../core/services/admin.service';
@@ -58,7 +58,7 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
       };
     }
     const controls: Record<string, unknown> = {
-      title: ['', [Validators.required, Validators.maxLength(255)]],
+      title: ['', [Validators.required, noSoloEspacios, Validators.maxLength(255)]],
       description: ['', Validators.required],
       categoryId: [null],
       typeId: [null],
@@ -295,7 +295,15 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
 
   submit(): void {
     if (this.form.invalid) {
-      this.toastService.warn('Complete los campos obligatorios');
+      // Se marcan todos para que cada campo enseñe su mensaje, y el aviso dice
+      // cuáles faltan en lugar de un genérico.
+      this.form.markAllAsTouched();
+      const faltan = [
+        this.form.get('title')?.invalid ? 'título' : '',
+        this.form.get('description')?.invalid ? 'descripción' : '',
+        this.form.get('categoryId')?.invalid ? 'categoría' : '',
+      ].filter(Boolean);
+      this.toastService.warn(`Falta completar: ${faltan.join(', ') || 'campos obligatorios'}`);
       return;
     }
     const description = this.form.value.description;
@@ -305,7 +313,7 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     this.loading = true;
     const payload = {
-      title: this.form.value.title,
+      title: String(this.form.value.title).trim(),
       description,
       categoryId: this.form.value.categoryId ?? undefined,
       typeId: this.form.value.typeId ?? undefined,
@@ -340,3 +348,9 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
 
 /** Igual que spring.servlet.multipart.max-file-size del backend. */
 const MAX_BYTES_ADJUNTO = 20 * 1024 * 1024;
+
+/** Un título hecho solo de espacios no es un título (habilitaba "Crear"). */
+function noSoloEspacios(control: AbstractControl): ValidationErrors | null {
+  const v = control.value;
+  return typeof v === 'string' && v.length > 0 && !v.trim() ? { soloEspacios: true } : null;
+}

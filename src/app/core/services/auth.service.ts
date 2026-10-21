@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, map, of, tap, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, of, shareReplay, tap, throwError } from 'rxjs';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { environment } from '../../../environments/environment';
 import {
@@ -249,9 +249,28 @@ restoreSession(): Promise<void> {
       );
   }
 
-  me(): Observable<User> {
-    return this.http.get<User>(`${environment.apiUrl}/users/me`);
+  /**
+   * Perfil de quien tiene la sesión. Navbar, sidebar, dashboard y formularios lo
+   * piden a la vez al cargar una pantalla: durante unos segundos se comparte la
+   * misma respuesta en lugar de lanzar 6 o 7 peticiones iguales.
+   */
+  me(forzar = false): Observable<User> {
+    const ahora = Date.now();
+    if (forzar || !this.meCompartido || ahora - this.meDesde > 5000) {
+      this.meDesde = ahora;
+      this.meCompartido = this.http.get<User>(`${environment.apiUrl}/users/me`).pipe(
+        catchError((e) => {
+          this.meCompartido = undefined; // un error no se guarda
+          return throwError(() => e);
+        }),
+        shareReplay({ bufferSize: 1, refCount: false }),
+      );
+    }
+    return this.meCompartido;
   }
+
+  private meCompartido?: Observable<User>;
+  private meDesde = 0;
 
   /**
    * Cambia la contraseña. El backend invalida todos los tokens anteriores (de
@@ -629,7 +648,7 @@ private storeSession(res: AuthResponse): void {
    * desactivada por el admin seguía apareciendo como activa.
    */
   private hidratarPerfil(): void {
-    this.me().subscribe({
+    this.me(true).subscribe({
       next: (u) => this.currentUser.next(u),
       error: () => undefined
     });

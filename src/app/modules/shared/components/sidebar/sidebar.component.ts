@@ -55,7 +55,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private sseSub?: Subscription;
   navItems: NavItem[] = [
     {
-      label: 'Dashboard',
+      label: 'Inicio',
       seccion: 'principal',
       route: '/dashboard',
       icon: navIcon('dashboard'),

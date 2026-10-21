@@ -8,7 +8,7 @@ import {
   ElementRef,
 } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { Subscription, firstValueFrom } from "rxjs";
 import Quill from "quill";
 import Swal from "sweetalert2";
@@ -302,6 +302,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     private telefonia: TelefoniaService,
     private browserNotif: BrowserNotificationService,
     private quickReplyService: QuickReplyService,
+    private router?: Router,
   ) {
     this.userRole = this.authService.getRole();
     this.currentUserEmail = this.authService.getEmail();
@@ -498,6 +499,25 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   load(): void {
+    // /tickets/43 o /tickets/%2343: la gente comparte el número visible. Se
+    // traduce al uuid; antes el 400 dejaba la pantalla en "Cargando ticket...".
+    const numero = /^#?(\d+)$/.exec(this.ticketId.trim())?.[1];
+    if (numero) {
+      this.ticketService.search({ keyword: numero, page: 0, size: 5 }).subscribe({
+        next: (p) => {
+          const t = (p?.content || []).find((x) => String(x.numberTicket) === numero);
+          if (!t) {
+            this.router?.navigate(["/404"], { replaceUrl: true });
+            return;
+          }
+          this.ticketId = t.idTicket;
+          this.router?.navigate(["/tickets", t.idTicket], { replaceUrl: true });
+          this.load();
+        },
+        error: () => this.router?.navigate(["/404"], { replaceUrl: true }),
+      });
+      return;
+    }
     this.ticketService.getById(this.ticketId).subscribe({
       next: (t) => {
         this.ticket = t;
@@ -511,7 +531,9 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         // El *ngIf="ticket" ya renderizó el editor: inicializar Quill ahora.
         setTimeout(() => this.initQuill());
       },
-      error: () => this.toastService.error("Ticket no encontrado"),
+      error: (e) =>
+        // Sin ticket la pantalla se quedaría cargando para siempre.
+        this.router?.navigate([e?.status === 403 ? "/403" : "/404"], { replaceUrl: true }),
     });
   }
 
@@ -1133,6 +1155,8 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private loadAudit(): void {
+    // El historial solo se muestra al personal: el solicitante no lo descarga.
+    if (!this.canManage) return;
     this.ticketService
       .audit(this.ticketId)
       .subscribe({ next: (a) => (this.audit = a) });

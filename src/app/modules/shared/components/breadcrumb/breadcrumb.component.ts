@@ -21,7 +21,7 @@ export interface Crumb {
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const LABELS: Record<string, string> = {
-  dashboard: 'Dashboard',
+  dashboard: 'Inicio',
   tickets: 'Tickets',
   new: 'Nuevo ticket',
   mine: 'Mis tickets',
