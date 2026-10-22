@@ -213,7 +213,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
     },
     {
       type: "NEXA",
-      label: "NEXA",
+      label: "MAPI",
       description: "La IA clasifica, resume o propone respuesta.",
       color: "#9333ea",
       group: "decision",
@@ -1337,7 +1337,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
         this.workflow()?.name ?? "Escalamiento automático de tickets críticos",
       nodes: [
         n("inicio", "INICIO", "Ticket creado", 300, 40),
-        n("nexa", "NEXA", "NEXA analiza", 300, 170, {
+        n("nexa", "NEXA", "MAPI analiza", 300, 170, {
           accion: "CLASIFICAR",
           instrucciones:
             "Es CRITICA si afecta a varias agencias, al core financiero o a la atención al socio.",
@@ -1351,7 +1351,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
           rol: "ADMIN",
           titulo: "Ticket crítico #{{ticket.numero}}",
           mensaje:
-            'NEXA clasificó como CRÍTICO el ticket #{{ticket.numero}} "{{ticket.titulo}}": {{nodos.nexa.resumen}}',
+            'MAPI clasificó como CRÍTICO el ticket #{{ticket.numero}} "{{ticket.titulo}}": {{nodos.nexa.resumen}}',
         }),
         n("prioridad", "TICKET_PRIORITY", "Subir a crítica", 120, 570, {
           prioridadId: critica,
@@ -1370,7 +1370,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
         n("auditoria", "AUDIT", "Registrar auditoría", 120, 960, {
           accion: "WORKFLOW_ESCALAMIENTO_CRITICO",
           detalle:
-            "Ticket #{{ticket.numero}} escalado al equipo {{ticket.equipo}} por NEXA (confianza {{nodos.nexa.confianza}})",
+            "Ticket #{{ticket.numero}} escalado al equipo {{ticket.equipo}} por MAPI (confianza {{nodos.nexa.confianza}})",
         }),
         n("fin_si", "FIN", "Fin", 120, 1090),
         n("fin_no", "FIN", "Fin (no crítico)", 480, 440),

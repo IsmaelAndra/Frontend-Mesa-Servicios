@@ -2,14 +2,11 @@
   <!-- Widget de chat -->
   <div *ngIf="open" class="card w-[21rem] sm:w-[27rem] shadow-2xl border border-base-200 bg-base-100 overflow-hidden flex flex-col max-h-[min(640px,85vh)]">
     <div class="flex items-center gap-2 px-4 py-3 bg-primary text-white shrink-0">
-      <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-lg shrink-0 overflow-hidden">
-        <img *ngIf="iconIsUrl()" [src]="iconSrc()" alt="Icono del proveedor de IA"
-          class="w-full h-full object-cover" (error)="iconError()" />
-        <i *ngIf="iconIsFa()" [class]="iconFaClass()" aria-hidden="true"></i>
-        <span *ngIf="!iconIsUrl() && !iconIsFa()">{{ iconGlyph() }}</span>
+      <div class="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shrink-0 overflow-hidden">
+        <img [src]="iconoMapi" alt="MAPI" class="w-full h-full object-contain" />
       </div>
       <div class="min-w-0 flex-1">
-        <p class="font-bold text-sm leading-tight">Asistente IA</p>
+        <p class="font-bold text-sm leading-tight">MAPI</p>
         <p class="text-[10px] opacity-90 truncate">
           {{ providerLabel() }}<span *ngIf="modelLabel()"> · {{ modelLabel() }}</span>
         </p>
@@ -21,9 +18,21 @@
     </div>
 
     <div id="ai-chat-scroll" class="chat-wa-bg h-96 flex-1 overflow-y-auto p-3 space-y-2" aria-live="polite">
-      <div *ngIf="!messages.length" class="text-xs text-center opacity-50 pt-10 leading-relaxed">
-        Hola, soy el asistente de la mesa de servicios.<br />
-        Escribe tu consulta y te ayudaré a resolverla.
+      <!-- Saludo de MAPI con atajos, mientras la conversación está vacía. -->
+      <div *ngIf="!messages.length" class="chat chat-start">
+        <div class="chat-bubble chat-message chat-message-ai bg-base-200 text-base-content border border-base-300/70 text-sm">
+          <div class="ai-markdown" [innerHTML]="formatAi(saludo)"></div>
+          <div class="flex flex-wrap gap-2 mt-2.5">
+            <button type="button" class="mapi-atajo"
+              (click)="atajo('crear')">
+              <i class="fa-solid fa-file-circle-plus" aria-hidden="true"></i> Crear ticket
+            </button>
+            <button type="button" class="mapi-atajo"
+              (click)="atajo('estado')">
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Ver estado
+            </button>
+          </div>
+        </div>
       </div>
       <div *ngFor="let m of messages" class="chat" [ngClass]="m.from === 'user' ? 'chat-end' : 'chat-start'">
         <div *ngIf="m.from === 'user'"
@@ -47,9 +56,9 @@
         [value]="message"
         (input)="message = $any($event.target).value"
         (keyup.enter)="send()"
-        placeholder="Escribe tu consulta..."
+        placeholder="Escribe tu consulta a MAPI..."
         class="input input-bordered input-sm flex-1"
-        [attr.aria-label]="'Mensaje para el asistente IA'" />
+        [attr.aria-label]="'Mensaje para MAPI'" />
       <button type="button" class="btn btn-primary btn-sm btn-square" (click)="send()"
         [disabled]="!message.trim() || loading" aria-label="Enviar mensaje">
         <i class="fa-solid fa-paper-plane text-[15px]" aria-hidden="true"></i>
@@ -59,12 +68,10 @@
 
   <!-- Botón flotante -->
   <button type="button"
-    class="btn btn-primary btn-circle w-14 h-14 shadow-lg hover:scale-105 transition-transform"
+    class="btn btn-circle w-16 h-16 p-0 bg-white border-2 border-primary shadow-lg hover:scale-105 hover:bg-white transition-transform overflow-hidden"
     (click)="toggle()" [attr.aria-expanded]="open"
-    [attr.aria-label]="open ? 'Cerrar asistente IA' : 'Abrir asistente IA'">
-    <img *ngIf="iconIsUrl()" [src]="iconSrc()" alt="Icono del proveedor de IA" class="w-7 h-7 object-cover"
-      (error)="iconError()" />
-    <i *ngIf="iconIsFa()" [class]="iconFaClass()" aria-hidden="true"></i>
-    <span *ngIf="!iconIsUrl() && !iconIsFa()" class="text-2xl leading-none">{{ iconGlyph() }}</span>
+    [attr.aria-label]="open ? 'Cerrar MAPI' : 'Abrir MAPI, tu asistente'"
+    [title]="open ? 'Cerrar MAPI' : 'MAPI, tu asistente'">
+    <img [src]="iconoMapi" alt="" class="w-full h-full object-contain p-0.5" />
   </button>
 </div>

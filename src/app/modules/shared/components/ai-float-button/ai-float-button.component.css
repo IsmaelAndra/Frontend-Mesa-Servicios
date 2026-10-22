@@ -50,3 +50,30 @@
   text-decoration: underline;
   word-break: break-all;
 }
+/* Atajos del saludo de MAPI ("Crear ticket", "Ver estado"). No usan
+   btn-outline: una regla global le pone fondo de marca y el texto quedaba
+   azul sobre azul. Píldora sobre el fondo de la burbuja, texto azul claro. */
+.mapi-atajo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #2563eb;
+  background: oklch(var(--b1));
+  border: 1px solid oklch(var(--bc) / 0.15);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.mapi-atajo:hover {
+  border-color: #3b82f6;
+  background: oklch(var(--b1) / 0.7);
+}
+.mapi-atajo:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+:host-context([data-theme="dark"]) .mapi-atajo {
+  color: #93c5fd;
+}

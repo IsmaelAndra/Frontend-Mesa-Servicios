@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="MAPI">
+  <title>MAPI</title>
+  <defs>
+    <linearGradient id="mapi-pelo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6FA8F0"/>
+      <stop offset="1" stop-color="#3B6FD4"/>
+    </linearGradient>
+    <linearGradient id="mapi-oreja" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5C95E6"/>
+      <stop offset="1" stop-color="#2F5CC0"/>
+    </linearGradient>
+    <radialGradient id="mapi-ojo" cx="0.45" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#B9773E"/>
+      <stop offset="1" stop-color="#5A3418"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Orejas -->
+  <path d="M22 58 L18 12 Q20 8 25 11 L58 36 Z" fill="url(#mapi-oreja)"/>
+  <path d="M106 58 L110 12 Q108 8 103 11 L70 36 Z" fill="url(#mapi-oreja)"/>
+  <path d="M28 50 L26 22 L50 38 Z" fill="#E9F1FD"/>
+  <path d="M100 50 L102 22 L78 38 Z" fill="#E9F1FD"/>
+
+  <!-- Cabeza -->
+  <path d="M64 30 C92 30 112 46 112 70 C112 86 102 98 88 106 L64 118 L40 106 C26 98 16 86 16 70 C16 46 36 30 64 30 Z"
+        fill="url(#mapi-pelo)"/>
+  <!-- Mejillas y hocico claros -->
+  <path d="M30 80 C40 76 52 80 64 92 C76 80 88 76 98 80 C96 96 82 110 64 116 C46 110 32 96 30 80 Z"
+        fill="#E9F1FD"/>
+  <!-- Mechón -->
+  <path d="M56 32 Q64 22 72 32 Q66 29 64 34 Q62 29 56 32 Z" fill="#3B6FD4"/>
+
+  <!-- Cejas -->
+  <path d="M34 50 Q44 44 54 49" stroke="#24479E" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M74 49 Q84 44 94 50" stroke="#24479E" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+  <!-- Ojos -->
+  <circle cx="45" cy="66" r="9" fill="#FFFFFF"/>
+  <circle cx="83" cy="66" r="9" fill="#FFFFFF"/>
+  <circle cx="47" cy="67" r="6" fill="url(#mapi-ojo)"/>
+  <circle cx="81" cy="67" r="6" fill="url(#mapi-ojo)"/>
+  <circle cx="47.5" cy="67.5" r="2.6" fill="#1B1B1F"/>
+  <circle cx="81.5" cy="67.5" r="2.6" fill="#1B1B1F"/>
+  <circle cx="49.5" cy="64.5" r="1.6" fill="#FFFFFF"/>
+  <circle cx="83.5" cy="64.5" r="1.6" fill="#FFFFFF"/>
+
+  <!-- Gafas redondas -->
+  <g fill="none" stroke="#141418" stroke-width="5">
+    <circle cx="45" cy="66" r="16"/>
+    <circle cx="83" cy="66" r="16"/>
+    <path d="M61 64 Q64 61 67 64"/>
+    <path d="M29 62 L18 58"/>
+    <path d="M99 62 L110 58"/>
+  </g>
+  <!-- Brillo de los cristales -->
+  <path d="M36 57 Q40 53 45 53" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M74 57 Q78 53 83 53" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Nariz y boca -->
+  <path d="M57 90 Q64 86 71 90 Q70 96 64 98 Q58 96 57 90 Z" fill="#3A3240"/>
+  <path d="M59 90.5 Q62 89 64 89.5" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <path d="M64 98 L64 102 M64 102 Q59 106 55 103 M64 102 Q69 106 73 103"
+        stroke="#3A3240" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+</svg>

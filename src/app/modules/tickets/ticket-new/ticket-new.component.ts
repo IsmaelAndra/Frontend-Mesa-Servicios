@@ -154,7 +154,7 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
         this.ticketTypes = c.ticketTypes || [];
         this.priorities = c.priorities || [];
           this.sucursales = c.sucursales || [];
-        // Prioridad MEDIA por defecto: casi todo lo es, y la persona (o NEXA, si
+        // Prioridad MEDIA por defecto: casi todo lo es, y la persona (o MAPI, si
         // la automatización está activa) la cambia si hace falta.
         const media = this.priorities.find((p) => (p.name || '').trim().toUpperCase() === 'MEDIA');
         if (media && !this.form.get('priorityId')?.value) {
@@ -327,7 +327,14 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
     this.ticketService.create(payload).subscribe({
       next: (t) => {
         this.uploadFilesAfterCreate(t.idTicket);
-        this.toastService.success('Ticket creado', `Ticket #${t.numberTicket ?? ""}`);
+        // Se avisa de la revisión: si MAPI o el personal ajustan la categoría o
+        // el tipo, que no parezca un cambio sin motivo.
+        this.toastService.success(
+          'Revisaremos que la categoría, la prioridad y el tipo sean correctos y los ajustaremos si hace falta.'
+            + (payload.priorityManual ? ' La prioridad que elegiste se respeta.' : ''),
+          `Ticket #${t.numberTicket ?? ''} creado`,
+          { duration: 9000 },
+        );
         this.router.navigate(['/tickets', t.idTicket]);
       },
       error: (err) => {

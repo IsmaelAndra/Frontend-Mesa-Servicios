@@ -118,7 +118,7 @@ export class AiConfigComponent implements OnInit {
     {
       value: "CLASSIFY",
       label: "Clasificar tickets (automatizaciones)",
-      ayuda: "Lo usa el nodo NEXA de los workflows para sugerir prioridad, categoría y equipo.",
+      ayuda: "Lo usa el nodo MAPI de los workflows para sugerir prioridad, categoría y equipo.",
     },
   ];
 
@@ -154,7 +154,7 @@ export class AiConfigComponent implements OnInit {
     "- Nunca prometas plazos ni resultados que no estén en el SLA del ticket.",
     "- Redacta respuestas de máximo 200 palabras, en Markdown.",
     "- Si te piden datos personales o credenciales, indica que se consulten en el módulo correspondiente.",
-    "- Al clasificar (nodo NEXA): responde SOLO un objeto JSON, sin texto alrededor.",
+    "- Al clasificar (nodo MAPI): responde SOLO un objeto JSON, sin texto alrededor.",
     "- En la clasificación usa SOLO los valores permitidos listados en el prompt (prioridad, categoría y equipo); si no puedes decidir, pon null en esa clave.",
     "- Devuelve una confianza de 0 a 1 y sea austero: confianza baja o ticket sin datos se marcan como no decidido.",
   ].join("\n");

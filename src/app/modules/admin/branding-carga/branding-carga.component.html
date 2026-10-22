@@ -446,6 +446,7 @@
               <button
                 *ngFor="let c of b.loadingColores"
                 type="button"
+                [attr.aria-label]="'Color de fondo ' + c"
                 class="w-6 h-6 rounded-lg border-2 transition hover:scale-105"
                 [class.border-primary]="b.config.loadingBackgroundColor === c"
                 [class.border-base-300]="
@@ -486,6 +487,7 @@
               <button
                 *ngFor="let c of b.loadingColoresTexto"
                 type="button"
+                [attr.aria-label]="'Color del texto ' + c"
                 class="w-6 h-6 rounded-lg border-2 transition hover:scale-105"
                 [class.border-primary]="b.config.loadingTextColor === c"
                 [class.border-base-300]="b.config.loadingTextColor !== c"

@@ -23,6 +23,7 @@
             type="button"
             class="btn btn-ghost btn-xs"
             title="Duplicar"
+            aria-label="Duplicar nodo"
             (click)="editor.duplicarNodo(nodo.id)"
           >
             <i class="fa-solid fa-copy text-xs" aria-hidden="true"></i>
@@ -31,6 +32,7 @@
             type="button"
             class="btn btn-ghost btn-xs text-error hover:bg-error/10"
             title="Eliminar"
+            aria-label="Eliminar nodo"
             (click)="editor.eliminarNodo(nodo.id)"
           >
             <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
@@ -322,11 +324,11 @@
           </p>
         </ng-container>
 
-        <!-- NEXA -->
+        <!-- MAPI -->
         <ng-container *ngSwitchCase="'NEXA'">
           <label class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium opacity-70">
-              Que hace NEXA
+              Que hace MAPI
             </span>
           </label>
           <app-master-select [ngModel]="configDe('accion') || null" (ngModelChange)="setConfig('accion', $event ?? '')" [ngModelOptions]="{ standalone: true }" [options]="accionesNexa" icon="fa-solid fa-robot"></app-master-select>
@@ -342,7 +344,7 @@
             (input)="setConfig('instrucciones', $any($event.target).value)"
           ></textarea>
           <p class="text-[10px] opacity-50 leading-relaxed">
-            NEXA no cambia nada por si sola: deja sus resultados en
+            MAPI no cambia nada por si sola: deja sus resultados en
             <code class="bg-base-200 px-1 rounded"
               >nodos.{{ nodo.id }}.*</code
             >
@@ -564,7 +566,7 @@
           ></app-master-select>
           <div class="flex justify-between items-center">
             <label class="text-xs font-medium opacity-70">
-              o variable (p. ej. la sugerencia de NEXA)
+              o variable (p. ej. la sugerencia de MAPI)
             </label>
             <ng-container
               *ngTemplateOutlet="

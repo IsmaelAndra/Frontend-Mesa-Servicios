@@ -13,5 +13,7 @@ export const TICKETS_ROUTES: Routes = [
   { path: 'mine', component: TicketListComponent, canActivate: [AuthGuard], data: { mine: true } },
   { path: 'assigned', component: TicketListComponent, canActivate: [AuthGuard], data: { assigned: true } },
   { path: 'kanban', component: TicketKanbanComponent, canActivate: [AuthGuard, RoleGuard], data: { roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT'] } },
-  { path: ':id', component: TicketDetailComponent, canActivate: [AuthGuard] },
+  // Al pasar de un ticket a otro el componente se crea de nuevo: lee el id una
+  // sola vez y, reutilizado, seguía mostrando el ticket anterior.
+  { path: ':id', component: TicketDetailComponent, canActivate: [AuthGuard], data: { recrearAlCambiarParametros: true } },
 ];

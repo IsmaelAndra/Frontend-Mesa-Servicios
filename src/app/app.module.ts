@@ -12,6 +12,8 @@ import { AuthService } from './core/services/auth.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { SharedModule } from './modules/shared/shared.module';
+import { RouteReuseStrategy } from '@angular/router';
+import { ReutilizacionRutasStrategy } from './core/routing/reutilizacion-rutas.strategy';
 
 @NgModule({
   declarations: [AppComponent],
@@ -26,6 +28,8 @@ import { SharedModule } from './modules/shared/shared.module';
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    // De un ticket a otro el detalle se crea de nuevo (ver la estrategia).
+    { provide: RouteReuseStrategy, useClass: ReutilizacionRutasStrategy },
     {
       provide: APP_INITIALIZER,
       useFactory: (authService: AuthService) => () => authService.restoreSession(),

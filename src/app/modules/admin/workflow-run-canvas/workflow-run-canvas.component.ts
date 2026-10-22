@@ -56,7 +56,7 @@ const ICONOS: Record<string, string> = {
  *
  * <p>Por cada paso: el punto viaja por el conector (≈380 ms), el nodo "trabaja"
  * (lo que tardó de verdad, acotado entre 0,45 y 1,1 s) y se resuelve en verde o
- * en rojo con su resultado. Si un paso sigue EJECUTANDO (NEXA pensando de verdad),
+ * en rojo con su resultado. Si un paso sigue EJECUTANDO (MAPI pensando de verdad),
  * el lienzo se queda en él hasta que llegue su final.
  *
  * <p>Con "reducir movimiento" no hay punto viajero ni halos: solo cambios de color.
@@ -303,7 +303,7 @@ export class WorkflowRunCanvasComponent implements OnChanges, AfterViewInit, OnD
 
   /**
    * El reproductor se quedó sin nada que hacer hasta que lleguen datos: no hay
-   * más pasos, o el paso actual sigue EJECUTANDO (NEXA pensando de verdad).
+   * más pasos, o el paso actual sigue EJECUTANDO (MAPI pensando de verdad).
    * Al principio vale true para arrancar con los primeros pasos.
    */
   private esperandoDatos = true;

@@ -520,9 +520,9 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
             this.router?.navigate(["/404"], { replaceUrl: true });
             return;
           }
+          // La ruta se crea de nuevo con el uuid y esa instancia lo carga.
           this.ticketId = t.idTicket;
           this.router?.navigate(["/tickets", t.idTicket], { replaceUrl: true });
-          this.load();
         },
         error: () => this.router?.navigate(["/404"], { replaceUrl: true }),
       });

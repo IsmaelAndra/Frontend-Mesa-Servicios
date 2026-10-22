@@ -37,7 +37,7 @@ export interface TicketRequest {
   sucursalId?: string;
   /** Solicitante cuando el personal abre el ticket a nombre de otra persona. */
   requesterId?: string;
-  /** La persona eligió la prioridad a mano: NEXA no la cambia después. */
+  /** La persona eligió la prioridad a mano: MAPI no la cambia después. */
   priorityManual?: boolean;
 }
 

@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Router } from '@angular/router';
 import { timeout } from 'rxjs';
 import { AiService, AiStatus } from '../../../../core/services/ai.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -49,8 +50,31 @@ export class AiFloatButtonComponent implements OnInit {
   constructor(
     private aiService: AiService,
     private authService: AuthService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private router?: Router
   ) {}
+
+  /** Ilustración de MAPI, la asistente (botón flotante y cabecera del chat). */
+  readonly iconoMapi = 'assets/mapi/mapi.svg';
+
+  /** Saludo con el que se abre el chat vacío (Markdown, como las respuestas). */
+  readonly saludo =
+    '¡Hola! Soy **MAPI**, tu asistente inteligente de tickets y tareas. 🦊✨ ¿En qué puedo ayudarte hoy?';
+
+  /**
+   * Atajos del saludo. Llevan a la pantalla en lugar de preguntarle a la IA: el
+   * estado real de los tickets está en la lista, y la IA no lo conoce.
+   */
+  atajo(destino: 'crear' | 'estado'): void {
+    if (destino === 'crear') {
+      this.router?.navigate(['/tickets/new']);
+    } else {
+      const rol = this.authService.getRole();
+      const personal = rol === 'AGENT' || rol === 'ADMIN' || rol === 'SUPER_ADMIN';
+      this.router?.navigate([personal ? '/tickets/kanban' : '/tickets/mine']);
+    }
+    this.open = false;
+  }
 
   get canUseAi(): boolean {
     const role = this.authService.getRole();

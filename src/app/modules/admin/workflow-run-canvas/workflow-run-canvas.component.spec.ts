@@ -32,7 +32,7 @@ describe('WorkflowRunCanvasComponent', () => {
     expect(lineas[0].color).toBe('#16a34a');
   });
 
-  it('cada conector hereda el color de su propio origen (INICIO verde, NEXA morado)', () => {
+  it('cada conector hereda el color de su propio origen (INICIO verde, MAPI morado)', () => {
     const c = comp();
     c.grafoS.set(grafo(
       [['inicio', 'INICIO', 0, 0], ['nexa', 'NEXA', 0, 200], ['correo', 'EMAIL', 0, 400]],
