@@ -22,6 +22,7 @@ import {
   WorkflowGraph,
   WorkflowNodeRun,
   WorkflowSummary,
+  leerGrafo,
 } from "../../../models/workflow.model";
 
 /** Una ejecución abierta con su recorrido. */
@@ -218,7 +219,7 @@ export class WorkflowExecutionsComponent implements OnInit, OnDestroy {
     const usar = (d: WorkflowDetail) => {
       const v = d.versions.find((x) => x.id === e.versionId);
       try {
-        listo(v ? (JSON.parse(v.definition) as WorkflowGraph) : null);
+        listo(v ? leerGrafo(v.definition) : null);
       } catch {
         listo(null);
       }

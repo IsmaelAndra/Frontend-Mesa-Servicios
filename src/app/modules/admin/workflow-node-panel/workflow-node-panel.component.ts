@@ -78,7 +78,7 @@ export class WorkflowNodePanelComponent {
     })),
   );
 
-  readonly accionesNexa: MasterOption[] = [
+  readonly accionesMapi: MasterOption[] = [
     { value: "CLASIFICAR", label: "Clasificar (prioridad, categoría, equipo)", icon: "fa-solid fa-tags", color: "#7C3AED" },
     { value: "RESUMIR", label: "Resumir el ticket", icon: "fa-solid fa-align-left", color: "#0E7490" },
     { value: "RESPONDER", label: "Proponer respuesta", icon: "fa-solid fa-reply", color: "#0D9488" },
@@ -242,7 +242,7 @@ export class WorkflowNodePanelComponent {
       "TICKET_CLOSE",
       "TICKET_REOPEN",
       "SLA_APPLY",
-      "NEXA",
+      "MAPI",
     ];
     const entidad = this.editor.disparadorActual()?.entidad;
     return conTicket.includes(nodo.type) && !!entidad && entidad !== "TICKET";

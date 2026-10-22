@@ -32,13 +32,13 @@ interface Linea {
 
 const COLORES: Record<string, string> = {
   INICIO: '#16a34a', FIN: '#16a34a', IF: '#d97706', SWITCH: '#d97706', WAIT: '#7c3aed', APPROVAL: '#7c3aed',
-  NEXA: '#9333ea', NOTIFY: '#0891b2', EMAIL: '#0891b2', SLA_APPLY: '#ea580c', TASK_CREATE: '#ea580c', AUDIT: '#64748b',
+  MAPI: '#9333ea', NOTIFY: '#0891b2', EMAIL: '#0891b2', SLA_APPLY: '#ea580c', TASK_CREATE: '#ea580c', AUDIT: '#64748b',
 };
 
 const ICONOS: Record<string, string> = {
   INICIO: 'fa-solid fa-play', FIN: 'fa-solid fa-flag-checkered', IF: 'fa-solid fa-code-branch',
   SWITCH: 'fa-solid fa-shuffle', WAIT: 'fa-solid fa-hourglass-half', APPROVAL: 'fa-solid fa-user-check',
-  NEXA: 'fa-solid fa-robot', NOTIFY: 'fa-solid fa-bell', EMAIL: 'fa-solid fa-envelope',
+  MAPI: 'fa-solid fa-robot', NOTIFY: 'fa-solid fa-bell', EMAIL: 'fa-solid fa-envelope',
   TICKET_CREATE: 'fa-solid fa-ticket', TICKET_ASSIGN: 'fa-solid fa-user-tag', TICKET_ASSIGN_TEAM: 'fa-solid fa-users',
   TICKET_STATUS: 'fa-solid fa-arrows-rotate', TICKET_PRIORITY: 'fa-solid fa-arrow-up-wide-short',
   TICKET_CATEGORY: 'fa-solid fa-tags', TICKET_TYPE: 'fa-solid fa-shapes', TICKET_COMMENT: 'fa-solid fa-comment', TICKET_CLOSE: 'fa-solid fa-lock',
@@ -505,7 +505,7 @@ export class WorkflowRunCanvasComponent implements OnChanges, AfterViewInit, OnD
     const s = nodos[p.nodeId] ?? {};
     const texto = (v: unknown) => (v === null || v === undefined || v === '' ? null : String(v));
     switch (p.nodeType) {
-      case 'NEXA': {
+      case 'MAPI': {
         const base = texto(s['prioridad']) ?? texto(s['categoria']) ?? (s['texto'] ? 'Texto listo' : null);
         const c = Number(s['confianza']);
         const pct = Number.isFinite(c) && s['confianza'] !== undefined ? ` · ${Math.round(c > 1 ? c : c * 100)}%` : '';

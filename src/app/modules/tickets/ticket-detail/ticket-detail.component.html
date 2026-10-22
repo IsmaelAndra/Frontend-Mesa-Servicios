@@ -1840,6 +1840,8 @@
 <app-ai-float-button
   [context]="aiContext"
   [session]="'detalle-' + (ticket?.idTicket || '')"
+  [usarRespuestaHabilitado]="esPersonal"
+  (usarRespuesta)="usarRespuestaIa($event)"
 ></app-ai-float-button>
 
 <!-- ============================ Modal: calificar con estrellas ============================ -->

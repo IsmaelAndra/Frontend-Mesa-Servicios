@@ -986,6 +986,19 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  /** "Usar esta respuesta" de MAPI: la lleva al cuadro de respuesta para revisarla y enviarla. */
+  usarRespuestaIa(texto: string): void {
+    const quill = this.quill;
+    if (!quill || !texto) return;
+    const rango = quill.getSelection(true);
+    quill.clipboard.dangerouslyPasteHTML(rango ? rango.index : quill.getLength(), textoAHtml(texto), "user");
+    setTimeout(() => {
+      quill.focus();
+      quill.setSelection(quill.getLength(), 0);
+    });
+    this.toastService.info("Revise la respuesta antes de enviarla.", "Respuesta de MAPI insertada");
+  }
+
   insertarRapida(r: QuickReply): void {
     const quill = this.quill;
     if (!quill) return;

@@ -325,13 +325,13 @@
         </ng-container>
 
         <!-- MAPI -->
-        <ng-container *ngSwitchCase="'NEXA'">
+        <ng-container *ngSwitchCase="'MAPI'">
           <label class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium opacity-70">
               Que hace MAPI
             </span>
           </label>
-          <app-master-select [ngModel]="configDe('accion') || null" (ngModelChange)="setConfig('accion', $event ?? '')" [ngModelOptions]="{ standalone: true }" [options]="accionesNexa" icon="fa-solid fa-robot"></app-master-select>
+          <app-master-select [ngModel]="configDe('accion') || null" (ngModelChange)="setConfig('accion', $event ?? '')" [ngModelOptions]="{ standalone: true }" [options]="accionesMapi" icon="fa-solid fa-robot"></app-master-select>
           <label class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium opacity-70">
               Criterios o instrucciones

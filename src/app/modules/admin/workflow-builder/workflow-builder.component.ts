@@ -40,6 +40,7 @@ import {
   WorkflowGraph,
   WorkflowNode,
   WorkflowNodeType,
+  leerGrafo,
 } from "../../../models/workflow.model";
 import Swal from "sweetalert2";
 
@@ -212,7 +213,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
       ports: ["APROBADO", "RECHAZADO", "VENCIDO"],
     },
     {
-      type: "NEXA",
+      type: "MAPI",
       label: "MAPI",
       description: "La IA clasifica, resume o propone respuesta.",
       color: "#9333ea",
@@ -372,7 +373,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
     SWITCH: "fa-solid fa-shuffle",
     WAIT: "fa-solid fa-hourglass-half",
     APPROVAL: "fa-solid fa-user-check",
-    NEXA: "fa-solid fa-robot",
+    MAPI: "fa-solid fa-robot",
     NOTIFY: "fa-solid fa-bell",
     EMAIL: "fa-solid fa-envelope",
     TICKET_CREATE: "fa-solid fa-ticket",
@@ -557,7 +558,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
       return;
     }
     try {
-      const parsed = JSON.parse(version.definition) as WorkflowGraph;
+      const parsed = leerGrafo(version.definition);
       this.grafo.set({
         name: parsed.name || detalle.name,
         nodes: (parsed.nodes ?? []).map((n) => ({
@@ -663,7 +664,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
         return { titulo: "", descripcion: "" };
       case "TASK_CREATE":
         return { titulo: "", estado: "PENDIENTE" };
-      case "NEXA":
+      case "MAPI":
         return { accion: "CLASIFICAR", instrucciones: "" };
       case "AUDIT":
         return { accion: "WORKFLOW_PASO", detalle: "" };
@@ -1009,7 +1010,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
             : "Sin plazo";
       case "APPROVAL":
         return `Aprueba Super admin${c["horas_limite"] ? ` · ${c["horas_limite"]} h` : ""}`;
-      case "NEXA":
+      case "MAPI":
         return String(c["accion"] ?? "CLASIFICAR");
       case "NOTIFY":
         return `A ${c["destino"] ?? c["rol"] ?? c["correo"] ?? c["usuarioId"] ?? "?"}`;
@@ -1247,7 +1248,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
     let grafo = this.grafo();
     if (publicada && this.cambiosSinPublicar()) {
       try {
-        grafo = JSON.parse(publicada.definition) as WorkflowGraph;
+        grafo = leerGrafo(publicada.definition);
       } catch {
         // Definición ilegible: se anima sobre el grafo del editor.
       }
@@ -1337,13 +1338,13 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
         this.workflow()?.name ?? "Escalamiento automático de tickets críticos",
       nodes: [
         n("inicio", "INICIO", "Ticket creado", 300, 40),
-        n("nexa", "NEXA", "MAPI analiza", 300, 170, {
+        n("mapi", "MAPI", "MAPI analiza", 300, 170, {
           accion: "CLASIFICAR",
           instrucciones:
             "Es CRITICA si afecta a varias agencias, al core financiero o a la atención al socio.",
         }),
         n("critico", "IF", "¿Prioridad crítica?", 300, 300, {
-          campo: "nodos.nexa.prioridad",
+          campo: "nodos.mapi.prioridad",
           operador: "==",
           valor: "CRITICA",
         }),
@@ -1351,7 +1352,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
           rol: "ADMIN",
           titulo: "Ticket crítico #{{ticket.numero}}",
           mensaje:
-            'MAPI clasificó como CRÍTICO el ticket #{{ticket.numero}} "{{ticket.titulo}}": {{nodos.nexa.resumen}}',
+            'MAPI clasificó como CRÍTICO el ticket #{{ticket.numero}} "{{ticket.titulo}}": {{nodos.mapi.resumen}}',
         }),
         n("prioridad", "TICKET_PRIORITY", "Subir a crítica", 120, 570, {
           prioridadId: critica,
@@ -1370,14 +1371,14 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
         n("auditoria", "AUDIT", "Registrar auditoría", 120, 960, {
           accion: "WORKFLOW_ESCALAMIENTO_CRITICO",
           detalle:
-            "Ticket #{{ticket.numero}} escalado al equipo {{ticket.equipo}} por MAPI (confianza {{nodos.nexa.confianza}})",
+            "Ticket #{{ticket.numero}} escalado al equipo {{ticket.equipo}} por MAPI (confianza {{nodos.mapi.confianza}})",
         }),
         n("fin_si", "FIN", "Fin", 120, 1090),
         n("fin_no", "FIN", "Fin (no crítico)", 480, 440),
       ],
       edges: [
-        { from: "inicio", to: "nexa", sourcePort: "NEXT" },
-        { from: "nexa", to: "critico", sourcePort: "NEXT" },
+        { from: "inicio", to: "mapi", sourcePort: "NEXT" },
+        { from: "mapi", to: "critico", sourcePort: "NEXT" },
         { from: "critico", to: "aviso", sourcePort: "SI", label: "SI" },
         { from: "critico", to: "fin_no", sourcePort: "NO", label: "NO" },
         { from: "aviso", to: "prioridad", sourcePort: "NEXT" },

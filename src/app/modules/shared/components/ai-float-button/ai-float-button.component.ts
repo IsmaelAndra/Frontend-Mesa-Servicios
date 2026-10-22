@@ -8,6 +8,8 @@ import { ToastService } from '../../../../core/services/toast.service';
 export interface ChatMessage {
   from: 'user' | 'ai';
   content: string;
+  /** Borrador de ticket que propuso MAPI (todavía no existe ningún ticket). */
+  borrador?: AiTicketFill;
 }
 
 /** Campos prellenables de un ticket nuevo devueltos por la IA. */
@@ -38,6 +40,10 @@ export class AiFloatButtonComponent implements OnInit {
   @Input() session = 'global';
   /** Se emite cuando la IA devuelve datos para prellenar un ticket nuevo. */
   @Output() fill = new EventEmitter<AiTicketFill>();
+  /** Muestra "Usar esta respuesta" en las respuestas de MAPI (detalle del ticket, personal). */
+  @Input() usarRespuestaHabilitado = false;
+  /** Texto (plano) que el agente quiere llevar al cuadro de respuesta del ticket. */
+  @Output() usarRespuesta = new EventEmitter<string>();
 
   private readonly providerGlyphs: Record<string, string> = {
     GEMINI: '\u2728',
@@ -65,6 +71,21 @@ export class AiFloatButtonComponent implements OnInit {
    * Atajos del saludo. Llevan a la pantalla en lugar de preguntarle a la IA: el
    * estado real de los tickets está en la lista, y la IA no lo conoce.
    */
+  /** Abre el formulario de nuevo ticket con el borrador de MAPI ya cargado. */
+  crearConBorrador(borrador: AiTicketFill): void {
+    this.router?.navigate(['/tickets/new'], { state: { borradorMapi: borrador } });
+    this.open = false;
+  }
+
+  /**
+   * Lleva la respuesta de MAPI al cuadro de respuesta del ticket. Si la
+   * respuesta trae la sección "Respuesta al solicitante", se usa solo esa (el
+   * resto son indicaciones para el agente). El Markdown pasa a texto plano.
+   */
+  usar(contenido: string): void {
+    this.usarRespuesta.emit(textoParaSolicitante(contenido));
+  }
+
   atajo(destino: 'crear' | 'estado'): void {
     if (destino === 'crear') {
       this.router?.navigate(['/tickets/new']);
@@ -162,11 +183,21 @@ export class AiFloatButtonComponent implements OnInit {
       .subscribe({
         next: (r) => {
           const { cleaned, fill } = this.extractFill(r.content);
-          const note = fill
-            ? '\n\n_(El ticket fue prellenado en el formulario. Revisa la información y presiona **Enviar** para crearlo.)_'
-            : '';
-          this.messages.push({ from: 'ai', content: cleaned + note });
-          if (fill) {
+          // Solo el formulario de nuevo ticket escucha el borrador. En otra
+          // pantalla se ofrece abrirlo con él: antes se decía "prellenado" (o la
+          // IA decía "Ticket creado") sin que existiera ningún ticket.
+          const hayFormulario = this.fill.observed;
+          const note = !fill
+            ? ''
+            : hayFormulario
+              ? '\n\n_(Borrador cargado en el formulario. Revíselo y pulse **Crear ticket** para registrarlo.)_'
+              : '\n\n_(Es un borrador: todavía no se ha creado ningún ticket.)_';
+          this.messages.push({
+            from: 'ai',
+            content: cleaned + note,
+            borrador: fill && !hayFormulario ? fill : undefined,
+          });
+          if (fill && hayFormulario) {
             this.fill.emit(fill);
           }
           this.loading = false;
@@ -296,4 +327,32 @@ export class AiFloatButtonComponent implements OnInit {
     flushList();
     return out.join('');
   }
+}
+
+/**
+ * La parte de una respuesta de MAPI que va al solicitante, en texto plano: la
+ * sección "Respuesta al solicitante" si la hay (hasta el siguiente encabezado),
+ * o todo el texto si no. Se quitan las marcas de Markdown.
+ */
+export function textoParaSolicitante(contenido: string): string {
+  const texto = (contenido || '').replace(/\n*_\([^)]*\)_\s*$/, '');
+  const lineas = texto.split('\n');
+  const inicio = lineas.findIndex((l) => /^\s*#{1,6}\s*.*respuesta al solicitante/i.test(l)
+    || /^\s*\*\*\s*respuesta al solicitante/i.test(l));
+  let seccion = lineas;
+  if (inicio >= 0) {
+    const resto = lineas.slice(inicio + 1);
+    const fin = resto.findIndex((l) => /^\s*#{1,6}\s/.test(l));
+    seccion = fin >= 0 ? resto.slice(0, fin) : resto;
+  }
+  return seccion
+    .map((l) => l
+      .replace(/^\s*#{1,6}\s*/, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1$2')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/^\s*[-*]\s+/, '• '))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }

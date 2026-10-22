@@ -159,7 +159,7 @@
             <div
               class="run-nodo"
               [ngClass]="'run-nodo--' + estadoDe(n.id).toLowerCase()"
-              [class.run-nodo--nexa]="n.type === 'NEXA'"
+              [class.run-nodo--mapi]="n.type === 'MAPI'"
               [style.height.px]="ALTO"
             >
               <span
@@ -172,11 +172,11 @@
               <div class="min-w-0 flex-1">
                 <p class="text-[13px] font-semibold leading-tight truncate text-base-content">{{ n.name }}</p>
                 <p
-                  *ngIf="!(estadoDe(n.id) === 'EJECUTANDO' && n.type === 'NEXA')"
+                  *ngIf="!(estadoDe(n.id) === 'EJECUTANDO' && n.type === 'MAPI')"
                   class="text-[10px] uppercase tracking-wide text-base-content/50 truncate mt-0.5"
                 >{{ n.type }}</p>
                 <p
-                  *ngIf="estadoDe(n.id) === 'EJECUTANDO' && n.type === 'NEXA'"
+                  *ngIf="estadoDe(n.id) === 'EJECUTANDO' && n.type === 'MAPI'"
                   class="run-pensando text-[11px] font-semibold mt-0.5"
                 >MAPI está pensando…</p>
               </div>

@@ -23,8 +23,8 @@ describe('WorkflowRunCanvasComponent', () => {
   it('pinta el conector con el color del nodo de origen en cadenas simples', () => {
     const c = comp();
     c.grafoS.set(grafo(
-      [['inicio', 'INICIO', 0, 0], ['nexa', 'NEXA', 0, 200]],
-      [['inicio', 'nexa']],
+      [['inicio', 'INICIO', 0, 0], ['mapi', 'MAPI', 0, 200]],
+      [['inicio', 'mapi']],
     ));
 
     const lineas = c.lineas();
@@ -35,8 +35,8 @@ describe('WorkflowRunCanvasComponent', () => {
   it('cada conector hereda el color de su propio origen (INICIO verde, MAPI morado)', () => {
     const c = comp();
     c.grafoS.set(grafo(
-      [['inicio', 'INICIO', 0, 0], ['nexa', 'NEXA', 0, 200], ['correo', 'EMAIL', 0, 400]],
-      [['inicio', 'nexa'], ['nexa', 'correo']],
+      [['inicio', 'INICIO', 0, 0], ['mapi', 'MAPI', 0, 200], ['correo', 'EMAIL', 0, 400]],
+      [['inicio', 'mapi'], ['mapi', 'correo']],
     ));
 
     const lineas = c.lineas();
@@ -46,8 +46,8 @@ describe('WorkflowRunCanvasComponent', () => {
   it('genera un marcador de punta por cada color distinto', () => {
     const c = comp();
     c.grafoS.set(grafo(
-      [['inicio', 'INICIO', 0, 0], ['nexa', 'NEXA', 0, 200], ['correo', 'EMAIL', 0, 400]],
-      [['inicio', 'nexa'], ['nexa', 'correo']],
+      [['inicio', 'INICIO', 0, 0], ['mapi', 'MAPI', 0, 200], ['correo', 'EMAIL', 0, 400]],
+      [['inicio', 'mapi'], ['mapi', 'correo']],
     ));
 
     const marcas = c.marcasLineas();

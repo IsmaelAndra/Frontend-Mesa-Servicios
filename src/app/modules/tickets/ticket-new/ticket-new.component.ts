@@ -160,6 +160,13 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
         if (media && !this.form.get('priorityId')?.value) {
           this.form.patchValue({ priorityId: media.id });
         }
+        // Borrador de MAPI preparado en otra pantalla ("Crear ticket con este
+        // borrador"): se aplica cuando ya están los catálogos para casar valores.
+        const borrador = (typeof history !== 'undefined' ? history.state?.borradorMapi : null) as AiTicketFill | null;
+        if (borrador) {
+          this.fillFromAi(borrador);
+          this.toastService.info('Revise el borrador de MAPI y pulse Crear ticket para registrarlo.', 'Borrador cargado');
+        }
       },
       error: () => this.toastService.warn('No se pudieron cargar los catálogos')
     });

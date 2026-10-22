@@ -42,6 +42,14 @@
         <div *ngIf="m.from === 'ai'"
           class="chat-bubble chat-message chat-message-ai bg-base-200 text-base-content border border-base-300/70 text-sm">
           <div class="ai-markdown" [innerHTML]="formatAi(m.content)"></div>
+          <div *ngIf="m.borrador || usarRespuestaHabilitado" class="flex flex-wrap gap-2 mt-2.5">
+            <button *ngIf="m.borrador" type="button" class="mapi-atajo" (click)="crearConBorrador(m.borrador)">
+              <i class="fa-solid fa-file-circle-plus" aria-hidden="true"></i> Crear ticket con este borrador
+            </button>
+            <button *ngIf="usarRespuestaHabilitado" type="button" class="mapi-atajo" (click)="usar(m.content)">
+              <i class="fa-solid fa-reply" aria-hidden="true"></i> Usar esta respuesta
+            </button>
+          </div>
         </div>
       </div>
       <div *ngIf="loading" class="flex items-center gap-2 text-xs opacity-60 pl-2">

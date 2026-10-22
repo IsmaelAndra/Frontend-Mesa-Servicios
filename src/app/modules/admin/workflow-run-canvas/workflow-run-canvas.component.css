@@ -2,7 +2,7 @@
 
 /* El color de trazo, la punta y la traza vienen del nodo de origen (bindings en
    el template): un conector nace con el color de su proceso (INICIO verde,
-   NEXA morado…) y la punta necesita un marcador por color, porque los marcadores
+   MAPI morado…) y la punta necesita un marcador por color, porque los marcadores
    SVG no heredan el color del trazo al que se enganchan. */
 .run-arista {
   fill: none;
@@ -101,12 +101,12 @@
   to { opacity: 0; transform: scale(1.08); }
 }
 
-/* NEXA pensando: un brillo recorre la caja mientras espera a la IA. */
-.run-nodo--nexa.run-nodo--ejecutando {
+/* MAPI pensando: un brillo recorre la caja mientras espera a la IA. */
+.run-nodo--mapi.run-nodo--ejecutando {
   border-color: #9333ea;
   overflow: hidden;
 }
-.run-nodo--nexa.run-nodo--ejecutando::before {
+.run-nodo--mapi.run-nodo--ejecutando::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -188,7 +188,7 @@
     transition: none;
   }
   .run-nodo--ejecutando::after,
-  .run-nodo--nexa.run-nodo--ejecutando::before,
+  .run-nodo--mapi.run-nodo--ejecutando::before,
   .run-reloj i,
   .run-directo {
     animation: none;

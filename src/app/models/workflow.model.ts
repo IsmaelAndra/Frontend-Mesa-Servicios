@@ -57,7 +57,7 @@ export type WorkflowNodeType =
   | 'TICKET_CREATE'
   | 'TASK_CREATE'
   | 'SLA_APPLY'
-  | 'NEXA'
+  | 'MAPI'
   | 'AUDIT';
 
 /** Lo que el constructor ofrece en la paleta. */
@@ -259,4 +259,17 @@ export interface PasoAnimable {
 export interface FinAnimable {
   estado: string;
   motivo: string | null;
+}
+
+/**
+ * Lee la definición guardada de una versión. Las versiones publicadas antes de
+ * que la asistente pasara a llamarse MAPI guardan su nodo como "NEXA"; se lee
+ * como "MAPI" para pintarlo con su icono y color (el backend hace lo mismo).
+ */
+export function leerGrafo(definicion: string): WorkflowGraph {
+  const g = JSON.parse(definicion) as WorkflowGraph;
+  for (const n of g?.nodes ?? []) {
+    if ((n.type as string) === 'NEXA') n.type = 'MAPI';
+  }
+  return g;
 }
