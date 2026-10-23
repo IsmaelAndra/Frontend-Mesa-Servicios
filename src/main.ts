@@ -1,5 +1,15 @@
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';
+import { environment } from './environments/environment';
+
+// En producción el manifiesto lo genera el servidor, con el icono de la
+// temporada vigente: así la app instalada cambia de icono (el navegador
+// pregunta antes si se quiere actualizar). En desarrollo la API vive en otro
+// puerto y se queda el manifiesto fijo de assets/.
+if (environment.production) {
+  const manifiesto = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+  if (manifiesto) manifiesto.href = '/api/pages/public/manifest.webmanifest';
+}
 
 platformBrowserDynamic()
   .bootstrapModule(AppModule)
