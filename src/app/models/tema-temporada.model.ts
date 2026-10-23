@@ -10,6 +10,8 @@ export interface TemaActual {
   logoUrl: string | null;
   /** Imagen de fondo del encabezado del inicio; null = el degradado de siempre. */
   dashboardUrl: string | null;
+  /** Icono de la pestaña y de la ventana de la app; null = el normal. */
+  iconUrl?: string | null;
 }
 
 /** Un tema en la pantalla de administración. */
@@ -26,6 +28,7 @@ export interface TemaTemporada {
   backgroundUrl: string | null;
   logoUrl: string | null;
   dashboardUrl: string | null;
+  iconUrl?: string | null;
   /** Si hoy cae entre sus fechas. */
   vigenteHoy: boolean;
   /** CARNAVAL si las fechas se calculan solas cada año (entonces no se editan). */

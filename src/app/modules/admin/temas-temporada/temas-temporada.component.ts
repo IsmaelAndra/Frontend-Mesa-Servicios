@@ -199,7 +199,9 @@ export class TemasTemporadaComponent implements OnInit {
       next: () => {
         this.guardando = false;
         this.toast.success(
-          tipo === 'fondo' ? 'Fondo del login guardado' : tipo === 'inicio' ? 'Imagen del inicio guardada' : 'Logo guardado',
+          tipo === 'fondo' ? 'Fondo del login guardado'
+            : tipo === 'inicio' ? 'Imagen del inicio guardada'
+              : tipo === 'icono' ? 'Icono guardado' : 'Logo guardado',
         );
         this.recargarSinSpinner();
       },

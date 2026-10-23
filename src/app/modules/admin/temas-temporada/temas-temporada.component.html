@@ -109,7 +109,7 @@
             </div>
 
             <!-- Imágenes propias del tema -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-base-200 pt-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4 border-t border-base-200 pt-4">
               <div>
                 <p class="text-xs font-medium mb-1.5">Fondo del login y del MFA <span class="opacity-60 font-normal">(opcional)</span></p>
                 <div *ngIf="t.backgroundUrl" class="relative rounded-xl overflow-hidden border border-base-200 mb-2">
@@ -148,6 +148,19 @@
                 <app-dropzone [compacta]="true" accept="image/png,image/jpeg,image/webp,image/gif" [disabled]="guardando"
                               hint="Fondo del encabezado del inicio, con velo azul"
                               (archivos)="subirImagen(t.id, 'inicio', $event)"></app-dropzone>
+              </div>
+              <div>
+                <p class="text-xs font-medium mb-1.5">Icono <span class="opacity-60 font-normal">(opcional)</span></p>
+                <div *ngIf="t.iconUrl" class="relative rounded-xl border border-base-200 mb-2 bg-base-200/50 p-3 flex justify-center">
+                  <img [src]="t.iconUrl" alt="Icono del tema" class="w-14 h-14 object-contain rounded-xl" />
+                  <button type="button" class="btn btn-xs btn-circle absolute top-1.5 right-1.5" [disabled]="guardando"
+                          (click)="quitarImagen(t.id, 'icono')" title="Quitar (vuelve el icono normal)" aria-label="Quitar el icono">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <app-dropzone [compacta]="true" accept="image/png,image/jpeg,image/webp,image/gif" [disabled]="guardando"
+                              hint="Cuadrado (512×512) · pestaña y ventana de la app"
+                              (archivos)="subirImagen(t.id, 'icono', $event)"></app-dropzone>
               </div>
             </div>
 

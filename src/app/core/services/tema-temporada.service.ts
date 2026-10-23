@@ -17,8 +17,11 @@ import { NotificationSoundService } from './notification-sound.service';
  * marca no cambian. Cada persona puede ocultar las decoraciones (se recuerda en
  * su navegador).
  */
-/** fondo = login y MFA; logo = login y barra superior; inicio = encabezado del dashboard. */
-export type TipoImagenTema = 'fondo' | 'logo' | 'inicio';
+/**
+ * fondo = login y MFA; logo = login y barra superior; inicio = encabezado del
+ * dashboard; icono = pestaña del navegador y ventana de la app instalada.
+ */
+export type TipoImagenTema = 'fondo' | 'logo' | 'inicio' | 'icono';
 
 @Injectable({ providedIn: 'root' })
 export class TemaTemporadaService {
@@ -86,6 +89,33 @@ export class TemaTemporadaService {
     // Los sonidos de la temporada suenan mientras se ven sus adornos; quien
     // los oculta vuelve a los sonidos de siempre.
     this.sonido.setTemporada(visible ? tema!.code : null);
+    this.aplicarIcono(visible ? tema!.iconUrl ?? null : null);
+  }
+
+  /**
+   * Icono de la pestaña (y de la ventana de la app instalada en la laptop). Se
+   * cambia desde aquí, en vivo, con la URL que da el servidor: así no depende
+   * de lo que cada navegador tenga guardado en caché. El icono de la pantalla
+   * de inicio del celular no se puede cambiar desde la página (lo fija el
+   * sistema al instalar), por eso ese queda fijo.
+   */
+  private aplicarIcono(url: string | null): void {
+    const head = this.document.head;
+    let link = head.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (!link) {
+      link = this.document.createElement('link');
+      link.rel = 'icon';
+      head.appendChild(link);
+    }
+    if (!link.dataset['normal']) {
+      // Se recuerda el icono normal para volver a él al acabar la temporada.
+      link.dataset['normal'] = link.getAttribute('href') || 'favicon.ico';
+    }
+    link.setAttribute('href', url || link.dataset['normal']);
+    if (url) {
+      link.removeAttribute('sizes');
+      link.type = '';
+    }
   }
 
   // ============================ administración (SUPER_ADMIN) ============================
