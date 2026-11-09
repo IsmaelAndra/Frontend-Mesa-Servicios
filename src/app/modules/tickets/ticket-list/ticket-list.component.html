@@ -110,7 +110,7 @@
                 <div class="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0" aria-hidden="true">
                   <i class="fa-solid fa-comment text-sm" aria-hidden="true"></i>
                 </div>
-                <span class="font-medium truncate" [title]="t.titleTicket">{{ t.titleTicket }}</span>
+                <span class="font-medium truncate" [title]="t.titleTicket | tituloPlano" [innerHTML]="t.titleTicket | tituloEnfasis"></span>
               </div>
             </td>
 

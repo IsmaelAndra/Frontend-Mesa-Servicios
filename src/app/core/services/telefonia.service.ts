@@ -41,6 +41,10 @@ export class TelefoniaService {
     return this.http.post<Llamada>(`${this.url}/tickets/${ticketId}/llamar`, {});
   }
 
+  llamarAlAgente(ticketId: string): Observable<Llamada> {
+    return this.http.post<Llamada>(`${this.url}/tickets/${ticketId}/llamar-agente`, {});
+  }
+
   estado(id: string): Observable<Llamada> {
     return this.http.get<Llamada>(`${this.url}/llamadas/${id}`);
   }

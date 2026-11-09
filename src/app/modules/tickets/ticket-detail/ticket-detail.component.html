@@ -19,8 +19,7 @@
             >#{{ ticket.numberTicket }}</span
           >
         </h1>
-        <p class="text-sm opacity-70 truncate" [title]="ticket.titleTicket">
-          {{ ticket.titleTicket }}
+        <p class="text-sm opacity-70 truncate" [title]="ticket.titleTicket | tituloPlano" [innerHTML]="ticket.titleTicket | tituloEnfasis">
         </p>
       </div>
     </div>
@@ -98,6 +97,20 @@
           </li>
         </ul>
       </div>
+
+      <!-- Llamar a quien tiene el ticket: para avisarle al asignarlo o escalarlo. -->
+      <button
+        *ngIf="puedeLlamarAlAgente()"
+        type="button"
+        class="btn btn-sm btn-square btn-primary shrink-0"
+        [disabled]="llamando"
+        [title]="'Llamar a ' + agentLabel(assignedAgent()) + ' (ext. ' + assignedAgent()?.extension + ')'"
+        [attr.aria-label]="'Llamar a ' + agentLabel(assignedAgent()) + ', extensión ' + assignedAgent()?.extension"
+        (click)="llamarAlAgente()"
+      >
+        <span *ngIf="llamando" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+        <i *ngIf="!llamando" class="fa-solid fa-phone-volume" aria-hidden="true"></i>
+      </button>
 
       <!-- Asignar a -->
       <div class="relative" *ngIf="canManage">
@@ -583,7 +596,7 @@
                     <span class="font-mono text-[11px] opacity-60">#{{ t.numberTicket }}</span>
                     <span *ngIf="t.idTicket === ticket.idTicket" class="badge badge-xs badge-primary text-white">Este ticket</span>
                   </span>
-                  <span class="block text-sm font-medium truncate" [title]="t.titleTicket">{{ t.titleTicket }}</span>
+                  <span class="block text-sm font-medium truncate" [title]="t.titleTicket | tituloPlano" [innerHTML]="t.titleTicket | tituloEnfasis"></span>
                   <span class="flex items-center gap-2 text-[11px] opacity-70 mt-0.5">
                     <span [style.color]="statusMeta(t.status).color || null" class="font-semibold">{{ t.status }}</span>
                     <span *ngIf="t.priority" aria-hidden="true">·</span>

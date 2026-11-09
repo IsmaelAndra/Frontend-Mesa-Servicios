@@ -305,10 +305,9 @@
           <!-- Título -->
           <p
             class="text-sm font-medium leading-snug line-clamp-2 mb-2.5"
-            [title]="t.titleTicket"
-          >
-            {{ t.titleTicket }}
-          </p>
+            [title]="t.titleTicket | tituloPlano"
+            [innerHTML]="t.titleTicket | tituloEnfasis"
+          ></p>
 
           <!-- Fila inferior reorganizada: 2 líneas -->
           <div class="pt-2 mt-2 border-t border-base-200 space-y-2">

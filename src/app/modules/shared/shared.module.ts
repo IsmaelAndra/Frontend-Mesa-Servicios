@@ -16,11 +16,12 @@ import { DropzoneComponent } from './components/dropzone/dropzone.component';
 import { PrimeNGModule } from './primeng.module';
 
 import { SkeletonComponent } from './components/skeleton/skeleton.component';
+import { TituloEnfasisPipe, TituloPlanoPipe } from './pipes/titulo-seguro.pipe';
 
 @NgModule({
-  declarations: [NavbarComponent, SidebarComponent, StatusBadgeComponent, MasterSelectComponent, BreadcrumbComponent, ToastContainerComponent, AiFloatButtonComponent, PaginatorComponent, PresenceDotComponent, GlobalSearchComponent, DropzoneComponent, EstadoActivoComponent],
+  declarations: [NavbarComponent, SidebarComponent, StatusBadgeComponent, MasterSelectComponent, BreadcrumbComponent, ToastContainerComponent, AiFloatButtonComponent, PaginatorComponent, PresenceDotComponent, GlobalSearchComponent, DropzoneComponent, EstadoActivoComponent, TituloEnfasisPipe, TituloPlanoPipe],
   imports: [CommonModule, RouterModule, PrimeNGModule, SkeletonComponent],
-  exports: [NavbarComponent, SidebarComponent, StatusBadgeComponent, MasterSelectComponent, BreadcrumbComponent, ToastContainerComponent, AiFloatButtonComponent, PaginatorComponent, PresenceDotComponent, GlobalSearchComponent, DropzoneComponent, EstadoActivoComponent, SkeletonComponent, CommonModule, RouterModule, PrimeNGModule]
+  exports: [NavbarComponent, SidebarComponent, StatusBadgeComponent, MasterSelectComponent, BreadcrumbComponent, ToastContainerComponent, AiFloatButtonComponent, PaginatorComponent, PresenceDotComponent, GlobalSearchComponent, DropzoneComponent, EstadoActivoComponent, TituloEnfasisPipe, TituloPlanoPipe, SkeletonComponent, CommonModule, RouterModule, PrimeNGModule]
 })
 export class SharedModule {}
 

@@ -1530,6 +1530,33 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  /** Se puede llamar si hay agente con extensión y no es uno mismo. */
+  puedeLlamarAlAgente(): boolean {
+    const a = this.assignedAgent();
+    return (
+      this.telefoniaHabilitada &&
+      !!a?.extension &&
+      a.corporateEmailUser !== this.currentUserEmail
+    );
+  }
+
+  /** Llama al agente asignado: suena primero la extensión propia. */
+  llamarAlAgente(): void {
+    if (this.llamando || !this.ticketId) return;
+    this.llamando = true;
+    this.telefonia.llamarAlAgente(this.ticketId).subscribe({
+      next: (l) => {
+        this.toastService.info(`Conteste su teléfono (ext. ${l.origen}): la central llamará a la ext. ${l.destino}.`,
+          "Llamando…");
+        this.seguirLlamada(l.id, 0);
+      },
+      error: (e) => {
+        this.llamando = false;
+        this.toastService.error(e?.error?.message || "No se pudo iniciar la llamada");
+      },
+    });
+  }
+
   private seguirLlamada(id: string, vuelta: number): void {
     if (vuelta >= 20) {
       this.llamando = false;
@@ -2261,7 +2288,17 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     this.ticketService.assign(this.ticketId, agentId).subscribe({
       next: () => {
         this.load();
-        this.toastService.success("Ticket asignado");
+        // Al asignar se ofrece avisarle de palabra a esa persona.
+        const a = this.agents.find((x) => x.idUser === agentId);
+        const llamable = this.telefoniaHabilitada && !!a?.extension
+          && a.corporateEmailUser !== this.currentUserEmail;
+        this.toastService.success(
+          a ? `Asignado a ${this.agentLabel(a)}` : "Ticket asignado",
+          "Ticket asignado",
+          llamable
+            ? { action: { label: `Llamar a la ext. ${a.extension}`, handler: () => this.llamarAlAgente() }, duration: 10000 }
+            : undefined,
+        );
       },
       error: (err) =>
         this.toastService.error(err?.error?.message || "No se pudo asignar"),

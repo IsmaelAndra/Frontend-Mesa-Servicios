@@ -331,6 +331,8 @@ export interface AgentOption {
   photoUrl: string | null;
   /** EN_LINEA, RECIENTE o DESCONECTADO. Lo pinta el kanban. */
   sessionState: string;
+  /** Extensión telefónica, para llamarle desde el ticket. */
+  extension?: string | null;
 }
 
 /**

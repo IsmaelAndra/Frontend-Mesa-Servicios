@@ -44,6 +44,11 @@ export class NotificationService {
     return this.http.get<Notification[]>(this.url);
   }
 
+  /** Lo que pinta la campana: las 20 últimas y cuántas hay sin leer. */
+  recientes(): Observable<{ items: Notification[]; sinLeer: number }> {
+    return this.http.get<{ items: Notification[]; sinLeer: number }>(`${this.url}/recientes`);
+  }
+
   /** Marca una notificación concreta como leída en el backend */
   markAsRead(id: string): Observable<void> {
     return this.http.put<void>(`${this.url}/${id}/read`, {});
@@ -70,6 +75,8 @@ downloadReport(id: string, format = 'PDF', params?: {
       typeId?: string;
       /** Sede por la que se acota el reporte; si se omite, son todas. */
       sucursalId?: string;
+      /** Área por la que se acota el reporte; si se omite, son todas. */
+      areaId?: string;
       orientacion?: string;
     }): Observable<Blob> {
     return this.http.get(`${environment.apiUrl}/reports/custom/${id}`,

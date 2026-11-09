@@ -257,19 +257,18 @@ private sseService: SseService,
       .pipe(
         debounceTime(400),
         switchMap(() =>
-          this.notificationService.myNotifications().pipe(catchError(() => of(null))),
+          this.notificationService.recientes().pipe(catchError(() => of(null))),
         ),
         takeUntil(this.destroy$),
       )
-      .subscribe((list) => {
-        if (list === null) {
+      .subscribe((r) => {
+        if (r === null) {
           this.notifications = [];
           this.notificationsCount = 0;
           return;
         }
-        const todas = list || [];
-        this.notifications = todas.slice(0, 20);
-        const sinLeer = todas.filter((n) => !n.readNotification).length;
+        this.notifications = r.items || [];
+        const sinLeer = r.sinLeer ?? 0;
         if (sinLeer > this.notificationsCount) this.pulsoContador++;
         this.notificationsCount = sinLeer;
       });

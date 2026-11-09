@@ -85,6 +85,8 @@ module.exports = {
           info: '#3b82f6',
           success: '#10b981',
           warning: '#f59e0b',
+          // Texto blanco sobre el ámbar en botones e insignias de advertencia.
+          'warning-content': '#ffffff',
           error: '#ef4444',
           // Esquinas más amables: cajas y desplegables 1rem, botones 0.75rem y
           // insignias e interruptores en píldora (con 0.25rem los toggles salían
@@ -114,6 +116,8 @@ module.exports = {
           info: '#3b82f6',
           success: '#10b981',
           warning: '#f59e0b',
+          // Texto blanco sobre el ámbar en botones e insignias de advertencia.
+          'warning-content': '#ffffff',
           error: '#ef4444',
           // Esquinas más amables: cajas y desplegables 1rem, botones 0.75rem y
           // insignias e interruptores en píldora (con 0.25rem los toggles salían

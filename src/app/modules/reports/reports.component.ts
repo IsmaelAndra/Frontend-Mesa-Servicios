@@ -36,6 +36,9 @@ export class ReportsComponent implements OnInit {
 typeId: string | null = null;
     /** Sede por la que se acota el reporte; null = todas. */
     sucursalId: string | null = null;
+    /** Área por la que se acota el reporte; null = todas. */
+    areaId: string | null = null;
+    areas: { id: string; name: string; icon?: string; color?: string }[] = [];
     ticketTypes: { id: string; name: string; icon?: string; color?: string }[] =
       [];
     sucursales: { id: string; code: string; name: string; icon?: string; color?: string }[] =
@@ -59,6 +62,15 @@ typeId: string | null = null;
       icon: s.icon,
       color: s.color
     }));
+  }
+
+  /** Opciones del filtro de área, con el icono y color del maestro. */
+  get areaOptions(): MasterOption[] {
+    return this.areas.map(a => ({ value: a.id, label: a.name, icon: a.icon, color: a.color }));
+  }
+
+  areaName(id: string): string {
+    return this.areas.find(x => x.id === id)?.name ?? "";
   }
 
   /** Nombre de la sede para el chip de filtro activo. */
@@ -89,6 +101,7 @@ typeId: string | null = null;
       next: (c) => {
         this.ticketTypes = c.ticketTypes || [];
         this.sucursales = c.sucursales || [];
+        this.areas = c.areas || [];
       },
       error: () => undefined,
     });
@@ -151,14 +164,16 @@ typeId: string | null = null;
     to?: string;
     typeId?: string;
     sucursalId?: string;
+    areaId?: string;
   } {
-    const params: { from?: string; to?: string; typeId?: string; sucursalId?: string } = {};
+    const params: { from?: string; to?: string; typeId?: string; sucursalId?: string; areaId?: string } = {};
     if (this.period !== "TODO") {
       if (this.fromDate) params.from = this.fromDate;
       if (this.toDate) params.to = this.toDate;
     }
     if (this.typeId) params.typeId = this.typeId;
     if (this.sucursalId) params.sucursalId = this.sucursalId;
+    if (this.areaId) params.areaId = this.areaId;
     return params;
   }
 
@@ -199,6 +214,7 @@ typeId: string | null = null;
       next: (c) => {
         this.ticketTypes = c.ticketTypes || [];
         this.sucursales = c.sucursales || [];
+        this.areas = c.areas || [];
       },
       error: () => undefined,
     });
@@ -253,7 +269,7 @@ typeId: string | null = null;
   }
 
   get hasActiveFilters(): boolean {
-    return !!(this.search || this.period !== "MES" || this.typeId || this.sucursalId);
+    return !!(this.search || this.period !== "MES" || this.typeId || this.sucursalId || this.areaId);
   }
 
   typeName(id?: string): string {
@@ -286,6 +302,7 @@ typeId: string | null = null;
     this.applyPeriod();
     this.typeId = null;
     this.sucursalId = null;
+    this.areaId = null;
     this.sortBy = "label";
   }
 }

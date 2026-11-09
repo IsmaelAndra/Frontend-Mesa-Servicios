@@ -186,6 +186,19 @@
             ></app-master-select>
           </div>
 
+          <!-- Área -->
+          <div class="relative">
+            <app-master-select
+              [(ngModel)]="areaId"
+              [options]="areaOptions"
+              [allowEmpty]="true"
+              icon="fa-solid fa-building"
+              emptyLabel="Todas las áreas"
+              placeholder="Todas las áreas"
+              label="Área"
+            ></app-master-select>
+          </div>
+
         <!-- Ordenamiento -->
         <app-master-select class="w-full sm:w-48" [(ngModel)]="sortBy" [options]="ordenReportes"
           icon="fa-solid fa-arrow-down-wide-short" label="Ordenar reportes"></app-master-select>
@@ -220,6 +233,10 @@
             <span *ngIf="sucursalId" class="badge badge-sm badge-ghost gap-1">
               <i class="fa-solid fa-city text-[10px]" aria-hidden="true"></i>
               {{ sucursalName(sucursalId) }}
+            </span>
+            <span *ngIf="areaId" class="badge badge-sm badge-ghost gap-1">
+              <i class="fa-solid fa-building text-[10px]" aria-hidden="true"></i>
+              {{ areaName(areaId) }}
             </span>
         </div>
       </div>

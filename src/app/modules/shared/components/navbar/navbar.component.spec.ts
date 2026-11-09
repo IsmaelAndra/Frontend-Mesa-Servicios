@@ -114,7 +114,7 @@ describe('NavbarComponent: aviso sonoro de las notificaciones', () => {
         {
           provide: NotificationService,
           useValue: {
-            myNotifications: () => vacio,
+            recientes: () => vacio,
             markAsRead: () => vacio,
             markAllAsRead: () => vacio,
             notificarLectura: () => {},
