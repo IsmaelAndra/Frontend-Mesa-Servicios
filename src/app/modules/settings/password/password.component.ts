@@ -215,6 +215,11 @@ export class SettingsPasswordComponent {
       },
       error: (e: { error?: { message?: string } }) => {
         this.loading.set(false);
+        // Si el servidor pide el código del doble factor y el campo no estaba
+        // visible (la consulta inicial falló), se muestra ahora para escribirlo.
+        if (/autenticaci[oó]n/i.test(e?.error?.message || "") && !this.pideCodigoMfa()) {
+          this.pideCodigoMfa.set(true);
+        }
         this.toastService.error(
           e?.error?.message || "No se pudo cambiar la contraseña"
         );

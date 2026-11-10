@@ -423,7 +423,7 @@
 
           <!-- Grupos por fecha -->
           <ng-container *ngIf="notifications && notifications.length > 0">
-            <ng-container *ngFor="let grupo of gruposNavbar(); trackBy: trackGrupoNotif">
+            <ng-container *ngFor="let grupo of gruposCampana; trackBy: trackGrupoNotif">
               <!-- Separador de grupo -->
               <div
                 class="flex items-center gap-2 px-4 py-2 bg-base-200/40 border-b border-base-200/60 sticky top-0 backdrop-blur-sm z-10"
@@ -508,7 +508,7 @@
                           class="fa-regular fa-clock text-[9px] me-0.5"
                           aria-hidden="true"
                         ></i>
-                        {{ n.createdAtNotification | date: "dd/MM HH:mm" }}
+                        {{ n.createdAtNotification | date: (grupo.label === 'Hoy' || grupo.label === 'Ayer' ? 'HH:mm' : 'dd/MM HH:mm') }}
                       </p>
 
                       <span

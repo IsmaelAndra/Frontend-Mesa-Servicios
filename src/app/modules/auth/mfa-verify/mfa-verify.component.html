@@ -93,7 +93,7 @@
               </div>
               <div *ngIf="qrError" class="text-sm text-warning">{{ qrError }}</div>
               <details class="w-full text-center">
-                <summary class="text-xs link link-primary no-underline cursor-pointer">¿No puede escanear? Use la clave manual</summary>
+                <summary class="enlace-mfa text-xs link link-primary no-underline cursor-pointer">¿No puede escanear? Use la clave manual</summary>
                 <div class="mt-2 p-3 rounded-xl bg-base-200">
                   <p class="font-mono text-sm tracking-wider break-all select-all">{{ challenge?.claveManual }}</p>
                   <button type="button" class="btn btn-ghost btn-xs mt-1 gap-1" (click)="copiarClaveManual()">
@@ -199,7 +199,7 @@
       [id]="'code-' + (i + 1)"
       [value]="digitos[i]"
       [disabled]="loading || usandoRecuperacion"
-      class="input input-bordered w-11 h-14 sm:w-12 sm:h-16 text-center text-2xl font-mono px-0 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/30"
+      class="casilla-codigo input input-bordered w-11 h-14 sm:w-12 sm:h-16 text-center text-2xl font-mono px-0 rounded-xl bg-base-200 border-2 border-base-content/25 focus:border-primary focus:ring-2 focus:ring-primary/30"
       [class.border-primary]="digitos[i] !== ''"
       [attr.aria-label]="'Dígito ' + (i + 1) + ' de 6'"
       (input)="onInput(i, $event)"

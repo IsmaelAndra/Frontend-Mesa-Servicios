@@ -1,3 +1,4 @@
+import { agruparPorFecha } from "../../../../core/utils/agrupar-por-fecha.util";
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
@@ -331,41 +332,8 @@ export class NotificationPageComponent implements OnInit {
   }
 
   private agrupar(): { label: string; items: Notification[] }[] {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-
-    const ayer = new Date(hoy);
-    ayer.setDate(ayer.getDate() - 1);
-
-    const inicioSemana = new Date(hoy);
-    inicioSemana.setDate(inicioSemana.getDate() - 7);
-
-    const grupos: Record<string, Notification[]> = {
-      Hoy: [],
-      Ayer: [],
-      "Últimos 7 días": [],
-      Anteriores: [],
-    };
-
-    // Importante: agrupar solo los VISIBLES en la página actual
-    this.notifications.forEach((n) => {
-      const fecha = new Date(n.createdAtNotification);
-      fecha.setHours(0, 0, 0, 0);
-
-      if (fecha.getTime() >= hoy.getTime()) {
-        grupos["Hoy"].push(n);
-      } else if (fecha.getTime() >= ayer.getTime()) {
-        grupos["Ayer"].push(n);
-      } else if (fecha.getTime() >= inicioSemana.getTime()) {
-        grupos["Últimos 7 días"].push(n);
-      } else {
-        grupos["Anteriores"].push(n);
-      }
-    });
-
-    return Object.entries(grupos)
-      .filter(([_, items]) => items.length > 0)
-      .map(([label, items]) => ({ label, items }));
+    // Se agrupan solo las visibles en la página actual.
+    return agruparPorFecha(this.notifications, (n) => n.createdAtNotification);
   }
 
   // ============ Helpers de correo (badge compacto) ============

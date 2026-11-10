@@ -1858,3 +1858,39 @@ main .ql-snow.ql-toolbar button.ql-active .ql-stroke {
     transform: translateY(calc(var(--y, 20vh) * -1));
   }
 }
+
+/* Cuadro "+N más" de la vista de mes (lo pinta Toast UI, fuera de la plantilla). */
+.calendar-wrap .toastui-calendar-see-more-container {
+  z-index: 30;
+}
+.calendar-wrap .toastui-calendar-see-more {
+  border-radius: 0.75rem;
+  box-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.25);
+}
+.calendar-wrap .toastui-calendar-see-more-header .cal-mas-dia {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.calendar-wrap .toastui-calendar-see-more-header .cal-mas-nombre {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  text-transform: capitalize;
+}
+
+/*
+ * Casillas del código del doble factor (mfa-verify). En modo oscuro el azul de
+ * marca casi no se distingue de la tarjeta: con el mismo fondo y ese borde las
+ * casillas parecían no estar. Al enfocarlas o llenarlas se usa un azul claro.
+ */
+[data-theme="dark"] .casilla-codigo {
+  border-color: rgb(148 163 184 / 0.45);
+}
+[data-theme="dark"] .casilla-codigo:focus,
+[data-theme="dark"] .casilla-codigo.border-primary {
+  border-color: #60a5fa;
+  --tw-ring-color: rgb(96 165 250 / 0.35);
+}
+/* El enlace "Use la clave manual" del alta del doble factor, legible en oscuro. */
+[data-theme="dark"] .enlace-mfa {
+  color: #93c5fd;
+}

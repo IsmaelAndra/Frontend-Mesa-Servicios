@@ -11,6 +11,7 @@ import { AuthService } from "../../../../core/services/auth.service";
 import { AdminService } from "../../../../core/services/admin.service";
 import { NotificationService } from "../../../../core/services/notification.service";
   import { NotificationSoundService } from "../../../../core/services/notification-sound.service";
+import { agruparPorFecha, GrupoPorFecha } from "../../../../core/utils/agrupar-por-fecha.util";
 import { SseService } from "../../../../core/services/sse.service";
 import { SonidosGlobalesService } from "../../../../core/services/sonidos-globales.service";
 import { TemaTemporadaService } from "../../../../core/services/tema-temporada.service";
@@ -70,6 +71,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   // Notificaciones
   notifications: Notification[] = [];
+  /**
+   * Las 20 de la campana por fecha (Hoy, Ayer, Últimos 7 días, Anteriores).
+   * Se calcula al recibirlas, no en un getter: el navbar se redibuja cada segundo.
+   */
+  gruposCampana: GrupoPorFecha<Notification>[] = [];
   notificationsCount = 0;
   /**
    * Cambia solo cuando el contador SUBE. La plantilla recrea el globo con este
@@ -264,10 +270,12 @@ private sseService: SseService,
       .subscribe((r) => {
         if (r === null) {
           this.notifications = [];
+          this.gruposCampana = [];
           this.notificationsCount = 0;
           return;
         }
         this.notifications = r.items || [];
+        this.gruposCampana = agruparPorFecha(this.notifications, (n) => n.createdAtNotification);
         const sinLeer = r.sinLeer ?? 0;
         if (sinLeer > this.notificationsCount) this.pulsoContador++;
         this.notificationsCount = sinLeer;
@@ -464,12 +472,8 @@ private sseService: SseService,
   getNotificationIconClass = notificationColor;
 
   /**
-   * Agrupa las notificaciones del navbar por fecha.
-   * Solo agrupa las que ya están en `this.notifications` (máx. 20).
-   */
-  /**
    * trackBy de la campana. El navbar fuerza la detección de cambios cada segundo
-   * (reloj de sesión) y gruposNavbar() devuelve objetos nuevos en cada llamada:
+   * (reloj de sesión) y antes los grupos se recalculaban en cada vuelta:
    * sin trackBy, Angular destruía y recreaba los avisos cada segundo y el clic
    * que caía en medio se perdía, por eso a veces no redirigía.
    */
@@ -479,43 +483,6 @@ private sseService: SseService,
 
   trackNotif(_: number, n: Notification): string {
     return n.idNotification;
-  }
-
-  gruposNavbar(): { label: string; items: Notification[] }[] {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-
-    const ayer = new Date(hoy);
-    ayer.setDate(ayer.getDate() - 1);
-
-    const inicioSemana = new Date(hoy);
-    inicioSemana.setDate(inicioSemana.getDate() - 7);
-
-    const grupos: Record<string, Notification[]> = {
-      Hoy: [],
-      Ayer: [],
-      "Esta semana": [],
-      Anteriores: [],
-    };
-
-    (this.notifications || []).forEach((n) => {
-      const fecha = new Date(n.createdAtNotification);
-      fecha.setHours(0, 0, 0, 0);
-
-      if (fecha.getTime() >= hoy.getTime()) {
-        grupos["Hoy"].push(n);
-      } else if (fecha.getTime() >= ayer.getTime()) {
-        grupos["Ayer"].push(n);
-      } else if (fecha.getTime() >= inicioSemana.getTime()) {
-        grupos["Esta semana"].push(n);
-      } else {
-        grupos["Anteriores"].push(n);
-      }
-    });
-
-    return Object.entries(grupos)
-      .filter(([_, items]) => items.length > 0)
-      .map(([label, items]) => ({ label, items }));
   }
 
   /**

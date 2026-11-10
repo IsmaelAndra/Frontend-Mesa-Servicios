@@ -80,6 +80,26 @@ export function plantillaEvento(ev: EventObject, conHora: boolean): string {
 }
 
 
+/** Nombre del día para la cabecera del cuadro "+N más" (0 = domingo). */
+const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+/**
+ * Pasa las coordenadas de página que pone Toast UI a coordenadas del
+ * contenedor posicionado del cuadro, para que quede sobre la celda pulsada.
+ */
+export function recolocarCuadroMas(cuadro: HTMLElement | null | undefined): void {
+  if (!cuadro) return;
+  const padre = cuadro.offsetParent as HTMLElement | null;
+  const top = parseFloat(cuadro.style.top);
+  const left = parseFloat(cuadro.style.left);
+  if (!padre || isNaN(top) || isNaN(left)) return;
+  const r = padre.getBoundingClientRect();
+  const enVistaTop = top - window.scrollY;
+  const enVistaLeft = left - window.scrollX;
+  cuadro.style.top = `${enVistaTop - r.top - padre.clientTop + padre.scrollTop}px`;
+  cuadro.style.left = `${enVistaLeft - r.left - padre.clientLeft + padre.scrollLeft}px`;
+}
+
 @Component({
   selector: 'app-calendar',
   templateUrl: './calendar.component.html',
@@ -249,7 +269,12 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
         allday: (ev: EventObject) =>
           plantillaEvento(ev, (ev.raw as { mostrarHora?: boolean } | undefined)?.mostrarHora === true),
         // Contador de eventos que no caben en la fila de día completo.
-        weekGridFooterExceed: (n: number) => `+${n} más`
+        weekGridFooterExceed: (n: number) => `+${n} más`,
+        // Vista de mes: el enlace "N more" y la cabecera del cuadro ("15 Thu")
+        // salían en inglés.
+        monthGridHeaderExceed: (n: number) => `+${n} más`,
+        monthMoreTitleDate: ({ date, day }: { date: number; day: number }) =>
+          `<span class="cal-mas-dia">${date}</span> <span class="cal-mas-nombre">${DIAS_SEMANA[day] ?? ''}</span>`
       },
       // Sin visibleWeeksCount: con 6, ToastUI mostraba seis semanas a partir de
       // la semana actual y no el mes, así que en "Octubre" la rejilla empezaba
@@ -280,6 +305,13 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
       this.reloadForRange();
       this.persistState();
     });
+
+    // El cuadro "+N más" llega con top/left de página (posición de la celda +
+    // scroll de la ventana), pensado para un calendario sin contenedores
+    // posicionados. Aquí vive dentro del layout, que tiene su propio scroll, y el
+    // cuadro aparecía al fondo de la pantalla. Se recoloca respecto a su
+    // contenedor real.
+    cal.on('clickMoreEventsBtn', ({ target }) => recolocarCuadroMas(target));
 
     // this.calendar se asigna antes de setDate: el constructor de ToastUI ya hizo
     // un primer render y los handlers necesitan la instancia para leer la fecha.
