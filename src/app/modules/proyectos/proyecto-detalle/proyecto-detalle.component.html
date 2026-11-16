@@ -89,11 +89,11 @@
     <a role="tab" class="tab gap-2 whitespace-nowrap shrink-0" [class.tab-active]="pestana === 'tablero'" (click)="pestana = 'tablero'">
       <i class="fa-solid fa-table-columns" aria-hidden="true"></i> Tablero</a>
     <a role="tab" class="tab gap-2 whitespace-nowrap shrink-0" [class.tab-active]="pestana === 'sprints'" (click)="pestana = 'sprints'">
-      <i class="fa-solid fa-person-running" aria-hidden="true"></i> Sprints <span class="badge badge-sm">{{ d.sprints.length }}</span></a>
+      <i class="fa-solid fa-person-running" aria-hidden="true"></i> Sprints <span class="badge badge-sm border-0" [ngClass]="pestana === 'sprints' ? 'bg-white text-primary' : 'bg-base-200'" [style.--bc]="pestana === 'sprints' ? '#062e86' : null" [style.color]="pestana === 'sprints' ? '#062e86' : null">{{ d.sprints.length }}</span></a>
     <a role="tab" class="tab gap-2 whitespace-nowrap shrink-0" [class.tab-active]="pestana === 'objetivos'" (click)="pestana = 'objetivos'">
       <i class="fa-solid fa-bullseye" aria-hidden="true"></i> Objetivos y logros</a>
     <a role="tab" class="tab gap-2 whitespace-nowrap shrink-0" [class.tab-active]="pestana === 'equipo'" (click)="pestana = 'equipo'">
-      <i class="fa-solid fa-people-group" aria-hidden="true"></i> Equipo <span class="badge badge-sm">{{ d.miembros.length }}</span></a>
+      <i class="fa-solid fa-people-group" aria-hidden="true"></i> Equipo <span class="badge badge-sm border-0" [ngClass]="pestana === 'equipo' ? 'bg-white text-primary' : 'bg-base-200'" [style.--bc]="pestana === 'equipo' ? '#062e86' : null" [style.color]="pestana === 'equipo' ? '#062e86' : null">{{ d.miembros.length }}</span></a>
     <a role="tab" class="tab gap-2 whitespace-nowrap shrink-0" [class.tab-active]="pestana === 'chat'" (click)="irA('chat')">
       <i class="fa-solid fa-comments" aria-hidden="true"></i> Chat
       <span *ngIf="noLeidos" class="badge badge-sm badge-error text-white">{{ noLeidos > 99 ? '99+' : noLeidos }}</span></a>
@@ -357,6 +357,122 @@
       <button type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="guardarTarjeta()"
               [disabled]="!tarjeta.titulo.trim() || guardandoTarjeta">
         <span *ngIf="guardandoTarjeta" class="loading loading-spinner loading-xs"></span> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ MODAL: PROYECTO ============================ -->
+<div *ngIf="formProyecto as f" class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
+     (click)="formProyecto = null">
+  <div class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[94vh] flex flex-col"
+       role="dialog" aria-modal="true" aria-labelledby="titulo-proyecto" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-base-200">
+      <span class="p-2 rounded-xl" [style.background-color]="f.color + '1F'" [style.color]="f.color" aria-hidden="true">
+        <i [class]="f.icono"></i></span>
+      <h3 id="titulo-proyecto" class="font-bold text-lg flex-1">Editar proyecto</h3>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="formProyecto = null" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </div>
+    <div class="overflow-y-auto px-5 py-4 space-y-3">
+      <label class="form-control">
+        <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Nombre <span class="text-error">*</span></span></div>
+        <input class="input input-bordered input-sm" maxlength="150" [(ngModel)]="f.nombre" placeholder="Nombre del proyecto" />
+      </label>
+      <label class="form-control">
+        <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Descripción</span></div>
+        <textarea class="textarea textarea-bordered textarea-sm" rows="3" [(ngModel)]="f.descripcion" placeholder="Qué se quiere lograr"></textarea>
+      </label>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <label class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Inicio</span></div>
+          <input type="date" class="input input-bordered input-sm" [(ngModel)]="f.inicio" [max]="f.fin || ''" />
+        </label>
+        <label class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Fin</span></div>
+          <input type="date" class="input input-bordered input-sm" [(ngModel)]="f.fin" [min]="f.inicio || ''" />
+        </label>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div>
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Icono</span></div>
+          <div class="flex flex-wrap gap-1.5">
+            <button *ngFor="let i of iconosProyecto" type="button" class="btn btn-sm btn-square"
+                    [ngClass]="f.icono === i ? 'btn-primary text-white' : 'btn-ghost border border-base-300'"
+                    (click)="f.icono = i" [attr.aria-pressed]="f.icono === i" [attr.aria-label]="'Icono ' + i">
+              <i [class]="i" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <div>
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Color</span></div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button *ngFor="let c of coloresProyecto" type="button" class="w-7 h-7 rounded-full border-2" [style.background-color]="c"
+                    [ngClass]="f.color === c ? 'border-base-content' : 'border-transparent'"
+                    (click)="f.color = c" [attr.aria-label]="'Color ' + c" [attr.aria-pressed]="f.color === c"></button>
+          </div>
+        </div>
+      </div>
+      <p class="text-xs opacity-60">Acortar las fechas no se permite si deja sprints o tarjetas fuera del plazo. El estado se cambia en el encabezado.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 px-5 py-4 border-t border-base-200">
+      <p *ngIf="motivoProyecto as m" class="mr-auto text-xs text-error flex items-center gap-1.5" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ m }}</p>
+      <span *ngIf="!motivoProyecto" class="flex-1"></span>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="formProyecto = null">Cancelar</button>
+      <button type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="guardarProyecto()" [disabled]="!!motivoProyecto || guardandoProyecto">
+        <span *ngIf="guardandoProyecto" class="loading loading-spinner loading-xs"></span>
+        <i *ngIf="!guardandoProyecto" class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ MODAL: SPRINT ============================ -->
+<div *ngIf="formSprint as f" class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
+     (click)="formSprint = null">
+  <div class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-xl max-h-[94vh] flex flex-col"
+       role="dialog" aria-modal="true" aria-labelledby="titulo-sprint" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-base-200">
+      <span class="p-2 rounded-xl bg-primary/10 text-primary" aria-hidden="true"><i class="fa-solid fa-person-running"></i></span>
+      <h3 id="titulo-sprint" class="font-bold text-lg flex-1">{{ f.id ? 'Editar sprint' : 'Nuevo sprint' }}</h3>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="formSprint = null" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </div>
+    <div class="overflow-y-auto px-5 py-4 space-y-3">
+      <label class="form-control">
+        <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Nombre <span class="text-error">*</span></span></div>
+        <input class="input input-bordered input-sm" maxlength="120" [(ngModel)]="f.nombre" placeholder="Ej.: Sprint 1" />
+      </label>
+      <label class="form-control">
+        <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Objetivo del sprint</span></div>
+        <textarea class="textarea textarea-bordered textarea-sm" rows="2" maxlength="500" [(ngModel)]="f.objetivo" placeholder="Qué debe quedar listo al final"></textarea>
+      </label>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <label class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Inicio</span></div>
+          <input type="date" class="input input-bordered input-sm" [(ngModel)]="f.inicio"
+                 [min]="d?.proyecto?.inicio || ''" [max]="f.fin || d?.proyecto?.fin || ''" />
+        </label>
+        <label class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Fin</span></div>
+          <input type="date" class="input input-bordered input-sm" [(ngModel)]="f.fin"
+                 [min]="f.inicio || d?.proyecto?.inicio || ''" [max]="d?.proyecto?.fin || ''" />
+        </label>
+      </div>
+      <p class="text-xs opacity-60">
+        <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+        Plazo del proyecto: {{ (d?.proyecto?.inicio | date: 'dd/MM/yyyy') || '…' }} – {{ (d?.proyecto?.fin | date: 'dd/MM/yyyy') || '…' }}
+      </p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 px-5 py-4 border-t border-base-200">
+      <p *ngIf="motivoSprint as m" class="mr-auto text-xs text-error flex items-center gap-1.5" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ m }}</p>
+      <span *ngIf="!motivoSprint" class="flex-1"></span>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="formSprint = null">Cancelar</button>
+      <button type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="guardarSprint()" [disabled]="!!motivoSprint || guardandoSprint">
+        <span *ngIf="guardandoSprint" class="loading loading-spinner loading-xs"></span>
+        <i *ngIf="!guardandoSprint" class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar
+      </button>
     </div>
   </div>
 </div>

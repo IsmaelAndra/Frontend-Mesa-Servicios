@@ -357,43 +357,54 @@ export class ProyectoDetalleComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ---------------------------------------------------------------- modal: proyecto
+
+  readonly iconosProyecto = [
+    'fa-solid fa-diagram-project', 'fa-solid fa-rocket', 'fa-solid fa-bullseye', 'fa-solid fa-code',
+    'fa-solid fa-server', 'fa-solid fa-people-group', 'fa-solid fa-chart-line', 'fa-solid fa-lightbulb',
+  ];
+  readonly coloresProyecto = ['#062E86', '#2563EB', '#0891B2', '#16A34A', '#D97706', '#DC2626', '#7C3AED', '#475569'];
+
+  /** Formulario del modal "Editar proyecto" (antes era un SweetAlert con campos sueltos). */
+  formProyecto: { nombre: string; descripcion: string; inicio: string | null; fin: string | null; icono: string; color: string } | null = null;
+  guardandoProyecto = false;
+
   editarProyecto(): void {
     if (!this.d) return;
     const p = this.d.proyecto;
-    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280',
-      title: 'Editar proyecto',
-      html: `<input id="pr-nombre" class="swal2-input" maxlength="150" placeholder="Nombre">
-             <textarea id="pr-desc" class="swal2-textarea" placeholder="Descripción"></textarea>
-             <div style="display:flex;gap:8px;justify-content:center"><input id="pr-ini" type="date" class="swal2-input" style="width:45%">
-             <input id="pr-fin" type="date" class="swal2-input" style="width:45%"></div>`,
-      didOpen: () => {
-        (document.getElementById('pr-nombre') as HTMLInputElement).value = p.nombre;
-        (document.getElementById('pr-desc') as HTMLTextAreaElement).value = p.descripcion || '';
-        (document.getElementById('pr-ini') as HTMLInputElement).value = p.inicio || '';
-        (document.getElementById('pr-fin') as HTMLInputElement).value = p.fin || '';
+    this.formProyecto = {
+      nombre: p.nombre, descripcion: p.descripcion || '', inicio: p.inicio || null, fin: p.fin || null,
+      icono: p.icono || 'fa-solid fa-diagram-project', color: p.color || '#062E86',
+    };
+  }
+
+  /** Por qué no se puede guardar el proyecto (null = se puede). */
+  get motivoProyecto(): string | null {
+    const f = this.formProyecto;
+    if (!f) return null;
+    if (!f.nombre.trim()) return 'Escriba el nombre del proyecto';
+    if (f.inicio && f.fin && f.fin < f.inicio) return 'La fecha de fin es anterior a la de inicio';
+    return null;
+  }
+
+  guardarProyecto(): void {
+    const f = this.formProyecto;
+    if (!this.d || !f || this.motivoProyecto || this.guardandoProyecto) return;
+    this.guardandoProyecto = true;
+    this.servicio.editar(this.id, {
+      nombre: f.nombre.trim(), descripcion: f.descripcion, inicio: f.inicio, fin: f.fin,
+      icono: f.icono, color: f.color, estado: this.d.proyecto.estado,
+    }).subscribe({
+      next: () => {
+        this.guardandoProyecto = false;
+        this.formProyecto = null;
+        this.toast.success('Proyecto actualizado');
+        this.cargar();
       },
-      showCancelButton: true,
-      confirmButtonText: 'Guardar',
-      cancelButtonText: 'Cancelar',
-      preConfirm: () => {
-        const nombre = (document.getElementById('pr-nombre') as HTMLInputElement).value.trim();
-        if (!nombre) {
-          Swal.showValidationMessage('Ponga un nombre');
-          return false;
-        }
-        return {
-          nombre,
-          descripcion: (document.getElementById('pr-desc') as HTMLTextAreaElement).value,
-          inicio: (document.getElementById('pr-ini') as HTMLInputElement).value || null,
-          fin: (document.getElementById('pr-fin') as HTMLInputElement).value || null,
-        };
+      error: (e) => {
+        this.guardandoProyecto = false;
+        this.toast.error(e?.error?.message || 'No se pudo guardar');
       },
-    }).then((r) => {
-      if (!r.isConfirmed || !r.value) return;
-      this.servicio.editar(this.id, { ...r.value, estado: p.estado, icono: p.icono, color: p.color }).subscribe({
-        next: () => this.cargar(),
-        error: (e) => this.toast.error(e?.error?.message || 'No se pudo guardar'),
-      });
     });
   }
 
@@ -413,58 +424,49 @@ export class ProyectoDetalleComponent implements OnInit, OnDestroy {
 
   // ================================================================ sprints
 
+  /** Formulario del modal de sprint (crear o editar). */
+  formSprint: { id?: string; nombre: string; objetivo: string; inicio: string | null; fin: string | null;
+    estado?: ProyectoSprint['estado'] } | null = null;
+  guardandoSprint = false;
+
   editarSprint(s?: ProyectoSprint): void {
-    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280',
-      title: s ? 'Editar sprint' : 'Nuevo sprint',
-      html: `<input id="sp-nombre" class="swal2-input" maxlength="120" placeholder="Nombre (ej.: Sprint 1)">
-             <input id="sp-obj" class="swal2-input" maxlength="500" placeholder="Objetivo del sprint">
-             <div style="display:flex;gap:8px;justify-content:center"><input id="sp-ini" type="date" class="swal2-input" style="width:45%">
-             <input id="sp-fin" type="date" class="swal2-input" style="width:45%"></div>`,
-      didOpen: () => {
-        (document.getElementById('sp-nombre') as HTMLInputElement).value = s?.nombre || '';
-        (document.getElementById('sp-obj') as HTMLInputElement).value = s?.objetivo || '';
-        (document.getElementById('sp-ini') as HTMLInputElement).value = s?.inicio || '';
-        (document.getElementById('sp-fin') as HTMLInputElement).value = s?.fin || '';
-        // El sprint vive dentro del plazo del proyecto.
-        for (const idCampo of ['sp-ini', 'sp-fin']) {
-          const campo = document.getElementById(idCampo) as HTMLInputElement;
-          if (this.d?.proyecto.inicio) campo.min = this.d.proyecto.inicio;
-          if (this.d?.proyecto.fin) campo.max = this.d.proyecto.fin;
-        }
+    this.formSprint = s
+      ? { id: s.id, nombre: s.nombre, objetivo: s.objetivo || '', inicio: s.inicio || null, fin: s.fin || null, estado: s.estado }
+      : { nombre: '', objetivo: '', inicio: null, fin: null };
+  }
+
+  /** Por qué no se puede guardar el sprint (null = se puede). */
+  get motivoSprint(): string | null {
+    const f = this.formSprint;
+    if (!f) return null;
+    if (!f.nombre.trim()) return 'Escriba el nombre del sprint';
+    if (f.inicio && f.fin && f.fin < f.inicio) return 'El fin es anterior al inicio';
+    const pIni = this.d?.proyecto.inicio;
+    const pFin = this.d?.proyecto.fin;
+    const fuera = (x: string | null) => !!x && ((!!pIni && x < pIni) || (!!pFin && x > pFin));
+    if (fuera(f.inicio) || fuera(f.fin)) return `El sprint debe estar dentro del proyecto (${pIni || '…'} a ${pFin || '…'})`;
+    return null;
+  }
+
+  guardarSprint(): void {
+    const f = this.formSprint;
+    if (!f || this.motivoSprint || this.guardandoSprint) return;
+    this.guardandoSprint = true;
+    const req: SprintRequest = { nombre: f.nombre.trim(), objetivo: f.objetivo, inicio: f.inicio, fin: f.fin, estado: f.estado };
+    const llamada: Observable<unknown> = f.id
+      ? this.servicio.editarSprint(this.id, f.id, req)
+      : this.servicio.crearSprint(this.id, req);
+    llamada.subscribe({
+      next: () => {
+        this.guardandoSprint = false;
+        this.toast.success(f.id ? 'Sprint actualizado' : 'Sprint creado');
+        this.formSprint = null;
+        this.cargar();
       },
-      showCancelButton: true,
-      confirmButtonText: 'Guardar',
-      cancelButtonText: 'Cancelar',
-      preConfirm: () => {
-        const nombre = (document.getElementById('sp-nombre') as HTMLInputElement).value.trim();
-        const inicio = (document.getElementById('sp-ini') as HTMLInputElement).value || null;
-        const fin = (document.getElementById('sp-fin') as HTMLInputElement).value || null;
-        if (!nombre) {
-          Swal.showValidationMessage('Ponga un nombre');
-          return false;
-        }
-        if (inicio && fin && fin < inicio) {
-          Swal.showValidationMessage('El fin es anterior al inicio');
-          return false;
-        }
-        const pIni = this.d?.proyecto.inicio;
-        const pFin = this.d?.proyecto.fin;
-        if ((pIni && ((inicio && inicio < pIni) || (fin && fin < pIni))) || (pFin && ((inicio && inicio > pFin) || (fin && fin > pFin)))) {
-          Swal.showValidationMessage(`El sprint debe estar dentro del proyecto (${pIni || '…'} a ${pFin || '…'})`);
-          return false;
-        }
-        return { nombre, objetivo: (document.getElementById('sp-obj') as HTMLInputElement).value, inicio, fin } as SprintRequest;
+      error: (e) => {
+        this.guardandoSprint = false;
+        this.toast.error(e?.error?.message || 'No se pudo guardar el sprint');
       },
-    }).then((r) => {
-      if (!r.isConfirmed || !r.value) return;
-      const req: SprintRequest = { ...r.value, estado: s?.estado };
-      const llamada: Observable<unknown> = s
-        ? this.servicio.editarSprint(this.id, s.id, req)
-        : this.servicio.crearSprint(this.id, req);
-      llamada.subscribe({
-        next: () => this.cargar(),
-        error: (e) => this.toast.error(e?.error?.message || 'No se pudo guardar el sprint'),
-      });
     });
   }
 
