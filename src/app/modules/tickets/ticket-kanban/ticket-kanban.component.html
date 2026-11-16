@@ -37,7 +37,7 @@
         {{ loading ? "Cargando..." : "Actualizar" }}
       </button>
 
-      <a routerLink="/tickets/new" class="btn btn-primary btn-sm gap-2">
+      <a routerLink="/tickets/nuevo" class="btn btn-primary btn-sm gap-2">
         <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
         Nuevo ticket
       </a>
@@ -249,8 +249,15 @@
           (click)="openTicket(t.idTicket)"
           class="kanban-card bg-base-100 rounded-lg shadow-sm border border-base-200 border-l-4 p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition group relative"
           [class.saving]="isSaving(t.idTicket)"
+          [class.kanban-card--vencido]="plazoDe(t)?.tipo === 'vencido'"
           [style.borderLeftColor]="col.color"
         >
+          <!-- Plazo del SLA: vencido (brillo rojo) o por vencer (cuenta regresiva) -->
+          <p *ngIf="plazoDe(t) as pl" class="kanban-plazo mb-1.5"
+             [ngClass]="pl.tipo === 'vencido' ? 'kanban-plazo--vencido' : 'kanban-plazo--pronto'">
+            <i class="fa-solid" [ngClass]="pl.tipo === 'vencido' ? 'fa-triangle-exclamation' : 'fa-hourglass-half'" aria-hidden="true"></i>
+            {{ pl.texto }}
+          </p>
           <!-- Fila superior: #id + tipo + prioridad -->
           <div class="flex items-center gap-1.5 mb-1.5 min-w-0">
             <span

@@ -134,7 +134,7 @@ describe('NavbarComponent: aviso sonoro de las notificaciones', () => {
         { provide: ToastService, useValue: { success: () => {}, error: () => {}, warn: () => {}, info: () => {} } },
         { provide: NotificationSoundService, useValue: sonido },
         { provide: GlobalSearchService, useValue: { open: () => {}, open$: new Subject().asObservable() } },
-        { provide: Router, useValue: { url: '/dashboard', navigate: () => Promise.resolve(true), events: new Subject() } },
+        { provide: Router, useValue: { url: '/inicio', navigate: () => Promise.resolve(true), events: new Subject() } },
       ],
     }).compileComponents();
 

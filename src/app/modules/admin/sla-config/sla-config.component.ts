@@ -1,3 +1,4 @@
+import { AuthService } from "../../../core/services/auth.service";
 import { Component, OnInit } from "@angular/core";
 import Swal from "sweetalert2";
 import * as moment from "moment";
@@ -26,10 +27,18 @@ export class SlaConfigComponent implements OnInit {
     10,
   );
 
+  /** El súper admin genera las de todos; el jefe, las de los agentes de su área. */
+  puedeGenerar = true;
+  esJefe = false;
+
   constructor(
     private adminService: AdminService,
     private toastService: ToastService,
-  ) {}
+    authService: AuthService,
+  ) {
+    this.esJefe = authService.getRole() === 'AREA_MANAGER';
+    this.puedeGenerar = this.esJefe || authService.getRole() === 'SUPER_ADMIN';
+  }
 
   ngOnInit(): void {
     this.adminService.catalog().subscribe({
@@ -52,10 +61,10 @@ export class SlaConfigComponent implements OnInit {
     const month = moment().startOf("month").format("YYYY-MM-DD");
     const mesBonito = moment().locale("es").format("MMMM YYYY");
 
-    Swal.fire({
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280',
       title: "Generar evaluaciones mensuales",
       html: `
-      <p style="font-size:14px;">Se generará la evaluación de desempeño para <strong>${mesBonito}</strong>.</p>
+      <p style="font-size:14px;">Se generará la evaluación de desempeño ${this.esJefe ? "de los agentes de su área " : ""}para <strong>${mesBonito}</strong>.</p>
       <p style="font-size:12px;opacity:0.7;margin-top:8px;">Si ya existen evaluaciones para este mes, se recalcularán con los datos actuales.</p>
     `,
       icon: "question",

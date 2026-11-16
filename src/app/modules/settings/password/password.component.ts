@@ -211,7 +211,7 @@ export class SettingsPasswordComponent {
         this.authService.clearMustChangePassword();
         this.resetForm();
         this.toastService.success("Tu contraseña ha sido actualizada correctamente");
-        this.router.navigate(["/dashboard"]);
+        this.router.navigate(["/inicio"]);
       },
       error: (e: { error?: { message?: string } }) => {
         this.loading.set(false);

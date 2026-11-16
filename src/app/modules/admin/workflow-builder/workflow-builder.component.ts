@@ -792,7 +792,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
       showCancelButton: true,
       confirmButtonText: "Sí, quitar",
       cancelButtonText: "Cancelar",
-      confirmButtonColor: "#d33",
+      confirmButtonColor: "#dc2626",
       cancelButtonColor: "#64748b",
       reverseButtons: true,
       focusCancel: true,
@@ -1275,14 +1275,14 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
     const id = this.workflowId();
     if (!p || !id) return;
     this.cerrarPrueba();
-    this.router.navigate(["/workflows", id, "ejecuciones"], {
+    this.router.navigate(["/automatizaciones", id, "ejecuciones"], {
       queryParams: { ver: p.ejecucionId },
     });
   }
 
   irAlHistorial(): void {
     const id = this.workflowId();
-    if (id) this.router.navigate(["/workflows", id, "ejecuciones"]);
+    if (id) this.router.navigate(["/automatizaciones", id, "ejecuciones"]);
   }
 
   // ============================ Ejemplo ============================
@@ -1349,7 +1349,7 @@ export class WorkflowBuilderComponent implements OnInit, OnDestroy, EditorDeWork
           valor: "CRITICA",
         }),
         n("aviso", "NOTIFY", "Notificar supervisor", 120, 440, {
-          rol: "ADMIN",
+          rol: "AREA_MANAGER",
           titulo: "Ticket crítico #{{ticket.numero}}",
           mensaje:
             'MAPI clasificó como CRÍTICO el ticket #{{ticket.numero}} "{{ticket.titulo}}": {{nodos.mapi.resumen}}',

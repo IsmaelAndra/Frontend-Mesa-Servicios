@@ -2,8 +2,8 @@
   <!-- Widget de chat -->
   <div *ngIf="open" class="card w-[21rem] sm:w-[27rem] shadow-2xl border border-base-200 bg-base-100 overflow-hidden flex flex-col max-h-[min(640px,85vh)]">
     <div class="flex items-center gap-2 px-4 py-3 bg-primary text-white shrink-0">
-      <div class="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shrink-0 overflow-hidden">
-        <img [src]="iconoMapi" alt="MAPI" class="w-full h-full object-contain" />
+      <div class="w-9 h-9 rounded-full bg-white/90 text-primary flex items-center justify-center shrink-0 overflow-hidden">
+        <ng-container *ngTemplateOutlet="iconoAsistente"></ng-container>
       </div>
       <div class="min-w-0 flex-1">
         <p class="font-bold text-sm leading-tight">MAPI</p>
@@ -80,6 +80,14 @@
     (click)="toggle()" [attr.aria-expanded]="open"
     [attr.aria-label]="open ? 'Cerrar MAPI' : 'Abrir MAPI, tu asistente'"
     [title]="open ? 'Cerrar MAPI' : 'MAPI, tu asistente'">
-    <img [src]="iconoMapi" alt="" class="w-full h-full object-contain p-0.5" />
+    <ng-container *ngTemplateOutlet="iconoAsistente"></ng-container>
   </button>
 </div>
+
+<!-- Icono del asistente: el configurado en Administración → IA; sin él, MAPI. -->
+<ng-template #iconoAsistente>
+  <img *ngIf="iconIsUrl()" [src]="iconSrc()" alt="" class="w-full h-full object-cover" (error)="iconError()" />
+  <i *ngIf="iconIsFa()" [class]="iconFaClass() + ' text-primary'" aria-hidden="true"></i>
+  <span *ngIf="iconGlyph()" class="text-2xl leading-none" aria-hidden="true">{{ iconGlyph() }}</span>
+  <img *ngIf="!tieneIconoPropio()" [src]="iconoMapi" alt="" class="w-full h-full object-contain p-0.5" />
+</ng-template>

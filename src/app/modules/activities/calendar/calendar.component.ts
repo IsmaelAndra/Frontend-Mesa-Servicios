@@ -76,7 +76,9 @@ export function plantillaEvento(ev: EventObject, conHora: boolean): string {
   const texto = horaRaw
     ?? (inicio && !Number.isNaN(inicio.getTime()) ? `${pad(inicio.getHours())}:${pad(inicio.getMinutes())}` : '');
   const hora = conHora && texto ? `<span class="cal-hora">${texto}</span> ` : '';
-  return `${punto}${hora}${escaparHtml(String(ev.title ?? ''))}`;
+  // data-ev: el clic propio (abrirDesdeClic) encuentra el evento por aquí;
+  // el de ToastUI no saltaba al pulsar sobre esta plantilla en la vista de mes.
+  return `<span class="cal-ev" data-ev="${escaparHtml(String(ev.id ?? ''))}">${punto}${hora}${escaparHtml(String(ev.title ?? ''))}</span>`;
 }
 
 
@@ -290,6 +292,17 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
     // El detalle se abre en un panel lateral y no en un SweetAlert: el título lo
     // escribe quien abre el ticket y el SweetAlert lo pintaba como HTML sin
     // escapar. Además el panel deja enlaces al ticket o a la tarea.
+    // Respaldo del clic de ToastUI: en la vista de mes no saltaba al pulsar
+    // sobre el contenido de la barra (solo sobre el borde del título).
+    this.calendarEl.nativeElement.addEventListener('click', (e: MouseEvent) => {
+      const marca = (e.target as HTMLElement | null)?.closest?.('[data-ev]') as HTMLElement | null;
+      const id = marca?.dataset['ev'];
+      if (!id || this.seleccionado?.id === id) return;
+      this.zone.run(() => {
+        this.seleccionado = this.eventos.find((x) => x.id === id) ?? null;
+      });
+    });
+
     cal.on('clickEvent', ({ event }) => {
       const id = (event as unknown as { id: string }).id;
       this.zone.run(() => {

@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { TicketService } from '../../../core/services/ticket.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -10,7 +10,8 @@ import {
   metaSesion,
   normalizarSesion
 } from '../../../core/utils/session-presence.util';
-import { Ticket } from '../../../models/ticket.model';
+import { PlazoSla, Ticket } from '../../../models/ticket.model';
+import { celebrar } from '../../../core/utils/celebrar.util';
 import { Catalog } from '../../../models/user.model';
 import { MasterOption } from '../../shared/components/master-select/master-select.component';
 import { urlDelApi } from '../../../core/utils/url-api.util';
@@ -39,7 +40,15 @@ function statusColor(status: string): string {
   templateUrl: './ticket-kanban.component.html',
   styleUrls: ['./ticket-kanban.component.css']
 })
-export class TicketKanbanComponent implements OnInit {
+export class TicketKanbanComponent implements OnInit, OnDestroy {
+  /** Plazo de resolución de cada ticket abierto (brillo si venció, cuenta regresiva si no). */
+  plazos: Record<string, PlazoSla> = {};
+  /** Se refresca cada 30 s para la cuenta regresiva. */
+  ahora = Date.now();
+  private reloj?: ReturnType<typeof setInterval>;
+  /** Por debajo de este margen se muestra la cuenta regresiva. */
+  private static readonly MARGEN_AVISO_MS = 4 * 60 * 60 * 1000;
+
   columns: TicketColumn[] = [];
   allTickets: Ticket[] = [];
 
@@ -65,12 +74,16 @@ export class TicketKanbanComponent implements OnInit {
     private authService: AuthService,
     private adminService: AdminService,
     private router: Router,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.role = this.authService.getRole();
     this.currentUserEmail = this.authService.getEmail();
+    // "Ver todos" del buscador global llega con ?keyword=...
+    const kw = this.route.snapshot.queryParamMap.get('keyword');
+    if (kw) this.filterKeyword = kw;
     const statuses = ['NUEVO', 'ASIGNADO', 'EN_PROCESO', 'RESUELTO', 'CERRADO', 'ESCALADO'];
     this.columns = statuses.map((s) => ({
       key: s,
@@ -94,15 +107,19 @@ export class TicketKanbanComponent implements OnInit {
   }
 
   get canManage(): boolean {
-    return this.role === 'ADMIN' || this.role === 'SUPER_ADMIN' || this.role === 'AGENT';
+    return this.role === 'AREA_MANAGER' || this.role === 'SUPER_ADMIN' || this.role === 'AGENT';
   }
 
+  /** Si hay un área elegida, solo sus categorías (antes salían todas). */
   get categories(): { id: string; name: string; icon?: string; color?: string }[] {
-    return this.catalog?.categories || [];
+    const todas = this.catalog?.categories || [];
+    if (!this.filterArea) return todas;
+    const area = (this.catalog?.areas || []).find((a) => a.name === this.filterArea);
+    return area ? todas.filter((c) => !c.areaId || c.areaId === area.id) : todas;
   }
 
   get areas(): { id: string; name: string; icon?: string; color?: string }[] {
-    return this.catalog?.areas || [];
+    return (this.catalog?.areas || []).filter((a) => a.status !== false);
   }
 
   /**
@@ -219,6 +236,39 @@ export class TicketKanbanComponent implements OnInit {
     this.allTickets = tickets || [];
     this.applyFilters();
     this.loading = false;
+    this.cargarPlazos();
+  }
+
+  ngOnDestroy(): void {
+    if (this.reloj) clearInterval(this.reloj);
+  }
+
+  private cargarPlazos(): void {
+    const ids = this.allTickets
+      .filter((t) => t.status !== 'RESUELTO' && t.status !== 'CERRADO')
+      .map((t) => t.idTicket)
+      .slice(0, 500);
+    if (!ids.length) { this.plazos = {}; return; }
+    this.ticketService.plazos(ids).subscribe({
+      next: (p) => {
+        this.plazos = p || {};
+        if (!this.reloj) this.reloj = setInterval(() => (this.ahora = Date.now()), 30_000);
+      },
+      error: () => undefined,
+    });
+  }
+
+  /** Estado del plazo para pintar la tarjeta: vencido, por vencer (con texto) o nada. */
+  plazoDe(t: Ticket): { tipo: 'vencido' | 'pronto'; texto: string } | null {
+    if (t.status === 'RESUELTO' || t.status === 'CERRADO') return null;
+    const p = this.plazos[t.idTicket];
+    if (!p || p.pausado) return null;
+    const resta = new Date(p.vence).getTime() - this.ahora;
+    if (p.vencido || resta <= 0) return { tipo: 'vencido', texto: 'SLA vencido' };
+    if (resta > TicketKanbanComponent.MARGEN_AVISO_MS) return null;
+    const min = Math.max(1, Math.round(resta / 60000));
+    const texto = min < 60 ? `Vence en ${min} min` : `Vence en ${Math.floor(min / 60)} h ${min % 60 ? (min % 60) + ' min' : ''}`.trim();
+    return { tipo: 'pronto', texto };
   }
 
   private fail(): void {
@@ -227,6 +277,10 @@ export class TicketKanbanComponent implements OnInit {
   }
 
   applyFilters(): void {
+    // Una categoría de otra área ya no aplica al cambiar el filtro de área.
+    if (this.filterCategory && !this.categories.some((c) => c.name === this.filterCategory)) {
+      this.filterCategory = '';
+    }
     const keyword = this.filterKeyword.trim().toLowerCase();
     const onlyMine = this.canManage && this.filterOnlyMine;
 
@@ -238,7 +292,11 @@ export class TicketKanbanComponent implements OnInit {
       if (this.filterArea && t.area !== this.filterArea) return false;
       if (onlyMine && (t.agent || '') !== this.currentUserEmail) return false;
       if (keyword) {
-        const haystack = `${t.idTicket} ${t.titleTicket || ''} ${t.user || ''} ${t.category || ''}`
+        // Por número visible (43 o #43), nunca por el uuid; y por título,
+        // descripción, solicitante y categoría, como el buscador global.
+        const numero = keyword.replace(/^#/, '');
+        if (/^\d+$/.test(numero) && String(t.numberTicket ?? '') === numero) return true;
+        const haystack = `#${t.numberTicket ?? ''} ${t.titleTicket || ''} ${t.descriptionTicket || ''} ${t.user || ''} ${t.category || ''}`
           .toLowerCase();
         if (!haystack.includes(keyword)) return false;
       }
@@ -304,6 +362,11 @@ export class TicketKanbanComponent implements OnInit {
       next: () => {
         this.savingIds.delete(ticket.idTicket);
         this.toastService.success(`Movido a ${to.label}`, 'Estado actualizado');
+        // Un ticket resuelto es un logro: una pequeña celebración sobre la tarjeta.
+        if (to.key === 'RESUELTO') {
+          celebrar(event.item.element.nativeElement);
+          delete this.plazos[ticket.idTicket];
+        }
       },
       error: (err) => {
         this.savingIds.delete(ticket.idTicket);

@@ -1,0 +1,117 @@
+<div class="space-y-6">
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-envelope-open-text text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">
+          {{ esSuperAdmin || soloLectura ? 'Plantillas por área' : 'Plantillas de mi área' }}</h1>
+        <p class="text-sm opacity-70">Correos de los tickets que atiende el área. Sin versión propia, sale la plantilla general.</p>
+      </div>
+    </div>
+    <div *ngIf="esSuperAdmin || soloLectura" class="w-full sm:w-64">
+      <app-master-select [ngModel]="areaId" (ngModelChange)="elegirArea($event)" [options]="areas"
+                         icon="fa-solid fa-building" placeholder="Elija el área" label="Área"></app-master-select>
+    </div>
+  </header>
+
+  <div *ngIf="cargando" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div *ngFor="let _ of [1, 2, 3]" class="skeleton h-36 rounded-2xl"></div>
+  </div>
+
+  <div *ngIf="!cargando" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <article *ngFor="let p of plantillas; trackBy: trackPlantilla"
+             class="card bg-base-100 shadow-sm border border-base-200 border-t-4 rounded-2xl"
+             [style.border-top-color]="opcion(p).color">
+      <div class="card-body p-5 gap-3">
+        <div class="flex items-start gap-3">
+          <span class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                [style.background-color]="opcion(p).color + '1F'" [style.color]="opcion(p).color" aria-hidden="true">
+            <i [class]="opcion(p).icon"></i></span>
+          <div class="min-w-0 flex-1">
+            <h3 class="font-semibold leading-tight">{{ disparador(p.nombre) }}</h3>
+            <p class="text-[11px] font-mono opacity-60">{{ p.nombre }}</p>
+          </div>
+        </div>
+        <p class="text-xs opacity-80 line-clamp-2" [title]="p.asunto"><b>Asunto:</b> {{ p.asunto }}</p>
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span *ngIf="p.personalizada && p.activa" class="badge badge-sm kanban-tag border gap-1 font-semibold"
+                [style.background-color]="'#16A34A'" [style.border-color]="'#16A34A'" [style.color]="'#FFFFFF'" [style.--bc]="'#FFFFFF'">
+            <i class="fa-solid fa-pen-nib text-[10px]" aria-hidden="true"></i> Del área</span>
+          <span *ngIf="p.personalizada && !p.activa" class="badge badge-sm gap-1 badge-warning">
+            <i class="fa-solid fa-pause text-[10px]" aria-hidden="true"></i> Del área, inactiva</span>
+          <span *ngIf="!p.personalizada" class="badge badge-sm badge-ghost gap-1">
+            <i class="fa-solid fa-globe text-[10px]" aria-hidden="true"></i> Usa la general</span>
+          <span *ngIf="p.actualizada" class="text-[11px] opacity-60">{{ p.actualizada | date: 'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="flex gap-2 pt-3 mt-auto border-t border-base-200">
+          <button type="button" class="btn btn-sm flex-1 gap-2"
+                  [ngClass]="soloLectura ? 'btn-ghost border border-base-300' : 'btn-primary text-white'" (click)="editar(p)">
+            <i class="fa-solid" [ngClass]="soloLectura ? 'fa-eye' : (p.personalizada ? 'fa-pen' : 'fa-wand-magic-sparkles')" aria-hidden="true"></i>
+            {{ soloLectura ? 'Ver' : (p.personalizada ? 'Editar' : 'Personalizar') }}
+          </button>
+          <button *ngIf="p.personalizada && !soloLectura" type="button" class="btn btn-sm btn-ghost border border-base-300 gap-1"
+                  (click)="restablecer(p)" title="Volver a la plantilla general">
+            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> General
+          </button>
+        </div>
+      </div>
+    </article>
+  </div>
+</div>
+
+<!-- Modal de edición -->
+<div *ngIf="editando" class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
+     (click)="cerrar()">
+  <div class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[94vh] flex flex-col" role="dialog"
+       aria-modal="true" aria-labelledby="titulo-plantilla-area" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-base-200">
+      <span class="p-2.5 rounded-xl text-white" [style.background-color]="opcion(editando).color" aria-hidden="true">
+        <i [class]="opcion(editando).icon"></i></span>
+      <div class="flex-1 min-w-0">
+        <h3 id="titulo-plantilla-area" class="font-bold text-lg truncate">{{ disparador(editando.nombre) }}</h3>
+        <p class="text-xs opacity-70">Versión del área · si la desactiva, sale la general</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="cerrar()" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </div>
+    <div class="overflow-y-auto px-5 py-4 grid gap-4 lg:grid-cols-2">
+      <div class="space-y-3">
+        <label class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Asunto <span class="text-error">*</span></span></div>
+          <input class="input input-bordered input-sm" maxlength="255" [(ngModel)]="asunto" [disabled]="soloLectura" />
+        </label>
+        <div>
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Cuerpo (HTML) <span class="text-error">*</span></span>
+            <button *ngIf="!soloLectura" type="button" class="btn btn-ghost btn-xs gap-1" (click)="copiarGeneral()">
+              <i class="fa-solid fa-copy" aria-hidden="true"></i> Copiar la general</button></div>
+          <textarea class="textarea textarea-bordered w-full font-mono text-xs min-h-[22rem]" [(ngModel)]="cuerpo"
+                    [disabled]="soloLectura" spellcheck="false"></textarea>
+        </div>
+        <div *ngIf="!soloLectura" class="flex flex-wrap gap-1">
+          <span class="text-[11px] opacity-60 self-center mr-1">Variables:</span>
+          <button *ngFor="let v of variables" type="button" class="badge badge-ghost border cursor-pointer font-mono text-[11px]"
+                  (click)="insertar(v)">{{ v }}</button>
+        </div>
+        <app-estado-activo *ngIf="!soloLectura" [(ngModel)]="activa" etiqueta="Estado"
+                           descripcion="Inactiva: se usa la plantilla general sin perder este texto."></app-estado-activo>
+      </div>
+      <div>
+        <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Vista previa</span></div>
+        <iframe sandbox class="w-full min-h-[30rem] rounded-xl border border-base-200 bg-white" title="Vista previa del correo"
+                [srcdoc]="preview()"></iframe>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 px-5 py-4 border-t border-base-200">
+      <button *ngIf="editando.personalizada && !soloLectura" type="button" class="btn btn-ghost btn-sm gap-1 text-error"
+              (click)="restablecer(editando)"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Volver a la general</button>
+      <span class="flex-1"></span>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="cerrar()">{{ soloLectura ? 'Cerrar' : 'Cancelar' }}</button>
+      <button *ngIf="!soloLectura" type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="guardar()"
+              [disabled]="!valido || guardando">
+        <span *ngIf="guardando" class="loading loading-spinner loading-xs"></span> Guardar para el área
+      </button>
+    </div>
+  </div>
+</div>

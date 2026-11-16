@@ -4,8 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   Answer, AnswerPage, AnswerRequest, Attach, AuditLog, Rating, RatingRequest,
-  Ticket, TicketPage, TicketQuery, TicketRequest, TicketSla
-} from '../../models/ticket.model';
+  Ticket, TicketPage, TicketQuery, TicketRequest, TicketSla, TrasladoRequest, Confidencialidad, AccesoConfidencial, PlazoSla } from '../../models/ticket.model';
 import { SolicitanteResumen } from '../../models/user.model';
 
 @Injectable({ providedIn: 'root' })
@@ -40,6 +39,38 @@ export class TicketService {
 
   assign(id: string, agentId?: string, teamId?: string): Observable<Ticket> {
     return this.http.post<Ticket>(`${this.url}/${id}/assign`, { agentId, teamId });
+  }
+
+  confidencialidad(id: string): Observable<Confidencialidad> {
+    return this.http.get<Confidencialidad>(`${this.url}/${id}/confidencialidad`);
+  }
+
+  cambiarConfidencialidad(id: string, data: { confidencial: boolean; todaElArea: boolean; personas: string[] }): Observable<Confidencialidad> {
+    return this.http.put<Confidencialidad>(`${this.url}/${id}/confidencialidad`, data);
+  }
+
+  /** Súper admin / auditor: pedir acceso de emergencia a un confidencial. */
+  solicitarAcceso(id: string, motivo: string): Observable<AccesoConfidencial> {
+    return this.http.post<AccesoConfidencial>(`${this.url}/${id}/acceso-confidencial`, { motivo });
+  }
+
+  /** Mi última solicitud sobre este ticket (null si nunca pedí). */
+  miAcceso(id: string): Observable<AccesoConfidencial | null> {
+    return this.http.get<AccesoConfidencial | null>(`${this.url}/${id}/acceso-confidencial`);
+  }
+
+  /** Jefe: solicitudes de acceso pendientes de sus áreas. */
+  accesosPendientes(): Observable<AccesoConfidencial[]> {
+    return this.http.get<AccesoConfidencial[]>(`${this.url}/accesos-confidenciales/pendientes`);
+  }
+
+  decidirAcceso(accesoId: string, aprobar: boolean, comentario?: string): Observable<AccesoConfidencial> {
+    return this.http.post<AccesoConfidencial>(`${this.url}/accesos-confidenciales/${accesoId}/decidir`, { aprobar, comentario });
+  }
+
+  /** Pasa el ticket a otra área, con motivo (queda en el historial). */
+  trasladar(id: string, data: TrasladoRequest): Observable<Ticket> {
+    return this.http.post<Ticket>(`${this.url}/${id}/trasladar`, data);
   }
 
   changeStatus(id: string, statusName: string): Observable<Ticket> {
@@ -107,6 +138,11 @@ uploadAttachment(id: string, file: File, answerId?: string): Observable<Attach> 
   }
 
   /** Plazos del SLA; null si el ticket no tiene (204). */
+  /** Plazos de resolución de varios tickets abiertos (tablero). */
+  plazos(ids: string[]): Observable<Record<string, PlazoSla>> {
+    return this.http.post<Record<string, PlazoSla>>(`${this.url}/sla/plazos`, ids);
+  }
+
   sla(id: string): Observable<TicketSla | null> {
     return this.http.get<TicketSla | null>(`${this.url}/${id}/sla`);
   }
@@ -115,8 +151,9 @@ uploadAttachment(id: string, file: File, answerId?: string): Observable<Attach> 
     return this.http.post<Rating>(`${this.url}/${id}/rate`, data);
   }
 
-  getRating(id: string): Observable<Rating> {
-    return this.http.get<Rating>(`${this.url}/${id}/rating`);
+  /** null si todavía no está calificado (el backend responde 204). */
+  getRating(id: string): Observable<Rating | null> {
+    return this.http.get<Rating | null>(`${this.url}/${id}/rating`);
   }
 
   solicitanteResumen(userId: string): Observable<SolicitanteResumen> {

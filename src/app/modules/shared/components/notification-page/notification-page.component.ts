@@ -130,7 +130,7 @@ export class NotificationPageComponent implements OnInit {
   markAllAsRead(): void {
     if (!this.hasUnread) return;
 
-    Swal.fire({
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280',
       title: "¿Marcar todas como leídas?",
       text: "Todas las notificaciones no leídas se marcarán como leídas.",
       icon: "question",

@@ -12,7 +12,7 @@
       </div>
       <div>
         <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">
-          Gestión de Sedes
+          Gestión de Sucursales
         </h1>
         <p class="text-sm opacity-70">
           Las oficinas de la institución. Cada persona y cada ticket guardan la
@@ -25,8 +25,8 @@
       class="btn btn-primary btn-sm gap-2"
       (click)="showCreate = !showCreate"
     >
-      <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
-      {{ showCreate ? "Cerrar" : "Nueva Sede" }}
+      <i class="fa-solid text-[15px]" [ngClass]="showCreate ? 'fa-xmark' : 'fa-plus'" aria-hidden="true"></i>
+      {{ showCreate ? "Cerrar" : "Nueva Sucursal" }}
     </button>
   </header>
 
@@ -38,7 +38,7 @@
     <span>
       El <b>código</b> es la clave corta que se ve en los reportes
       (<code class="font-mono">MAT</code>, <code class="font-mono">QUI</code>).
-      Al crear un ticket, si no eliges sede, se toma la del solicitante.
+      Al crear un ticket, si no eliges sucursal, se toma la del solicitante.
     </span>
   </div>
 
@@ -55,7 +55,7 @@
         >
           <i class="fa-solid fa-plus text-[15px]"></i>
         </div>
-        <h3 class="card-title text-base">Nueva Sede</h3>
+        <h3 class="card-title text-base">Nueva Sucursal</h3>
       </div>
 
       <form
@@ -99,6 +99,8 @@
           </div>
           <input
             [(ngModel)]="newSucursal.phoneSucursal"
+            inputmode="tel" maxlength="20"
+            [class.input-error]="telefonoInvalido(newSucursal.phoneSucursal)"
             name="phoneSucursal"
             class="input input-bordered input-sm w-full"
             placeholder="02 2xxxxxxx"
@@ -143,12 +145,7 @@
                 class="text-base"
               ></i>
             </span>
-            <input
-              [(ngModel)]="newSucursal.iconSucursal"
-              name="iconSucursal"
-              class="input input-bordered input-sm w-full font-mono text-xs"
-              placeholder="fa-solid fa-city"
-            />
+            <app-selector-icono [(ngModel)]="newSucursal.iconSucursal" name="iconSucursal" [color]="newSucursal.colorSucursal || '#062e86'"></app-selector-icono>
           </div>
         </label>
 
@@ -185,7 +182,7 @@
           <button type="submit" class="btn btn-primary btn-sm gap-2"
                   [disabled]="!newSucursal.codeSucursal?.trim() || !newSucursal.nameSucursal?.trim()">
             <i class="fa-solid fa-check text-[13px]" aria-hidden="true"></i>
-            Crear sede
+            Crear sucursal
           </button>
         </div>
       </form>
@@ -200,7 +197,7 @@
       <table class="table table-sm table-zebra">
         <thead class="bg-primary text-white">
           <tr>
-            <th class="text-center">Sede</th>
+            <th class="text-center">Sucursal</th>
             <th class="text-center">Código</th>
             <th class="text-center">Dirección</th>
             <th class="text-center">Teléfono</th>
@@ -212,7 +209,7 @@
           <!-- Cargando -->
           <tr *ngIf="loading">
             <td colspan="6">
-              <app-skeleton tipo="filas" etiqueta="Cargando sedes..."></app-skeleton>
+              <app-skeleton tipo="filas" etiqueta="Cargando sucursales..."></app-skeleton>
             </td>
           </tr>
 
@@ -223,7 +220,7 @@
               *ngIf="!editSucursal || editSucursal.idSucursal !== sucursal.idSucursal"
               class="hover:bg-base-200/50 transition-colors"
             >
-              <!-- Sede (icono + badge + descripcion) -->
+              <!-- Sucursal (icono + badge + descripcion) -->
               <td>
                 <div class="flex items-center gap-2">
                   <div
@@ -308,7 +305,7 @@
                   <button
                     class="btn btn-xs btn-ghost gap-1"
                     (click)="edit(sucursal)"
-                    aria-label="Editar sede"
+                    aria-label="Editar sucursal"
                   >
                     <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
                     Editar
@@ -317,7 +314,7 @@
                   <button
                     class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
                     (click)="delete(sucursal)"
-                    aria-label="Eliminar sede"
+                    aria-label="Eliminar sucursal"
                   >
                     <i class="fa-solid fa-trash text-sm" aria-hidden="true"></i>
                     Eliminar
@@ -366,6 +363,8 @@
                     </div>
                     <input
                       [(ngModel)]="editSucursal.phoneSucursal"
+                      inputmode="tel" maxlength="20"
+                      [class.input-error]="telefonoInvalido(editSucursal.phoneSucursal, telefonoAnterior)"
                       class="input input-bordered input-sm w-40"
                     />
                   </label>
@@ -385,11 +384,7 @@
                           class="text-base"
                         ></i>
                       </span>
-                      <input
-                        [(ngModel)]="editSucursal.iconSucursal"
-                        class="input input-bordered input-sm w-32 font-mono text-xs"
-                        placeholder="fa-solid fa-city"
-                      />
+                      <app-selector-icono [(ngModel)]="editSucursal.iconSucursal" [color]="editSucursal.colorSucursal || '#062e86'"></app-selector-icono>
                     </div>
                   </label>
 
@@ -473,7 +468,7 @@
                 class="flex flex-col items-center justify-center py-12 gap-3 opacity-70"
               >
                 <i class="fa-solid fa-city text-4xl" aria-hidden="true"></i>
-                <span class="text-sm">No hay sedes registradas</span>
+                <span class="text-sm">No hay sucursales registradas</span>
                 <p class="text-xs opacity-70">
                   Crea la primera para poder asignarla a personas y tickets
                 </p>

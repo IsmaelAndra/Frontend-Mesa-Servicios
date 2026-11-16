@@ -28,11 +28,11 @@ describe('GlobalSearchComponent', () => {
   let globalSearch: jasmine.SpyObj<GlobalSearchService>;
   let openSubject: Subject<void>;
   /** `url` de Router es un getter de solo lectura: se controla por separado. */
-  let urlActual = '/dashboard';
+  let urlActual = '/inicio';
 
   beforeEach(() => {
     openSubject = new Subject<void>();
-    urlActual = '/dashboard';
+    urlActual = '/inicio';
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
     Object.defineProperty(router, 'url', {
       get: () => urlActual,
@@ -77,7 +77,7 @@ describe('GlobalSearchComponent', () => {
   });
 
   it('Ctrl+K no abre en las rutas de autenticación', () => {
-    urlActual = '/auth/login';
+    urlActual = '/acceso/ingresar';
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }));
     expect(comp.abierto).toBe(false);
   });
@@ -124,7 +124,7 @@ describe('GlobalSearchComponent', () => {
     abrirYBuscar('ana');
     const fila = fixture.debugElement.query(By.css('[data-search-row]')).nativeElement as HTMLButtonElement;
     fila.click();
-    expect(router.navigate).toHaveBeenCalledWith(['/tickets/new'], {
+    expect(router.navigate).toHaveBeenCalledWith(['/tickets/nuevo'], {
       queryParams: { solicitante: '10', nombre: 'Ana Lopez', correo: 'ana@coac.local' },
     });
   }));

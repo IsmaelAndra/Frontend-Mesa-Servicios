@@ -27,8 +27,12 @@ describe('AssetDetailComponent', () => {
 
   function setup(role: string, activo: Asset = activoBase) {
     const assetService = jasmine.createSpyObj('AssetService', [
-      'getById', 'getHistory', 'asignables', 'assign', 'unassign', 'changeStatus', 'delete'
+      'getById', 'getHistory', 'asignables', 'assign', 'unassign', 'changeStatus', 'delete',
+      'archivos', 'actas', 'tipos', 'descargarArchivo'
     ]);
+    assetService.archivos.and.returnValue(of([]));
+    assetService.actas.and.returnValue(of([]));
+    assetService.tipos.and.returnValue(of([]));
     assetService.getById.and.returnValue(of({ ...activo }));
     assetService.getHistory.and.returnValue(of([]));
     assetService.asignables.and.returnValue(of(personas));
@@ -37,8 +41,10 @@ describe('AssetDetailComponent', () => {
     assetService.changeStatus.and.returnValue(of({ ...activo }));
     assetService.delete.and.returnValue(of(void 0));
 
-    const auth = jasmine.createSpyObj('AuthService', ['getRole']);
+    const auth = jasmine.createSpyObj('AuthService', ['getRole', 'gestionaActivos']);
     auth.getRole.and.returnValue(role);
+    // Gestionan Tecnología y Desarrollo (permiso del servidor); en estas pruebas, el súper admin.
+    auth.gestionaActivos.and.callFake(() => role === 'SUPER_ADMIN' || role === 'AGENT_TI');
     const toastService = jasmine.createSpyObj('ToastService', ['success', 'error', 'info', 'warn']);
     const router = jasmine.createSpyObj('Router', ['navigate']);
     const breadcrumb = jasmine.createSpyObj('BreadcrumbService', ['fijar', 'quitar']);
@@ -61,7 +67,7 @@ describe('AssetDetailComponent', () => {
   }
 
   it('carga el activo y su historial', () => {
-    const { fixture, c, assetService } = setup('ADMIN');
+    const { fixture, c, assetService } = setup('SUPER_ADMIN');
     fixture.detectChanges();
     expect(assetService.getById).toHaveBeenCalledWith('a1');
     expect(assetService.getHistory).toHaveBeenCalledWith('a1');
@@ -83,24 +89,39 @@ describe('AssetDetailComponent', () => {
   });
 
   it('las opciones de personas van ordenadas y sin quien ya lo tiene', () => {
-    const { fixture, c } = setup('ADMIN', { ...activoBase, statusAsset: 'ASIGNADO', assignedUserId: 'u2', assignedUser: 'z@coac.ec' });
+    const { fixture, c } = setup('SUPER_ADMIN', { ...activoBase, statusAsset: 'ASIGNADO', assignedUserId: 'u2', assignedUser: 'z@coac.ec' });
     fixture.detectChanges();
     expect(c.userOptions.map((o) => o.label)).toEqual(['Ana Torres']);
     expect(c.userOptions[0].initials).toBe('AT');
     expect(c.userOptions[0].detail).toBe('TI');
   });
 
-  it('solo ADMIN/SUPER_ADMIN pueden eliminar', () => {
-    const { c } = setup('USER');
+  it('solo el súper admin elimina; gestiona quien tiene el permiso de activos', () => {
+    const { c } = setup('AGENT_TI');
+    expect(c.puedeGestionar).toBeTrue();
+    expect(c.puedeEliminar).toBeFalse();
     c.role = 'SUPER_ADMIN';
     expect(c.puedeEliminar).toBeTrue();
-    c.role = 'AREA_MANAGER';
-    expect(c.puedeEliminar).toBeFalse();
-    expect(c.puedeGestionar).toBeTrue();
+  });
+
+  it('entregar, reasignar y devolver abren el acta del tipo correcto', () => {
+    const { fixture, c } = setup('SUPER_ADMIN');
+    fixture.detectChanges();
+    c.abrirActa('ENTREGA');
+    expect(c.actaTipo).toBe('ENTREGA');
+    c.actaCerrada(null);
+    expect(c.actaTipo).toBeNull();
+  });
+
+  it('carga las fotos, los documentos y las actas del activo', () => {
+    const { fixture, assetService } = setup('SUPER_ADMIN');
+    fixture.detectChanges();
+    expect(assetService.archivos).toHaveBeenCalledWith('a1');
+    expect(assetService.actas).toHaveBeenCalledWith('a1');
   });
 
   it('asigna a la persona elegida con la nota', () => {
-    const { fixture, c, assetService, toastService } = setup('ADMIN');
+    const { fixture, c, assetService, toastService } = setup('SUPER_ADMIN');
     fixture.detectChanges();
     c.abrir('asignar');
     c.personaElegida = 'u1';
@@ -112,7 +133,7 @@ describe('AssetDetailComponent', () => {
   });
 
   it('no asigna sin persona y avisa', () => {
-    const { fixture, c, assetService, toastService } = setup('ADMIN');
+    const { fixture, c, assetService, toastService } = setup('SUPER_ADMIN');
     fixture.detectChanges();
     c.abrir('asignar');
     c.confirmar();
@@ -121,7 +142,7 @@ describe('AssetDetailComponent', () => {
   });
 
   it('devolver registra la devolución', () => {
-    const { fixture, c, assetService } = setup('ADMIN', { ...activoBase, statusAsset: 'ASIGNADO', assignedUser: 'z@coac.ec' });
+    const { fixture, c, assetService } = setup('SUPER_ADMIN', { ...activoBase, statusAsset: 'ASIGNADO', assignedUser: 'z@coac.ec' });
     fixture.detectChanges();
     c.abrir('devolver');
     c.confirmar();
@@ -129,7 +150,7 @@ describe('AssetDetailComponent', () => {
   });
 
   it('cada acción de estado pide el estado correcto', () => {
-    const { fixture, c, assetService } = setup('ADMIN');
+    const { fixture, c, assetService } = setup('SUPER_ADMIN');
     fixture.detectChanges();
     c.abrir('reparar');
     c.confirmar();
@@ -139,11 +160,11 @@ describe('AssetDetailComponent', () => {
     expect(assetService.changeStatus).toHaveBeenCalledWith('a1', 'BAJA');
     c.abrir('finReparacion');
     c.confirmar();
-    expect(assetService.changeStatus).toHaveBeenCalledWith('a1', 'DISPONIBLE');
+    expect(assetService.changeStatus).toHaveBeenCalledWith('a1', 'EN_BODEGA');
   });
 
   it('en reparación o de baja no se puede asignar', () => {
-    const { fixture, c } = setup('ADMIN', { ...activoBase, statusAsset: 'EN_REPARACION' });
+    const { fixture, c } = setup('SUPER_ADMIN', { ...activoBase, statusAsset: 'EN_REPARACION' });
     fixture.detectChanges();
     expect(c.asignable).toBeFalse();
   });
@@ -158,7 +179,7 @@ describe('AssetDetailComponent', () => {
   });
 
   it('el historial se cuenta en frases legibles', () => {
-    const { c } = setup('ADMIN');
+    const { c } = setup('SUPER_ADMIN');
     const base = { idAssetHistory: 'h', assetId: 'a1', assetCode: 'x', assetName: 'x', createdAtAssetHistory: '' };
     expect(c.frase({ ...base, actionType: 'REASIGNACION', userDisplayName: 'Ana' })).toBe('Reasignado a Ana');
     expect(c.frase({ ...base, actionType: 'DEVOLUCION', userDisplayName: 'Luis' })).toBe('Devuelto por Luis');

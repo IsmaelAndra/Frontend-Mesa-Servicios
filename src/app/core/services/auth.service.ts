@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, Subject, catchError, map, of, shareReplay, tap, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, ReplaySubject, Subject, catchError, map, of, shareReplay, tap, throwError } from 'rxjs';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { environment } from '../../../environments/environment';
 import {
@@ -509,13 +509,63 @@ restoreSession(): Promise<void> {
    */
   rolesEfectivos(): string[] {
     const rol = this.getRole();
-    return rol === 'AREA_MANAGER' ? ['AREA_MANAGER', 'USER'] : rol ? [rol] : [];
+    if (!rol) return [];
+    // GESTOR_USUARIOS no es un rol: es el permiso del jefe de un área que
+    // gestiona usuarios (Tecnología y Desarrollo). El menú y las guardas lo
+    // tratan como uno más para mostrar "Usuarios" solo a quien puede entrar.
+    // GESTOR_ACTIVOS: personal de Tecnología y Desarrollo (y el súper admin).
+    return [rol, ...(this.gestionaUsuarios ? ['GESTOR_USUARIOS'] : []), ...(this.gestionaLosActivos ? ['GESTOR_ACTIVOS'] : [])];
   }
 
-  /** Usuario final (USER o jefe de área): ve solo sus tickets. */
+  /** Usuario final: ve solo sus tickets. Desde la mesa multi-área el jefe es personal. */
   esUsuarioFinal(): boolean {
-    const rol = this.getRole();
-    return rol === 'USER' || rol === 'AREA_MANAGER';
+    return this.getRole() === 'USER';
+  }
+
+  /** Permisos que no salen del rol (GET /users/me/permisos), uno por sesión. */
+  private gestionaUsuarios = false;
+  private areasDelJefe: string[] = [];
+  private gestionaLosActivos = false;
+
+  /** Gestiona activos (registrar, actas, etiquetas): Tecnología, Desarrollo y súper admin. */
+  gestionaActivos(): boolean {
+    return this.gestionaLosActivos || this.getRole() === 'SUPER_ADMIN';
+  }
+
+  /** Áreas a cargo del jefe (vacío para otros roles). Limita lo que configura. */
+  areasACargo(): string[] {
+    return this.areasDelJefe;
+  }
+  private permisosDe: string | null = null;
+
+  /** Emite (una vez y para quien llegue después) cuando ya se conocen los permisos de la sesión. */
+  private permisosListos = new ReplaySubject<void>(1);
+
+  /**
+   * Espera a los permisos (los pide si hace falta). Una pantalla que decide algo
+   * con ellos al iniciar (p. ej. la lista de activos) lo usa: tras recargar la
+   * página aún no han llegado y se tomaba la decisión con el valor por defecto.
+   */
+  permisosCargados(): Observable<void> {
+    this.cargarPermisos();
+    if (!this.getEmail()) return of(undefined);
+    return this.permisosListos.asObservable();
+  }
+
+  cargarPermisos(): void {
+    const correo = this.getEmail();
+    if (!correo || this.permisosDe === correo) return;
+    this.permisosDe = correo;
+    this.http
+      .get<{ gestionaUsuarios: boolean; areasACargo?: string[]; gestionaActivos?: boolean }>(`${environment.apiUrl}/users/me/permisos`)
+      .pipe(catchError(() => of({ gestionaUsuarios: false, areasACargo: [] as string[], gestionaActivos: false })))
+      .subscribe((p) => {
+        this.gestionaUsuarios = !!p?.gestionaUsuarios;
+        this.gestionaLosActivos = !!p?.gestionaActivos;
+        this.areasDelJefe = p?.areasACargo || [];
+        // Al final: quien espera los permisos lee también las áreas del jefe.
+        this.permisosListos.next();
+      });
   }
 
   getEmail(): string {
@@ -799,6 +849,11 @@ private storeSession(res: AuthResponse): void {
       this.canal?.postMessage({ tipo: 'salir' });
     }
     this.tokenMemoria = null;
+    this.gestionaUsuarios = false;
+    this.gestionaLosActivos = false;
+    this.permisosListos = new ReplaySubject<void>(1);
+    this.areasDelJefe = [];
+    this.permisosDe = null;
     localStorage.removeItem(this.TOKEN_KEY_LEGADO);
     // La cookie la borra el backend en /auth/logout; desde aquí no se puede,
     // y no hace falta intentarlo.

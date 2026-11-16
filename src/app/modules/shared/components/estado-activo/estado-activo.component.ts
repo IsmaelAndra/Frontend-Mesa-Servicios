@@ -52,7 +52,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
   `
 })
 export class EstadoActivoComponent implements ControlValueAccessor {
-  /** "Activa"/"Inactiva" (área, sede, regla, política) en lugar de "Activo"/"Inactivo". */
+  /** "Activa"/"Inactiva" (área, sucursal, regla, política) en lugar de "Activo"/"Inactivo". */
   @Input() femenino = false;
   /** Texto corto que explica qué implica el estado (opcional). */
   @Input() descripcion = '';

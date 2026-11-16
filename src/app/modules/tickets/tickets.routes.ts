@@ -9,11 +9,16 @@ import { TicketKanbanComponent } from './ticket-kanban/ticket-kanban.component';
 /** Rutas bajo /tickets. Se cargan bajo demanda (ver app-routing.module.ts). */
 export const TICKETS_ROUTES: Routes = [
   { path: '', component: TicketListComponent, canActivate: [AuthGuard] },
-  { path: 'new', component: TicketNewComponent, canActivate: [AuthGuard] },
-  { path: 'mine', component: TicketListComponent, canActivate: [AuthGuard], data: { mine: true } },
-  { path: 'assigned', component: TicketListComponent, canActivate: [AuthGuard], data: { assigned: true } },
-  { path: 'kanban', component: TicketKanbanComponent, canActivate: [AuthGuard, RoleGuard], data: { roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT'] } },
+  { path: 'nuevo', component: TicketNewComponent, canActivate: [AuthGuard] },
+  { path: 'mios', component: TicketListComponent, canActivate: [AuthGuard], data: { mine: true } },
+  { path: 'asignados', component: TicketListComponent, canActivate: [AuthGuard], data: { assigned: true } },
+  { path: 'tablero', component: TicketKanbanComponent, canActivate: [AuthGuard, RoleGuard], data: { roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'AUDITOR'] } },
   // Al pasar de un ticket a otro el componente se crea de nuevo: lee el id una
   // sola vez y, reutilizado, seguía mostrando el ticket anterior.
+  // Direcciones antiguas en inglés (correos ya enviados).
+  { path: 'new', redirectTo: 'nuevo' },
+  { path: 'mine', redirectTo: 'mios' },
+  { path: 'assigned', redirectTo: 'asignados' },
+  { path: 'kanban', redirectTo: 'tablero' },
   { path: ':id', component: TicketDetailComponent, canActivate: [AuthGuard], data: { recrearAlCambiarParametros: true } },
 ];

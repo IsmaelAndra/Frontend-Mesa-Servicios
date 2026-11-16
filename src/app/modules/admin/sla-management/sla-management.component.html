@@ -21,7 +21,7 @@
         <i class="fa-solid fa-clipboard-check text-[15px]" aria-hidden="true"></i>
         Reglas
       </a>
-      <a role="tab" class="tab gap-2" [class.tab-active]="activeTab === 'escalations'"
+      <a *ngIf="!esJefe" role="tab" class="tab gap-2" [class.tab-active]="activeTab === 'escalations'"
         (click)="activeTab = 'escalations'">
         <i class="fa-solid fa-arrow-trend-up text-[15px]" aria-hidden="true"></i>
         Escalaciones
@@ -40,8 +40,8 @@
           <h3 class="card-title text-base">Políticas SLA</h3>
           <span class="badge badge-sm badge-ghost">{{ policies.length || 0 }}</span>
         </div>
-        <button class="btn btn-primary btn-sm gap-2" (click)="showNewPolicy = !showNewPolicy">
-          <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
+        <button class="btn btn-primary btn-sm gap-2" (click)="abrirNuevaPolitica()">
+          <i class="fa-solid text-[15px]" [ngClass]="showNewPolicy ? 'fa-xmark' : 'fa-plus'" aria-hidden="true"></i>
           {{ showNewPolicy ? 'Cerrar' : 'Nueva Política' }}
         </button>
       </div>
@@ -89,7 +89,16 @@
 
           <div class="form-control w-full">
             <div class="label pt-0 pb-1">
-              <span class="label-text text-xs font-medium">Icono (Font Awesome)</span>
+              <span class="label-text text-xs font-medium">Área <span *ngIf="esJefe" class="text-error">*</span></span>
+            </div>
+            <app-master-select [(ngModel)]="newPolicy.areaSlaPolicy" name="areaSlaPolicy" [options]="areaOptions()"
+              [allowEmpty]="!esJefe" emptyLabel="Global (todas las áreas)" placeholder="Global (todas las áreas)"
+              icon="fa-solid fa-building" label="Área de la política"></app-master-select>
+          </div>
+
+          <div class="form-control w-full">
+            <div class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Icono</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
@@ -98,8 +107,7 @@
                 aria-hidden="true">
                 <i [class]="policyIcon(newPolicy)" class="text-[15px]"></i>
               </span>
-              <input [(ngModel)]="newPolicy.iconSlaPolicy" name="iconSlaPolicy"
-                class="input input-bordered input-sm w-full font-mono" placeholder="fa-solid fa-clock" />
+              <app-selector-icono [(ngModel)]="newPolicy.iconSlaPolicy" name="iconSlaPolicy" [color]="newPolicy.colorSlaPolicy || '#062e86'"></app-selector-icono>
             </div>
           </div>
 
@@ -145,7 +153,7 @@
               <!-- Modo edición -->
               <tr *ngIf="editPolicy?.idSlaPolicy === p.idSlaPolicy" class="bg-base-200/50">
                 <td colspan="6">
-                  <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 p-2 items-end">
+                  <div class="form-en-fila grid gap-3 p-2 items-end">
                     <div class="form-control">
                       <div class="label pt-0 pb-1">
                         <span class="label-text text-xs font-medium">Nombre</span>
@@ -187,8 +195,7 @@
                           aria-hidden="true">
                           <i [class]="policyIcon(editPolicy!)" class="text-[15px]"></i>
                         </span>
-                        <input [(ngModel)]="editPolicy!.iconSlaPolicy"
-                          class="input input-bordered input-sm w-full font-mono" placeholder="fa-solid fa-clock" />
+                        <app-selector-icono [(ngModel)]="editPolicy!.iconSlaPolicy" [color]="editPolicy!.colorSlaPolicy || '#062e86'"></app-selector-icono>
                       </div>
                     </div>
 
@@ -207,12 +214,21 @@
 
                     <div class="form-control">
                       <div class="label pt-0 pb-1">
+                        <span class="label-text text-xs font-medium">Área</span>
+                      </div>
+                      <app-master-select [(ngModel)]="editPolicy!.areaSlaPolicy" [options]="areaOptions()"
+                        [allowEmpty]="!esJefe" emptyLabel="Global (todas las áreas)" placeholder="Global (todas las áreas)"
+                        icon="fa-solid fa-building" label="Área de la política"></app-master-select>
+                    </div>
+
+                    <div class="form-control">
+                      <div class="label pt-0 pb-1">
                         <span class="label-text text-xs font-medium">Estado</span>
                       </div>
                       <app-estado-activo [(ngModel)]="editPolicy!.activeSlaPolicy" [femenino]="true" etiqueta="Estado"></app-estado-activo>
                     </div>
 
-                    <div class="col-span-2 md:col-span-4 xl:col-span-6 flex justify-end gap-2 pt-2 border-t border-base-300">
+                    <div class="col-span-full flex justify-end gap-2 pt-2 border-t border-base-300">
                       <button class="btn btn-sm btn-ghost gap-1" (click)="cancelEditPolicy()">
                         <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i>
                         Cancelar
@@ -245,6 +261,16 @@
                     >
                       {{ p.nameSlaPolicy }}
                     </span>
+                    <span *ngIf="areaDePolitica(p) as a; else politicaGlobal" class="badge badge-sm kanban-tag border gap-1"
+                      [style.background-color]="(a.color || '#062e86') + '1F'" [style.--bc]="a.color || '#062e86'"
+                      [style.border-color]="a.color || '#062e86'" [style.color]="a.color || '#062e86'" title="Política de esta área">
+                      <i [class]="a.icon || 'fa-solid fa-building'" aria-hidden="true"></i> {{ a.nombre }}
+                    </span>
+                    <ng-template #politicaGlobal>
+                      <span class="badge badge-sm badge-ghost gap-1" title="Vale para todas las áreas">
+                        <i class="fa-solid fa-globe" aria-hidden="true"></i> Global
+                      </span>
+                    </ng-template>
                   </div>
                 </td>
                 <td class="opacity-80 max-w-xs truncate" [title]="p.descriptionSlaPolicy">
@@ -270,7 +296,7 @@
                   </span>
                 </td>
                 <td class="text-right">
-                  <div class="flex justify-end gap-1 whitespace-nowrap">
+                  <div *ngIf="puedeEditarPolitica(p)" class="flex justify-end gap-1 whitespace-nowrap">
                     <button class="btn btn-xs btn-ghost gap-1" (click)="startEditPolicy(p)" aria-label="Editar política">
                       <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
                       Editar
@@ -310,7 +336,7 @@
           <span class="badge badge-sm badge-ghost">{{ rules.length || 0 }}</span>
         </div>
         <button class="btn btn-primary btn-sm gap-2" (click)="showNewRule = !showNewRule">
-          <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
+          <i class="fa-solid text-[15px]" [ngClass]="showNewRule ? 'fa-xmark' : 'fa-plus'" aria-hidden="true"></i>
           {{ showNewRule ? 'Cerrar' : 'Nueva Regla' }}
         </button>
       </div>
@@ -322,7 +348,7 @@
             <div class="label pt-0 pb-1">
               <span class="label-text text-xs font-medium">Política <span class="text-error">*</span></span>
             </div>
-            <app-master-select [(ngModel)]="newRule.slaPolicyId" name="slaPolicyId" [options]="policyOptions()" icon="fa-solid fa-stopwatch" placeholder="Seleccione política" label="Política SLA"></app-master-select>
+            <app-master-select [(ngModel)]="newRule.slaPolicyId" name="slaPolicyId" [options]="policyOptions(newRule.areaId)" icon="fa-solid fa-stopwatch" placeholder="Seleccione política" label="Política SLA"></app-master-select>
           </label>
 
 <!--
@@ -420,12 +446,12 @@
               <!-- Modo edición -->
               <tr *ngIf="editRule?.idSlaRule === r.idSlaRule" class="bg-base-200/50">
                 <td colspan="6">
-                  <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 p-2 items-end">
+                  <div class="form-en-fila grid gap-3 p-2 items-end">
                     <div class="form-control">
                       <div class="label pt-0 pb-1">
                         <span class="label-text text-xs font-medium">Política</span>
                       </div>
-                      <app-master-select [(ngModel)]="editRule!.slaPolicyId" [options]="policyOptions()" icon="fa-solid fa-stopwatch" placeholder="Seleccione política" label="Política SLA"></app-master-select>
+                      <app-master-select [(ngModel)]="editRule!.slaPolicyId" [options]="policyOptions(editRule!.areaId)" icon="fa-solid fa-stopwatch" placeholder="Seleccione política" label="Política SLA"></app-master-select>
                     </div>
 
 <div class="form-control">
@@ -487,7 +513,7 @@
                       <app-estado-activo [(ngModel)]="editRule!.activeSlaRule" [femenino]="true" etiqueta="Estado"></app-estado-activo>
                     </div>
 
-                    <div class="col-span-2 md:col-span-3 xl:col-span-6 flex justify-end gap-2 pt-2 border-t border-base-300">
+                    <div class="col-span-full flex justify-end gap-2 pt-2 border-t border-base-300">
                       <button class="btn btn-sm btn-ghost gap-1" (click)="cancelEditRule()">
                         <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i>
                         Cancelar
@@ -514,7 +540,7 @@
                     [style.border-color]="policyMeta(r.slaPolicyId).color" [style.color]="policyMeta(r.slaPolicyId).color" [style.--bc]="policyMeta(r.slaPolicyId).color"
                   >
                     <i [class]="policyMeta(r.slaPolicyId).icon" class="text-xs" aria-hidden="true"></i>
-                    {{ getPolicyName(r.slaPolicyId) }}
+                    {{ getPolicyName(r.slaPolicyId, r.slaPolicyName) }}
                   </span>
                 </td>
                 <td class="text-center">
@@ -603,7 +629,7 @@
           <span class="badge badge-sm badge-ghost">{{ escalations.length || 0 }}</span>
         </div>
         <button class="btn btn-primary btn-sm gap-2" (click)="showNewEscalation = !showNewEscalation">
-          <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
+          <i class="fa-solid text-[15px]" [ngClass]="showNewEscalation ? 'fa-xmark' : 'fa-plus'" aria-hidden="true"></i>
           {{ showNewEscalation ? 'Cerrar' : 'Nueva Escalación' }}
         </button>
       </div>

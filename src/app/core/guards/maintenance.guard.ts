@@ -11,7 +11,7 @@ import { AdminService } from '../services/admin.service';
  * - la de Páginas del Sistema (pages-system), donde vive el interruptor
  *   principal del modo mantenimiento.
  */
-const EXENTAS = ['/admin/pages-system', '/admin/branding', '/auth'];
+const EXENTAS = ['/administracion/paginas-sistema', '/administracion/marca', '/acceso'];
 
 /** Redirige a la pantalla de mantenimiento cuando el administrador la tiene activa. */
 export const maintenanceGuard: CanActivateFn = () => {

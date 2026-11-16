@@ -42,7 +42,7 @@ export class TicketTypeManagementComponent implements OnInit {
     });
   }
 
-  edit(t: TicketTypeConfig): void { this.editType = { ...t }; }
+  edit(t: TicketTypeConfig): void { this.editType = { ...t, color: t.color || '#062e86' }; }
   cancelEdit(): void { this.editType = null; }
 
   saveEdit(): void {
@@ -59,7 +59,7 @@ export class TicketTypeManagementComponent implements OnInit {
   }
 
   delete(t: TicketTypeConfig): void {
-    Swal.fire({ title: '¿Eliminar tipo de ticket?', text: t.name, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' })
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar', focusCancel: true, title: '¿Eliminar tipo de ticket?', text: t.name, icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626' })
       .then((r) => {
         if (r.isConfirmed) {
           this.adminService.deleteTicketType(t.id).subscribe({

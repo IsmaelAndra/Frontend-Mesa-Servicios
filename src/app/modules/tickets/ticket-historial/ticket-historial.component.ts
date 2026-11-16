@@ -15,6 +15,56 @@ function textoPlano(text: string): string {
     .trim();
 }
 
+/** Cómo se pinta cada acción: texto en español, icono y tono de daisyUI. */
+interface Accion {
+  etiqueta: string;
+  icono: string;
+  tono: string;
+  /** Si existe, se muestra esta frase en lugar de los valores guardados. */
+  frase?: string;
+}
+
+/** Clases literales por tono (Tailwind no genera clases armadas en tiempo de ejecución): [texto, fondo del icono]. */
+const TONOS: Record<string, [string, string]> = {
+  info: ["text-info", "bg-info text-white"],
+  secondary: ["text-secondary", "bg-secondary text-white"],
+  warning: ["text-warning", "bg-warning text-white"],
+  primary: ["text-primary", "bg-primary text-white"],
+  neutral: ["text-base-content", "bg-neutral text-neutral-content"],
+  success: ["text-success", "bg-success text-white"],
+  error: ["text-error", "bg-error text-white"],
+  "base-content": ["text-base-content", "bg-base-300 text-base-content"],
+};
+
+const DEFECTO: Accion = { etiqueta: "", icono: "fa-solid fa-clock", tono: "base-content" };
+
+const ACCIONES: Record<string, Accion> = {
+  CREATE: { etiqueta: "Ticket creado", icono: "fa-solid fa-plus", tono: "info" },
+  ASSIGN: { etiqueta: "Asignación", icono: "fa-solid fa-user-check", tono: "secondary" },
+  TEAM_ASSIGN: { etiqueta: "Cambio de equipo", icono: "fa-solid fa-users", tono: "secondary" },
+  STATUS_CHANGE: { etiqueta: "Cambio de estado", icono: "fa-solid fa-rotate", tono: "warning" },
+  PRIORITY_CHANGE: { etiqueta: "Cambio de prioridad", icono: "fa-solid fa-flag", tono: "warning" },
+  CATEGORY_CHANGE: { etiqueta: "Cambio de categoría", icono: "fa-solid fa-tag", tono: "warning" },
+  TYPE_CHANGE: { etiqueta: "Cambio de tipo", icono: "fa-solid fa-shapes", tono: "warning" },
+  AREA_TRANSFER: { etiqueta: "Traslado de área", icono: "fa-solid fa-right-left", tono: "secondary" },
+  ANSWER: { etiqueta: "Respuesta", icono: "fa-solid fa-comment-dots", tono: "primary" },
+  ANSWER_EDITED: { etiqueta: "Mensaje editado", icono: "fa-solid fa-pen", tono: "primary" },
+  ANSWER_DELETED: { etiqueta: "Mensaje eliminado", icono: "fa-solid fa-comment-slash", tono: "error" },
+  ATTACH: { etiqueta: "Adjunto", icono: "fa-solid fa-paperclip", tono: "neutral" },
+  RATING: { etiqueta: "Calificación", icono: "fa-solid fa-star", tono: "success" },
+  LLAMADA: { etiqueta: "Llamada", icono: "fa-solid fa-phone", tono: "info" },
+  CONFIDENTIALITY_CHANGE: { etiqueta: "Cambio de confidencialidad", icono: "fa-solid fa-user-shield", tono: "warning" },
+  CONFIDENTIAL_READ: {
+    etiqueta: "Lectura con acceso de emergencia", icono: "fa-solid fa-eye", tono: "error",
+    frase: "Abrió el ticket confidencial con un acceso aprobado por el jefe del área",
+  },
+  CONFIDENTIAL_ACCESS_REQUEST: {
+    etiqueta: "Pidió acceso al ticket confidencial", icono: "fa-solid fa-key", tono: "warning",
+  },
+  CONFIDENTIAL_ACCESS_APPROVED: { etiqueta: "Acceso confidencial aprobado", icono: "fa-solid fa-lock-open", tono: "success" },
+  CONFIDENTIAL_ACCESS_REJECTED: { etiqueta: "Acceso confidencial rechazado", icono: "fa-solid fa-ban", tono: "error" },
+};
+
 /**
  * Línea de tiempo de auditoría de un ticket (pestaña Historial del detalle).
  *
@@ -32,84 +82,33 @@ export class TicketHistorialComponent {
   readonly pagAudit = new Paginacion<AuditLog>(() => this.audit, 15);
 
   timelineLabel(action: string): string {
-    switch (action) {
-      case "CREATE":
-        return "Ticket creado";
-      case "ASSIGN":
-        return "Asignación";
-      case "STATUS_CHANGE":
-        return "Cambio de estado";
-      case "ANSWER":
-        return "Respuesta";
-      case "ATTACH":
-        return "Adjunto";
-      case "RATING":
-        return "Calificación";
-      default:
-        return action || "Evento";
-    }
+    return (ACCIONES[action] || DEFECTO).etiqueta || action || "Evento";
   }
 
   /** Color del texto del encabezado de cada evento del timeline. */
   timelineTextColor(action: string): string {
-    switch (action) {
-      case "CREATE":
-        return "text-info";
-      case "ASSIGN":
-        return "text-secondary";
-      case "STATUS_CHANGE":
-        return "text-warning";
-      case "ANSWER":
-        return "text-primary";
-      case "ATTACH":
-        return "text-base-content";
-      case "RATING":
-        return "text-success";
-      default:
-        return "text-base-content";
-    }
+    return TONOS[(ACCIONES[action] || DEFECTO).tono][0];
   }
 
   /** Fondo sólido del icono circular del timeline. */
   timelineIconBg(action: string): string {
-    switch (action) {
-      case "CREATE":
-        return "bg-info text-white text-white";
-      case "ASSIGN":
-        return "bg-secondary text-white text-white";
-      case "STATUS_CHANGE":
-        return "bg-warning text-white text-white";
-      case "ANSWER":
-        return "bg-primary text-white text-white";
-      case "ATTACH":
-        return "bg-neutral text-neutral-content text-white";
-      case "RATING":
-        return "bg-success text-white text-white";
-      default:
-        return "bg-base-300 text-base-content text-white";
-    }
+    return TONOS[(ACCIONES[action] || DEFECTO).tono][1];
   }
 
   timelineIcon(action: string): string {
-    switch (action) {
-      case "CREATE":
-        return "fa-solid fa-plus";
-      case "ASSIGN":
-        return "fa-solid fa-user-check";
-      case "STATUS_CHANGE":
-        return "fa-solid fa-rotate";
-      case "ANSWER":
-        return "fa-solid fa-comment-dots";
-      case "ATTACH":
-        return "fa-solid fa-paperclip";
-      case "RATING":
-        return "fa-solid fa-star";
-      default:
-        return "fa-solid fa-clock";
-    }
+    return (ACCIONES[action] || DEFECTO).icono;
+  }
+
+  /** Acciones cuyos valores no aportan (p. ej. el correo de quien leyó): se muestra una frase. */
+  sinValores(a: AuditLog): boolean {
+    return !!(ACCIONES[a.actionType] || DEFECTO).frase;
   }
 
   timelineDetail(a: AuditLog): string {
+    const frase = (ACCIONES[a.actionType] || DEFECTO).frase;
+    if (frase) {
+      return frase;
+    }
     if (a.actionType === "STATUS_CHANGE") {
       return `${a.oldValue || "—"} → ${a.newValue || "—"}`;
     }

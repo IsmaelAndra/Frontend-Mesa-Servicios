@@ -9,12 +9,13 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import { Asset } from '../../../models/asset.model';
-import { Catalog } from '../../../models/user.model';
 
 describe('AssetFormComponent', () => {
-  function setup(id: string | null, activo?: Asset, role = 'ADMIN') {
-    const assetService = jasmine.createSpyObj('AssetService', ['getById', 'create', 'update', 'asignables']);
+  function setup(id: string | null, activo?: Asset, role = 'SUPER_ADMIN') {
+    const assetService = jasmine.createSpyObj('AssetService', ['getById', 'create', 'update', 'asignables', 'tipos', 'config']);
     assetService.asignables.and.returnValue(of([]));
+    assetService.tipos.and.returnValue(of([{ id: 't1', nombre: 'Laptop', prefijo: 'LAP', icono: 'fa-solid fa-laptop', color: '#2563EB', activo: true }]));
+    assetService.config.and.returnValue(of({ formatoCodigo: 'TI-{TIPO}-{NUM:6}' }));
     assetService.getById.and.returnValue(of(activo ?? ({} as Asset)));
     assetService.create.and.returnValue(of({ idAsset: 'nuevo' } as Asset));
     assetService.update.and.returnValue(of({ idAsset: id ?? '' } as Asset));
@@ -69,7 +70,7 @@ describe('AssetFormComponent', () => {
     expect(fixture.componentInstance.request.purchaseDateAsset).toBe('2026-05-01');
   });
 
-  it('no guarda sin código ni nombre y avisa', () => {
+  it('no guarda sin nombre ni tipo y avisa', () => {
     const { fixture, assetService, toastService } = setup(null);
     fixture.detectChanges();
 
@@ -83,11 +84,16 @@ describe('AssetFormComponent', () => {
     const { fixture, assetService, router } = setup(null);
     fixture.detectChanges();
 
-    fixture.componentInstance.request.codeAsset = 'C1';
+    // Sin código: el servidor pone el siguiente de la numeración.
     fixture.componentInstance.request.nameAsset = 'Laptop';
+    fixture.componentInstance.request.assetTypeId = 't1';
+    // Lo que hace la pantalla al elegir el tipo.
+    fixture.componentInstance.actualizarEjemplo();
     fixture.componentInstance.guardar();
 
     expect(assetService.create).toHaveBeenCalled();
+    expect(assetService.create.calls.mostRecent().args[0].codeAsset).toBeUndefined();
+    expect(fixture.componentInstance.ejemploCodigo).toBe('TI-LAP-00000N');
     expect(router.navigate).toHaveBeenCalledWith(['/activos', 'nuevo']);
   });
 
@@ -95,7 +101,7 @@ describe('AssetFormComponent', () => {
     const activo = { idAsset: 'a1', codeAsset: 'C1', nameAsset: 'N', typeAsset: 'LAPTOP', statusAsset: 'ASIGNADO', assignedUserId: 'u1' } as Asset;
     const { fixture } = setup('a1', activo);
     fixture.detectChanges();
-    expect(fixture.componentInstance.request.statusAsset).toBe('DISPONIBLE');
+    expect(fixture.componentInstance.request.statusAsset).toBe('EN_BODEGA');
     expect(fixture.componentInstance.estadoResultante).toBe('ASIGNADO');
   });
 
@@ -103,7 +109,7 @@ describe('AssetFormComponent', () => {
     const { fixture, assetService, toastService } = setup(null);
     fixture.detectChanges();
     const c = fixture.componentInstance;
-    c.request.codeAsset = 'C1';
+    c.request.assetTypeId = 't1';
     c.request.nameAsset = 'Laptop';
     c.request.statusAsset = 'BAJA';
     c.request.assignedUserId = 'u1';
@@ -112,12 +118,9 @@ describe('AssetFormComponent', () => {
     expect(toastService.warn).toHaveBeenCalled();
   });
 
-  it('el jefe de área no elige área: queda la suya', () => {
-    const { fixture } = setup(null, undefined, 'AREA_MANAGER');
-    const admin = TestBed.inject(AdminService) as jasmine.SpyObj<AdminService>;
-    admin.catalog.and.returnValue(of({ areas: [{ id: 'ar1', name: 'TI' }], categories: [], priorities: [], statuses: [], sucursales: [] } as unknown as Catalog));
+  it('el área se elige libremente: Tecnología y Desarrollo gestionan todos los activos', () => {
+    const { fixture } = setup(null, undefined, 'AGENT');
     fixture.detectChanges();
-    expect(fixture.componentInstance.areaBloqueada).toBeTrue();
-    expect(fixture.componentInstance.request.areaId).toBe('ar1');
+    expect(fixture.componentInstance.areaBloqueada).toBeFalse();
   });
 });

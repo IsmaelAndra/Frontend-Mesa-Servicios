@@ -152,7 +152,7 @@ export class ChatConfigComponent implements OnInit {
         };
       case "ADMIN":
         return {
-          label: "Solo administradores",
+          label: "Súper admin y jefes de área",
           className: "badge-warning text-warning-content",
           icon: "fa-solid fa-user-tie",
         };
@@ -199,7 +199,7 @@ export class ChatConfigComponent implements OnInit {
         };
       case "ADMIN":
         return {
-          label: "Admin",
+          label: "Jefes",
           className: "badge-warning text-warning-content",
           icon: "fa-solid fa-user-tie",
         };
@@ -260,8 +260,8 @@ export class ChatConfigComponent implements OnInit {
       case "ADMIN":
         return {
           texto: mostrarNombres
-            ? "Leído por administradores"
-            : "Leído por admins",
+            ? "Leído por jefes de área"
+            : "Leído por jefes",
           className: "text-warning",
           icon: "fa-solid fa-check-double",
         };

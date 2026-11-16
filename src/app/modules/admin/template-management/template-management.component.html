@@ -12,7 +12,7 @@
     </div>
 
     <button class="btn btn-primary btn-sm gap-2" (click)="showNew = !showNew">
-      <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
+      <i class="fa-solid text-[15px]" [ngClass]="showNew ? 'fa-xmark' : 'fa-plus'" aria-hidden="true"></i>
       {{ showNew ? 'Cerrar' : 'Nueva Plantilla' }}
     </button>
   </header>
@@ -38,6 +38,15 @@
           <app-master-select [(ngModel)]="newTemplate.nameTemplate" name="nameTemplate"
             [options]="opcionesEvento" icon="fa-solid fa-bolt" placeholder="Seleccione el evento" label="Evento"
             (elegido)="onEventChange()"></app-master-select>
+          <!-- Aviso al elegir, no al guardar: el evento ya tiene plantilla -->
+          <div *ngIf="plantillaExistente as ex" role="alert"
+               class="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs">
+            <i class="fa-solid fa-triangle-exclamation text-warning" aria-hidden="true"></i>
+            <span class="flex-1 min-w-[12rem]">Este evento ya tiene plantilla. Si crea una nueva, <b>reemplaza</b> su texto.</span>
+            <button type="button" class="btn btn-xs btn-warning" (click)="editarExistente(ex)">
+              <i class="fa-solid fa-pen" aria-hidden="true"></i> Editar la existente
+            </button>
+          </div>
           <div class="label pt-1">
             <span class="label-text-alt text-xs opacity-60">
               El evento es la clave que dispara el envío: solo hay una plantilla por evento,
@@ -60,7 +69,7 @@
         <!-- Icono -->
         <div class="form-control w-full">
           <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Icono (Font Awesome)</span>
+            <span class="label-text text-xs font-medium">Icono</span>
           </div>
           <div class="flex items-center gap-2">
             <span
@@ -71,12 +80,7 @@
             >
               <i [class]="newTemplate.iconTemplate || 'fa-regular fa-envelope'" class="text-[15px]"></i>
             </span>
-            <input
-              [(ngModel)]="newTemplate.iconTemplate"
-              name="iconTemplate"
-              class="input input-bordered input-sm w-full font-mono"
-              placeholder="fa-solid fa-ticket"
-            />
+            <app-selector-icono [(ngModel)]="newTemplate.iconTemplate" name="iconTemplate" [color]="newTemplate.colorTemplate || '#062e86'"></app-selector-icono>
           </div>
         </div>
 
@@ -313,7 +317,7 @@
         <!-- Icono -->
         <div class="form-control w-full">
           <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Icono (Font Awesome)</span>
+            <span class="label-text text-xs font-medium">Icono</span>
           </div>
           <div class="flex items-center gap-2">
             <span
@@ -324,12 +328,7 @@
             >
               <i [class]="editingTemplate.iconTemplate || 'fa-regular fa-envelope'" class="text-[15px]"></i>
             </span>
-            <input
-              [(ngModel)]="editingTemplate.iconTemplate"
-              name="editIconTemplate"
-              class="input input-bordered input-sm w-full font-mono"
-              placeholder="fa-solid fa-ticket"
-            />
+            <app-selector-icono [(ngModel)]="editingTemplate.iconTemplate" name="editIconTemplate" [color]="editingTemplate.colorTemplate || '#062e86'"></app-selector-icono>
           </div>
         </div>
 
@@ -615,7 +614,7 @@
                 <th class="text-center">Disparo</th>
                 <th class="text-center">Tipo</th>
                 <th class="text-center">Asunto</th>
-                <th class="text-center">Destinatario del correo</th>
+                <th class="text-center">Destinatario</th>
                 <th class="text-center">Estado</th>
                 <th class="text-center">Acciones</th>
               </tr>
@@ -676,7 +675,7 @@
                 </td>
 
                 <!-- Disparo -->
-                <td class="text-xs opacity-80 whitespace-nowrap">
+                <td class="text-xs opacity-80 min-w-[9rem] max-w-[12rem]">
                   {{ triggerLabel(t) }}
                 </td>
 
@@ -686,7 +685,7 @@
                 </td>
 
                 <!-- Asunto -->
-                <td class="max-w-xs truncate opacity-80" [title]="t.subjectTemplate">
+                <td class="max-w-[14rem] truncate opacity-80" [title]="t.subjectTemplate">
                   {{ t.subjectTemplate }}
                 </td>
 
@@ -710,39 +709,23 @@
                 </td>
 
                 <!-- Acciones -->
+                <!-- Solo iconos (con su nombre al pasar el mouse): con texto, esta
+                     columna medía 390 px y la tabla se salía de la pantalla. -->
                 <td class="text-right whitespace-nowrap">
-                  <button
-                    class="btn btn-xs btn-ghost gap-1"
-                    (click)="startEdit(t)"
-                    aria-label="Editar plantilla"
-                  >
-                    <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
-                    Editar
-                  </button>
-                  <button
-                    class="btn btn-xs btn-ghost gap-1"
-                    (click)="abrirVisor(t)"
-                    aria-label="Ver la plantilla en el visor"
-                  >
-                    <i class="fa-solid fa-up-right-from-square text-sm" aria-hidden="true"></i>
-                    Abrir visor
-                  </button>
-                  <button
-                    class="btn btn-xs btn-ghost gap-1"
-                    (click)="preview(t)"
-                    aria-label="Ver vista previa"
-                  >
-                    <i class="fa-solid fa-eye text-sm" aria-hidden="true"></i>
-                    Vista previa
-                  </button>
-                  <button
-                    class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
-                    (click)="delete(t)"
-                    aria-label="Eliminar plantilla"
-                  >
-<i class="fa-solid fa-trash text-sm" aria-hidden="true"></i>
-                    Eliminar
-                  </button>
+                  <div class="join">
+                    <button class="btn btn-xs btn-ghost join-item" (click)="startEdit(t)" title="Editar" aria-label="Editar plantilla">
+                      <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
+                    </button>
+                    <button class="btn btn-xs btn-ghost join-item" (click)="abrirVisor(t)" title="Abrir visor" aria-label="Ver la plantilla en el visor">
+                      <i class="fa-solid fa-up-right-from-square text-sm" aria-hidden="true"></i>
+                    </button>
+                    <button class="btn btn-xs btn-ghost join-item" (click)="preview(t)" title="Vista previa" aria-label="Ver vista previa">
+                      <i class="fa-solid fa-eye text-sm" aria-hidden="true"></i>
+                    </button>
+                    <button class="btn btn-xs btn-ghost join-item text-error hover:bg-error/10" (click)="delete(t)" title="Eliminar" aria-label="Eliminar plantilla">
+                      <i class="fa-solid fa-trash text-sm" aria-hidden="true"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
 

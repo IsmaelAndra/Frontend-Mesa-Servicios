@@ -5,7 +5,7 @@ export type SessionState = 'EN_LINEA' | 'RECIENTE' | 'DESCONECTADO';
 export const SESION_META: Record<SessionState, { label: string; dot: string; icon: string }> = {
   EN_LINEA: { label: 'En línea', dot: 'bg-success', icon: 'fa-circle' },
   RECIENTE: { label: 'Conectado recientemente', dot: 'bg-warning', icon: 'fa-clock' },
-  DESCONECTADO: { label: 'Desconectado', dot: 'bg-error', icon: 'fa-circle-xmark' }
+  DESCONECTADO: { label: 'Desconectado', dot: 'bg-base-content/30', icon: 'fa-circle' }
 };
 
 const SIN_SESION: SessionState = 'DESCONECTADO';
@@ -22,7 +22,7 @@ const SIN_SESION: SessionState = 'DESCONECTADO';
 export const SESION_PUNTO_NAVBAR: Record<SessionState, string> = {
   EN_LINEA: 'bg-white ring-2 ring-success',
   RECIENTE: 'bg-warning ring-2 ring-warning/40',
-  DESCONECTADO: 'bg-error ring-2 ring-error/40'
+  DESCONECTADO: 'bg-slate-400 ring-2 ring-white/40'
 };
 
 /**

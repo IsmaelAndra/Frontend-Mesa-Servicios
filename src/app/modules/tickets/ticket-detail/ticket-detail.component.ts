@@ -1,4 +1,5 @@
 import { TelefoniaService } from "../../../core/services/telefonia.service";
+import { textoEstado } from '../../../core/utils/texto-estado.util';
 import {
   Component,
   OnInit,
@@ -36,6 +37,7 @@ import {
 import { duracionLegible } from "../../../core/utils/duracion.util";
 import { SolicitanteResumen } from "../../../models/user.model";
 import { Catalog } from "../../../models/user.model";
+import { AccesoConfidencial } from "../../../models/ticket.model";
 import { MasterOption } from "../../shared/components/master-select/master-select.component";
 import { urlDelApi } from '../../../core/utils/url-api.util';
 
@@ -337,7 +339,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     });
     if (
       this.canManage &&
-      (this.userRole === "ADMIN" ||
+      (this.userRole === "AREA_MANAGER" ||
         this.userRole === "SUPER_ADMIN" ||
         this.userRole === "AGENT")
     ) {
@@ -358,14 +360,37 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
    * valor se manda al backend en el mismo clic, pero app-master-select mantiene
    * el mismo manejador (ngModelChange) y aporta el icono del maestro.
    */
+  /** "EN_PROCESO" → "En proceso" (menú, botón y avisos). */
+  estadoTexto(s: string | null | undefined): string {
+    return textoEstado(s);
+  }
+
+  /**
+   * Estados que se ofrecen en el menú. Un ticket CERRADO solo puede reabrirse
+   * (el backend rechaza lo demás), así que solo se ofrece eso.
+   */
+  get estadosElegibles(): string[] {
+    // REABIERTO no está en la lista normal: solo tiene sentido desde CERRADO.
+    if (this.ticket?.status === 'CERRADO') {
+      return ['REABIERTO'];
+    }
+    // Solo se cierra lo que ya está resuelto (el backend lo exige).
+    return this.ticket?.status === 'RESUELTO' ? this.statuses : this.statuses.filter((s) => s !== 'CERRADO');
+  }
+
+  /** daisyUI abre el menú con el foco: quitárselo lo cierra (al elegir o con Escape). */
+  cerrarMenu(): void {
+    (document.activeElement as HTMLElement | null)?.blur();
+  }
+
   get statusOptions(): MasterOption[] {
     return this.statuses.map((name) => {
       const meta = this.statusMeta(name);
-      return { value: name, label: name, icon: meta.icon, color: meta.color };
+      return { value: name, label: textoEstado(name), icon: meta.icon, color: meta.color };
     });
   }
 
-  /** Icono y color de la sede, del maestro de sedes (como el área). */
+  /** Icono y color de la sucursal, del maestro de sucursales (como el área). */
   sucursalMeta(id: string | null | undefined): { icon: string; color: string } {
     const s = (this.catalog?.sucursales || []).find((x) => x.id === id);
     return { icon: s?.icon || "fa-solid fa-location-dot", color: s?.color || "#0d9488" };
@@ -415,6 +440,22 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
           ],
           handlers: {
             image: () => this.onEditorImage(),
+          },
+        },
+        // Como cualquier chat: Enter envía y Mayús+Enter salta de línea. Dentro
+        // de una lista o con el panel de respuestas rápidas abierto, Enter hace
+        // lo de siempre (nuevo punto / elegir respuesta).
+        keyboard: {
+          bindings: {
+            enviarConEnter: {
+              key: "Enter",
+              shiftKey: false,
+              handler: (_rango: unknown, contexto: { format?: Record<string, unknown> }) => {
+                if (this.panelRapidas || contexto?.format?.["list"]) return true;
+                this.sendAnswer();
+                return false;
+              },
+            },
           },
         },
       },
@@ -542,10 +583,24 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         // El *ngIf="ticket" ya renderizó el editor: inicializar Quill ahora.
         setTimeout(() => this.initQuill());
       },
-      error: (e) =>
+      error: (e) => {
+        // Un confidencial sin acceso no es un 403 sin salida: se ofrece pedir acceso.
+        if (e?.status === 403 && String(e?.error?.message || "").startsWith("Ticket confidencial")) {
+          this.confidencialBloqueado = true;
+          this.ticketService.miAcceso(this.ticketId).subscribe({ next: (a) => (this.miAcceso = a), error: () => undefined });
+          return;
+        }
         // Sin ticket la pantalla se quedaría cargando para siempre.
-        this.router?.navigate([e?.status === 403 ? "/403" : "/404"], { replaceUrl: true }),
+        this.router?.navigate([e?.status === 403 ? "/403" : "/404"], { replaceUrl: true });
+      },
     });
+    // El jefe ve aquí las solicitudes de acceso a este ticket confidencial.
+    if (this.userRole === "AREA_MANAGER") {
+      this.ticketService.accesosPendientes().subscribe({
+        next: (l) => (this.accesosDelTicket = (l || []).filter((a) => a.ticketId === this.ticketId)),
+        error: () => undefined,
+      });
+    }
   }
 
   /**
@@ -822,6 +877,8 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   // ---------------- Editar / eliminar un mensaje propio
   puedeEditar(a: Answer): boolean {
     if (!this.isMine(a) || a.state || a.idAnswer.startsWith("tmp-")) return false;
+    // En un ticket cerrado la conversación queda como constancia.
+    if (this.ticket?.status === "CERRADO") return false;
     const creado = new Date(a.createdAtAnswer).getTime();
     return Number.isFinite(creado) && Date.now() - creado < this.MINUTOS_EDICION * 60_000;
   }
@@ -872,7 +929,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   eliminarMensaje(a: Answer): void {
-    void Swal.fire({
+    void Swal.fire({ cancelButtonColor: '#6b7280',
       title: "¿Eliminar este mensaje?",
       text: "Desaparece de la conversación para todos. Queda registrado en el historial del ticket.",
       icon: "warning",
@@ -939,11 +996,11 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ---------------- Respuestas rápidas
   get esPersonal(): boolean {
-    return ["AGENT", "ADMIN", "SUPER_ADMIN"].includes(this.userRole);
+    return ["AGENT", "AREA_MANAGER", "SUPER_ADMIN"].includes(this.userRole);
   }
 
   get esAdmin(): boolean {
-    return this.userRole === "ADMIN" || this.userRole === "SUPER_ADMIN";
+    return this.userRole === "AREA_MANAGER" || this.userRole === "SUPER_ADMIN";
   }
 
   get rapidasFiltradas(): QuickReply[] {
@@ -1032,7 +1089,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async formularioRapida(r?: QuickReply): Promise<void> {
-    const res = await Swal.fire({
+    const res = await Swal.fire({ cancelButtonColor: '#6b7280',
       title: r ? "Editar respuesta rápida" : "Nueva respuesta rápida",
       html: `
         <div style="text-align:left;display:flex;flex-direction:column;gap:10px">
@@ -1088,7 +1145,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   eliminarRapida(r: QuickReply): void {
-    void Swal.fire({
+    void Swal.fire({ cancelButtonColor: '#6b7280', focusCancel: true,
       title: `¿Eliminar "${escaparHtml(r.title)}"?`,
       icon: "warning",
       showCancelButton: true,
@@ -1243,6 +1300,11 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   ): { texto: string; clase: string; icono: string } | null {
     if (!vence) return null;
     const limite = new Date(vence).getTime();
+    if (!cumplido && (this.ticket?.status === "RESUELTO" || this.ticket?.status === "CERRADO")) {
+      // Un ticket terminado no sigue "venciendo": el plazo ya no corre.
+      return { texto: "Detenido: ticket " + (this.ticket.status === "CERRADO" ? "cerrado" : "resuelto"),
+        clase: "text-base-content/60", icono: "fa-solid fa-circle-stop" };
+    }
     if (cumplido) {
       const aTiempo = new Date(cumplido).getTime() <= limite;
       return aTiempo
@@ -1267,7 +1329,8 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   private loadRating(): void {
     this.ticketService.getRating(this.ticketId).subscribe({
       next: (r) => {
-        this.rating = r;
+        // 204 (sin calificar) llega como null.
+        this.rating = r || undefined;
         this.ratingCargado = true;
         this.intentarCalificarDesdeEnlace();
       },
@@ -1315,11 +1378,18 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   get canManage(): boolean {
-    return (
-      this.userRole === "ADMIN" ||
+    const porRol =
+      this.userRole === "AREA_MANAGER" ||
       this.userRole === "SUPER_ADMIN" ||
-      this.userRole === "AGENT"
-    );
+      this.userRole === "AGENT";
+    // El backend dice si ESTE ticket lo gestiona quien lo abre: el jefe que solo
+    // hace seguimiento de un ticket de su gente lo ve, pero no lo gestiona.
+    return porRol && this.ticket?.puedeGestionar !== false;
+  }
+
+  /** Puede responder en el chat (false = solo lectura). */
+  get puedeComentar(): boolean {
+    return this.ticket?.puedeComentar !== false;
   }
 
   /**
@@ -1348,6 +1418,147 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
   readonly textoEstrellas = ["", "Muy mal", "Mal", "Regular", "Bien", "Excelente"];
   readonly unoACinco = [1, 2, 3, 4, 5];
+  // ============ Confidencialidad ============
+  readonly horasAcceso = 2;
+  confidencialBloqueado = false;
+  miAcceso: AccesoConfidencial | null = null;
+  motivoAcceso = "";
+  enviandoAcceso = false;
+  accesosDelTicket: AccesoConfidencial[] = [];
+  editandoConfidencialidad = false;
+  guardandoConfidencialidad = false;
+  conf: { confidencial: boolean; todaElArea: boolean; personas: string[] } = { confidencial: false, todaElArea: false, personas: [] };
+
+  solicitarAcceso(): void {
+    if (!this.ticketId || this.motivoAcceso.trim().length < 10) return;
+    this.enviandoAcceso = true;
+    this.ticketService.solicitarAcceso(this.ticketId, this.motivoAcceso.trim()).subscribe({
+      next: (a) => {
+        this.enviandoAcceso = false;
+        this.miAcceso = a;
+        this.toastService.success("El jefe del área recibirá su solicitud", "Solicitud enviada");
+      },
+      error: (err) => {
+        this.enviandoAcceso = false;
+        this.toastService.error(err?.error?.message || "No se pudo enviar la solicitud");
+      },
+    });
+  }
+
+  decidirAcceso(a: AccesoConfidencial, aprobar: boolean): void {
+    this.ticketService.decidirAcceso(a.id, aprobar).subscribe({
+      next: () => {
+        this.accesosDelTicket = this.accesosDelTicket.filter((x) => x.id !== a.id);
+        this.toastService.success(aprobar ? `Acceso aprobado por ${this.horasAcceso} horas` : "Acceso rechazado");
+      },
+      error: (err) => this.toastService.error(err?.error?.message || "No se pudo decidir la solicitud"),
+    });
+  }
+
+  abrirConfidencialidad(): void {
+    if (!this.ticketId) return;
+    this.ticketService.confidencialidad(this.ticketId).subscribe({
+      next: (c) => {
+        this.conf = { confidencial: c.confidencial, todaElArea: c.todaElArea, personas: c.personas.map((p) => p.id) };
+        this.editandoConfidencialidad = true;
+      },
+      error: (err) => this.toastService.error(err?.error?.message || "No se pudo leer la confidencialidad"),
+    });
+  }
+
+  alternarAutorizado(id: string): void {
+    const p = this.conf.personas;
+    this.conf.personas = p.includes(id) ? p.filter((x) => x !== id) : [...p, id];
+  }
+
+  cerrarConfidencialidad(): void {
+    if (!this.guardandoConfidencialidad) this.editandoConfidencialidad = false;
+  }
+
+  guardarConfidencialidad(): void {
+    if (!this.ticketId) return;
+    this.guardandoConfidencialidad = true;
+    this.ticketService.cambiarConfidencialidad(this.ticketId, {
+      confidencial: this.conf.confidencial,
+      todaElArea: this.conf.confidencial && this.conf.todaElArea,
+      personas: this.conf.confidencial ? this.conf.personas : [],
+    }).subscribe({
+      next: () => {
+        this.guardandoConfidencialidad = false;
+        this.editandoConfidencialidad = false;
+        this.toastService.success(this.conf.confidencial ? "El ticket ahora es confidencial" : "El ticket ya no es confidencial");
+        this.load();
+      },
+      error: (err) => {
+        this.guardandoConfidencialidad = false;
+        this.toastService.error(err?.error?.message || "No se pudo guardar");
+      },
+    });
+  }
+
+  // ============ Traslado a otra área ============
+  trasladando = false;
+  enviandoTraslado = false;
+  trasladoArea: string | null = null;
+  trasladoCategoria: string | null = null;
+  trasladoMotivo = "";
+  /** Opciones del modal; se calculan al abrirlo y al cambiar de área, no en un getter. */
+  opcionesAreaTraslado: MasterOption[] = [];
+  opcionesCategoriaTraslado: MasterOption[] = [];
+
+  /** Trasladan el agente asignado, el jefe y el súper admin (el backend lo vuelve a comprobar). */
+  get puedeTrasladar(): boolean {
+    const estado = this.ticket?.status;
+    return this.canManage && this.userRole !== "AUDITOR" && estado !== "RESUELTO" && estado !== "CERRADO";
+  }
+
+  abrirTraslado(): void {
+    const conCategoria = new Set((this.catalog?.categories || []).map((c) => c.areaId).filter(Boolean));
+    this.opcionesAreaTraslado = (this.catalog?.areas || []).filter((a) => a.status !== false)
+      .filter((a) => conCategoria.has(a.id) && a.id !== this.ticket?.areaDestinoId)
+      .map((a) => ({ value: a.id, label: a.name, icon: a.icon, color: a.color }));
+    this.trasladoArea = null;
+    this.trasladoCategoria = null;
+    this.trasladoMotivo = "";
+    this.opcionesCategoriaTraslado = [];
+    this.trasladando = true;
+  }
+
+  elegirAreaTraslado(areaId: string | null): void {
+    this.trasladoArea = areaId;
+    this.trasladoCategoria = null;
+    this.opcionesCategoriaTraslado = (this.catalog?.categories || [])
+      .filter((c) => c.areaId === areaId)
+      .map((c) => ({ value: c.id, label: c.name, icon: c.icon, color: c.color }));
+  }
+
+  cerrarTraslado(): void {
+    if (!this.enviandoTraslado) this.trasladando = false;
+  }
+
+  confirmarTraslado(): void {
+    if (!this.ticketId || !this.trasladoArea || !this.trasladoMotivo.trim()) return;
+    this.enviandoTraslado = true;
+    this.ticketService
+      .trasladar(this.ticketId, {
+        areaId: this.trasladoArea,
+        categoryId: this.trasladoCategoria ?? undefined,
+        motivo: this.trasladoMotivo.trim(),
+      })
+      .subscribe({
+        next: (t) => {
+          this.enviandoTraslado = false;
+          this.trasladando = false;
+          this.toastService.success(`El ticket ahora lo atiende ${t.areaDestino ?? "la otra área"}`, "Ticket trasladado");
+          this.load();
+        },
+        error: (err) => {
+          this.enviandoTraslado = false;
+          this.toastService.error(err?.error?.message || "No se pudo trasladar el ticket");
+        },
+      });
+  }
+
   calificando = false;
   enviandoCalificacion = false;
   calif: Record<CriterioCalificacion, number> & { comentarios: string } = this.calificacionVacia();
@@ -2198,6 +2409,10 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     const escrito = (this.message.value || "").toString();
     if (!escrito || !escrito.replace(/<\/?[^>]+(>|$)/g, "").trim()) return;
     if (this.sending) return;
+    if (!this.puedeComentar) {
+      this.toastService.warn("Este ticket es de solo lectura para usted: no puede responder en él.");
+      return;
+    }
     // La cita va dentro del propio mensaje, como un bloque enlazado al original:
     // así se conserva aunque el original se edite o se borre después.
     const text = this.citando ? this.citaHtml(this.citando) + escrito : escrito;
@@ -2272,10 +2487,12 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   changeStatus(statusName: string): void {
+    this.cerrarMenu();
+    if (statusName === this.ticket?.status) return;
     this.ticketService.changeStatus(this.ticketId, statusName).subscribe({
       next: () => {
         this.load();
-        this.toastService.success(`Estado: ${statusName}`);
+        this.toastService.success(`Estado: ${textoEstado(statusName)}`);
       },
       error: (err) =>
         this.toastService.error(

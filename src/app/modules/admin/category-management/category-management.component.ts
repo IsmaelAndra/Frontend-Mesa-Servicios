@@ -71,7 +71,8 @@ export class CategoryManagementComponent implements OnInit {
   }
 
   edit(cat: Category): void {
-    this.editCategory = { ...cat };
+    // Sin color guardado, el selector mostraba negro: se propone el de la tabla.
+    this.editCategory = { ...cat, colorCategory: cat.colorCategory || '#2563EB' };
     this.editTeamId = cat.teamCategory?.idTeam ?? null;
   }
 
@@ -94,7 +95,7 @@ export class CategoryManagementComponent implements OnInit {
   }
 
   delete(cat: Category): void {
-    Swal.fire({ title: '¿Eliminar categoría?', text: cat.nameCategory, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' })
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar', focusCancel: true, title: '¿Eliminar categoría?', text: cat.nameCategory, icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626' })
       .then((r) => { if (r.isConfirmed) this.adminService.deleteCategory(cat.idCategory).subscribe({ next: () => { this.load(); this.toastService.success('Categoría eliminada'); }, error: (e) => this.toastService.error(e?.error?.message || 'No se pudo eliminar') }); });
   }
 }

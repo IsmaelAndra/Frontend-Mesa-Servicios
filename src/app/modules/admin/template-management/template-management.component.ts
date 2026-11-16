@@ -47,7 +47,18 @@ export class TemplateManagementComponent implements OnInit {
     SLA_BREACHED: 'SLA vencido',
     ESCALATION: 'Al escalar un ticket',
     MONTHLY_EVALUATION: 'Al generar la evaluación mensual',
-    TASK_ASIGNADA: 'Al asignar una tarea',
+    TASK_ASIGNADA: 'Al asignar una actividad',
+    TAREA_POR_VENCER: 'Antes del plazo de una actividad',
+    ACTA_ACTIVO: 'Actas de equipos (por aceptar / aceptada)',
+    GARANTIA_POR_VENCER: 'Garantía de un equipo por vencer',
+    PROYECTO_INVITACION: 'Invitación de un área a un proyecto',
+    PROYECTO_RESPUESTA: 'Respuesta a una invitación de proyecto',
+    PROYECTO_MIEMBRO: 'Al sumar a alguien a un proyecto',
+    PROYECTO_TAREA: 'Al asignar una tarea de proyecto',
+    PROYECTO_MENCION: 'Al mencionar a alguien con @ en el chat de un proyecto',
+    ACCESO_CONFIDENCIAL: 'Acceso a un ticket confidencial',
+    ALERTA_SEGURIDAD: 'Alerta de seguridad',
+    WORKFLOW_APROBACION: 'Aprobación de una automatización',
     CREACION_USUARIO: 'Al crear una cuenta de usuario',
     RESET_PASSWORD: 'Al restablecer la contraseña'
   };
@@ -173,8 +184,12 @@ return this.htmlPreview;
     RATING: ['[id]', '[titulo]', '[title]', '[nombre]'],
     SLA: ['[id]', '[percentage]', '[titulo]', '[title]'],
     EVAL: ['[nombre]'],
-    TASK: ['[task]', '[descripcion]', '[estado]', '[status]', '[nombre]', '[agente]'],
-    CUENTA: ['[nombre]', '[email]', '[correo]', '[password]', '[clave]']
+    TASK: ['[task]', '[titulo]', '[descripcion]', '[estado]', '[status]', '[nombre]', '[agente]', '[fechaInicio]', '[fechaFin]', '[asignadaPor]', '[urlTicket]'],
+    CUENTA: ['[nombre]', '[email]', '[correo]', '[password]', '[clave]'],
+    // Avisos armados por el sistema: [mensaje] trae el detalle ya redactado.
+    ACTIVO: ['[nombre]', '[asunto]', '[mensaje]', '[urlTicket]'],
+    PROYECTO: ['[nombre]', '[asunto]', '[mensaje]', '[urlTicket]'],
+    AVISO: ['[nombre]', '[asunto]', '[mensaje]', '[urlTicket]']
   };
 
   variablesDe(tipo?: string | null): string[] {
@@ -448,6 +463,7 @@ return this.htmlPreview;
         .replace(/\[porcentaje\]|\[percentage\]/g, '80')
         .replace(/\[id\]|\[ticket\]/g, '123')
         .replace(/\[titulo\]|\[asunto\]|\[title\]/g, 'Título de ejemplo')
+        .replace(/\[mensaje\]/g, '<p>Detalle del aviso que arma el sistema (equipo, proyecto, motivo...).</p>')
         .replace(/\[area\]/g, 'Soporte Técnico')
         .replace(/\[categoria\]/g, 'Acceso a sistemas')
         .replace(/\[prioridad\]|\[priority\]/g, 'Media')
@@ -593,6 +609,19 @@ return this.htmlPreview;
     this.adminService.getTemplates().subscribe({ next: (t) => { this.templates = t; this.loading = false; }, error: () => { this.loading = false; this.toastService.error('No se pudieron cargar las plantillas'); } });
   }
 
+  /** La plantilla que ya existe para el evento elegido en el alta (se reemplazaría). */
+  get plantillaExistente(): NotificationTemplate | null {
+    const n = this.newTemplate.nameTemplate;
+    return n ? this.templates.find((t) => t.nameTemplate === n) ?? null : null;
+  }
+
+  /** Cierra el alta y abre la edición de la plantilla que ya tiene el evento. */
+  editarExistente(t: NotificationTemplate): void {
+    this.showNew = false;
+    this.newTemplate = { activeTemplate: true, recipientRule: 'DEFAULT' as string };
+    this.startEdit(t);
+  }
+
   create(): void {
     if (!this.newTemplate.nameTemplate || !this.newTemplate.typeTemplate || !this.newTemplate.subjectTemplate || !this.newTemplate.bodyTemplate) return;
     const overwrites = this.templates.some(t => t.nameTemplate === this.newTemplate.nameTemplate);
@@ -621,7 +650,7 @@ return this.htmlPreview;
 
     if (overwrites) {
       // Solo hay una fila por evento: se avisa antes de sustituir el texto.
-      Swal.fire({
+      Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', cancelButtonText: 'Cancelar',
         title: 'Sobrescribir la plantilla del evento?',
         html: `Ya existe una plantilla para <b>${this.newTemplate.nameTemplate}</b>.<br>Su texto se reemplazará por el que estás creando.`,
         icon: 'warning',
@@ -638,14 +667,14 @@ return this.htmlPreview;
 
   delete(t: NotificationTemplate): void {
     const system = this.isSystemEvent(t);
-    Swal.fire({
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar', focusCancel: true,
       title: '¿Eliminar?',
       html: system
         ? `<b>${t.nameTemplate}</b> es una plantilla de un evento del sistema.<br>Si la eliminas, ese correo se enviará con el texto predeterminado del sistema.`
         : t.nameTemplate,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33'
+      confirmButtonColor: '#dc2626'
     })
       .then((r) => { if (r.isConfirmed) this.adminService.deleteTemplate(t.idTemplate).subscribe({ next: () => this.load(), error: (e) => this.toastService.error(e?.error?.message || 'No se pudo eliminar') }); });
   }

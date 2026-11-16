@@ -1,3 +1,4 @@
+import { MENSAJE_TELEFONO, telefonoInvalido } from '../../../core/utils/telefono.util';
 import { Component, OnInit } from '@angular/core';
 import Swal from 'sweetalert2';
 import { AdminService } from '../../../core/services/admin.service';
@@ -6,9 +7,9 @@ import { Paginacion } from '../../../core/utils/pagination.util';
 import { ToastService } from '../../../core/services/toast.service';
 
 /**
- * Catálogo de sedes de la institución.
+ * Catálogo de sucursales de la institución.
  *
- * Una sede es la oficina física, distinta del área (a qué se dedica la
+ * Una sucursal es la oficina física, distinta del área (a qué se dedica la
  * persona). Cada persona y cada ticket guardan la suya, así que el catálogo
  * alimenta los selectores del alta de usuarios y del ticket nuevo.
  */
@@ -44,7 +45,7 @@ export class SucursalManagementComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
-        this.toastService.error('No se pudieron cargar las sedes');
+        this.toastService.error('No se pudieron cargar las sucursales');
       }
     });
   }
@@ -62,8 +63,17 @@ export class SucursalManagementComponent implements OnInit {
     };
   }
 
+  readonly telefonoInvalido = telefonoInvalido;
+
+  /** Teléfono que tenía la sucursal en edición (solo se valida si cambia). */
+  get telefonoAnterior(): string | null {
+    const id = this.editSucursal?.idSucursal;
+    return this.sucursales.find((s) => s.idSucursal === id)?.phoneSucursal ?? null;
+  }
+
   create(): void {
     if (!this.newSucursal.nameSucursal || !this.newSucursal.codeSucursal) return;
+    if (telefonoInvalido(this.newSucursal.phoneSucursal)) { this.toastService.error(MENSAJE_TELEFONO); return; }
     this.adminService.createSucursal(this.payload(this.newSucursal)).subscribe({
       next: () => {
         this.load();
@@ -73,14 +83,14 @@ export class SucursalManagementComponent implements OnInit {
           colorSucursal: '#062e86'
         };
         this.showCreate = false;
-        this.toastService.success('Sede creada');
+        this.toastService.success('Sucursal creada');
       },
-      error: (e) => this.toastService.error(e?.error?.message || 'No se pudo crear la sede')
+      error: (e) => this.toastService.error(e?.error?.message || 'No se pudo crear la sucursal')
     });
   }
 
   edit(sucursal: Sucursal): void {
-    this.editSucursal = { ...sucursal };
+    this.editSucursal = { ...sucursal, colorSucursal: sucursal.colorSucursal || '#0d9488' };
   }
 
   cancelEdit(): void {
@@ -89,33 +99,34 @@ export class SucursalManagementComponent implements OnInit {
 
   saveEdit(): void {
     if (!this.editSucursal) return;
+    if (telefonoInvalido(this.editSucursal.phoneSucursal, this.telefonoAnterior)) { this.toastService.error(MENSAJE_TELEFONO); return; }
     this.adminService.updateSucursal(this.editSucursal.idSucursal, this.payload(this.editSucursal)).subscribe({
       next: () => {
         this.load();
         this.editSucursal = null;
-        this.toastService.success('Sede actualizada');
+        this.toastService.success('Sucursal actualizada');
       },
-      error: (e) => this.toastService.error(e?.error?.message || 'No se pudo actualizar la sede')
+      error: (e) => this.toastService.error(e?.error?.message || 'No se pudo actualizar la sucursal')
     });
   }
 
   delete(sucursal: Sucursal): void {
-    Swal.fire({
-      title: '¿Eliminar sede?',
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar', focusCancel: true,
+      title: '¿Eliminar sucursal?',
       text: `${sucursal.nameSucursal}. Si tiene personas asignadas no se podrá borrar.`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33'
+      confirmButtonColor: '#dc2626'
     }).then((r) => {
       if (!r.isConfirmed) return;
       this.adminService.deleteSucursal(sucursal.idSucursal).subscribe({
         next: () => {
           this.load();
-          this.toastService.success('Sede eliminada');
+          this.toastService.success('Sucursal eliminada');
         },
         // El backend avisa si quedan personas asignadas, y en ese caso conviene
-        // desactivar la sede en lugar de borrarla.
-        error: (e) => this.toastService.error(e?.error?.message || 'No se pudo eliminar la sede')
+        // desactivar la sucursal en lugar de borrarla.
+        error: (e) => this.toastService.error(e?.error?.message || 'No se pudo eliminar la sucursal')
       });
     });
   }

@@ -4,16 +4,6 @@ import { Observable, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Notification } from '../../models/notification.model';
 
-/** Reporte tal como lo publica GET /reports/disponibles. */
-export interface AvailableReport {
-  id: string;
-  nombre: string;
-  titulo: string;
-  descripcion?: string;
-  icono?: string;
-  color?: string;
-}
-
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private url = `${environment.apiUrl}/notifications`;
@@ -62,24 +52,5 @@ export class NotificationService {
   /** Número de notificaciones sin leer, para el contador del navbar. */
   unreadCount(): Observable<{ unread: number }> {
     return this.http.get<{ unread: number }>(`${this.url}/unread-count`);
-  }
-
-  /** Reportos disponibles, los devuelve el backend para no fijarlos en el código. */
-  availableReports(): Observable<AvailableReport[]> {
-    return this.http.get<AvailableReport[]>(`${environment.apiUrl}/reports/disponibles`);
-  }
-
-downloadReport(id: string, format = 'PDF', params?: {
-      from?: string;
-      to?: string;
-      typeId?: string;
-      /** Sede por la que se acota el reporte; si se omite, son todas. */
-      sucursalId?: string;
-      /** Área por la que se acota el reporte; si se omite, son todas. */
-      areaId?: string;
-      orientacion?: string;
-    }): Observable<Blob> {
-    return this.http.get(`${environment.apiUrl}/reports/custom/${id}`,
-      { responseType: 'blob', params: { format, ...(params || {}) } as Record<string, string | number> });
   }
 }

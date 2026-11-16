@@ -6,7 +6,8 @@
  * historial mostraba el código crudo con un icono genérico.
  */
 
-export const ESTADOS_ACTIVO = ['DISPONIBLE', 'ASIGNADO', 'EN_REPARACION', 'BAJA'] as const;
+/** EN_BODEGA = sin persona asignada (V36; antes DISPONIBLE). */
+export const ESTADOS_ACTIVO = ['EN_BODEGA', 'ASIGNADO', 'EN_REPARACION', 'BAJA'] as const;
 
 interface Meta {
   etiqueta: string;
@@ -15,7 +16,9 @@ interface Meta {
 }
 
 const ESTADO: Record<string, Meta> = {
-  DISPONIBLE: { etiqueta: 'Disponible', icono: 'fa-solid fa-circle-check', color: '#059669' },
+  EN_BODEGA: { etiqueta: 'En bodega', icono: 'fa-solid fa-warehouse', color: '#0891B2' },
+  // Valor antiguo: se muestra igual que En bodega.
+  DISPONIBLE: { etiqueta: 'En bodega', icono: 'fa-solid fa-warehouse', color: '#0891B2' },
   ASIGNADO: { etiqueta: 'Asignado', icono: 'fa-solid fa-user-check', color: '#2563EB' },
   EN_REPARACION: { etiqueta: 'En reparación', icono: 'fa-solid fa-screwdriver-wrench', color: '#D97706' },
   BAJA: { etiqueta: 'Dado de baja', icono: 'fa-solid fa-ban', color: '#DC2626' }

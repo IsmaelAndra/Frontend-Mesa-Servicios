@@ -4,7 +4,7 @@ import Swal from 'sweetalert2';
 import { TaskService } from '../../../core/services/task.service';
 import { AdminService, AssignableAgent } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { TaskItem, TaskRequest, TaskStatus, KANBAN_STATUSES } from '../../../models/task.model';
+import { TaskItem, TaskRequest, TaskStatus, KANBAN_STATUSES, RECORDATORIOS } from '../../../models/task.model';
 import { User } from '../../../models/user.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { urlDelApi } from '../../../core/utils/url-api.util';
@@ -121,6 +121,27 @@ export class KanbanComponent implements OnInit {
   }
 
   /**
+   * "Te la asignó X" cuando otra persona me la encargó, o "Encargada a X"
+   * cuando yo se la encargué a otra. Null si es una actividad propia.
+   */
+  origenTarea(task: TaskItem): { icono: string; texto: string } | null {
+    const yo = this.currentUser()?.corporateEmailUser;
+    if (!yo || !task.createdByEmail || task.createdByEmail === task.assignedUserEmail) return null;
+    if (task.assignedUserEmail === yo) {
+      return { icono: 'fa-share', texto: `Te la asignó ${this.nombreDe(task.createdByEmail)}` };
+    }
+    if (task.createdByEmail === yo) {
+      return { icono: 'fa-paper-plane', texto: `Encargada a ${this.asignado(task)}` };
+    }
+    return null;
+  }
+
+  private nombreDe(email: string): string {
+    const agente = this.agents.find((a) => a.corporateEmailUser === email);
+    return agente?.displayName?.trim() || (email.includes('@') ? email.split('@')[0] : email);
+  }
+
+  /**
    * Estado de sesión de la persona asignada. Se busca en la lista de agentes
    * (con su sessionState) y, si es el usuario con sesión, se usa el suyo: sin
    * esto el avatar no distinguía a nadie en línea de nadie desconectado.
@@ -145,6 +166,11 @@ export class KanbanComponent implements OnInit {
   openEdit(task: TaskItem): void {
     if (this.dragging) return;
     this.openModal(task);
+  }
+
+  /** Vencida: tiene plazo, ya pasó y no está HECHA. */
+  vencida(task: TaskItem): boolean {
+    return !!task.due && task.status !== 'HECHO' && new Date(task.due).getTime() < Date.now();
   }
 
   onDragStart(): void {
@@ -209,7 +235,7 @@ export class KanbanComponent implements OnInit {
       })
       .join('');
 
-    Swal.fire({
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', confirmButtonColor: '#dc2626', focusCancel: true,
       title: editing ? 'Editar tarea' : 'Nueva tarea',
       width: '600px',
       html: `
@@ -244,11 +270,20 @@ export class KanbanComponent implements OnInit {
       )}" />
             </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Duración (min)</label>
-            <input id="tk-duration" type="number" min="1" class="swal-daisy-input" value="${task?.durationMinutes ?? 5
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium mb-1">Duración (min)</label>
+              <input id="tk-duration" type="number" min="1" class="swal-daisy-input" value="${task?.durationMinutes ?? 5
         }" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Avisarme por correo</label>
+              <select id="tk-recordatorio" class="swal-daisy-input" title="Aviso antes de la fecha de fin">${RECORDATORIOS
+        .map((r) => `<option value="${r.valor ?? ''}" ${(task?.recordatorioMinutos ?? null) === r.valor ? 'selected' : ''}>${r.texto}</option>`)
+        .join('')}</select>
+            </div>
           </div>
+          <p class="text-xs opacity-60 text-left">El aviso se envía antes de la fecha de fin; sin fecha de fin no hay aviso.</p>
         </div>`,
       customClass: {
         popup: 'rounded-xl',
@@ -276,8 +311,14 @@ export class KanbanComponent implements OnInit {
         }
         const start = (popup?.querySelector('#tk-start') as HTMLInputElement)?.value || undefined;
         const due = (popup?.querySelector('#tk-end') as HTMLInputElement)?.value || undefined;
+        if (start && due && new Date(due).getTime() < new Date(start).getTime()) {
+          Swal.showValidationMessage('La fecha de fin no puede ser anterior a la de inicio');
+          return false;
+        }
         const duration =
           Number((popup?.querySelector('#tk-duration') as HTMLInputElement)?.value) || undefined;
+        const recordatorio =
+          Number((popup?.querySelector('#tk-recordatorio') as HTMLSelectElement)?.value) || null;
         return {
           title,
           description:
@@ -285,7 +326,8 @@ export class KanbanComponent implements OnInit {
           assignedUserId: assigned,
           start: start ? new Date(start).toISOString() : undefined,
           due: due ? new Date(due).toISOString() : undefined,
-          durationMinutes: duration
+          durationMinutes: duration,
+          recordatorioMinutos: due ? recordatorio : null
         } as TaskRequest;
       }
     }).then((result) => {
@@ -311,7 +353,7 @@ export class KanbanComponent implements OnInit {
   }
 
   deleteTask(id: string): void {
-    Swal.fire({
+    Swal.fire({ reverseButtons: true, focusCancel: true,
       title: '¿Eliminar tarea?',
       text: 'Esta acción no se puede deshacer',
       icon: 'warning',

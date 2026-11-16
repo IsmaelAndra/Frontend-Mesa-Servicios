@@ -1,18 +1,22 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { take } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { AssetService } from '../../../core/services/asset.service';
 import { AdminService } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Asset, AssetPage } from '../../../models/asset.model';
-import { TIPOS_ACTIVO, etiquetaTipoActivo, iconoTipoActivo } from '../../../core/utils/asset-type.util';
+import { Asset, AssetPage, TipoActa } from '../../../models/asset.model';
+import { abrirBlob } from '../../../core/utils/abrir-blob.util';
+import { colorTipoActivo, etiquetaTipoActivo, iconoTipoActivo } from '../../../core/utils/asset-type.util';
 import { ESTADOS_ACTIVO, metaEstadoActivo } from '../../../core/utils/asset-status.util';
 import { inicialesDe, urlFotoUsuario } from '../../../core/utils/user-photo.util';
 import { MasterOption } from '../../shared/components/master-select/master-select.component';
 
 /**
- * Listado de activos. Lo que trae lo decide el backend según quién mira
- * (AssetService.alcanceVisible): cada uno sus equipos, el jefe de área los de
- * su área y los administradores todo. Aquí solo cambian textos y filtros.
+ * Inventario de activos para Tecnología, Desarrollo, el súper admin (gestionan)
+ * y el auditor (solo lee). Los demás ven "Mis equipos" (/activos/mis-equipos).
+ * Se pueden elegir varios equipos para imprimir sus etiquetas o entregarlos en
+ * una sola acta.
  */
 @Component({
   selector: 'app-asset-list',
@@ -39,11 +43,15 @@ export class AssetListComponent implements OnInit {
     const m = metaEstadoActivo(e);
     return { value: e, label: m.etiqueta, icon: m.icono, color: m.color };
   });
-  readonly typeOptions: MasterOption[] = TIPOS_ACTIVO.map((t) => ({
-    value: t,
-    label: etiquetaTipoActivo(t),
-    icon: iconoTipoActivo(t)
-  }));
+  /** Tipos del maestro; el filtro va por nombre (así lo guarda el activo). */
+  typeOptions: MasterOption[] = [];
+
+  /** Equipos elegidos (ids) para etiquetas o un acta conjunta. */
+  seleccion = new Set<string>();
+  private elegidos = new Map<string, Asset>();
+  actaTipo: TipoActa | null = null;
+  actaActivos: Asset[] = [];
+  escaneando = false;
   areaOptions: MasterOption[] = [];
 
   /** Fotos de la columna "Asignado a" que no cargaron (se muestran iniciales). */
@@ -53,16 +61,33 @@ export class AssetListComponent implements OnInit {
     private assetService: AssetService,
     private authService: AuthService,
     private adminService: AdminService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private router: Router
   ) {
     this.role = this.authService.getRole();
   }
 
   ngOnInit(): void {
-    if (this.esAdmin) {
+    // El permiso de activos llega del servidor: tras recargar aún no está.
+    this.authService.permisosCargados().pipe(take(1)).subscribe(() => this.iniciar());
+  }
+
+  private iniciar(): void {
+    // Quien no gestiona ni audita solo tiene sus equipos: su pantalla es otra.
+    if (!this.veTodo) {
+      this.router.navigate(['/activos/mis-equipos'], { replaceUrl: true });
+      return;
+    }
+    this.assetService.tipos().subscribe({
+      next: (t) => (this.typeOptions = (t || []).map((x) => ({
+        value: x.nombre.toUpperCase(), label: x.nombre, icon: x.icono || 'fa-solid fa-box', color: x.color || undefined,
+      }))),
+      error: () => undefined
+    });
+    if (this.veTodo) {
       this.adminService.catalog().subscribe({
         next: (c) => {
-          this.areaOptions = (c?.areas || []).map((a) => ({
+          this.areaOptions = (c?.areas || []).filter((a) => a.status !== false).map((a) => ({
             value: a.id,
             label: a.name,
             icon: a.icon,
@@ -76,28 +101,87 @@ export class AssetListComponent implements OnInit {
   }
 
   get esAdmin(): boolean {
-    return this.role === 'SUPER_ADMIN' || this.role === 'ADMIN';
+    return this.role === 'SUPER_ADMIN';
   }
 
   get esJefeDeArea(): boolean {
     return this.role === 'AREA_MANAGER';
   }
 
+  /** Tecnología, Desarrollo y el súper admin (permiso del servidor). */
   get puedeGestionar(): boolean {
-    return this.esAdmin || this.esJefeDeArea;
+    return this.authService.gestionaActivos();
   }
 
-  /** Título y subtítulo según el alcance de quien mira. */
-  get titulo(): string {
-    if (this.esAdmin) return 'Activos de TI';
-    if (this.esJefeDeArea) return 'Activos de mi área';
-    return 'Mis activos';
+  get veTodo(): boolean {
+    return this.puedeGestionar || this.role === 'AUDITOR';
   }
 
-  get subtitulo(): string {
-    if (this.esAdmin) return 'Inventario completo de equipos, a quién están asignados y dónde están';
-    if (this.esJefeDeArea) return 'Equipos de tu área y de las personas de tu área, con quién los tiene';
-    return 'Equipos que tienes asignados a tu nombre';
+  readonly titulo = 'Activos de TI';
+  readonly subtitulo = 'Inventario de equipos: quién los tiene, dónde están y sus actas';
+
+  // ------------------------------------------------------------- selección
+
+  alternar(a: Asset, ev: Event): void {
+    ev.stopPropagation();
+    if (this.seleccion.has(a.idAsset)) {
+      this.seleccion.delete(a.idAsset);
+      this.elegidos.delete(a.idAsset);
+    } else {
+      this.seleccion.add(a.idAsset);
+      this.elegidos.set(a.idAsset, a);
+    }
+  }
+
+  alternarPagina(ev: Event): void {
+    const marcar = (ev.target as HTMLInputElement).checked;
+    for (const a of this.assets) {
+      if (marcar) {
+        this.seleccion.add(a.idAsset);
+        this.elegidos.set(a.idAsset, a);
+      } else {
+        this.seleccion.delete(a.idAsset);
+        this.elegidos.delete(a.idAsset);
+      }
+    }
+  }
+
+  get paginaMarcada(): boolean {
+    return this.assets.length > 0 && this.assets.every((a) => this.seleccion.has(a.idAsset));
+  }
+
+  limpiarSeleccion(): void {
+    this.seleccion.clear();
+    this.elegidos.clear();
+  }
+
+  /** Solo los equipos en bodega se entregan juntos. */
+  get todosEnBodega(): boolean {
+    return [...this.elegidos.values()].every((a) => !a.assignedUserId && (a.statusAsset === 'EN_BODEGA' || a.statusAsset === 'DISPONIBLE'));
+  }
+
+  imprimirEtiquetas(): void {
+    this.assetService.etiquetas([...this.seleccion]).subscribe({
+      next: (b) => abrirBlob(b, 'etiquetas-activos.pdf'),
+      error: (e) => this.toastService.error(e?.error?.message || 'No se pudieron generar las etiquetas'),
+    });
+  }
+
+  entregarSeleccion(): void {
+    this.actaActivos = [...this.elegidos.values()];
+    this.actaTipo = 'ENTREGA';
+  }
+
+  actaCerrada(a: unknown): void {
+    this.actaTipo = null;
+    if (a) {
+      this.limpiarSeleccion();
+      this.loadAssets();
+    }
+  }
+
+  tipoColor(type?: string | null): string {
+    return colorTipoActivo(type);
   }
 
   loadAssets(): void {

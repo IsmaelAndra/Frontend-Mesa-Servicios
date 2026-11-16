@@ -143,7 +143,7 @@ export class MantenimientoComponent implements OnInit {
    * segun quien sea; en el resto, al inicio.
    */
   volver(): void {
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/inicio']);
   }
 
   /** Enlace a la politica de privacidad, que es publica y sin sesion. */

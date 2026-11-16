@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Component, OnInit, Optional } from '@angular/core';
 import Swal from 'sweetalert2';
 import { AdminService, NotificationTemplate, SlaPolicy, SlaRule, SlaEscalation, SupportTeam, TicketTypeConfig } from '../../../core/services/admin.service';
 import { Area, Catalog } from '../../../models/user.model';
@@ -7,6 +8,7 @@ import { Paginacion } from '../../../core/utils/pagination.util';
 import { MasterOption } from '../../shared/components/master-select/master-select.component';
 import { ACCIONES_ESCALACION, metaAccionEscalacion } from '../../../core/utils/sla-escalacion.util';
 import { duracionLegible } from '../../../core/utils/duracion.util';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-sla-management',
@@ -80,9 +82,15 @@ export class SlaManagementComponent implements OnInit {
     }));
   }
 
-  /** Políticas con su icono y color, para el select de reglas y escalaciones. */
-  policyOptions(): MasterOption[] {
-    return (this.policies || []).map(p => ({
+  /**
+   * Políticas con su icono y color, para el select de reglas y escalaciones.
+   * Con área, solo las globales y las de esa área (una regla no usa la de otra).
+   */
+  policyOptions(areaId?: string | null): MasterOption[] {
+    return (this.policies || [])
+      // El jefe solo recibe las de su área; el súper admin, todas.
+      .filter(p => !areaId || !p.areaSlaPolicy || p.areaSlaPolicy === areaId)
+      .map(p => ({
       value: p.idSlaPolicy, label: p.nameSlaPolicy,
       icon: p.iconSlaPolicy || 'fa-solid fa-stopwatch', color: p.colorSlaPolicy || '#062e86'
     }));
@@ -111,7 +119,29 @@ export class SlaManagementComponent implements OnInit {
   editRule: Partial<SlaRule> | null = null;
   editEscalation: Partial<SlaEscalation> | null = null;
 
-  constructor(private adminService: AdminService, private toastService: ToastService) { }
+  /** El jefe gestiona las políticas y reglas de su área; las escalaciones son del súper admin. */
+  esJefe = false;
+
+  /** Nombre del área dueña de una política, o null si es global. */
+  areaDePolitica(p: Partial<SlaPolicy>): { nombre: string; icon?: string; color?: string } | null {
+    const a = p.areaSlaPolicy ? this.areas.find(x => x.idArea === p.areaSlaPolicy) : null;
+    if (!p.areaSlaPolicy) return null;
+    return { nombre: a?.nameArea || 'Otra área', icon: a?.iconArea, color: a?.colorArea };
+  }
+
+  /** El súper admin edita todas; el jefe, solo las de sus áreas (no las globales). */
+  puedeEditarPolitica(p: SlaPolicy): boolean {
+    return !this.esJefe || (!!p.areaSlaPolicy && this.areas.some(a => a.idArea === p.areaSlaPolicy));
+  }
+
+  constructor(private adminService: AdminService, private toastService: ToastService, private authService: AuthService,
+              @Optional() private route?: ActivatedRoute) {
+    this.esJefe = this.authService.getRole() === 'AREA_MANAGER';
+    if (this.esJefe) this.activeTab = 'rules';
+    // ?tab=escalations abre esa pestaña (el antiguo menú "Escalaciones" llega aquí).
+    const tab = this.route?.snapshot?.queryParamMap?.get('tab');
+    if (tab && ['policies', 'rules', 'escalations'].includes(tab) && !(this.esJefe && tab === 'escalations')) this.activeTab = tab;
+  }
 
   ngOnInit(): void { this.load(); }
 
@@ -119,13 +149,26 @@ export class SlaManagementComponent implements OnInit {
     this.loading = true;
     this.adminService.getSlaPolicies().subscribe({ next: (p) => { this.policies = p; this.loading = false; } });
     this.adminService.getSlaRules().subscribe({ next: (r) => this.rules = r });
-    this.adminService.getEscalations().subscribe({ next: (e) => this.escalations = e });
-    this.adminService.getAreas().subscribe({ next: (a) => this.areas = a });
-    this.adminService.getTicketTypes().subscribe({ next: (t) => this.ticketTypes = t });
+    this.adminService.getAreas().subscribe({
+      next: (a) => {
+        const mias = this.esJefe ? this.authService.areasACargo() : null;
+        this.areas = a.filter((x) => !mias || mias.includes(x.idArea));
+      }
+    });
     this.adminService.getTeams().subscribe({ next: (t) => this.teams = t });
-    this.adminService.getTemplates().subscribe({ next: (t) => this.templates = t });
-    // Get catalog for priorities/categories
-    this.adminService.catalog().subscribe({ next: (c) => { this.priorities = c.priorities; this.categories = c.categories; } });
+    if (!this.esJefe) {
+      this.adminService.getEscalations().subscribe({ next: (e) => this.escalations = e });
+      this.adminService.getTicketTypes().subscribe({ next: (t) => this.ticketTypes = t });
+      this.adminService.getTemplates().subscribe({ next: (t) => this.templates = t });
+    }
+    // Prioridades, categorías y (para el jefe) tipos salen del catálogo.
+    this.adminService.catalog().subscribe({
+      next: (c) => {
+        this.priorities = c.priorities;
+        this.categories = c.categories;
+        if (this.esJefe) this.ticketTypes = (c.ticketTypes || []) as unknown as TicketTypeConfig[];
+      }
+    });
   }
 
   createRule(): void {
@@ -186,8 +229,17 @@ export class SlaManagementComponent implements OnInit {
     return p.colorSlaPolicy || '#64748B';
   }
 
+  abrirNuevaPolitica(): void {
+    this.showNewPolicy = !this.showNewPolicy;
+    // El jefe crea políticas de su área (la primera, si tiene varias).
+    if (this.showNewPolicy && this.esJefe && !this.newPolicy.areaSlaPolicy) {
+      this.newPolicy.areaSlaPolicy = this.areas[0]?.idArea ?? null;
+    }
+  }
+
   createPolicy(): void {
     if (!this.newPolicy.nameSlaPolicy || !this.newPolicy.responseTimeMinutes || !this.newPolicy.resolutionTimeMinutes) return;
+    if (this.esJefe && !this.newPolicy.areaSlaPolicy) return;
     this.adminService.createSlaPolicy(this.newPolicy).subscribe({
       next: () => { this.load(); this.newPolicy = { activeSlaPolicy: true, iconSlaPolicy: 'fa-solid fa-clock', colorSlaPolicy: '#D97706' }; this.showNewPolicy = false; this.toastService.success('Política SLA creada'); },
       error: (e) => this.toastService.error(e?.error?.message || 'No se pudo crear')
@@ -195,7 +247,7 @@ export class SlaManagementComponent implements OnInit {
   }
 
   startEditPolicy(p: SlaPolicy): void {
-    this.editPolicy = { ...p };
+    this.editPolicy = { ...p, colorSlaPolicy: p.colorSlaPolicy || '#062e86' };
   }
 
   saveEditPolicy(): void {
@@ -212,12 +264,12 @@ export class SlaManagementComponent implements OnInit {
   }
 
   deletePolicy(p: SlaPolicy): void {
-    Swal.fire({ title: '¿Eliminar política?', html: `<b>${p.nameSlaPolicy}</b> quedará desactivada y sus tickets dejarán de usar su SLA.`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' })
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar', focusCancel: true, title: '¿Eliminar política?', html: `<b>${p.nameSlaPolicy}</b> quedará desactivada y sus tickets dejarán de usar su SLA.`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626' })
       .then((r) => { if (r.isConfirmed) this.adminService.deleteSlaPolicy(p.idSlaPolicy).subscribe({ next: () => this.load(), error: (e) => this.toastService.error(e?.error?.message || 'No se pudo eliminar') }); });
   }
 
   deleteRule(rule: SlaRule): void {
-    Swal.fire({ title: '¿Eliminar regla?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' })
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar', focusCancel: true, title: '¿Eliminar regla?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626' })
       .then((result) => { if (result.isConfirmed) this.adminService.deleteSlaRule(rule.idSlaRule).subscribe({ next: () => this.load(), error: (e) => this.toastService.error(e?.error?.message || 'No se pudo eliminar') }); });
   }
 
@@ -249,7 +301,7 @@ export class SlaManagementComponent implements OnInit {
   }
 
   deleteEscalation(e: SlaEscalation): void {
-    Swal.fire({ title: '¿Eliminar escalación?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' })
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar', focusCancel: true, title: '¿Eliminar escalación?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626' })
       .then((r) => { if (r.isConfirmed) this.adminService.deleteEscalation(e.idEscalation).subscribe({ next: () => this.load(), error: (err) => this.toastService.error(err?.error?.message || 'No se pudo eliminar') }); });
   }
 
@@ -272,8 +324,8 @@ export class SlaManagementComponent implements OnInit {
     return { icon: p?.iconSlaPolicy || 'fa-solid fa-shield-halved', color: p?.colorSlaPolicy || '#062e86' };
   }
 
-  getPolicyName(id: string): string {
-    return this.policies.find(p => p.idSlaPolicy === id)?.nameSlaPolicy || '—';
+  getPolicyName(id: string, respaldo?: string | null): string {
+    return this.policies.find(p => p.idSlaPolicy === id)?.nameSlaPolicy || respaldo || '—';
   }
 
   getAreaName(id: string): string {

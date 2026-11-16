@@ -103,7 +103,7 @@ export class EscalationManagementComponent implements OnInit {
   }
 
   delete(e: SlaEscalation): void {
-    Swal.fire({ title: '¿Eliminar?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' })
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar', focusCancel: true, title: '¿Eliminar?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626' })
       .then((r) => { if (r.isConfirmed) this.adminService.deleteEscalation(e.idEscalation).subscribe({ next: () => this.load(), error: (err) => this.toastService.error(err?.error?.message || 'No se pudo eliminar') }); });
   }
 

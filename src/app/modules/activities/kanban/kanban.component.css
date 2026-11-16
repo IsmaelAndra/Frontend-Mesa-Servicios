@@ -86,3 +86,12 @@
   background-color: rgba(6, 46, 134, 0.03);
   border-radius: 0.75rem;
 }
+/* Actividad vencida (tiene plazo, ya pasó y no está hecha): borde y fondo rojizos. */
+.kanban-card.tarea-vencida {
+  border-color: oklch(var(--er) / 0.4);
+  background-image: linear-gradient(oklch(var(--er) / 0.05), oklch(var(--er) / 0.05));
+}
+.kanban-card:focus-visible {
+  outline: 2px solid oklch(var(--p));
+  outline-offset: 2px;
+}

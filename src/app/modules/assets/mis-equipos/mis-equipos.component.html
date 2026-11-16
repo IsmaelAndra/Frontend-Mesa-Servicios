@@ -1,0 +1,175 @@
+<div class="space-y-6">
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-laptop-house text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">Mis equipos</h1>
+        <p class="text-sm opacity-70">Los equipos de la cooperativa a su nombre y sus actas de entrega</p>
+      </div>
+    </div>
+    <a routerLink="/tickets/nuevo" class="btn btn-primary btn-sm text-white gap-2">
+      <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Reportar una falla
+    </a>
+  </header>
+
+  <!-- Resumen -->
+  <div class="grid gap-3 grid-cols-2 lg:grid-cols-4">
+    <div *ngFor="let k of resumen" class="card bg-base-100 border border-base-200 border-t-4 shadow-sm" [style.border-top-color]="k.color">
+      <div class="card-body p-4 flex-row items-center gap-3">
+        <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-lg"
+              [style.background-color]="k.color + '1F'" [style.color]="k.color" aria-hidden="true"><i [class]="k.icono"></i></span>
+        <div class="min-w-0">
+          <p class="text-2xl font-bold leading-none">{{ cargando ? '—' : k.valor }}</p>
+          <p class="text-xs opacity-70 mt-1">{{ k.texto }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actas por aceptar -->
+  <section *ngIf="pendientes.length" class="card bg-base-100 border border-warning/50 border-l-4 border-l-warning shadow-sm">
+    <div class="card-body p-4 gap-3">
+      <h2 class="font-semibold flex items-center gap-2">
+        <i class="fa-solid fa-file-signature text-warning" aria-hidden="true"></i>
+        Actas por aceptar <span class="badge badge-warning badge-sm">{{ pendientes.length }}</span>
+      </h2>
+      <p class="text-xs opacity-70 -mt-2">Revise el PDF y acepte si los equipos y su estado son correctos. Luego firmará el acta impresa.</p>
+      <div *ngFor="let a of pendientes; trackBy: trackActa" class="rounded-xl bg-base-200/50 p-3 flex flex-col md:flex-row md:items-center gap-3">
+        <div class="flex-1 min-w-0">
+          <p class="font-medium flex flex-wrap items-center gap-2">
+            <span class="font-mono">{{ a.numero }}</span>
+            <span class="badge badge-sm kanban-tag border gap-1" [style.background-color]="tiposActa[a.tipo].color + '1F'"
+                  [style.--bc]="tiposActa[a.tipo].color" [style.border-color]="tiposActa[a.tipo].color" [style.color]="tiposActa[a.tipo].color">
+              <i [class]="tiposActa[a.tipo].icono" aria-hidden="true"></i> {{ tiposActa[a.tipo].texto }}</span>
+          </p>
+          <p class="text-xs opacity-70">
+            {{ a.fecha | date: 'dd/MM/yyyy' }} · {{ a.items.length }} equipo{{ a.items.length === 1 ? '' : 's' }}:
+            {{ a.items[0].nombre }}<span *ngIf="a.items.length > 1"> y {{ a.items.length - 1 }} más</span>
+          </p>
+        </div>
+        <div class="flex gap-2 shrink-0">
+          <button type="button" class="btn btn-sm btn-ghost border border-base-300 gap-1" (click)="ver(a)"><i class="fa-regular fa-file-pdf text-error" aria-hidden="true"></i> Ver acta</button>
+          <button type="button" class="btn btn-sm btn-success text-white gap-1" (click)="aceptar(a)" [disabled]="aceptando === a.id">
+            <span *ngIf="aceptando === a.id" class="loading loading-spinner loading-xs"></span>
+            <i *ngIf="aceptando !== a.id" class="fa-solid fa-check" aria-hidden="true"></i> Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid gap-6 xl:grid-cols-12">
+    <div class="xl:col-span-8 space-y-6">
+      <!-- Equipos -->
+      <section>
+        <h2 class="font-semibold mb-3 flex items-center gap-2"><i class="fa-solid fa-laptop text-primary" aria-hidden="true"></i> Equipos a mi nombre</h2>
+        <div *ngIf="cargando" class="grid gap-4 md:grid-cols-2">
+          <div *ngFor="let _ of [1, 2]" class="skeleton h-40 rounded-2xl"></div>
+        </div>
+        <div *ngIf="!cargando && !equipos.length" class="card bg-base-100 border border-dashed border-base-300">
+          <div class="card-body items-center text-center py-10 gap-2">
+            <span class="p-4 rounded-2xl bg-base-200 text-base-content/50" aria-hidden="true"><i class="fa-solid fa-laptop text-3xl"></i></span>
+            <p class="font-medium">No tiene equipos a su nombre</p>
+            <p class="text-sm opacity-70 max-w-md">Cuando Tecnología le entregue uno, aparecerá aquí junto con su acta para que la acepte.</p>
+          </div>
+        </div>
+        <div *ngIf="!cargando && equipos.length" class="grid gap-4 md:grid-cols-2">
+          <a *ngFor="let e of equipos; trackBy: trackEquipo" [routerLink]="['/activos', e.idAsset]"
+             class="card bg-base-100 border border-base-200 border-t-4 shadow-sm hover:shadow-md transition" [style.border-top-color]="color(e)">
+            <div class="card-body p-4 gap-2">
+              <div class="flex items-start gap-3">
+                <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" [style.background-color]="color(e) + '1F'" [style.color]="color(e)" aria-hidden="true">
+                  <i [class]="icono(e)" class="text-lg"></i>
+                </span>
+                <div class="min-w-0 flex-1">
+                  <h3 class="font-semibold truncate">{{ e.nameAsset }}</h3>
+                  <p class="text-xs opacity-70 font-mono">{{ e.codeAsset }}</p>
+                </div>
+                <span class="text-xs inline-flex items-center gap-1 shrink-0" [style.color]="estadoFisico(e.estadoFisicoAsset).color">
+                  <i [class]="estadoFisico(e.estadoFisicoAsset).icono" aria-hidden="true"></i> {{ estadoFisico(e.estadoFisicoAsset).texto }}
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs opacity-80 mt-1">
+                <span class="truncate"><i class="fa-solid fa-tag mr-1 opacity-60" aria-hidden="true"></i>{{ tipo(e) }}</span>
+                <span class="truncate" *ngIf="e.brandAsset"><i class="fa-solid fa-industry mr-1 opacity-60" aria-hidden="true"></i>{{ e.brandAsset }} {{ e.modelAsset }}</span>
+                <span class="truncate" *ngIf="e.serialNumberAsset"><i class="fa-solid fa-barcode mr-1 opacity-60" aria-hidden="true"></i>{{ e.serialNumberAsset }}</span>
+                <span class="truncate" *ngIf="e.ubicacionAsset"><i class="fa-solid fa-location-dot mr-1 opacity-60" aria-hidden="true"></i>{{ e.ubicacionAsset }}</span>
+              </div>
+              <p *ngIf="e.warrantyUntilAsset" class="text-xs mt-1" [ngClass]="garantiaPorVencer(e) ? 'text-warning font-medium' : 'opacity-70'">
+                <i class="fa-solid fa-shield-halved mr-1" aria-hidden="true"></i>Garantía hasta {{ fechaLocal(e.warrantyUntilAsset) | date: 'dd/MM/yyyy' }}
+              </p>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- Historial de actas -->
+      <section class="card bg-base-100 border border-base-200 shadow-sm">
+        <div class="card-body p-4 gap-2">
+          <h2 class="font-semibold flex items-center gap-2"><i class="fa-solid fa-file-lines text-primary" aria-hidden="true"></i> Mis actas</h2>
+          <p *ngIf="!actas.length" class="text-sm opacity-60 py-4 text-center">Todavía no tiene actas.</p>
+          <div *ngIf="actas.length" class="overflow-x-auto">
+            <table class="table table-sm">
+              <thead><tr><th>Número</th><th>Tipo</th><th>Estado</th><th>Fecha</th><th>Equipos</th><th></th></tr></thead>
+              <tbody>
+                <tr *ngFor="let a of actas; trackBy: trackActa">
+                  <td class="font-mono text-sm">{{ a.numero }}</td>
+                  <td><span class="badge badge-sm kanban-tag border gap-1" [style.background-color]="tiposActa[a.tipo].color + '1F'"
+                        [style.--bc]="tiposActa[a.tipo].color" [style.border-color]="tiposActa[a.tipo].color" [style.color]="tiposActa[a.tipo].color">
+                    {{ tiposActa[a.tipo].texto }}</span></td>
+                  <td><span class="badge badge-sm kanban-tag border gap-1" [style.background-color]="estadosActa[a.estado].color + '1F'"
+                        [style.--bc]="estadosActa[a.estado].color" [style.border-color]="estadosActa[a.estado].color" [style.color]="estadosActa[a.estado].color">
+                    <i [class]="estadosActa[a.estado].icono" aria-hidden="true"></i> {{ estadosActa[a.estado].texto }}</span></td>
+                  <td class="text-xs">{{ a.fecha | date: 'dd/MM/yyyy' }}</td>
+                  <td class="text-xs">{{ a.items.length }}</td>
+                  <td class="text-right whitespace-nowrap">
+                    <button type="button" class="btn btn-ghost btn-xs gap-1" (click)="ver(a)"><i class="fa-regular fa-file-pdf text-error" aria-hidden="true"></i> Acta</button>
+                    <button *ngIf="a.firmada" type="button" class="btn btn-ghost btn-xs gap-1" (click)="verFirmada(a)">
+                      <i class="fa-solid fa-file-signature" aria-hidden="true"></i> Firmada</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Ayuda -->
+    <aside class="xl:col-span-4 space-y-4">
+      <section class="card bg-base-100 border border-base-200 shadow-sm">
+        <div class="card-body p-4 gap-3">
+          <h2 class="font-semibold flex items-center gap-2"><i class="fa-solid fa-circle-info text-info" aria-hidden="true"></i> ¿Cómo funciona?</h2>
+          <ol class="space-y-3 text-sm">
+            <li class="flex gap-3"><span class="badge badge-primary text-white shrink-0">1</span>
+              <span>Tecnología le entrega el equipo y genera el <b>acta</b>.</span></li>
+            <li class="flex gap-3"><span class="badge badge-primary text-white shrink-0">2</span>
+              <span>Usted la revisa y la <b>acepta aquí</b> (queda la fecha y hora).</span></li>
+            <li class="flex gap-3"><span class="badge badge-primary text-white shrink-0">3</span>
+              <span>Firma el acta impresa y Tecnología sube el <b>escaneo</b>.</span></li>
+          </ol>
+        </div>
+      </section>
+      <section class="card bg-base-100 border border-base-200 shadow-sm">
+        <div class="card-body p-4 gap-2">
+          <h2 class="font-semibold flex items-center gap-2"><i class="fa-solid fa-headset text-primary" aria-hidden="true"></i> ¿Problemas con un equipo?</h2>
+          <p class="text-sm opacity-75">Si falla, se daña o se pierde, repórtelo con un ticket indicando el código del equipo (está en su etiqueta).</p>
+          <a routerLink="/tickets/nuevo" class="btn btn-sm btn-outline gap-2 mt-1">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> Crear ticket</a>
+        </div>
+      </section>
+      <section class="card bg-base-100 border border-base-200 shadow-sm">
+        <div class="card-body p-4 gap-2">
+          <h2 class="font-semibold flex items-center gap-2"><i class="fa-solid fa-hand-holding-heart text-success" aria-hidden="true"></i> Cuidados</h2>
+          <ul class="text-sm opacity-75 space-y-1 list-disc pl-5">
+            <li>No instale programas sin autorización de Tecnología.</li>
+            <li>No preste el equipo ni sus accesorios.</li>
+            <li>Al cambiar de puesto o salir, devuélvalo con acta.</li>
+          </ul>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>

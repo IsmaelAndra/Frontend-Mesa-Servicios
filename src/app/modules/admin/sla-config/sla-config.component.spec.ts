@@ -17,7 +17,8 @@ describe('SlaConfigComponent (tablas de políticas y evaluaciones)', () => {
     adminService.catalog.and.returnValue({ of: () => ({ subscribe: () => undefined }) } as any);
     adminService.evaluationsByMonth.and.returnValue({ subscribe: () => undefined } as any);
     const toastService = jasmine.createSpyObj('ToastService', ['success', 'error', 'info', 'warning']);
-    const c = new SlaConfigComponent(adminService, toastService);
+    const authService = { getRole: () => 'SUPER_ADMIN' } as any;
+    const c = new SlaConfigComponent(adminService, toastService, authService);
     // catalog() nunca resuelve en la prueba, pero el resto de helpers no lo necesita.
     c.catalog = { slaPolicies: [] } as any;
     return c;
@@ -115,5 +116,16 @@ describe('SlaConfigComponent (tablas de políticas y evaluaciones)', () => {
       expect(c.agentPhoto(evaluacion({ agentPhotoUrl: '', agentSessionState: 'EN_LINEA' }))).toBeNull();
       expect(c.agentPhoto(evaluacion({ agentPhotoUrl: '', agentSessionState: 'DESCONECTADO' }))).toBeNull();
     });
+  });
+
+  it('el jefe de área genera las evaluaciones de su equipo; el agente no', () => {
+    const adminService = jasmine.createSpyObj('AdminService', ['catalog', 'evaluationsByMonth', 'generateEvaluations']);
+    const c = new SlaConfigComponent(adminService, jasmine.createSpyObj('ToastService', ['success']),
+      { getRole: () => 'AREA_MANAGER' } as any);
+    expect(c.puedeGenerar).toBeTrue();
+    expect(c.esJefe).toBeTrue();
+    const agente = new SlaConfigComponent(adminService, jasmine.createSpyObj('ToastService', ['success']),
+      { getRole: () => 'AGENT' } as any);
+    expect(agente.puedeGenerar).toBeFalse();
   });
 });

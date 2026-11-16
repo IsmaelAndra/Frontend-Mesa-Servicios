@@ -1,0 +1,185 @@
+<section class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden relative"
+         (dragover)="$event.preventDefault(); arrastrando = puedeEscribir" (dragleave)="arrastrando = false" (drop)="soltar($event)">
+  <div *ngIf="arrastrando" class="chat-soltar" aria-hidden="true">
+    <i class="fa-solid fa-cloud-arrow-up text-xl"></i> Suelte los archivos para adjuntarlos
+  </div>
+
+  <header class="flex items-center gap-3 px-4 py-3 border-b border-base-200">
+    <span class="p-2 rounded-xl bg-primary/10 text-primary" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
+    <div class="flex-1 min-w-0">
+      <h2 class="font-semibold leading-tight">Chat del proyecto</h2>
+      <p class="text-xs opacity-60">Lo ve todo el equipo · los mensajes llegan en vivo · <b>&#64;</b> avisa a una persona</p>
+    </div>
+  </header>
+
+  <div class="p-3">
+    <!-- Mismo contenedor que el chat de los tickets: fondo de Marca + marca de agua -->
+    <div #lista class="proyecto-chat-scroll chat-wa-bg space-y-4 p-3 rounded-lg h-[clamp(300px,calc(100dvh-28rem),720px)] overflow-y-auto">
+      <div class="chat-watermark" aria-hidden="true"></div>
+
+      <div *ngIf="cargando" class="flex justify-center py-10"><span class="loading loading-spinner"></span></div>
+
+      <div *ngIf="!cargando && hayMas" class="flex justify-center">
+        <button type="button" class="btn btn-xs bg-base-100/90 border-base-300 gap-1" (click)="cargarAnteriores()" [disabled]="cargandoMas">
+          <span *ngIf="cargandoMas" class="loading loading-spinner loading-xs"></span>
+          <i *ngIf="!cargandoMas" class="fa-solid fa-arrow-up" aria-hidden="true"></i> Mensajes anteriores
+        </button>
+      </div>
+
+      <div *ngIf="!cargando && !mensajes.length" class="h-full flex flex-col items-center justify-center text-center gap-2">
+        <span class="p-4 rounded-2xl bg-base-100/90 shadow-sm" aria-hidden="true"><i class="fa-regular fa-comments text-3xl text-primary"></i></span>
+        <p class="font-medium">Todavía no hay mensajes</p>
+        <p class="text-sm opacity-70">{{ puedeEscribir ? 'Escriba el primero: le llega en vivo a todo el equipo.' : 'Aquí conversa el equipo del proyecto.' }}</p>
+      </div>
+
+      <ng-container *ngFor="let m of mensajes; let i = index; trackBy: trackMensaje">
+        <div *ngIf="separador(i) as dia" class="chat-dia" role="separator"><span>{{ dia }}</span></div>
+
+        <div class="flex items-end gap-2.5"
+             [class.chat-continua]="continuacion(i)"
+             [class.chat-entra]="recienLlegados.has(m.id)"
+             [class.chat-entra--propio]="recienLlegados.has(m.id) && m.propio"
+             [class.chat-entra--ajeno]="recienLlegados.has(m.id) && !m.propio"
+             [ngClass]="m.propio ? 'flex-row-reverse' : ''">
+          <!-- Avatar (no se repite en mensajes seguidos) -->
+          <div class="shrink-0 relative w-8 h-8" [class.invisible]="continuacion(i)">
+            <img *ngIf="foto(m)" [src]="foto(m)" [alt]="m.autor" (error)="m.autorFoto = null"
+                 class="w-8 h-8 rounded-full object-cover ring-2 ring-base-100 block" />
+            <div *ngIf="!foto(m)" class="w-8 h-8 rounded-full flex items-center justify-center"
+                 [ngClass]="m.propio ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'">
+              <span class="text-xs font-bold">{{ iniciales(m.autor) }}</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1 max-w-[75%] min-w-0" [ngClass]="m.propio ? 'items-end' : 'items-start'">
+            <div class="flex items-baseline gap-2 text-xs opacity-70" [class.sr-only]="continuacion(i)">
+              <span class="font-semibold opacity-100">{{ m.propio ? 'Usted' : m.autor }}</span>
+              <time [attr.datetime]="m.creado" [title]="m.creado | date: 'dd/MM/yyyy HH:mm'">{{ m.creado | date: 'HH:mm' }}</time>
+            </div>
+
+            <!-- HTML del editor: Angular lo sanea al pintarlo ([innerHTML]) y el backend ya quitó scripts. -->
+            <div *ngIf="m.texto" class="chat-burbuja chat-html px-4 py-3 rounded-2xl shadow-sm break-words text-sm"
+                 [ngClass]="m.propio
+                   ? 'chat-message chat-message-user bg-primary/25 text-base-content border border-primary/40 rounded-ee-sm'
+                   : 'chat-message chat-message-other bg-base-200/70 text-base-content border border-base-300 rounded-es-sm'"
+                 [innerHTML]="htmlDe(m)"></div>
+
+            <!-- Archivos -->
+            <div *ngIf="m.adjuntos.length" class="flex flex-wrap gap-1.5" [ngClass]="m.propio ? 'justify-end' : ''">
+              <ng-container *ngFor="let a of m.adjuntos">
+                <button *ngIf="esImagen(a) && miniaturas[a.id]; else chip" type="button" (click)="abrir(a)"
+                        class="rounded-xl overflow-hidden border border-base-300 shadow-sm hover:opacity-90" [title]="a.nombre">
+                  <img [src]="miniaturas[a.id]" [alt]="a.nombre" class="max-h-44 max-w-[15rem] object-cover" />
+                </button>
+                <ng-template #chip>
+                  <button type="button" (click)="abrir(a)" [title]="a.nombre"
+                          class="flex items-center gap-2 rounded-xl border border-base-300 bg-base-100/95 shadow-sm px-3 py-2 text-left hover:bg-base-200 max-w-[16rem]">
+                    <i [class]="icono(a)" class="text-lg shrink-0" aria-hidden="true"></i>
+                    <span class="min-w-0">
+                      <span class="block text-xs font-medium truncate">{{ a.nombre }}</span>
+                      <span class="block text-[10px] opacity-60">{{ tamano(a.tamano) }}</span>
+                    </span>
+                    <i class="fa-solid fa-download text-[10px] opacity-50 shrink-0" aria-hidden="true"></i>
+                  </button>
+                </ng-template>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Escribir -->
+  <footer *ngIf="puedeEscribir" class="border-t border-base-200 px-3 pb-3 pt-2 space-y-2 relative">
+    <!-- Menú de menciones (@) -->
+    <div *ngIf="mencion && mencionesFiltradas.length" class="chat-flotante" role="listbox" aria-label="Mencionar a">
+      <p class="px-3 pt-2 pb-1 text-[11px] opacity-60">Mencionar · ↑ ↓ y Enter</p>
+      <button *ngFor="let p of mencionesFiltradas; let k = index" type="button" role="option" [attr.aria-selected]="k === mencionActiva"
+              class="w-full flex items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-base-200"
+              [ngClass]="k === mencionActiva ? 'bg-primary/10' : ''" (mousedown)="$event.preventDefault(); elegirMencion(p)">
+        <img *ngIf="p.id !== '__todos__' && fotoParticipante(p)" [src]="fotoParticipante(p)" alt="" class="w-6 h-6 rounded-full object-cover" />
+        <span *ngIf="p.id === '__todos__'" class="w-6 h-6 rounded-full bg-warning/15 text-warning text-[10px] flex items-center justify-center"><i class="fa-solid fa-users" aria-hidden="true"></i></span>
+        <span *ngIf="p.id !== '__todos__' && !fotoParticipante(p)" class="w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">{{ iniciales(p.nombre) }}</span>
+        <span class="truncate">{{ p.id === '__todos__' ? '@todos' : p.nombre }}</span>
+        <span *ngIf="p.id === '__todos__'" class="ml-auto text-[10px] opacity-60">avisa a todo el equipo</span>
+      </button>
+    </div>
+
+    <!-- Respuestas rápidas -->
+    <div *ngIf="panelRapidas" class="chat-flotante">
+      <div class="flex items-center gap-2 px-3 pt-2 pb-1">
+        <i class="fa-solid fa-bolt text-warning text-xs" aria-hidden="true"></i>
+        <input *ngIf="!rapidasPorBarra" class="input input-bordered input-xs flex-1" placeholder="Buscar respuesta…"
+               [value]="filtroRapidas" (input)="filtroRapidas = $any($event.target).value" aria-label="Buscar respuesta rápida" />
+        <span *ngIf="rapidasPorBarra" class="text-[11px] opacity-60 flex-1">Respuestas que coinciden con «{{ filtroRapidas }}»</span>
+        <button type="button" class="btn btn-ghost btn-xs btn-square" (click)="panelRapidas = false" aria-label="Cerrar respuestas rápidas">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <div class="max-h-56 overflow-y-auto">
+        <button *ngFor="let r of rapidasFiltradas" type="button" class="w-full text-left px-3 py-2 hover:bg-base-200 border-t border-base-200"
+                (mousedown)="$event.preventDefault(); insertarRapida(r)">
+          <span class="block text-xs font-semibold truncate">{{ r.title }}</span>
+          <span class="block text-[11px] opacity-60 line-clamp-2">{{ r.content }}</span>
+        </button>
+        <p *ngIf="!rapidasFiltradas.length" class="px-3 py-4 text-center text-xs opacity-60">
+          {{ respuestasRapidas.length ? 'Ninguna coincide.' : 'Todavía no tiene respuestas rápidas (se crean desde el chat de un ticket).' }}
+        </p>
+      </div>
+    </div>
+
+    <div *ngIf="archivos.length" class="flex flex-wrap gap-1.5">
+      <span *ngFor="let f of archivos; let i = index" class="badge badge-lg gap-1.5 border border-base-300 bg-base-200">
+        <i class="fa-solid fa-paperclip text-[10px]" aria-hidden="true"></i>
+        <span class="max-w-[10rem] truncate text-xs">{{ f.name }}</span>
+        <span class="text-[10px] opacity-60">{{ tamano(f.size) }}</span>
+        <button type="button" class="opacity-60 hover:opacity-100" (click)="quitarArchivo(i)" [attr.aria-label]="'Quitar ' + f.name">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </span>
+    </div>
+
+    <!-- Barra de formato ("Aa"): oculta por defecto, como en el chat de los tickets -->
+    <div *ngIf="barraFormato" class="chat-barra-formato" role="toolbar" aria-label="Formato del mensaje">
+      <button type="button" (mousedown)="$event.preventDefault(); formato('bold')" [class.activo]="activo('bold')" title="Negrita" aria-label="Negrita"><i class="fa-solid fa-bold"></i></button>
+      <button type="button" (mousedown)="$event.preventDefault(); formato('italic')" [class.activo]="activo('italic')" title="Cursiva" aria-label="Cursiva"><i class="fa-solid fa-italic"></i></button>
+      <button type="button" (mousedown)="$event.preventDefault(); formato('underline')" [class.activo]="activo('underline')" title="Subrayado" aria-label="Subrayado"><i class="fa-solid fa-underline"></i></button>
+      <button type="button" (mousedown)="$event.preventDefault(); formato('strike')" [class.activo]="activo('strike')" title="Tachado" aria-label="Tachado"><i class="fa-solid fa-strikethrough"></i></button>
+      <span class="separador" aria-hidden="true"></span>
+      <button type="button" (mousedown)="$event.preventDefault(); formato('list', 'bullet')" [class.activo]="activo('list', 'bullet')" title="Lista" aria-label="Lista con viñetas"><i class="fa-solid fa-list-ul"></i></button>
+      <button type="button" (mousedown)="$event.preventDefault(); formato('list', 'ordered')" [class.activo]="activo('list', 'ordered')" title="Lista numerada" aria-label="Lista numerada"><i class="fa-solid fa-list-ol"></i></button>
+      <button type="button" (mousedown)="$event.preventDefault(); formato('blockquote')" [class.activo]="activo('blockquote')" title="Cita" aria-label="Cita"><i class="fa-solid fa-quote-right"></i></button>
+      <button type="button" (mousedown)="$event.preventDefault(); formato('code-block')" [class.activo]="activo('code-block')" title="Código" aria-label="Bloque de código"><i class="fa-solid fa-code"></i></button>
+      <span class="separador" aria-hidden="true"></span>
+      <button type="button" (mousedown)="$event.preventDefault(); enlace()" [class.activo]="!!formatos['link']" title="Enlace" aria-label="Enlace"><i class="fa-solid fa-link"></i></button>
+      <button type="button" (mousedown)="$event.preventDefault(); limpiarFormato()" title="Quitar formato" aria-label="Quitar formato"><i class="fa-solid fa-text-slash"></i></button>
+    </div>
+
+    <div class="chat-redactor flex items-end gap-1.5 px-2 py-1.5 rounded-xl border border-primary bg-base-200/50 focus-within:ring-2 focus-within:ring-primary/25">
+      <div class="flex items-center gap-0.5 shrink-0 pb-0.5">
+        <button type="button" class="btn btn-sm btn-square" [ngClass]="barraFormato ? 'btn-primary' : 'btn-ghost'"
+                (click)="barraFormato = !barraFormato" [title]="barraFormato ? 'Ocultar formato' : 'Mostrar formato'"
+                aria-label="Alternar barra de formato" [attr.aria-pressed]="barraFormato">
+          <i class="fa-solid fa-font text-sm" aria-hidden="true"></i>
+        </button>
+        <button *ngIf="puedeRapidas" type="button" class="btn btn-ghost btn-sm btn-square" [class.text-warning]="panelRapidas"
+                (click)="alternarRapidas()" title="Respuestas rápidas (o escriba /)" aria-label="Respuestas rápidas" [attr.aria-expanded]="panelRapidas">
+          <i class="fa-solid fa-bolt text-sm" aria-hidden="true"></i>
+        </button>
+        <label class="btn btn-ghost btn-sm btn-square cursor-pointer" title="Adjuntar archivos (hasta 5, 10 MB cada uno)">
+          <i class="fa-solid fa-paperclip text-sm" aria-hidden="true"></i>
+          <input type="file" class="hidden" multiple [accept]="accept" (change)="elegir($event)" aria-label="Adjuntar archivos" />
+        </label>
+      </div>
+      <div #editor class="proyecto-editor flex-1 min-w-0" aria-label="Mensaje"></div>
+      <button type="button" class="btn btn-primary btn-circle btn-sm text-white shrink-0" (click)="enviar()" [disabled]="!puedeEnviar"
+              aria-label="Enviar mensaje" title="Enviar (Enter)">
+        <span *ngIf="enviando" class="loading loading-spinner loading-xs"></span>
+        <i *ngIf="!enviando" class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+      </button>
+    </div>
+    <p class="text-[10px] opacity-50 px-1">Enter envía · Mayús+Enter salta de línea · &#64; menciona · arrastre o pegue archivos (imágenes, PDF, Office, TXT, CSV, ZIP)</p>
+  </footer>
+  <footer *ngIf="!puedeEscribir" class="border-t border-base-200 px-4 py-3 text-xs opacity-70 flex items-center gap-2">
+    <i class="fa-solid fa-eye" aria-hidden="true"></i> Solo lectura: escribe el equipo del proyecto.
+  </footer>
+</section>

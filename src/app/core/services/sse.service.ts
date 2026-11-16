@@ -10,6 +10,7 @@ import {
   TypingEvent
 } from '../../models/dashboard.model';
 import { WorkflowPasoEvento } from '../../models/workflow.model';
+import { MensajeProyecto } from '../../models/proyecto.model';
 
 /**
  * Conexión SSE de la aplicación. Es única y se abre desde el navbar, que vive en
@@ -30,6 +31,7 @@ export class SseService {
   private readonly notificationEvents = new Subject<NotificationEvent>();
   private readonly lecturaEvents = new Subject<LecturaEvent>();
   private readonly workflowEvents = new Subject<WorkflowPasoEvento>();
+  private readonly proyectoChatEvents = new Subject<MensajeProyecto>();
 
   readonly status$ = this.status.asObservable();
   readonly ticketEvent$ = this.events.asObservable();
@@ -38,6 +40,8 @@ export class SseService {
   readonly lectura$ = this.lecturaEvents.asObservable();
   /** Pasos de las ejecuciones de workflow que lanzó este usuario (solo super admin). */
   readonly workflow$ = this.workflowEvents.asObservable();
+  /** Mensajes nuevos del chat de los proyectos donde participa la persona. */
+  readonly proyectoChat$ = this.proyectoChatEvents.asObservable();
 
   constructor(
     private authService: AuthService,
@@ -139,6 +143,15 @@ export class SseService {
     source.addEventListener('workflow', (evt: MessageEvent) => {
       try {
         this.workflowEvents.next(JSON.parse(evt.data) as WorkflowPasoEvento);
+      } catch {
+        // evento malformado: se ignora
+      }
+    });
+
+    // Chat de proyectos: el backend lo manda solo a los participantes.
+    source.addEventListener('proyecto-chat', (evt: MessageEvent) => {
+      try {
+        this.proyectoChatEvents.next(JSON.parse(evt.data) as MensajeProyecto);
       } catch {
         // evento malformado: se ignora
       }

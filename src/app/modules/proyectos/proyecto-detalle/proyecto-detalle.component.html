@@ -1,0 +1,346 @@
+<div *ngIf="cargando" class="flex justify-center py-16"><span class="loading loading-spinner loading-lg"></span></div>
+
+<div *ngIf="d && !cargando" class="space-y-5">
+  <!-- ============================ ENCABEZADO ============================ -->
+  <header class="page-head flex flex-col lg:flex-row lg:items-center gap-4">
+    <div class="flex items-center gap-3 min-w-0 flex-1">
+      <div class="p-3 rounded-2xl shrink-0" [style.background-color]="color + '1F'" [style.color]="color">
+        <i [class]="d.proyecto.icono || 'fa-solid fa-diagram-project'" class="text-2xl" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight truncate">{{ d.proyecto.nombre }}</h1>
+        <p class="text-sm opacity-70 truncate">
+          {{ d.proyecto.area }}<span *ngIf="d.proyecto.areasParticipantes.length"> + {{ d.proyecto.areasParticipantes.join(', ') }}</span>
+          <span *ngIf="d.proyecto.inicio || d.proyecto.fin"> · {{ d.proyecto.inicio | date: 'dd/MM/yyyy' }} – {{ d.proyecto.fin | date: 'dd/MM/yyyy' }}</span>
+        </p>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <div *ngIf="d.permisos.gestionar; else estadoFijo" class="w-48">
+        <app-master-select [ngModel]="d.proyecto.estado" (ngModelChange)="cambiarEstado($event)" [options]="opcionesEstadoProyecto"
+                           icon="fa-solid fa-flag" label="Estado del proyecto"></app-master-select>
+      </div>
+      <ng-template #estadoFijo>
+        <span class="badge kanban-tag border gap-1" [style.background-color]="estadosProyecto[d.proyecto.estado].color + '1F'"
+              [style.--bc]="estadosProyecto[d.proyecto.estado].color" [style.border-color]="estadosProyecto[d.proyecto.estado].color"
+              [style.color]="estadosProyecto[d.proyecto.estado].color">
+          <i [class]="estadosProyecto[d.proyecto.estado].icono" aria-hidden="true"></i> {{ estadosProyecto[d.proyecto.estado].texto }}
+        </span>
+      </ng-template>
+      <button *ngIf="d.permisos.gestionar" type="button" class="btn btn-ghost btn-sm gap-1" (click)="editarProyecto()">
+        <i class="fa-solid fa-pen" aria-hidden="true"></i> Editar
+      </button>
+      <button *ngIf="d.permisos.gestionar" type="button" class="btn btn-ghost btn-sm text-error" (click)="eliminarProyecto()" aria-label="Eliminar proyecto">
+        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Avance -->
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-4 gap-2">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="font-semibold">Avance del proyecto</span>
+        <span class="text-sm opacity-70">{{ d.proyecto.hechas }} de {{ d.proyecto.tarjetas }} tarjetas hechas · el avance suma el peso de lo hecho</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <!-- Barra por columnas: cuánto del peso está por hacer, en curso, en revisión y hecho -->
+        <div class="flex-1 h-4 rounded-full bg-base-200 overflow-hidden flex" role="img"
+             [attr.aria-label]="'Avance ' + d.proyecto.avance + '%'">
+          <div *ngFor="let s of segmentos" class="h-full transition-all" [style.width.%]="s.pct" [style.background-color]="s.color"
+               [title]="s.titulo + ': ' + s.pct + '%'"></div>
+        </div>
+        <span class="text-xl font-bold w-14 text-right" [style.color]="color">{{ d.proyecto.avance }}%</span>
+      </div>
+      <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+        <span *ngFor="let s of segmentos" class="inline-flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full" [style.background-color]="s.colorLeyenda" aria-hidden="true"></span>
+          {{ s.titulo }} <b>{{ s.pct }}%</b>
+        </span>
+        <span class="inline-flex items-center gap-1.5 opacity-70" title="Peso que aún no se reparte entre tarjetas">
+          <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i> Peso sin repartir <b>{{ pesoLibre }}%</b>
+        </span>
+        <span *ngIf="d.proyecto.inicio || d.proyecto.fin" class="inline-flex items-center gap-1.5 opacity-70">
+          <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+          {{ d.proyecto.inicio ? (d.proyecto.inicio | date: 'dd/MM/yyyy') : '…' }} → {{ d.proyecto.fin ? (d.proyecto.fin | date: 'dd/MM/yyyy') : '…' }}
+        </span>
+      </div>
+      <p *ngIf="d.proyecto.descripcion" class="text-sm opacity-80 whitespace-pre-line">{{ d.proyecto.descripcion }}</p>
+    </div>
+  </div>
+
+  <!-- Pestañas -->
+  <div role="tablist" class="tabs tabs-boxed bg-base-100 border border-base-200 w-fit max-w-full overflow-x-auto flex flex-nowrap">
+    <a role="tab" class="tab gap-2 whitespace-nowrap shrink-0" [class.tab-active]="pestana === 'tablero'" (click)="pestana = 'tablero'">
+      <i class="fa-solid fa-table-columns" aria-hidden="true"></i> Tablero</a>
+    <a role="tab" class="tab gap-2 whitespace-nowrap shrink-0" [class.tab-active]="pestana === 'sprints'" (click)="pestana = 'sprints'">
+      <i class="fa-solid fa-person-running" aria-hidden="true"></i> Sprints <span class="badge badge-sm">{{ d.sprints.length }}</span></a>
+    <a role="tab" class="tab gap-2 whitespace-nowrap shrink-0" [class.tab-active]="pestana === 'objetivos'" (click)="pestana = 'objetivos'">
+      <i class="fa-solid fa-bullseye" aria-hidden="true"></i> Objetivos y logros</a>
+    <a role="tab" class="tab gap-2 whitespace-nowrap shrink-0" [class.tab-active]="pestana === 'equipo'" (click)="pestana = 'equipo'">
+      <i class="fa-solid fa-people-group" aria-hidden="true"></i> Equipo <span class="badge badge-sm">{{ d.miembros.length }}</span></a>
+    <a role="tab" class="tab gap-2 whitespace-nowrap shrink-0" [class.tab-active]="pestana === 'chat'" (click)="irA('chat')">
+      <i class="fa-solid fa-comments" aria-hidden="true"></i> Chat
+      <span *ngIf="noLeidos" class="badge badge-sm badge-error text-white">{{ noLeidos > 99 ? '99+' : noLeidos }}</span></a>
+  </div>
+
+  <!-- ============================ CHAT ============================ -->
+  <app-proyecto-chat *ngIf="pestana === 'chat'" [proyectoId]="id" [puedeEscribir]="d.permisos.editarTablero"></app-proyecto-chat>
+
+  <!-- ============================ TABLERO ============================ -->
+  <section *ngIf="pestana === 'tablero'" class="space-y-3">
+    <div class="flex flex-wrap items-end gap-2">
+      <div class="w-64 max-w-full">
+        <app-master-select [(ngModel)]="filtroSprint" (ngModelChange)="armarTablero()" [options]="opcionesSprint"
+                           [allowEmpty]="true" emptyLabel="Todas las tarjetas" placeholder="Todas las tarjetas"
+                           icon="fa-solid fa-person-running" label="Filtrar por sprint"></app-master-select>
+      </div>
+      <span class="flex-1"></span>
+      <button *ngIf="d.permisos.editarTablero" type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="nuevaTarjeta()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> Nueva tarjeta
+      </button>
+    </div>
+
+    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div *ngFor="let c of columnas" class="rounded-2xl bg-base-200/50 border border-base-200 flex flex-col min-h-[16rem]">
+        <div class="flex items-center gap-2 px-3 py-2 border-b border-base-200">
+          <i [class]="c.icono" [style.color]="c.color" aria-hidden="true"></i>
+          <span class="font-semibold text-sm">{{ c.titulo }}</span>
+          <span class="badge badge-sm">{{ tablero[c.clave].length }}</span>
+          <span class="flex-1"></span>
+          <span class="text-[11px] opacity-60" title="Suma de pesos">peso {{ pesoColumna(c.clave) }}</span>
+          <button *ngIf="d.permisos.editarTablero" type="button" class="btn btn-ghost btn-xs btn-circle" (click)="nuevaTarjeta(c.clave)"
+                  [attr.aria-label]="'Nueva tarjeta en ' + c.titulo"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+        </div>
+        <div cdkDropList [id]="'col-' + c.clave" [cdkDropListConnectedTo]="idsColumnas"
+             [cdkDropListData]="tablero[c.clave]" [cdkDropListDisabled]="!d.permisos.editarTablero"
+             (cdkDropListDropped)="soltar($event, c.clave)" class="flex-1 p-2 space-y-2">
+          <div *ngFor="let i of tablero[c.clave]; trackBy: trackItem" cdkDrag [cdkDragData]="i"
+               role="button" tabindex="0" (click)="d.permisos.editarTablero && editarTarjeta(i)"
+               (keydown.enter)="d.permisos.editarTablero && editarTarjeta(i)"
+               class="rounded-xl bg-base-100 border border-base-200 p-3 shadow-sm hover:shadow transition border-l-4"
+               [class.cursor-grab]="d.permisos.editarTablero" [style.border-left-color]="c.color">
+            <p class="text-sm font-medium" [class.line-through]="i.estado === 'HECHO'" [class.opacity-60]="i.estado === 'HECHO'">{{ i.titulo }}</p>
+            <div class="flex flex-wrap items-center gap-1.5 mt-2 text-[11px]">
+              <span class="badge badge-xs badge-ghost" title="Peso para el avance">peso {{ i.peso }}</span>
+              <span *ngIf="nombreSprint(i.sprintId) as s" class="badge badge-xs badge-outline gap-1">
+                <i class="fa-solid fa-person-running" aria-hidden="true"></i>{{ s }}</span>
+              <span *ngIf="i.limite" class="opacity-70"><i class="fa-regular fa-calendar mr-0.5" aria-hidden="true"></i>{{ i.limite | date: 'dd/MM' }}</span>
+              <span class="flex-1"></span>
+              <span *ngIf="i.responsable" class="opacity-80 truncate max-w-[8rem]" [title]="i.responsable">
+                <i class="fa-solid fa-user mr-0.5" aria-hidden="true"></i>{{ i.responsable }}</span>
+            </div>
+          </div>
+          <p *ngIf="!tablero[c.clave].length" class="text-xs opacity-50 text-center py-6">Sin tarjetas</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ SPRINTS ============================ -->
+  <section *ngIf="pestana === 'sprints'" class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-4 gap-3">
+      <div class="flex items-center gap-2">
+        <h2 class="font-semibold flex-1">Sprints</h2>
+        <button *ngIf="d.permisos.gestionar" type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="editarSprint()">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> Nuevo sprint
+        </button>
+      </div>
+      <p *ngIf="!d.sprints.length" class="text-sm opacity-70 text-center py-6">Aún no hay sprints. Las tarjetas sin sprint quedan en el backlog.</p>
+      <div *ngFor="let s of d.sprints" class="rounded-xl border border-base-200 p-3 flex flex-col md:flex-row md:items-center gap-3">
+        <div class="flex-1 min-w-0">
+          <p class="font-medium flex items-center gap-2">
+            {{ s.nombre }}
+            <span class="badge badge-sm kanban-tag border gap-1" [style.background-color]="estadosSprint[s.estado].color + '1F'"
+                  [style.--bc]="estadosSprint[s.estado].color" [style.border-color]="estadosSprint[s.estado].color"
+                  [style.color]="estadosSprint[s.estado].color">
+              <i [class]="estadosSprint[s.estado].icono" aria-hidden="true"></i> {{ estadosSprint[s.estado].texto }}</span>
+          </p>
+          <p class="text-xs opacity-70">
+            <span *ngIf="s.inicio || s.fin">{{ s.inicio | date: 'dd/MM/yyyy' }} – {{ s.fin | date: 'dd/MM/yyyy' }} · </span>{{ s.tarjetas }} tarjetas
+          </p>
+          <p *ngIf="s.objetivo" class="text-xs opacity-80 mt-1"><i class="fa-solid fa-bullseye mr-1" aria-hidden="true"></i>{{ s.objetivo }}</p>
+        </div>
+        <div class="flex items-center gap-2 w-full md:w-48">
+          <progress class="progress flex-1" [value]="s.avance" max="100" [style.color]="color"></progress>
+          <span class="text-sm font-semibold w-10 text-right">{{ s.avance }}%</span>
+        </div>
+        <div class="flex flex-wrap gap-1">
+          <button type="button" class="btn btn-ghost btn-xs gap-1" (click)="verSprint(s)"><i class="fa-solid fa-table-columns" aria-hidden="true"></i> Tablero</button>
+          <ng-container *ngIf="d.permisos.gestionar">
+            <button *ngIf="s.estado === 'PLANIFICADO'" type="button" class="btn btn-ghost btn-xs gap-1" (click)="estadoSprint(s, 'ACTIVO')">
+              <i class="fa-solid fa-play" aria-hidden="true"></i> Iniciar</button>
+            <button *ngIf="s.estado === 'ACTIVO'" type="button" class="btn btn-ghost btn-xs gap-1" (click)="estadoSprint(s, 'CERRADO')">
+              <i class="fa-solid fa-lock" aria-hidden="true"></i> Cerrar</button>
+            <button type="button" class="btn btn-ghost btn-xs" (click)="editarSprint(s)" aria-label="Editar sprint"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
+            <button type="button" class="btn btn-ghost btn-xs text-error" (click)="eliminarSprint(s)" aria-label="Eliminar sprint"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ OBJETIVOS Y LOGROS ============================ -->
+  <section *ngIf="pestana === 'objetivos'" class="grid gap-4 xl:grid-cols-2">
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body p-4 gap-3">
+        <div class="flex items-center gap-2">
+          <h2 class="font-semibold flex-1"><i class="fa-solid fa-bullseye text-primary mr-1" aria-hidden="true"></i> Objetivos</h2>
+          <button *ngIf="d.permisos.gestionar" type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="nuevoObjetivo()">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> Objetivo
+          </button>
+        </div>
+        <p *ngIf="!d.objetivos.length" class="text-sm opacity-70 text-center py-6">Defina qué debe conseguir el proyecto.</p>
+        <div *ngFor="let o of d.objetivos" class="flex items-start gap-3 rounded-xl border border-base-200 p-3">
+          <input type="checkbox" class="checkbox checkbox-success checkbox-sm mt-0.5" [checked]="!!o.logradoAt"
+                 [disabled]="!d.permisos.gestionar" (click)="$event.preventDefault(); alternarLogro(o)"
+                 [attr.aria-label]="'Logrado: ' + o.descripcion" />
+          <p class="flex-1 text-sm" [class.line-through]="o.logradoAt" [class.opacity-60]="o.logradoAt">{{ o.descripcion }}</p>
+          <button *ngIf="d.permisos.gestionar" type="button" class="btn btn-ghost btn-xs text-error" (click)="eliminarObjetivo(o)"
+                  aria-label="Eliminar objetivo"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body p-4 gap-3">
+        <h2 class="font-semibold"><i class="fa-solid fa-trophy text-warning mr-1" aria-hidden="true"></i> Logros
+          <span class="badge badge-sm badge-warning ml-1">{{ logros.length }}</span></h2>
+        <p *ngIf="!logros.length" class="text-sm opacity-70 text-center py-6">Cuando un objetivo se cumpla, márquelo y quedará aquí.</p>
+        <ol class="relative border-l-2 border-warning/40 ml-2 space-y-4">
+          <li *ngFor="let o of logros; trackBy: trackObjetivo" class="ml-4">
+            <span class="absolute -left-[9px] w-4 h-4 rounded-full bg-warning ring-4 ring-base-100" aria-hidden="true"></span>
+            <p class="text-xs opacity-60">{{ o.logradoAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+            <p class="text-sm font-medium">{{ o.descripcion }}</p>
+            <p *ngIf="o.notaLogro" class="text-xs opacity-80 whitespace-pre-line mt-0.5">{{ o.notaLogro }}</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ EQUIPO Y ÁREAS ============================ -->
+  <section *ngIf="pestana === 'equipo'" class="grid gap-4 xl:grid-cols-12">
+    <div class="card bg-base-100 border border-base-200 shadow-sm xl:col-span-7">
+      <div class="card-body p-4 gap-3">
+        <h2 class="font-semibold"><i class="fa-solid fa-people-group text-primary mr-1" aria-hidden="true"></i> Equipo del proyecto</h2>
+        <p class="text-xs opacity-70">Es distinto de los equipos de atención de tickets. Solo entra gente del área dueña o de las áreas que aceptaron.</p>
+        <div *ngIf="d.permisos.agregarMiembros" class="flex flex-col sm:flex-row gap-2 sm:items-end">
+          <div class="flex-1 min-w-0">
+            <app-master-select [(ngModel)]="candidatoElegido" [options]="candidatos" icon="fa-solid fa-user-plus"
+                               placeholder="Añadir persona" label="Añadir persona al equipo"></app-master-select>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="agregarMiembro()" [disabled]="!candidatoElegido">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> Añadir
+          </button>
+        </div>
+        <ul class="divide-y divide-base-200 rounded-xl border border-base-200">
+          <li *ngFor="let m of d.miembros" class="flex items-center gap-3 px-3 py-2">
+            <span class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0" aria-hidden="true">
+              {{ m.nombre.charAt(0).toUpperCase() }}</span>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium truncate">{{ m.nombre }}
+                <span *ngIf="m.rol === 'RESPONSABLE'" class="badge badge-xs badge-primary ml-1">Responsable</span></p>
+              <p class="text-xs opacity-60 truncate">{{ m.correo }}<span *ngIf="m.area"> · {{ m.area }}</span></p>
+            </div>
+            <button *ngIf="d.permisos.agregarMiembros" type="button" class="btn btn-ghost btn-xs text-error" (click)="quitarMiembro(m)"
+                    [attr.aria-label]="'Quitar a ' + m.nombre"><i class="fa-solid fa-user-minus" aria-hidden="true"></i></button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 border border-base-200 shadow-sm xl:col-span-5">
+      <div class="card-body p-4 gap-3">
+        <h2 class="font-semibold"><i class="fa-solid fa-building text-primary mr-1" aria-hidden="true"></i> Áreas</h2>
+        <div class="flex items-center gap-2 rounded-xl bg-base-200/50 p-2.5">
+          <i class="fa-solid fa-crown text-warning" aria-hidden="true"></i>
+          <span class="text-sm font-medium flex-1">{{ d.proyecto.area }}</span>
+          <span class="badge badge-sm">Dueña</span>
+        </div>
+        <div *ngFor="let a of d.areas" class="flex items-center gap-2 rounded-xl border border-base-200 p-2.5">
+          <span class="text-sm flex-1">{{ a.nombre }}
+            <span *ngIf="a.motivo" class="block text-xs opacity-60">{{ a.motivo }}</span></span>
+          <span class="badge badge-sm kanban-tag border" [style.background-color]="colorArea(a.estado) + '1F'" [style.--bc]="colorArea(a.estado)"
+                [style.border-color]="colorArea(a.estado)" [style.color]="colorArea(a.estado)">
+            {{ a.estado === 'PENDIENTE' ? 'Esperando respuesta' : a.estado === 'ACEPTADA' ? 'Aceptó' : 'Rechazó' }}</span>
+          <button *ngIf="d.permisos.gestionar" type="button" class="btn btn-ghost btn-xs text-error" (click)="quitarArea(a.areaId, a.nombre)"
+                  [attr.aria-label]="'Quitar ' + a.nombre"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </div>
+        <div *ngIf="d.permisos.gestionar" class="flex flex-col sm:flex-row gap-2 sm:items-end pt-1">
+          <div class="flex-1 min-w-0">
+            <app-master-select [(ngModel)]="areaElegida" [options]="areasInvitables" icon="fa-solid fa-building"
+                               placeholder="Invitar a otra área" label="Invitar a otra área"></app-master-select>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline gap-2" (click)="invitarArea()" [disabled]="!areaElegida">
+            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Invitar
+          </button>
+        </div>
+        <p *ngIf="d.permisos.gestionar" class="text-xs opacity-60">Su jefe recibe el aviso al instante y debe aceptar antes de sumar gente.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================ MODAL: TARJETA ============================ -->
+<div *ngIf="tarjeta" class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
+     (click)="tarjeta = null">
+  <div class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-xl max-h-[94vh] flex flex-col"
+       role="dialog" aria-modal="true" aria-labelledby="titulo-tarjeta" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-base-200">
+      <h3 id="titulo-tarjeta" class="font-bold text-lg flex-1">{{ tarjeta.id ? 'Editar tarjeta' : 'Nueva tarjeta' }}</h3>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="tarjeta = null" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </div>
+    <div class="overflow-y-auto px-5 py-4 space-y-3">
+      <label class="form-control">
+        <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Título <span class="text-error">*</span></span></div>
+        <input class="input input-bordered input-sm" maxlength="200" [(ngModel)]="tarjeta.titulo" placeholder="Qué hay que hacer" />
+      </label>
+      <label class="form-control">
+        <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Descripción</span></div>
+        <textarea class="textarea textarea-bordered textarea-sm" rows="3" [(ngModel)]="tarjeta.descripcion"></textarea>
+      </label>
+      <div class="form-control">
+        <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Columna</span></div>
+        <app-master-select [(ngModel)]="tarjeta.estado" [options]="opcionesColumna" icon="fa-solid fa-table-columns" label="Columna"></app-master-select>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <label class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Peso (% del proyecto)</span>
+            <span class="label-text-alt text-[11px]" [ngClass]="pesoMaximo < 5 ? 'text-warning' : 'opacity-60'">máx. {{ pesoMaximo }}%</span></div>
+          <input type="number" min="1" [max]="pesoMaximo" class="input input-bordered input-sm" [(ngModel)]="tarjeta.peso" />
+          <span class="text-[11px] opacity-60 mt-1">Entre todas las tarjetas suman como máximo 100%.</span>
+        </label>
+        <label class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Fecha límite</span></div>
+          <input type="date" class="input input-bordered input-sm" [(ngModel)]="tarjeta.limite"
+                 [min]="rangoTarjeta().min || ''" [max]="rangoTarjeta().max || ''" />
+          <span *ngIf="rangoTarjeta().min || rangoTarjeta().max" class="text-[11px] opacity-60 mt-1">
+            Entre {{ rangoTarjeta().min ? (rangoTarjeta().min | date: 'dd/MM/yyyy') : '…' }} y
+            {{ rangoTarjeta().max ? (rangoTarjeta().max | date: 'dd/MM/yyyy') : '…' }}</span>
+        </label>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Responsable</span></div>
+          <app-master-select [(ngModel)]="tarjeta.responsableId" [options]="opcionesResponsable" [allowEmpty]="true"
+                             emptyLabel="Sin responsable" placeholder="Sin responsable" icon="fa-solid fa-user" label="Responsable"></app-master-select>
+        </div>
+        <div class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Sprint</span></div>
+          <app-master-select [(ngModel)]="tarjeta.sprintId" [options]="opcionesSprintTarjeta" [allowEmpty]="true"
+                             emptyLabel="Backlog (sin sprint)" placeholder="Backlog (sin sprint)" icon="fa-solid fa-person-running" label="Sprint"></app-master-select>
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 px-5 py-4 border-t border-base-200">
+      <button *ngIf="tarjeta.id" type="button" class="btn btn-ghost btn-sm text-error gap-1" (click)="eliminarTarjeta()">
+        <i class="fa-solid fa-trash" aria-hidden="true"></i> Eliminar</button>
+      <span class="flex-1"></span>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="tarjeta = null">Cancelar</button>
+      <button type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="guardarTarjeta()"
+              [disabled]="!tarjeta.titulo.trim() || guardandoTarjeta">
+        <span *ngIf="guardandoTarjeta" class="loading loading-spinner loading-xs"></span> Guardar</button>
+    </div>
+  </div>
+</div>

@@ -63,6 +63,9 @@ export const TIPOS_PLANTILLA: MasterOption[] = [
   { value: 'EVAL', label: 'Evaluación', icon: 'fa-solid fa-chart-line', color: '#7C3AED' },
   { value: 'TASK', label: 'Tarea', icon: 'fa-solid fa-list-check', color: '#0D9488' },
   { value: 'CUENTA', label: 'Cuenta', icon: 'fa-solid fa-user-shield', color: '#475569' },
+  { value: 'ACTIVO', label: 'Activos y equipos', icon: 'fa-solid fa-laptop', color: '#0E7490' },
+  { value: 'PROYECTO', label: 'Proyectos', icon: 'fa-solid fa-diagram-project', color: '#7C3AED' },
+  { value: 'AVISO', label: 'Avisos del sistema', icon: 'fa-solid fa-bell', color: '#DC2626' },
 ];
 
 /** Eventos que disparan una plantilla de correo (nombre de la plantilla). */
@@ -78,6 +81,17 @@ const EVENTOS_PLANTILLA: Record<string, { icon: string; color: string }> = {
   ESCALATION: { icon: 'fa-solid fa-arrow-trend-up', color: '#DC2626' },
   MONTHLY_EVALUATION: { icon: 'fa-solid fa-chart-line', color: '#7C3AED' },
   TASK_ASIGNADA: { icon: 'fa-solid fa-list-check', color: '#0D9488' },
+  TAREA_POR_VENCER: { icon: 'fa-solid fa-hourglass-half', color: '#D97706' },
+  PROYECTO_INVITACION: { icon: 'fa-solid fa-handshake', color: '#7C3AED' },
+  PROYECTO_RESPUESTA: { icon: 'fa-solid fa-reply', color: '#7C3AED' },
+  PROYECTO_MIEMBRO: { icon: 'fa-solid fa-user-plus', color: '#7C3AED' },
+  PROYECTO_TAREA: { icon: 'fa-solid fa-table-columns', color: '#7C3AED' },
+  PROYECTO_MENCION: { icon: 'fa-solid fa-at', color: '#062E86' },
+  ACTA_ACTIVO: { icon: 'fa-solid fa-file-signature', color: '#0E7490' },
+  GARANTIA_POR_VENCER: { icon: 'fa-solid fa-shield-halved', color: '#D97706' },
+  ACCESO_CONFIDENCIAL: { icon: 'fa-solid fa-user-lock', color: '#B45309' },
+  ALERTA_SEGURIDAD: { icon: 'fa-solid fa-triangle-exclamation', color: '#DC2626' },
+  WORKFLOW_APROBACION: { icon: 'fa-solid fa-user-check', color: '#2563EB' },
   CREACION_USUARIO: { icon: 'fa-solid fa-user-plus', color: '#0D9488' },
   RESET_PASSWORD: { icon: 'fa-solid fa-key', color: '#D97706' },
 };

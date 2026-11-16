@@ -44,15 +44,15 @@ export class AppComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.isAuthPage = this.router.url.startsWith('/auth');
+    this.isAuthPage = this.router.url.startsWith('/acceso');
     this.loadBrandingIcons();
     // Tema de temporada (Halloween, Navidad...): público, vale también en el login.
     this.temaTemporada.cargar().subscribe();
     this.routerSub = this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(event => {
       const url = (event as NavigationEnd).url;
-      this.isAuthPage = url.startsWith('/auth');
+      this.isAuthPage = url.startsWith('/acceso');
       this.ocultarSplash();
-      if (url.startsWith('/admin/branding')) {
+      if (url.startsWith('/administracion/marca')) {
         this.loadBrandingIcons();
       }
     });
@@ -66,7 +66,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.avisoSub = this.authService.idleRemaining$.subscribe((ms) => this.revisarAvisoCierre(ms));
     this.cierreSub = this.authService.sesionCerrada$.subscribe((motivo) => {
       this.cerrarAvisoCierre();
-      if (this.router.url.startsWith('/auth')) return;
+      if (this.router.url.startsWith('/acceso')) return;
       this.toast.warn(
         motivo === 'inactividad'
           ? `Tu sesión se cerró tras ${this.authService.idleMinutos()} minutos sin actividad. Vuelve a iniciar sesión.`
@@ -74,7 +74,7 @@ export class AppComponent implements OnInit, OnDestroy {
         'Sesión cerrada',
         { duration: 10_000 },
       );
-      this.router.navigate(['/auth/login'], { queryParams: { volver: this.router.url } });
+      this.router.navigate(['/acceso/ingresar'], { queryParams: { volver: this.router.url } });
     });
   }
 
@@ -91,7 +91,7 @@ export class AppComponent implements OnInit, OnDestroy {
    */
   private revisarAvisoCierre(ms: number): void {
     const enMargen = ms > 0 && ms <= AppComponent.AVISO_CIERRE_MS && !!this.authService.getToken()
-      && !this.router.url.startsWith('/auth');
+      && !this.router.url.startsWith('/acceso');
     if (!enMargen) {
       // Hubo actividad (aquí o en otra pestaña): el aviso sobra.
       if (this.avisoAbierto && ms > AppComponent.AVISO_CIERRE_MS) this.cerrarAvisoCierre();
@@ -102,7 +102,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (contador) contador.textContent = String(this.avisoRestante);
     if (this.avisoAbierto) return;
     this.avisoAbierto = true;
-    Swal.fire({
+    Swal.fire({ cancelButtonColor: '#6b7280',
       icon: 'warning',
       title: 'Tu sesión está por cerrarse',
       html: 'Por inactividad, la sesión se cerrará en <b id="aviso-cierre-segundos">'
@@ -120,7 +120,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.authService.reiniciarInactividad();
       } else if (r.dismiss === Swal.DismissReason.cancel) {
         this.authService.logout();
-        this.router.navigate(['/auth/login']);
+        this.router.navigate(['/acceso/ingresar']);
       }
     });
   }
@@ -195,7 +195,7 @@ export class AppComponent implements OnInit, OnDestroy {
         // El login no pedía el fondo y el logo hasta que acababa la pantalla de
         // carga: en producción el fondo aparecía a los 4 s. Se empiezan a bajar
         // ahora, en paralelo, y cuando el login los pide ya están en caché.
-        if (this.router.url.startsWith('/auth') || location.pathname.startsWith('/auth')) {
+        if (this.router.url.startsWith('/acceso') || location.pathname.startsWith('/acceso')) {
           precargarImagenes([b.backgroundUrl, b.logoLoginUrl || b.logoUrl]);
         }
         // La marca puede traer una duracion minima mayor que la inicial.

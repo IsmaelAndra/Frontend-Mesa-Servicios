@@ -87,6 +87,6 @@ export class PrivacyComponent implements OnInit {
   }
 
   volver(): void {
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/inicio']);
   }
 }

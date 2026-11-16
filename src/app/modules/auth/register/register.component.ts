@@ -62,7 +62,7 @@ export class RegisterComponent implements OnInit {
       next: () => {
         this.loading = false;
         this.toastService.success('Bienvenido a la Mesa de Servicios', 'Cuenta creada');
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/inicio']);
       },
       error: (err) => {
         this.loading = false;

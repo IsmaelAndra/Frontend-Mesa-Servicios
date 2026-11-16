@@ -29,6 +29,9 @@ export interface DashboardStats {
   ratingsCount?: number;
   agentLoad?: AgentLoad[];
   attention?: TicketAtencion[];
+  /** Terminados del periodo (base del % de SLA) y cuántos a tiempo. */
+  slaTerminados?: number;
+  slaATiempo?: number;
 }
 
 /** Carga de un agente en el periodo (solo la ve la administración). */

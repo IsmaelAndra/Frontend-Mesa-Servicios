@@ -11,7 +11,7 @@
   <!-- ============ Cabecera ============ -->
   <section class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
     <div
-      class="relative h-28 sm:h-36 bg-cover bg-center"
+      class="relative h-28 sm:h-36 bg-cover bg-top"
       [style.background-image]="'url(' + coverUrl + ')'"
     >
       <!-- Degradado azul para que la portada no compita con el contenido. -->
@@ -98,7 +98,7 @@
             <i class="fa-solid fa-pen text-[12px]" aria-hidden="true"></i>
             Editar datos
           </button>
-          <a routerLink="/settings/password" class="btn btn-sm btn-outline gap-2">
+          <a routerLink="/mi-cuenta/contrasena" class="btn btn-sm btn-outline gap-2">
             <i class="fa-solid fa-key text-[12px]" aria-hidden="true"></i>
             Cambiar contraseña
           </a>
@@ -138,7 +138,15 @@
           <div class="perfil-dato">
             <dt>Identificación</dt>
             <dd [class.perfil-dato--vacio]="!user.identificationUser" class="tabular-nums">
-              {{ user.identificationUser || "No registrada" }}
+              <ng-container *ngIf="user.identificationUser; else sinCedula">
+                <!-- Enmascarada por defecto: solo los últimos 4 dígitos -->
+                <span>{{ verCedula ? user.identificationUser : enmascarar(user.identificationUser) }}</span>
+                <button type="button" class="btn btn-ghost btn-xs btn-square ml-1 align-middle" (click)="verCedula = !verCedula"
+                        [title]="verCedula ? 'Ocultar' : 'Mostrar'" [attr.aria-label]="verCedula ? 'Ocultar identificación' : 'Mostrar identificación'">
+                  <i class="fa-solid" [ngClass]="verCedula ? 'fa-eye-slash' : 'fa-eye'" aria-hidden="true"></i>
+                </button>
+              </ng-container>
+              <ng-template #sinCedula>No registrada</ng-template>
             </dd>
           </div>
           <div class="perfil-dato">
@@ -191,10 +199,14 @@
               <input
                 [(ngModel)]="form.phoneUser"
                 name="phoneUser"
+                inputmode="tel"
+                maxlength="20"
                 class="input input-bordered input-sm w-full"
+                [class.input-error]="telefonoInvalido(form.phoneUser, user.phoneUser)"
                 placeholder="Ej. +593 99 123 4567"
                 autocomplete="tel"
               />
+              <span *ngIf="telefonoInvalido(form.phoneUser, user.phoneUser)" class="label-text-alt text-error mt-1">Use solo números (7 a 15 dígitos)</span>
             </label>
           </div>
 
@@ -218,7 +230,7 @@
           <p class="text-xs opacity-60 flex items-start gap-2">
             <i class="fa-solid fa-circle-info mt-0.5" aria-hidden="true"></i>
             <span>
-              El nombre, el correo, el área y la sede los gestiona la organización
+              El nombre, el correo, el área y la sucursal los gestiona la organización
               (o Microsoft 365, si está sincronizado).
             </span>
           </p>
@@ -258,8 +270,8 @@
               <dd [class.perfil-dato--vacio]="!user.area">{{ user.area || "Sin área" }}</dd>
             </div>
             <div class="perfil-fila">
-              <dt><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Sede</dt>
-              <dd [class.perfil-dato--vacio]="!user.sucursal">{{ user.sucursal || "Sin sede" }}</dd>
+              <dt><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Sucursal</dt>
+              <dd [class.perfil-dato--vacio]="!user.sucursal">{{ user.sucursal || "Sin sucursal" }}</dd>
             </div>
             <div class="perfil-fila" *ngIf="user.createdAtUser">
               <dt><i class="fa-regular fa-calendar" aria-hidden="true"></i> Miembro desde</dt>

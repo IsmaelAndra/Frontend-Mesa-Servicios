@@ -36,12 +36,14 @@ export interface User {
   phoneUser?: string;
   /** Extensión telefónica en la central (solo números). */
   extensionUser?: string | null;
+  /** Cargo (sale en las actas de activos). */
+  cargoUser?: string | null;
   statusUser: string;
   /** Estado de sesión calculado en el backend: EN_LINEA | RECIENTE | DESCONECTADO. */
   sessionState?: string;
   role: string;
   area: string;
-  /** Sede fisica de la persona. */
+  /** Sucursal fisica de la persona. */
   sucursal?: string;
   sucursalId?: string | null;
   photoUrl?: string;
@@ -120,21 +122,25 @@ export interface RegisterRequest {
   phone?: string;
 roleName: string;
     areaId: string;
-    /** Sede de la persona; opcional. */
+    /** Sucursal de la persona; opcional. */
     sucursalId?: string | null;
     /** Extensión telefónica; "" la quita. */
     extension?: string;
+    /** Cargo: null = no se toca; vacío = se quita. */
+    cargo?: string;
+    /** Nombres y apellidos (alta desde Usuarios; salen en las actas). */
+    nombre?: string;
   }
 
 export interface Catalog {
   roles: string[];
   areas: { id: string; name: string; priorityLevel: number; status: boolean; icon?: string; color?: string }[];
-    /** Sedes activas. El catálogo es público y lo consumen los selectores. */
+    /** Sucursales activas. El catálogo es público y lo consumen los selectores. */
     sucursales: { id: string; code: string; name: string; status: boolean; icon?: string; color?: string }[];
   statuses: { id: string; name: string; icon?: string; color?: string }[];
   priorities: { id: string; name: string; level: number; icon?: string; color?: string }[];
-  teams: { id: string; name: string; method: string; icon?: string; color?: string }[];
-  categories: { id: string; name: string; description?: string; teamId: string | null; icon?: string; color?: string }[];
+  teams: { id: string; name: string; method: string; icon?: string; color?: string; areaId?: string | null }[];
+  categories: { id: string; name: string; description?: string; teamId: string | null; icon?: string; color?: string; areaId?: string | null }[];
   ticketTypes: { id: string; name: string; description?: string; icon?: string; color?: string }[];
   /**
    * Políticas SLA vigentes. `icon` y `color` los edita la pantalla de gestión de

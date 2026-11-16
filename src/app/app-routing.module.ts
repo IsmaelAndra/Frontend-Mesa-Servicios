@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
 import { RoleGuard } from './core/guards/role.guard';
 import { maintenanceGuard } from './core/guards/maintenance.guard';
+import { soloEscritorioGuard } from './core/guards/solo-escritorio.guard';
 
 import { LoginComponent } from './modules/auth/login/login.component';
 import { RegisterComponent } from './modules/auth/register/register.component';
@@ -10,17 +11,51 @@ import { MantenimientoComponent } from './modules/auth/mantenimiento/mantenimien
 import { PrivacyComponent } from './modules/auth/privacy/privacy.component';
 import { ResetPasswordComponent } from './modules/auth/reset-password/reset-password.component';
 import { MfaVerifyComponent } from './modules/auth/mfa-verify/mfa-verify.component';
-import { DashboardComponent } from './modules/dashboard/dashboard.component';
 import { NotificationPageComponent } from './modules/shared/components/notification-page/notification-page.component';
 
 // Exportado para los tests: el spec del breadcrumb verifica que cada crumb
 // enlazable corresponda a una ruta real de esta tabla.
 export const routes: Routes = [
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-  { path: 'auth/login', component: LoginComponent },
-  { path: 'auth/register', component: RegisterComponent },
-  { path: 'auth/restablecer', component: ResetPasswordComponent },
-  { path: 'auth/mfa', component: MfaVerifyComponent },
+  { path: '', redirectTo: 'inicio', pathMatch: 'full' },
+  { path: 'acceso/ingresar', component: LoginComponent },
+  { path: 'acceso/registro', component: RegisterComponent },
+  { path: 'acceso/restablecer', component: ResetPasswordComponent },
+  { path: 'acceso/verificacion', component: MfaVerifyComponent },
+
+  // Rutas antiguas en inglés (nov 2026 todo pasó a español). Se mantienen como
+  // redirección: hay correos ya enviados y marcadores con esas direcciones. La
+  // redirección por prefijo conserva el resto de la ruta (/workflows/5/editar).
+  { path: 'auth/login', redirectTo: 'acceso/ingresar' },
+  { path: 'auth/register', redirectTo: 'acceso/registro' },
+  { path: 'auth/restablecer', redirectTo: 'acceso/restablecer' },
+  { path: 'auth/mfa', redirectTo: 'acceso/verificacion' },
+  { path: 'dashboard', redirectTo: 'inicio' },
+  { path: 'notifications', redirectTo: 'notificaciones' },
+  { path: 'admin/users', redirectTo: 'administracion/usuarios' },
+  { path: 'admin/teams', redirectTo: 'administracion/equipos' },
+  { path: 'admin/pages-system', redirectTo: 'administracion/paginas-sistema' },
+  { path: 'admin/categories', redirectTo: 'administracion/categorias' },
+  { path: 'admin/sla-config', redirectTo: 'administracion/evaluaciones' },
+  { path: 'admin/escalations', redirectTo: 'administracion/escalaciones' },
+  { path: 'admin/templates', redirectTo: 'administracion/plantillas' },
+  { path: 'admin/branding', redirectTo: 'administracion/marca' },
+  { path: 'admin/ticket-types', redirectTo: 'administracion/tipos-ticket' },
+  { path: 'admin/ai-config', redirectTo: 'administracion/inteligencia-artificial' },
+  { path: 'admin/microsoft-graph', redirectTo: 'administracion/correo-microsoft' },
+  { path: 'admin/session-config', redirectTo: 'administracion/seguridad-sesion' },
+  { path: 'admin/audit-sistema', redirectTo: 'administracion/auditoria' },
+  { path: 'admin/chat-config', redirectTo: 'administracion/acuses-lectura' },
+  { path: 'admin/mail-outbox', redirectTo: 'administracion/cola-correo' },
+  { path: 'admin/reports', redirectTo: 'reportes' },
+  { path: 'admin', redirectTo: 'administracion' },
+  { path: 'workflows', redirectTo: 'automatizaciones' },
+  { path: 'reports', redirectTo: 'reportes' },
+  { path: 'activities', redirectTo: 'actividades' },
+  { path: 'calendar', redirectTo: 'calendario' },
+  { path: 'settings/profile', redirectTo: 'mi-cuenta/perfil' },
+  { path: 'settings/password', redirectTo: 'mi-cuenta/contrasena' },
+  { path: 'settings/sounds', redirectTo: 'mi-cuenta/sonidos' },
+  { path: 'settings', redirectTo: 'mi-cuenta' },
 
 // Paginas de error y aviso. Van fuera del guard de mantenimiento para no
     // redirigirse a si mismas, y sin AuthGuard para que tambien cubran a quien
@@ -41,14 +76,17 @@ export const routes: Routes = [
     { path: 'privacidad', component: PrivacyComponent },
 
   // Rutas bajo autenticacion, bloqueadas si el admin activo el mantenimiento.
-  // Se exceptuan /admin/pages-system y /admin/branding (por donde se apaga el
-  // modo) y /auth/*.
+  // Se exceptuan /administracion/paginas-sistema y /administracion/marca (por
+  // donde se apaga el modo) y /acceso/*.
   {
     path: '',
     canActivate: [maintenanceGuard],
+    // En el teléfono, las pantallas de solo computador llevan a un aviso.
+    canActivateChild: [soloEscritorioGuard],
     children: [
-      { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
-      { path: 'notifications', component: NotificationPageComponent, canActivate: [AuthGuard] },
+      { path: 'inicio', canActivate: [AuthGuard], loadChildren: () => import('./modules/dashboard/dashboard.module').then((m) => m.DashboardModule) },
+      { path: 'solo-computador', canActivate: [AuthGuard], loadComponent: () => import('./modules/shared/components/solo-computador/solo-computador.component').then((m) => m.SoloComputadorComponent) },
+      { path: 'notificaciones', component: NotificationPageComponent, canActivate: [AuthGuard] },
 
       // Las áreas de la aplicación se descargan al entrar en ellas (lazy loading):
       // quien solo abre tickets no se baja el panel de administración, el
@@ -58,22 +96,21 @@ export const routes: Routes = [
 
       // Inventario de activos de TI. Cualquiera con sesión entra a la lista (el
       // servidor filtra qué ve: USER solo lo suyo), pero crear/editar queda para
-      // ADMIN/SUPER_ADMIN/AREA_MANAGER (lo comprueba también el RoleGuard interno).
+      // SUPER_ADMIN/AREA_MANAGER (lo comprueba también el RoleGuard interno).
       { path: 'activos', canActivate: [AuthGuard], loadChildren: () => import('./modules/assets/assets.module').then((m) => m.AssetsModule) },
 
       {
-        path: 'admin',
+        path: 'administracion',
         canActivate: [AuthGuard, RoleGuard],
-        data: { roles: ['SUPER_ADMIN', 'ADMIN'] },
+        data: { roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AUDITOR'] },
         loadChildren: () => import('./modules/admin/admin.module').then((m) => m.AdminModule)
       },
 
       // Motor de workflows. Solo SUPER_ADMIN: programar una automatizacion es
       // escribir codigo con permisos ajenos, y eso no lo decide un ADMIN.
-      // Van fuera de "admin" porque el menú y la navegación usan /workflows; dentro
-      // de "admin" la ruta real era /admin/workflows y el menú no llevaba a ningún sitio.
+      // Van fuera de "administracion" para que la ruta sea /automatizaciones.
       {
-        path: 'workflows',
+        path: 'automatizaciones',
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: ['SUPER_ADMIN'] },
         loadChildren: () => import('./modules/admin/workflow.routes').then((m) => m.WORKFLOW_ROUTES)
@@ -82,16 +119,18 @@ export const routes: Routes = [
       {
         path: 'aprobaciones',
         canActivate: [AuthGuard, RoleGuard],
-        data: { roles: ['SUPER_ADMIN', 'ADMIN'] },
+        data: { roles: ['SUPER_ADMIN', 'AREA_MANAGER'] },
         loadComponent: () => import('./modules/admin/workflow-approvals/workflow-approvals.component').then((m) => m.WorkflowApprovalsComponent)
       },
 
-      { path: 'reports', canActivate: [AuthGuard, RoleGuard], data: { roles: ['SUPER_ADMIN', 'ADMIN'] }, loadChildren: () => import('./modules/reports/reports.module').then((m) => m.ReportsModule) },
+      { path: 'reportes', canActivate: [AuthGuard, RoleGuard], data: { roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AUDITOR'] }, loadChildren: () => import('./modules/reports/reports.module').then((m) => m.ReportsModule) },
 
-      { path: 'activities', canActivate: [AuthGuard, RoleGuard], data: { roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT'] }, loadChildren: () => import('./modules/activities/activities.routes').then((m) => m.KanbanRutasModule) },
-      { path: 'calendar', canActivate: [AuthGuard, RoleGuard], data: { roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT'] }, loadChildren: () => import('./modules/activities/activities.routes').then((m) => m.CalendarioRutasModule) },
+      // Proyectos (Fase 3): todos pueden ser miembros; quién ve qué lo decide el backend.
+      { path: 'proyectos', canActivate: [AuthGuard, RoleGuard], data: { roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR'] }, loadChildren: () => import('./modules/proyectos/proyectos.module').then((m) => m.ProyectosModule) },
+      { path: 'actividades', canActivate: [AuthGuard, RoleGuard], data: { roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR'] }, loadChildren: () => import('./modules/activities/activities.routes').then((m) => m.KanbanRutasModule) },
+      { path: 'calendario', canActivate: [AuthGuard, RoleGuard], data: { roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR'] }, loadChildren: () => import('./modules/activities/activities.routes').then((m) => m.CalendarioRutasModule) },
 
-      { path: 'settings', canActivate: [AuthGuard], loadChildren: () => import('./modules/settings/settings.module').then((m) => m.SettingsModule) }
+      { path: 'mi-cuenta', canActivate: [AuthGuard], loadChildren: () => import('./modules/settings/settings.module').then((m) => m.SettingsModule) }
     ]
   },
 

@@ -1,0 +1,95 @@
+<div class="space-y-6">
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-file-signature text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">Actas de equipos</h1>
+        <p class="text-sm opacity-70">Entregas, devoluciones y reasignaciones (FOR-POL-TIC-01-10)</p>
+      </div>
+    </div>
+    <a class="btn btn-sm btn-ghost gap-2" routerLink="/activos">
+      <i class="fa-solid fa-arrow-left text-[13px]" aria-hidden="true"></i> Activos
+    </a>
+  </header>
+
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-3 flex-row flex-wrap gap-2 items-center">
+      <label class="input input-bordered input-sm flex items-center gap-2 w-full sm:w-72">
+        <i class="fa-solid fa-magnifying-glass text-[15px] opacity-50" aria-hidden="true"></i>
+        <input [(ngModel)]="texto" (ngModelChange)="filtrar()" class="grow bg-transparent outline-none"
+               placeholder="Número, custodio o código" aria-label="Buscar actas" />
+      </label>
+      <div class="w-full sm:w-48">
+        <app-master-select [(ngModel)]="estado" (ngModelChange)="filtrar()" [options]="opcionesEstado" [allowEmpty]="true"
+          emptyLabel="Todos los estados" placeholder="Todos los estados" icon="fa-solid fa-flag" label="Estado"></app-master-select>
+      </div>
+      <div class="w-full sm:w-48">
+        <app-master-select [(ngModel)]="tipo" (ngModelChange)="filtrar()" [options]="opcionesTipo" [allowEmpty]="true"
+          emptyLabel="Todos los tipos" placeholder="Todos los tipos" icon="fa-solid fa-file-signature" label="Tipo"></app-master-select>
+      </div>
+      <span class="badge badge-ghost badge-sm ml-auto">{{ filtradas.length }} acta{{ filtradas.length === 1 ? '' : 's' }}</span>
+    </div>
+  </div>
+
+  <div *ngIf="cargando" class="flex justify-center py-10"><span class="loading loading-spinner loading-lg"></span></div>
+
+  <div *ngIf="!cargando" class="card bg-base-100 shadow-md border border-base-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead class="bg-primary text-white">
+          <tr>
+            <th>Acta</th>
+            <th>Tipo</th>
+            <th>Custodio</th>
+            <th>Equipos</th>
+            <th>Estado</th>
+            <th class="text-right">Documentos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of pag.vista; trackBy: trackActa" class="hover:bg-base-200/50">
+            <td>
+              <div class="font-mono font-semibold">{{ a.numero }}</div>
+              <div class="text-xs opacity-60">{{ a.fecha | date: 'dd/MM/yyyy' }}</div>
+            </td>
+            <td>
+              <span class="badge badge-sm kanban-tag border gap-1 whitespace-nowrap" [style.background-color]="tiposActa[a.tipo].color + '1F'"
+                    [style.--bc]="tiposActa[a.tipo].color" [style.border-color]="tiposActa[a.tipo].color" [style.color]="tiposActa[a.tipo].color">
+                <i [class]="tiposActa[a.tipo].icono" aria-hidden="true"></i> {{ tiposActa[a.tipo].texto }}</span>
+            </td>
+            <td>
+              <div class="text-sm font-medium truncate max-w-[14rem]">{{ a.custodio.nombre }}</div>
+              <div *ngIf="a.custodioAnterior" class="text-xs opacity-60 truncate max-w-[14rem]">antes: {{ a.custodioAnterior.nombre }}</div>
+            </td>
+            <td>
+              <div class="text-sm font-mono">{{ a.items[0].codigo }}</div>
+              <div *ngIf="a.items.length > 1" class="text-xs opacity-60">y {{ a.items.length - 1 }} más</div>
+            </td>
+            <td>
+              <span class="badge badge-sm kanban-tag border gap-1 whitespace-nowrap" [style.background-color]="estadosActa[a.estado].color + '1F'"
+                    [style.--bc]="estadosActa[a.estado].color" [style.border-color]="estadosActa[a.estado].color" [style.color]="estadosActa[a.estado].color">
+                <i [class]="estadosActa[a.estado].icono" aria-hidden="true"></i> {{ estadosActa[a.estado].texto }}</span>
+            </td>
+            <td class="text-right whitespace-nowrap">
+              <button type="button" class="btn btn-ghost btn-xs gap-1" (click)="ver(a)"><i class="fa-regular fa-file-pdf" aria-hidden="true"></i> Acta</button>
+              <button *ngIf="a.firmada" type="button" class="btn btn-ghost btn-xs gap-1" (click)="verFirmada(a)">
+                <i class="fa-solid fa-file-signature" aria-hidden="true"></i> Firmada</button>
+              <label *ngIf="puedeGestionar && !a.firmada" class="btn btn-ghost btn-xs gap-1">
+                <i class="fa-solid fa-upload" aria-hidden="true"></i> Subir firmada
+                <input type="file" class="hidden" accept="application/pdf,.pdf,image/jpeg,image/png" capture="environment" (change)="subirFirmada($event, a)" />
+              </label>
+            </td>
+          </tr>
+          <tr *ngIf="!filtradas.length">
+            <td colspan="6" class="text-center text-sm opacity-60 py-10">No hay actas{{ texto || estado || tipo ? ' con esos filtros' : ' todavía' }}.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-paginator [total]="filtradas.length" [page]="pag.page" [pageSize]="pag.pageSize"
+    (pageChange)="pag.cambiarPagina($event)" (pageSizeChange)="pag.cambiarTamano($event)"></app-paginator>
+</div>

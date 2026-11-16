@@ -1,0 +1,197 @@
+/*
+ * Mismo aspecto que el chat de los tickets: el fondo (.chat-wa-bg, con la
+ * imagen de Marca) y las burbujas (.chat-message-*) son globales en styles.css;
+ * aquí van la marca de agua, el separador de día, la llegada animada y la
+ * barra de desplazamiento, copiados de ticket-detail.
+ */
+.proyecto-chat-scroll {
+  position: relative;
+}
+
+.chat-watermark {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("/assets/chat-bg.png");
+  background-repeat: repeat;
+  background-size: 260px;
+  opacity: 0.04;
+  border-radius: inherit;
+}
+
+.proyecto-chat-scroll > *:not(.chat-watermark) {
+  position: relative;
+  z-index: 1;
+}
+
+.proyecto-chat-scroll > .chat-continua {
+  margin-top: 0.3rem;
+}
+
+.proyecto-chat-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.proyecto-chat-scroll::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.proyecto-chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-dia {
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.chat-dia span {
+  padding: 0.2rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: oklch(var(--bc) / 0.7);
+  background: oklch(var(--b1) / 0.92);
+  border: 1px solid oklch(var(--bc) / 0.08);
+  box-shadow: 0 2px 8px -4px rgb(2 6 23 / 0.25);
+  backdrop-filter: blur(6px);
+}
+
+/* Solo lo que llega en vivo, no la carga inicial. */
+.chat-entra {
+  animation: chat-entra 320ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.chat-entra--propio {
+  transform-origin: bottom right;
+}
+
+.chat-entra--ajeno {
+  transform-origin: bottom left;
+}
+
+@keyframes chat-entra {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-entra {
+    animation-duration: 1ms;
+  }
+}
+
+.chat-soltar {
+  position: absolute;
+  inset: 0.5rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 2px dashed oklch(var(--p) / 0.6);
+  border-radius: 1rem;
+  background: oklch(var(--b1) / 0.85);
+  color: oklch(var(--p));
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* ============ Redactor (Quill sin tema: la barra la pinta el componente) ============ */
+.proyecto-editor ::ng-deep .ql-editor {
+  min-height: 2.25rem;
+  max-height: 10rem;
+  overflow-y: auto;
+  padding: 0.45rem 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: oklch(var(--bc));
+  outline: none;
+}
+.proyecto-editor ::ng-deep .ql-editor.ql-blank::before {
+  color: oklch(var(--bc) / 0.4);
+  font-style: normal;
+  left: 0.5rem;
+  right: 0.5rem;
+}
+.proyecto-editor ::ng-deep .ql-clipboard {
+  position: absolute;
+  left: -10000px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.chat-barra-formato {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid oklch(var(--p) / 0.4);
+  border-radius: 0.75rem;
+  background: oklch(var(--b2) / 0.5);
+  animation: chat-entra 160ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.chat-barra-formato button {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  font-size: 0.8rem;
+  color: oklch(var(--bc) / 0.8);
+}
+.chat-barra-formato button:hover,
+.chat-barra-formato button.activo {
+  background: oklch(var(--p) / 0.12);
+  color: oklch(var(--p));
+}
+.chat-barra-formato .separador {
+  width: 1px;
+  height: 1.1rem;
+  margin: 0 0.25rem;
+  background: oklch(var(--bc) / 0.15);
+}
+
+/* Menú de menciones y de respuestas rápidas, encima del redactor. */
+.chat-flotante {
+  position: absolute;
+  left: 0.75rem;
+  bottom: calc(100% - 0.25rem);
+  z-index: 10;
+  width: min(22rem, calc(100% - 1.5rem));
+  border: 1px solid oklch(var(--bc) / 0.12);
+  border-radius: 0.75rem;
+  background: oklch(var(--b1));
+  box-shadow: 0 12px 28px -12px rgb(2 6 23 / 0.35);
+  overflow: hidden;
+  animation: chat-entra 150ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/* Mensajes con formato (vienen por [innerHTML]: ::ng-deep). */
+.chat-html ::ng-deep p { margin: 0; }
+.chat-html ::ng-deep p + p { margin-top: 0.35rem; }
+.chat-html ::ng-deep ul,
+.chat-html ::ng-deep ol { margin: 0.25rem 0; padding-left: 1.25rem; }
+.chat-html ::ng-deep ul { list-style: disc; }
+.chat-html ::ng-deep ol { list-style: decimal; }
+.chat-html ::ng-deep blockquote {
+  margin: 0.3rem 0;
+  padding: 0.15rem 0.6rem;
+  border-left: 3px solid oklch(var(--p) / 0.6);
+  opacity: 0.85;
+}
+.chat-html ::ng-deep pre,
+.chat-html ::ng-deep .ql-syntax {
+  margin: 0.3rem 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.4rem;
+  background: oklch(var(--bc) / 0.08);
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+}
+.chat-html ::ng-deep a { color: oklch(var(--p)); text-decoration: underline; }

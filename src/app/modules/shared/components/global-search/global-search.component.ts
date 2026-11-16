@@ -6,6 +6,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { textoEstado } from '../../../../core/utils/texto-estado.util';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { GlobalSearchService } from '../../../../core/services/global-search.service';
@@ -114,7 +115,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
   private onKeydownGlobal = (event: KeyboardEvent): void => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
-      if (this.router.url.startsWith('/auth')) {
+      if (this.router.url.startsWith('/acceso')) {
         return;
       }
       if (this.abierto) {
@@ -239,19 +240,19 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
         break;
       case 'users':
       case 'agents':
-        this.router.navigate(['/admin/users'], { queryParams: { search: q } });
+        this.router.navigate(['/administracion/usuarios'], { queryParams: { search: q } });
         break;
       case 'teams':
-        this.router.navigate(['/admin/teams']);
+        this.router.navigate(['/administracion/equipos']);
         break;
       case 'areas':
-        this.router.navigate(['/admin/areas']);
+        this.router.navigate(['/administracion/areas']);
         break;
       case 'assets':
         this.router.navigate(['/activos']);
         break;
       case 'workflows':
-        this.router.navigate(['/workflows']);
+        this.router.navigate(['/automatizaciones']);
         break;
     }
   }
@@ -302,7 +303,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
           grupo: 'tickets',
           pos: 0,
           titulo: t.titleTicket || `Ticket #${t.numberTicket ?? ""}`,
-          detalle: `#${t.numberTicket ?? ""} · ${t.status || ''}`,
+          detalle: `#${t.numberTicket ?? ""} · ${textoEstado(t.status)}`,
           navegar: () => this.router.navigate(['/tickets', t.idTicket]),
         });
       }
@@ -318,7 +319,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
           pos: 0,
           titulo: t.nameTeam,
           detalle: t.descriptionTeam || '',
-          navegar: () => this.router.navigate(['/admin/teams']),
+          navegar: () => this.router.navigate(['/administracion/equipos']),
         });
       }
       for (const a of r.areas || []) {
@@ -327,7 +328,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
           pos: 0,
           titulo: a.nameArea,
           detalle: a.descriptionArea || '',
-          navegar: () => this.router.navigate(['/admin/areas']),
+          navegar: () => this.router.navigate(['/administracion/areas']),
         });
       }
       for (const a of r.assets || []) {
@@ -336,8 +337,8 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
           pos: 0,
           titulo: `${a.codeAsset} · ${a.nameAsset}`,
           detalle: a.assignedUserName
-            ? `${a.typeAsset} · ${a.statusAsset} · ${a.assignedUserName}`
-            : `${a.typeAsset} · ${a.statusAsset}`,
+            ? `${a.typeAsset} · ${textoEstado(a.statusAsset)} · ${a.assignedUserName}`
+            : `${a.typeAsset} · ${textoEstado(a.statusAsset)}`,
           navegar: () => this.router.navigate(['/activos', a.idAsset]),
         });
       }
@@ -346,8 +347,8 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
           grupo: 'workflows',
           pos: 0,
           titulo: w.nameWorkflow,
-          detalle: `Workflow · ${w.statusWorkflow || ''}`,
-          navegar: () => this.router.navigate(['/workflows']),
+          detalle: `Automatización · ${textoEstado(w.statusWorkflow)}`,
+          navegar: () => this.router.navigate(['/automatizaciones']),
         });
       }
     }
@@ -372,7 +373,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
       // Elegir a una persona abre un ticket nuevo a su nombre (lo pidió la mesa:
       // es lo que se hace cuando alguien llama o escribe para reportar algo).
       navegar: () =>
-        this.router.navigate(['/tickets/new'], {
+        this.router.navigate(['/tickets/nuevo'], {
           queryParams: {
             solicitante: p.idUser,
             nombre: p.displayName || p.corporateEmailUser,

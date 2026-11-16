@@ -17,6 +17,9 @@
       <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=2" />
   </head>
   <body class="bg-base-200 min-h-screen">
-    <app-root></app-root>
+    <!-- Mientras baja el JavaScript se ve esto (antes, una pantalla en blanco).
+         Angular lo reemplaza al arrancar por la pantalla de carga de Marca, que
+         usa el mismo fondo, así que el paso no se nota. Estilos en styles.css. -->
+    <app-root><div class="arranque" role="status" aria-label="Cargando"><span class="arranque__giro"></span></div></app-root>
   </body>
 </html>

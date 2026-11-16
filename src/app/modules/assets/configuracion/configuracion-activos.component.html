@@ -1,0 +1,135 @@
+<div class="space-y-6">
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="page-head__icono p-2.5 rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-boxes-stacked text-2xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary">Configuración de activos</h1>
+        <p class="text-sm opacity-70">Tipos de equipo y numeración de códigos y actas</p>
+      </div>
+    </div>
+    <a class="btn btn-sm btn-ghost gap-2" routerLink="/activos">
+      <i class="fa-solid fa-arrow-left text-[13px]" aria-hidden="true"></i> Activos
+    </a>
+  </header>
+
+  <div class="grid gap-6 xl:grid-cols-12">
+    <!-- Tipos -->
+    <section class="card bg-base-100 shadow-md border border-base-200 xl:col-span-7">
+      <div class="card-body gap-3">
+        <div class="flex items-center gap-2">
+          <h2 class="card-title text-base flex-1"><i class="fa-solid fa-boxes-stacked text-primary" aria-hidden="true"></i> Tipos de activo</h2>
+          <button type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="nuevoTipo()">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> Nuevo tipo</button>
+        </div>
+        <p class="text-xs opacity-70">El prefijo entra en el código del equipo (p. ej. LAP en TI-LAP-000123).</p>
+        <ul class="grid sm:grid-cols-2 gap-2">
+          <li *ngFor="let t of tipos; trackBy: trackTipo" class="flex items-center gap-3 px-3 py-2 rounded-xl border border-base-200 border-t-4"
+              [style.border-top-color]="t.color || '#475569'" [class.opacity-50]="!t.activo">
+            <span class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" [style.background-color]="(t.color || '#475569') + '1F'"
+                  [style.color]="t.color || '#475569'" aria-hidden="true"><i [class]="t.icono || 'fa-solid fa-box'"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium truncate">{{ t.nombre }} <span *ngIf="!t.activo" class="badge badge-xs badge-ghost ml-1">Inactivo</span></p>
+              <p class="text-xs opacity-60 font-mono">{{ t.prefijo }}</p>
+            </div>
+            <button type="button" class="btn btn-ghost btn-xs" (click)="editarTipo(t)" [attr.aria-label]="'Editar ' + t.nombre">
+              <i class="fa-solid fa-pen" aria-hidden="true"></i></button>
+            <button type="button" class="btn btn-ghost btn-xs text-error" (click)="eliminarTipo(t)" [attr.aria-label]="'Eliminar ' + t.nombre">
+              <i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Numeración -->
+    <section *ngIf="config" class="card bg-base-100 shadow-md border border-base-200 xl:col-span-5">
+      <div class="card-body gap-3">
+        <h2 class="card-title text-base"><i class="fa-solid fa-hashtag text-primary" aria-hidden="true"></i> Numeración</h2>
+        <p class="text-xs opacity-70">
+          Use <code class="bg-base-200 px-1 rounded">{{ '{' }}TIPO{{ '}' }}</code> (prefijo),
+          <code class="bg-base-200 px-1 rounded">{{ '{' }}ANIO{{ '}' }}</code> (año) y
+          <code class="bg-base-200 px-1 rounded">{{ '{' }}NUM:6{{ '}' }}</code> (número con 6 dígitos).
+          Al registrar un activo también se puede escribir el código que ya tenía.
+        </p>
+        <label class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Código de los activos</span></div>
+          <input class="input input-bordered input-sm font-mono" maxlength="60" [(ngModel)]="config.formatoCodigo" />
+          <span class="text-xs opacity-70 mt-1">Ejemplo: <b class="font-mono">{{ ejemplo(config.formatoCodigo, 'LAP', 123) }}</b></span>
+        </label>
+        <app-estado-activo [(ngModel)]="config.contadorPorTipo" etiqueta="Un contador por tipo"
+          descripcion="Encendido: LAP-000001, MON-000001… Apagado: un solo número para todos."></app-estado-activo>
+        <label class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Número de acta (reinicia cada año)</span></div>
+          <input class="input input-bordered input-sm font-mono" maxlength="60" [(ngModel)]="config.formatoActa" />
+          <span class="text-xs opacity-70 mt-1">Ejemplo: <b class="font-mono">{{ ejemplo(config.formatoActa, '', 1) }}</b></span>
+        </label>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="form-control">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Ciudad del acta</span></div>
+            <input class="input input-bordered input-sm" maxlength="80" [(ngModel)]="config.ciudad" />
+          </label>
+          <label class="form-control">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Aviso de garantía (días antes)</span></div>
+            <input type="number" min="1" max="365" class="input input-bordered input-sm" [(ngModel)]="config.diasAvisoGarantia" />
+          </label>
+          <label class="form-control">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Código del formulario</span></div>
+            <input class="input input-bordered input-sm font-mono" maxlength="40" [(ngModel)]="config.codigoFormulario" />
+          </label>
+          <label class="form-control">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Versión del formulario</span></div>
+            <input class="input input-bordered input-sm font-mono" maxlength="20" [(ngModel)]="config.versionFormulario" />
+          </label>
+        </div>
+        <div class="flex justify-end">
+          <button type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="guardarConfig()" [disabled]="guardandoConfig">
+            <span *ngIf="guardandoConfig" class="loading loading-spinner loading-xs"></span> Guardar
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Modal del tipo -->
+<div *ngIf="tipo" class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4" (click)="tipo = null">
+  <div class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" role="dialog" aria-modal="true"
+       aria-labelledby="titulo-tipo" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-base-200">
+      <span class="p-2.5 rounded-xl text-white" [style.background-color]="tipo.color || '#2563EB'" aria-hidden="true"><i [class]="tipo.icono || 'fa-solid fa-box'"></i></span>
+      <h3 id="titulo-tipo" class="font-bold text-lg flex-1">{{ tipo.id ? 'Editar tipo' : 'Nuevo tipo' }}</h3>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="tipo = null" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </div>
+    <div class="px-5 py-4 space-y-3">
+      <div class="grid gap-3 sm:grid-cols-3">
+        <label class="form-control sm:col-span-2">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Nombre <span class="text-error">*</span></span></div>
+          <input class="input input-bordered input-sm" maxlength="80" [(ngModel)]="tipo.nombre" placeholder="Ej. Tablet" />
+        </label>
+        <label class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Prefijo <span class="text-error">*</span></span></div>
+          <input class="input input-bordered input-sm font-mono uppercase" maxlength="10" [(ngModel)]="tipo.prefijo" placeholder="TAB" />
+        </label>
+      </div>
+      <div>
+        <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Icono</span></div>
+        <div class="flex flex-wrap gap-1.5">
+          <button *ngFor="let i of iconos" type="button" class="btn btn-sm btn-square"
+                  [ngClass]="tipo.icono === i ? 'btn-primary text-white' : 'btn-ghost border border-base-300'"
+                  (click)="tipo.icono = i" [attr.aria-label]="'Icono ' + i"><i [class]="i" aria-hidden="true"></i></button>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-4">
+        <label class="flex items-center gap-2 text-xs font-medium">Color
+          <input type="color" class="w-9 h-9 rounded cursor-pointer bg-transparent" [(ngModel)]="tipo.color" /></label>
+        <app-estado-activo [(ngModel)]="tipo.activo" etiqueta="Estado"></app-estado-activo>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 px-5 py-4 border-t border-base-200">
+      <button type="button" class="btn btn-ghost btn-sm" (click)="tipo = null">Cancelar</button>
+      <button type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="guardarTipo()" [disabled]="!tipoValido || guardandoTipo">
+        <span *ngIf="guardandoTipo" class="loading loading-spinner loading-xs"></span> Guardar</button>
+    </div>
+  </div>
+</div>

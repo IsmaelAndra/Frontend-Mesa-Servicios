@@ -270,7 +270,15 @@ export class MasterSelectComponent implements ControlValueAccessor, OnChanges, O
   /** Lista abierta, ya movida al <body>. */
   private panelEl: HTMLElement | null = null;
   /** Recoloca la lista al hacer scroll en cualquier contenedor o al redimensionar. */
-  private readonly alMoverse = () => this.posicionar();
+  private readonly alMoverse = () => {
+    // Si al desplazarse el botón queda bajo el navbar o fuera de la pantalla,
+    // la lista se cierra: antes lo seguía y se montaba sobre el navbar.
+    if (this.botonTapado()) {
+      this.zone.run(() => this.close());
+      return;
+    }
+    this.posicionar();
+  };
 
   /**
    * Al aparecer la lista (*ngIf) se saca al <body>: ahí ningún antepasado con
@@ -506,6 +514,7 @@ export class MasterSelectComponent implements ControlValueAccessor, OnChanges, O
     if (!panel || !boton) return;
     const r = boton.getBoundingClientRect();
     const margen = 4;
+    const tope = this.bordeInferiorNavbar(boton);
     const alto = Math.min(panel.scrollHeight || 240, 240);
     const abajo = window.innerHeight - r.bottom;
     const haciaArriba = abajo < alto + margen * 2 && r.top > abajo;
@@ -517,7 +526,28 @@ export class MasterSelectComponent implements ControlValueAccessor, OnChanges, O
     panel.style.zIndex = '5000';
     panel.style.left = `${Math.max(margen, r.left)}px`;
     panel.style.width = `${r.width}px`;
-    panel.style.top = haciaArriba ? `${Math.max(margen, r.top - alto - margen)}px` : `${r.bottom + margen}px`;
+    // Hacia arriba nunca pasa por encima del navbar.
+    panel.style.top = haciaArriba
+      ? `${Math.max(tope + margen, r.top - alto - margen)}px`
+      : `${r.bottom + margen}px`;
+  }
+
+  /**
+   * Borde inferior del navbar fijo (0 si no hay). Dentro de un diálogo no
+   * cuenta: el modal queda por encima del navbar y su contenido puede estar arriba.
+   */
+  private bordeInferiorNavbar(boton: HTMLElement): number {
+    if (boton.closest('.modal, .p-dialog, [role="dialog"]')) return 0;
+    const nav = this.document.querySelector('header.nav');
+    return nav ? Math.max(0, nav.getBoundingClientRect().bottom) : 0;
+  }
+
+  /** El botón quedó tapado por el navbar o fuera de la ventana. */
+  private botonTapado(): boolean {
+    const boton = this.trigger?.nativeElement;
+    if (!boton) return false;
+    const r = boton.getBoundingClientRect();
+    return r.bottom <= this.bordeInferiorNavbar(boton) + 2 || r.top >= window.innerHeight;
   }
 
   private quitarPanel(): void {

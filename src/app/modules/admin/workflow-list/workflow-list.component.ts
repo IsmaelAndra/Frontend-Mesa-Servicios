@@ -114,7 +114,7 @@ export class WorkflowListComponent implements OnInit {
             triggerType: "TICKET_CREATED",
             triggerConfig: "{}",
           };
-          this.router.navigate(["/workflows", creado.id, "editar"]);
+          this.router.navigate(["/automatizaciones", creado.id, "editar"]);
         },
         error: (e) =>
           this.toast.error(e?.error?.message ?? "No se pudo crear el workflow"),
@@ -154,7 +154,7 @@ export class WorkflowListComponent implements OnInit {
       showCancelButton: true,
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
-      confirmButtonColor: "#d33",
+      confirmButtonColor: "#dc2626",
       cancelButtonColor: "#64748b",
       reverseButtons: true,
       focusCancel: true,
@@ -214,7 +214,7 @@ export class WorkflowListComponent implements OnInit {
           this.toast.success(
             "Ejecución encolada. Mírala en el historial.",
           );
-          this.router.navigate(["/workflows", w.id, "ejecuciones"], {
+          this.router.navigate(["/automatizaciones", w.id, "ejecuciones"], {
             queryParams: { ver: e.id },
           });
         },
@@ -227,11 +227,11 @@ export class WorkflowListComponent implements OnInit {
   }
 
   irAlGrafo(w: WorkflowSummary): void {
-    this.router.navigate(["/workflows", w.id, "editar"]);
+    this.router.navigate(["/automatizaciones", w.id, "editar"]);
   }
 
   irAlHistorial(w: WorkflowSummary): void {
-    this.router.navigate(["/workflows", w.id, "ejecuciones"]);
+    this.router.navigate(["/automatizaciones", w.id, "ejecuciones"]);
   }
 
   claseEstado(w: WorkflowSummary): string {
@@ -275,7 +275,7 @@ export class WorkflowListComponent implements OnInit {
   }
 
   irAlHistorialGlobal(): void {
-    this.router.navigate(["/workflows", "ejecuciones"]);
+    this.router.navigate(["/automatizaciones", "ejecuciones"]);
   }
 
   fecha(iso: string | null | undefined): string {

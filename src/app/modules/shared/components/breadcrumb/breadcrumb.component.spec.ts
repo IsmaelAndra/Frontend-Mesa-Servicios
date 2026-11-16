@@ -8,6 +8,8 @@ import { WORKFLOW_ROUTES } from '../../../admin/workflow.routes';
 import { REPORTS_ROUTES } from '../../../reports/reports.routes';
 import { SETTINGS_ROUTES } from '../../../settings/settings.routes';
 import { CALENDARIO_ROUTES, KANBAN_ROUTES } from '../../../activities/activities.routes';
+import { PROYECTOS_ROUTES } from '../../../proyectos/proyectos.routes';
+import { DASHBOARD_ROUTES } from '../../../dashboard/dashboard.module';
 import { BreadcrumbComponent } from './breadcrumb.component';
 
 /**
@@ -60,12 +62,14 @@ function segmentosDe(url: string): string[] {
 const HIJAS_PEREZOSAS: Record<string, Routes> = {
   tickets: TICKETS_ROUTES,
   activos: ASSETS_ROUTES,
-  admin: ADMIN_ROUTES,
-  workflows: WORKFLOW_ROUTES,
-  reports: REPORTS_ROUTES,
-  settings: SETTINGS_ROUTES,
-  activities: KANBAN_ROUTES,
-  calendar: CALENDARIO_ROUTES,
+  administracion: ADMIN_ROUTES,
+  automatizaciones: WORKFLOW_ROUTES,
+  reportes: REPORTS_ROUTES,
+  'mi-cuenta': SETTINGS_ROUTES,
+  actividades: KANBAN_ROUTES,
+  calendario: CALENDARIO_ROUTES,
+  proyectos: PROYECTOS_ROUTES,
+  inicio: DASHBOARD_ROUTES,
 };
 
 function arbolCompleto(rutas: Routes): Routes {
@@ -101,50 +105,50 @@ function coincide(seg: string[], rutas: Routes): boolean {
 
 /** Todas las urls reales de la app que ponen breadcrumb (todas menos /auth/* y /dashboard). */
 const URLS_APP = [
-  '/notifications',
+  '/notificaciones',
   '/tickets',
-  '/tickets/new',
-  '/tickets/mine',
-  '/tickets/assigned',
-  '/tickets/kanban',
+  '/tickets/nuevo',
+  '/tickets/mios',
+  '/tickets/asignados',
+  '/tickets/tablero',
   '/tickets/3f2a9c1e-5b7d-4e8f-9a0b-1c2d3e4f5a6b',
   '/activos',
-  '/activos/new',
+  '/activos/nuevo',
   '/activos/3f2a9c1e-5b7d-4e8f-9a0b-1c2d3e4f5a6b',
   '/activos/3f2a9c1e-5b7d-4e8f-9a0b-1c2d3e4f5a6b/editar',
-  '/admin',
-  '/admin/users',
-  '/admin/teams',
-  '/admin/areas',
-  '/admin/sucursales',
-  '/admin/categories',
-  '/admin/sla',
-  '/admin/sla-config',
-  '/admin/escalations',
-  '/admin/templates',
-  '/admin/branding',
-  '/admin/pages-system',
-  '/admin/mfa',
-  '/admin/ai-config',
-  '/admin/microsoft-graph',
-  '/admin/session-config',
-  '/admin/chat-config',
-  '/admin/mail-outbox',
-  '/admin/ticket-types',
-  '/admin/audit-sistema',
-  '/admin/reports',
-  '/workflows',
-  '/workflows/ejecuciones',
-  '/workflows/7e6d5c4b-3a29-4180-9f8e-7d6c5b4a3928/editar',
-  '/workflows/7e6d5c4b-3a29-4180-9f8e-7d6c5b4a3928/ejecuciones',
+  '/administracion',
+  '/administracion/usuarios',
+  '/administracion/equipos',
+  '/administracion/areas',
+  '/administracion/sucursales',
+  '/administracion/categorias',
+  '/administracion/sla',
+  '/administracion/evaluaciones',
+  '/administracion/escalaciones',
+  '/administracion/plantillas',
+  '/administracion/marca',
+  '/administracion/paginas-sistema',
+  '/administracion/mfa',
+  '/administracion/inteligencia-artificial',
+  '/administracion/correo-microsoft',
+  '/administracion/seguridad-sesion',
+  '/administracion/acuses-lectura',
+  '/administracion/cola-correo',
+  '/administracion/tipos-ticket',
+  '/administracion/auditoria',
+  '/administracion/reportes',
+  '/automatizaciones',
+  '/automatizaciones/ejecuciones',
+  '/automatizaciones/7e6d5c4b-3a29-4180-9f8e-7d6c5b4a3928/editar',
+  '/automatizaciones/7e6d5c4b-3a29-4180-9f8e-7d6c5b4a3928/ejecuciones',
   '/aprobaciones',
-  '/reports',
-  '/activities',
-  '/calendar',
-  '/settings',
-  '/settings/profile',
-  '/settings/password',
-  '/settings/sounds',
+  '/reportes',
+  '/actividades',
+  '/calendario',
+  '/mi-cuenta',
+  '/mi-cuenta/perfil',
+  '/mi-cuenta/contrasena',
+  '/mi-cuenta/sonidos',
   '/privacidad',
   '/mantenimiento',
   '/404',
@@ -192,26 +196,26 @@ describe('breadcrumb', () => {
     expect(ficha.label).toBe('Detalle del activo');
     expect(ficha.enlazable).toBeTrue();
 
-    const editar = instanciar(['workflows', '7e6d5c4b-3a29-4180-9f8e-7d6c5b4a3928', 'editar']);
+    const editar = instanciar(['automatizaciones', '7e6d5c4b-3a29-4180-9f8e-7d6c5b4a3928', 'editar']);
     const proceso = editar.crumbs[editar.crumbs.length - 2];
     expect(proceso.label).toBe('Proceso');
     expect(proceso.enlazable).toBeFalse();
   });
 
   it('los segmentos nuevos resuelven label e icono propios', () => {
-    const sucursales = instanciar(['admin', 'sucursales']);
-    expect(sucursales.crumbs[sucursales.crumbs.length - 1].label).toBe('Sedes');
+    const sucursales = instanciar(['administracion', 'sucursales']);
+    expect(sucursales.crumbs[sucursales.crumbs.length - 1].label).toBe('Sucursales');
     expect(sucursales.crumbs[sucursales.crumbs.length - 1].icon).toBe('fa-solid fa-location-dot');
 
-    const auditoria = instanciar(['admin', 'audit-sistema']);
+    const auditoria = instanciar(['administracion', 'auditoria']);
     expect(auditoria.crumbs[auditoria.crumbs.length - 1].label).toBe('Auditoría del sistema');
     expect(auditoria.crumbs[auditoria.crumbs.length - 1].icon).toBe('fa-solid fa-clipboard-list');
 
-    const historial = instanciar(['workflows', 'ejecuciones']);
+    const historial = instanciar(['automatizaciones', 'ejecuciones']);
     expect(historial.crumbs[historial.crumbs.length - 1].label).toBe('Ejecuciones');
     expect(historial.crumbs[historial.crumbs.length - 1].icon).toBe('fa-solid fa-clock-rotate-left');
 
-    const editar = instanciar(['workflows', '2', 'editar']);
+    const editar = instanciar(['automatizaciones', '2', 'editar']);
     expect(editar.crumbs[editar.crumbs.length - 1].label).toBe('Editar');
     expect(editar.crumbs[editar.crumbs.length - 1].icon).toBe('fa-solid fa-pen');
 
@@ -234,19 +238,15 @@ describe('breadcrumb', () => {
     expect(privacidad.crumbs[privacidad.crumbs.length - 1].icon).toBe('fa-solid fa-user-shield');
   });
 
-  it('"reports" es la gestion de plantillas bajo /admin y la pantalla suelta fuera', () => {
-    const plantillas = instanciar(['admin', 'reports']);
-    expect(plantillas.crumbs[plantillas.crumbs.length - 1].label).toBe('Reportes personalizados');
-    expect(plantillas.crumbs[plantillas.crumbs.length - 1].icon).toBe('fa-solid fa-flask');
-
-    const pantalla = instanciar(['reports']);
+  it('las rutas en español muestran la etiqueta de siempre', () => {
+    const pantalla = instanciar(['reportes']);
     expect(pantalla.crumbs[pantalla.crumbs.length - 1].label).toBe('Reportes');
     expect(pantalla.crumbs[pantalla.crumbs.length - 1].icon).toBe('fa-solid fa-chart-column');
   });
 
-  it('/settings como crumb intermedio es navegable (tiene redirect a perfil)', () => {
-    const perfil = instanciar(['settings', 'profile']);
-    const settings = perfil.crumbs.find((c) => c.url === '/settings');
+  it('/mi-cuenta como crumb intermedio es navegable (tiene redirect a perfil)', () => {
+    const perfil = instanciar(['mi-cuenta', 'perfil']);
+    const settings = perfil.crumbs.find((c) => c.url === '/mi-cuenta');
     expect(settings).toBeDefined();
     expect(settings!.enlazable).toBeTrue();
   });

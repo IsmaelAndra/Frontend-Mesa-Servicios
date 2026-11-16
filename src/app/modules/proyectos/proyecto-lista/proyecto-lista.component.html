@@ -1,0 +1,349 @@
+<div class="space-y-6">
+  <header class="page-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="page-head__icono p-3 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary shrink-0 ring-1 ring-primary/10">
+        <i class="fa-solid fa-diagram-project text-2xl" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold text-primary leading-tight">Proyectos</h1>
+        <p class="text-sm opacity-70 truncate">Tablero, sprints, objetivos y logros de cada proyecto de su área</p>
+      </div>
+    </div>
+    <button *ngIf="puedeCrear" type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="nuevo()">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i> Nuevo proyecto
+    </button>
+  </header>
+
+  <!-- Invitaciones de otras áreas (solo jefes) -->
+  <section *ngIf="invitaciones.length" class="card bg-base-100 border border-warning/40 shadow-sm">
+    <div class="card-body p-4 gap-3">
+      <h2 class="font-semibold flex items-center gap-2">
+        <i class="fa-solid fa-handshake text-warning" aria-hidden="true"></i>
+        Invitaciones para su área <span class="badge badge-warning badge-sm">{{ invitaciones.length }}</span>
+      </h2>
+      <div *ngFor="let inv of invitaciones" class="flex flex-col md:flex-row md:items-center gap-3 rounded-xl bg-base-200/50 p-3">
+        <div class="flex-1 min-w-0">
+          <p class="font-medium truncate">{{ inv.proyecto }}</p>
+          <p class="text-xs opacity-70">
+            De {{ inv.areaDuena }}<span *ngIf="inv.invitadoPor"> · invitó {{ inv.invitadoPor }}</span> · {{ inv.fecha | date: 'dd/MM/yyyy HH:mm' }}
+          </p>
+          <p *ngIf="inv.descripcion" class="text-xs opacity-70 line-clamp-2 mt-1">{{ inv.descripcion }}</p>
+        </div>
+        <div class="flex gap-2 shrink-0">
+          <button type="button" class="btn btn-sm btn-success text-white gap-1" (click)="decidir(inv, true)">
+            <i class="fa-solid fa-check" aria-hidden="true"></i> Aceptar
+          </button>
+          <button type="button" class="btn btn-sm btn-ghost text-error gap-1" (click)="decidir(inv, false)">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i> Rechazar
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div *ngIf="cargando" class="flex justify-center py-10"><span class="loading loading-spinner loading-lg"></span></div>
+
+  <div *ngIf="!cargando && !proyectos.length" class="card bg-base-100 border border-base-200">
+    <div class="card-body items-center text-center py-12 gap-2 opacity-80">
+      <i class="fa-solid fa-diagram-project text-4xl opacity-40" aria-hidden="true"></i>
+      <p class="font-medium">Todavía no participa en ningún proyecto</p>
+      <p class="text-sm opacity-70">{{ puedeCrear ? 'Cree el primero con "Nuevo proyecto".' : 'Cuando le sumen a uno, aparecerá aquí.' }}</p>
+    </div>
+  </div>
+
+  <div *ngIf="!cargando && proyectos.length" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <button *ngFor="let p of proyectos; trackBy: trackProyecto" type="button" (click)="abrir(p)"
+            class="card bg-base-100 border border-base-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition text-left">
+      <div class="card-body p-4 gap-3">
+        <div class="flex items-start gap-3">
+          <span class="p-2.5 rounded-xl shrink-0" [style.background-color]="colorDe(p) + '1F'" [style.color]="colorDe(p)" aria-hidden="true">
+            <i [class]="p.icono || 'fa-solid fa-diagram-project'" class="text-lg"></i>
+          </span>
+          <div class="min-w-0 flex-1">
+            <h3 class="font-semibold truncate" [title]="p.nombre">{{ p.nombre }}</h3>
+            <p class="text-xs opacity-70 truncate">
+              {{ p.area }}<span *ngIf="p.areasParticipantes.length"> + {{ p.areasParticipantes.join(', ') }}</span>
+            </p>
+          </div>
+          <span class="badge badge-sm kanban-tag border gap-1 shrink-0"
+                [style.background-color]="estados[p.estado].color + '1F'" [style.--bc]="estados[p.estado].color"
+                [style.border-color]="estados[p.estado].color" [style.color]="estados[p.estado].color">
+            <i [class]="estados[p.estado].icono" aria-hidden="true"></i> {{ estados[p.estado].texto }}
+          </span>
+        </div>
+        <p *ngIf="p.descripcion" class="text-xs opacity-70 line-clamp-2">{{ p.descripcion }}</p>
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="opacity-70">Avance</span>
+            <span class="font-semibold">{{ p.avance }}%</span>
+          </div>
+          <progress class="progress w-full" [value]="p.avance" max="100" [style.color]="colorDe(p)"
+                    [attr.aria-label]="'Avance ' + p.avance + '%'"></progress>
+        </div>
+        <div class="flex flex-wrap gap-3 text-xs opacity-70">
+          <span><i class="fa-solid fa-list-check mr-1" aria-hidden="true"></i>{{ p.hechas }}/{{ p.tarjetas }} tarjetas</span>
+          <span><i class="fa-solid fa-users mr-1" aria-hidden="true"></i>{{ p.miembros }} en el equipo</span>
+          <span *ngIf="p.fin"><i class="fa-regular fa-calendar mr-1" aria-hidden="true"></i>hasta {{ p.fin | date: 'dd/MM/yyyy' }}</span>
+          <!-- La tarjeta ya es un botón: el acceso al chat es un span con rol de botón -->
+          <span role="button" tabindex="0" class="ml-auto inline-flex items-center gap-1 font-medium hover:underline"
+                [ngClass]="noLeidos[p.id] ? 'text-error opacity-100' : ''"
+                (click)="abrirChat(p, $event)" (keydown.enter)="abrirChat(p, $event)"
+                [attr.aria-label]="'Chat de ' + p.nombre + (noLeidos[p.id] ? ', ' + noLeidos[p.id] + ' sin leer' : '')">
+            <i class="fa-solid fa-comments" aria-hidden="true"></i> Chat
+            <span *ngIf="noLeidos[p.id]" class="badge badge-xs badge-error text-white">{{ noLeidos[p.id] }}</span>
+          </span>
+        </div>
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- ============================ ASISTENTE: NUEVO PROYECTO ============================ -->
+<div *ngIf="creando" class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
+     (click)="cerrarAsistente()">
+  <div class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[94vh] flex flex-col"
+       role="dialog" aria-modal="true" aria-labelledby="titulo-nuevo-proyecto" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-base-200">
+      <span class="p-2.5 rounded-xl text-white" [style.background-color]="form.color || '#2563EB'" aria-hidden="true">
+        <i [class]="form.icono || 'fa-solid fa-diagram-project'"></i>
+      </span>
+      <div class="flex-1 min-w-0">
+        <h3 id="titulo-nuevo-proyecto" class="font-bold text-lg truncate">{{ creado ? creado.nombre : 'Nuevo proyecto' }}</h3>
+        <p class="text-xs opacity-70">Paso {{ paso + 1 }} de {{ pasos.length }} · {{ pasos[paso].titulo }}</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="cerrarAsistente()" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <nav class="px-3 sm:px-5 pt-4 overflow-x-auto" aria-label="Pasos del proyecto">
+      <ul class="steps w-full min-w-[30rem] text-xs">
+        <li *ngFor="let p of pasos; let i = index" class="step" [ngClass]="i <= paso ? 'step-primary' : ''"
+            [attr.data-content]="i < paso ? '✓' : i + 1">
+          <button type="button" class="font-medium disabled:opacity-40" [disabled]="i > 0 && !creado" (click)="irAPaso(i)"
+                  [attr.aria-current]="i === paso ? 'step' : null">{{ p.titulo }}</button>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="overflow-y-auto px-5 py-5 min-h-[18rem]">
+      <!-- Paso 1: datos -->
+      <div *ngIf="paso === 0" class="space-y-4">
+        <label class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Nombre <span class="text-error">*</span></span></div>
+          <input class="input input-bordered input-sm" maxlength="150" [(ngModel)]="form.nombre" placeholder="Ej.: Migración del core" />
+        </label>
+        <label class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Descripción</span></div>
+          <textarea class="textarea textarea-bordered textarea-sm" rows="3" [(ngModel)]="form.descripcion"
+                    placeholder="Para qué es el proyecto"></textarea>
+        </label>
+        <div *ngIf="esSuperAdmin" class="form-control">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Área dueña <span class="text-error">*</span></span></div>
+          <app-master-select [(ngModel)]="form.areaId" [options]="areas" icon="fa-solid fa-building"
+                             placeholder="Elija el área" label="Área dueña" [disabled]="!!creado"></app-master-select>
+        </div>
+        <p *ngIf="!esSuperAdmin" class="text-xs opacity-70">
+          <i class="fa-solid fa-building mr-1" aria-hidden="true"></i>
+          El proyecto será de su área. En los siguientes pasos arma el equipo, invita a otras áreas (su jefe debe aceptar),
+          crea los sprints y los objetivos.
+        </p>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="form-control">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Inicio</span></div>
+            <input type="date" class="input input-bordered input-sm" [(ngModel)]="form.inicio" />
+          </label>
+          <label class="form-control">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Fin</span></div>
+            <input type="date" class="input input-bordered input-sm" [(ngModel)]="form.fin" />
+          </label>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Icono</span></div>
+            <div class="flex flex-wrap gap-1.5">
+              <button *ngFor="let i of iconos" type="button" class="btn btn-sm btn-square"
+                      [ngClass]="form.icono === i ? 'btn-primary text-white' : 'btn-ghost border border-base-300'"
+                      (click)="form.icono = i" [attr.aria-pressed]="form.icono === i" [attr.aria-label]="'Icono ' + i">
+                <i [class]="i" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+          <div>
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Color</span></div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button *ngFor="let c of colores" type="button" class="w-7 h-7 rounded-full border-2" [style.background-color]="c"
+                      [ngClass]="form.color === c ? 'border-base-content' : 'border-transparent'"
+                      (click)="form.color = c" [attr.aria-label]="'Color ' + c"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 2: integrantes -->
+      <div *ngIf="paso === 1" class="grid gap-4 md:grid-cols-2">
+        <div>
+          <h4 class="font-semibold mb-1">Personas disponibles</h4>
+          <p class="text-xs opacity-70 mb-2">De su área (y de las áreas que acepten la invitación).</p>
+          <p *ngIf="!candidatos.length" class="text-sm opacity-60 py-4 text-center">No hay más personas para agregar.</p>
+          <ul class="space-y-1 max-h-72 overflow-y-auto pr-1">
+            <li *ngFor="let m of candidatos; trackBy: trackMiembro" class="flex items-center gap-2 rounded-lg border border-base-200 px-2 py-1.5">
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium truncate">{{ m.nombre }}</p>
+                <p class="text-[11px] opacity-60 truncate">{{ m.area }}</p>
+              </div>
+              <button type="button" class="btn btn-ghost btn-xs" (click)="agregar(m, 'RESPONSABLE')" [disabled]="ocupado" title="Agregar como responsable">
+                <i class="fa-solid fa-star text-warning" aria-hidden="true"></i></button>
+              <button type="button" class="btn btn-primary btn-xs text-white gap-1" (click)="agregar(m)" [disabled]="ocupado">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i> Agregar</button>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-1">Equipo del proyecto <span class="badge badge-sm badge-ghost">{{ miembros.length }}</span></h4>
+          <p class="text-xs opacity-70 mb-2">La estrella marca a los responsables.</p>
+          <p *ngIf="!miembros.length" class="text-sm opacity-60 py-4 text-center">Todavía nadie. Puede hacerlo después en la pestaña Equipo.</p>
+          <ul class="space-y-1 max-h-72 overflow-y-auto pr-1">
+            <li *ngFor="let m of miembros; trackBy: trackMiembro" class="flex items-center gap-2 rounded-lg bg-base-200/60 px-2 py-1.5">
+              <i *ngIf="m.rol === 'RESPONSABLE'" class="fa-solid fa-star text-warning text-xs" title="Responsable" aria-label="Responsable"></i>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium truncate">{{ m.nombre }}</p>
+                <p class="text-[11px] opacity-60 truncate">{{ m.area }}</p>
+              </div>
+              <button type="button" class="btn btn-ghost btn-xs text-error" (click)="quitar(m)" [disabled]="ocupado" [attr.aria-label]="'Quitar a ' + m.nombre">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Paso 3: otras áreas -->
+      <div *ngIf="paso === 2" class="space-y-4">
+        <div>
+          <h4 class="font-semibold mb-1">¿Participan otras áreas?</h4>
+          <p class="text-xs opacity-70">Opcional. Al invitar, el jefe de esa área recibe el aviso al instante y decide; si acepta, suma a su gente.</p>
+        </div>
+        <div class="flex flex-wrap items-end gap-2">
+          <div class="grow min-w-[14rem] max-w-sm">
+            <app-master-select [(ngModel)]="areaAInvitar" [options]="areasParaInvitar" icon="fa-solid fa-building"
+                               placeholder="Elija el área" label="Área a invitar"></app-master-select>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="invitar()" [disabled]="!areaAInvitar || ocupado">
+            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Invitar
+          </button>
+        </div>
+        <p *ngIf="!areasInvitadas.length" class="text-sm opacity-60">Solo participa su área.</p>
+        <ul class="space-y-1">
+          <li *ngFor="let a of areasInvitadas" class="flex items-center gap-2 rounded-lg border border-base-200 px-3 py-2">
+            <i class="fa-solid fa-building opacity-60" aria-hidden="true"></i>
+            <span class="flex-1 text-sm font-medium">{{ a.nombre }}</span>
+            <span class="badge badge-sm gap-1"
+                  [ngClass]="a.estado === 'ACEPTADA' ? 'badge-success text-white' : a.estado === 'RECHAZADA' ? 'badge-error text-white' : 'badge-warning'">
+              <i class="fa-solid text-[10px]" [ngClass]="a.estado === 'ACEPTADA' ? 'fa-check' : a.estado === 'RECHAZADA' ? 'fa-xmark' : 'fa-hourglass-half'" aria-hidden="true"></i>
+              {{ a.estado === 'ACEPTADA' ? 'Aceptó' : a.estado === 'RECHAZADA' ? 'Rechazó' : 'Esperando al jefe' }}
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Paso 4: sprints -->
+      <div *ngIf="paso === 3" class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-3">
+          <div>
+            <h4 class="font-semibold mb-1">Nuevo sprint</h4>
+            <p class="text-xs opacity-70">Etapas cortas del proyecto (p. ej. 2 semanas), dentro de su plazo
+              <span *ngIf="form.inicio || form.fin">({{ form.inicio ? (form.inicio | date: 'dd/MM/yyyy') : '…' }} a {{ form.fin ? (form.fin | date: 'dd/MM/yyyy') : '…' }})</span>. Opcional.</p>
+          </div>
+          <label class="form-control">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Nombre <span class="text-error">*</span></span></div>
+            <input class="input input-bordered input-sm" maxlength="120" [(ngModel)]="sprint.nombre" placeholder="Ej.: Sprint 1 · Análisis" />
+          </label>
+          <label class="form-control">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Meta del sprint</span></div>
+            <input class="input input-bordered input-sm" maxlength="300" [(ngModel)]="sprint.objetivo" placeholder="Qué debe quedar listo" />
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="form-control">
+              <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Inicio</span></div>
+              <input type="date" class="input input-bordered input-sm" [(ngModel)]="sprint.inicio"
+                     [min]="form.inicio || ''" [max]="form.fin || ''" />
+            </label>
+            <label class="form-control">
+              <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Fin</span></div>
+              <input type="date" class="input input-bordered input-sm" [(ngModel)]="sprint.fin"
+                     [min]="sprint.inicio || form.inicio || ''" [max]="form.fin || ''" />
+            </label>
+          </div>
+          <p *ngIf="motivoSprint as m" class="text-xs text-error flex items-center gap-1.5" role="alert">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ m }}
+          </p>
+          <button type="button" class="btn btn-primary btn-sm text-white gap-2 w-full" (click)="agregarSprint()" [disabled]="!sprintValido || ocupado">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> Agregar sprint
+          </button>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">Sprints <span class="badge badge-sm badge-ghost">{{ sprints.length }}</span></h4>
+          <p *ngIf="!sprints.length" class="text-sm opacity-60 py-4 text-center">Sin sprints todavía.</p>
+          <ol class="space-y-1">
+            <li *ngFor="let sp of sprints; let i = index" class="flex items-start gap-2 rounded-lg border border-base-200 px-3 py-2">
+              <span class="badge badge-primary badge-sm text-white mt-0.5">{{ i + 1 }}</span>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium truncate">{{ sp.nombre }}</p>
+                <p class="text-[11px] opacity-60">{{ sp.inicio ? (sp.inicio | date: 'dd/MM') : '—' }} → {{ sp.fin ? (sp.fin | date: 'dd/MM') : '—' }}
+                  <span *ngIf="sp.objetivo"> · {{ sp.objetivo }}</span></p>
+              </div>
+              <button type="button" class="btn btn-ghost btn-xs text-error" (click)="quitarSprint(sp)" [disabled]="ocupado" aria-label="Quitar sprint">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Paso 5: objetivos -->
+      <div *ngIf="paso === 4" class="space-y-3">
+        <div>
+          <h4 class="font-semibold mb-1">Objetivos del proyecto</h4>
+          <p class="text-xs opacity-70">Lo que el proyecto debe lograr. Cuando se cumpla uno, se marca como logro en el detalle.</p>
+        </div>
+        <div class="flex gap-2">
+          <input class="input input-bordered input-sm grow" maxlength="300" [(ngModel)]="objetivoNuevo"
+                 placeholder="Ej.: Reducir a la mitad el tiempo de cierre" (keydown.enter)="agregarObjetivo()" />
+          <button type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="agregarObjetivo()" [disabled]="!objetivoNuevo.trim() || ocupado">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> Agregar
+          </button>
+        </div>
+        <p *ngIf="!objetivos.length" class="text-sm opacity-60">Sin objetivos todavía.</p>
+        <ul class="space-y-1">
+          <li *ngFor="let o of objetivos" class="flex items-center gap-2 rounded-lg border border-base-200 px-3 py-2">
+            <i class="fa-solid fa-bullseye text-primary" aria-hidden="true"></i>
+            <span class="flex-1 text-sm">{{ o.descripcion }}</span>
+            <button type="button" class="btn btn-ghost btn-xs text-error" (click)="quitarObjetivo(o)" [disabled]="ocupado" aria-label="Quitar objetivo">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Pie: aviso en su propia línea y botones en una fila que no se parte -->
+    <p *ngIf="creado" class="px-5 pt-3 text-xs opacity-60 border-t border-base-200">El proyecto ya está creado; lo demás puede completarlo después.</p>
+    <p *ngIf="!creado && paso === 0 && motivoProyecto as m" class="px-5 pt-3 text-xs text-error flex items-center gap-1.5 border-t border-base-200" role="alert">
+      <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ m }}
+    </p>
+    <div class="flex items-center gap-2 px-5 py-4" [class.border-t]="!creado && !(paso === 0 && motivoProyecto)" [class.border-base-200]="true">
+      <button type="button" class="btn btn-ghost btn-sm shrink-0" (click)="cerrarAsistente()" [disabled]="guardando">
+        {{ creado ? 'Cerrar' : 'Cancelar' }}</button>
+      <span class="flex-1"></span>
+      <button *ngIf="paso > 0" type="button" class="btn btn-ghost btn-sm gap-2 border border-base-300 shrink-0" (click)="irAPaso(paso - 1)">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Anterior
+      </button>
+      <button *ngIf="!esUltimoPaso" type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="siguiente()"
+              [disabled]="(paso === 0 && !formValido) || guardando">
+        <span *ngIf="guardando" class="loading loading-spinner loading-xs"></span>
+        {{ paso === 0 && !creado ? 'Crear y seguir' : 'Siguiente' }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      </button>
+      <button *ngIf="esUltimoPaso" type="button" class="btn btn-primary btn-sm text-white gap-2 shrink-0 whitespace-nowrap" (click)="terminar()">
+        <i class="fa-solid fa-check" aria-hidden="true"></i> Terminar e ir al proyecto
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,386 @@
+<!-- ============================ FILTROS ============================ -->
+<section class="card bg-base-100 shadow-sm border border-base-200">
+  <div class="card-body p-4 gap-3">
+    <div class="flex flex-wrap items-center gap-2">
+      <label class="input input-bordered input-sm flex items-center gap-2 grow min-w-[14rem] max-w-md focus-within:ring-2 focus-within:ring-primary/25">
+        <i class="fa-solid fa-magnifying-glass text-xs opacity-60" aria-hidden="true"></i>
+        <input type="search" class="grow bg-transparent outline-none" placeholder="Buscar por nombre o descripción…"
+               [(ngModel)]="busqueda" (ngModelChange)="filtrar()" aria-label="Buscar reportes" />
+      </label>
+      <div class="w-full sm:w-52">
+        <app-master-select [ngModel]="periodo" (ngModelChange)="cambiarPeriodo($event)" [options]="periodos"
+                           icon="fa-regular fa-calendar" label="Periodo"></app-master-select>
+      </div>
+      <div class="w-full sm:w-52">
+        <app-master-select [(ngModel)]="filtroTabla" (elegido)="filtrar()" [options]="opcionesTabla" [allowEmpty]="true"
+                           emptyLabel="Todos los datos" placeholder="Todos los datos" icon="fa-solid fa-database" label="Datos"></app-master-select>
+      </div>
+      <div class="w-full sm:w-52">
+        <app-master-select [(ngModel)]="filtroOrigen" (elegido)="filtrar()" [options]="origenes" [allowEmpty]="true"
+                           emptyLabel="Todos los reportes" placeholder="Todos los reportes" icon="fa-solid fa-layer-group" label="Origen"></app-master-select>
+      </div>
+      <div class="w-full sm:w-52">
+        <app-master-select [(ngModel)]="orden" (elegido)="filtrar()" [options]="ordenes"
+                           icon="fa-solid fa-arrow-down-a-z" label="Orden"></app-master-select>
+      </div>
+      <button *ngIf="hayFiltros" type="button" class="btn btn-ghost btn-sm gap-1" (click)="limpiarFiltros()">
+        <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i> Limpiar
+      </button>
+      <span class="flex-1"></span>
+      <button type="button" class="btn btn-ghost btn-sm gap-2" (click)="cargar()" [disabled]="cargando" aria-label="Actualizar">
+        <i class="fa-solid fa-rotate-right" [class.fa-spin]="cargando" aria-hidden="true"></i>
+      </button>
+      <button *ngIf="puedeCrear" type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="nuevo()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> Nuevo reporte
+      </button>
+    </div>
+    <div *ngIf="periodo === 'PERSONALIZADO'" class="flex flex-wrap items-end gap-2">
+      <label class="form-control">
+        <span class="label-text text-xs mb-1">Desde</span>
+        <input type="date" class="input input-bordered input-sm" [(ngModel)]="desde" />
+      </label>
+      <label class="form-control">
+        <span class="label-text text-xs mb-1">Hasta</span>
+        <input type="date" class="input input-bordered input-sm" [(ngModel)]="hasta" />
+      </label>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ TARJETAS ============================ -->
+<div *ngIf="cargando" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3 mt-4">
+  <div *ngFor="let _ of [1, 2, 3]" class="skeleton h-48 rounded-2xl"></div>
+</div>
+
+<div *ngIf="!cargando && !visibles.length" class="card bg-base-100 border border-base-200 mt-4">
+  <div class="card-body items-center text-center gap-2 py-10">
+    <span class="p-4 rounded-2xl bg-base-200 text-base-content/60" aria-hidden="true"><i class="fa-solid fa-chart-column text-3xl"></i></span>
+    <p class="font-semibold">{{ hayFiltros ? 'Ningún reporte coincide con los filtros' : 'Todavía no hay reportes' }}</p>
+    <p class="text-sm opacity-70">{{ hayFiltros ? 'Pruebe con otros filtros.' : (puedeCrear ? 'Cree el primero con "Nuevo reporte".' : '') }}</p>
+  </div>
+</div>
+
+<div *ngIf="!cargando && visibles.length" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3 mt-4">
+  <article *ngFor="let r of visibles; trackBy: trackReporte"
+           class="card bg-base-100 shadow-sm border border-base-200 border-t-4 rounded-2xl hover:shadow-md transition-shadow"
+           [style.border-top-color]="colorDe(r)">
+    <div class="card-body p-5 gap-3">
+      <div class="flex items-start gap-3">
+        <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-lg border"
+              [style.background-color]="colorDe(r) + '14'" [style.border-color]="colorDe(r) + '33'" [style.color]="colorDe(r)" aria-hidden="true">
+          <i [class]="iconoDe(r)"></i>
+        </span>
+        <div class="min-w-0 flex-1">
+          <h3 class="font-semibold leading-tight line-clamp-2" [title]="r.nombre">{{ r.nombre }}</h3>
+          <p class="text-xs opacity-70 line-clamp-2 mt-1">{{ r.descripcion || (tablaDe(r.definicion.tabla)?.descripcion) }}</p>
+        </div>
+        <div *ngIf="puedeEditar(r)" class="flex -mr-2 -mt-1">
+          <button type="button" class="btn btn-ghost btn-xs" (click)="editar(r)" aria-label="Editar reporte" title="Editar">
+            <i class="fa-solid fa-pen" aria-hidden="true"></i>
+          </button>
+          <!-- Los reportes del sistema se editan, pero no se borran -->
+          <button *ngIf="!r.sistema" type="button" class="btn btn-ghost btn-xs text-error" (click)="eliminar(r)" aria-label="Eliminar reporte" title="Eliminar">
+            <i class="fa-solid fa-trash" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-1.5">
+        <!-- Color con [style] y --bc: la regla global de .badge pisa las clases bg-*/text-* -->
+        <span *ngIf="r.sistema" class="badge badge-sm kanban-tag border gap-1 font-semibold"
+              [style.background-color]="'#062E86'" [style.border-color]="'#062E86'" [style.color]="'#FFFFFF'" [style.--bc]="'#FFFFFF'">
+          <i class="fa-solid fa-shield-halved text-[10px]" aria-hidden="true"></i> Sistema</span>
+        <span *ngIf="!r.sistema" class="badge badge-sm kanban-tag border gap-1 font-semibold"
+              [style.background-color]="'#16A34A'" [style.border-color]="'#16A34A'" [style.color]="'#FFFFFF'" [style.--bc]="'#FFFFFF'">
+          <i class="fa-solid fa-user text-[10px]" aria-hidden="true"></i> {{ r.propio ? 'Mío' : r.propietario }}</span>
+        <span class="badge badge-sm badge-ghost gap-1">
+          <i [class]="(tablaDe(r.definicion.tabla)?.icono || 'fa-solid fa-table') + ' text-[10px]'" aria-hidden="true"></i>
+          {{ tablaDe(r.definicion.tabla)?.nombre || r.definicion.tabla }}</span>
+        <span class="badge badge-sm badge-ghost gap-1">
+          <i class="fa-solid text-[10px]" [ngClass]="r.definicion.medidas?.length ? 'fa-chart-pie' : 'fa-list'" aria-hidden="true"></i>
+          {{ r.definicion.medidas?.length ? 'Resumen' : r.definicion.columnas.length + ' columnas' }}</span>
+        <span class="badge badge-sm badge-ghost gap-1">
+          <i class="fa-regular fa-calendar text-[10px]" aria-hidden="true"></i> {{ etiquetaPeriodo }}</span>
+      </div>
+
+      <div class="flex items-center gap-2 pt-3 mt-auto border-t border-base-200">
+        <button type="button" class="btn btn-primary btn-sm text-white flex-1 gap-2" (click)="ver(r)">
+          <i class="fa-solid fa-eye" aria-hidden="true"></i> Ver reporte
+        </button>
+        <button type="button" class="btn btn-sm btn-ghost border border-base-300 gap-1" (click)="exportar(r, 'PDF')"
+                [disabled]="exportando[r.id + 'PDF']" title="Descargar PDF">
+          <span *ngIf="exportando[r.id + 'PDF']" class="loading loading-spinner loading-xs"></span>
+          <i *ngIf="!exportando[r.id + 'PDF']" class="fa-regular fa-file-pdf text-error" aria-hidden="true"></i> PDF
+        </button>
+        <button type="button" class="btn btn-sm btn-ghost border border-base-300 gap-1" (click)="exportar(r, 'EXCEL')"
+                [disabled]="exportando[r.id + 'EXCEL']" title="Descargar Excel">
+          <span *ngIf="exportando[r.id + 'EXCEL']" class="loading loading-spinner loading-xs"></span>
+          <i *ngIf="!exportando[r.id + 'EXCEL']" class="fa-regular fa-file-excel text-success" aria-hidden="true"></i> Excel
+        </button>
+      </div>
+    </div>
+  </article>
+</div>
+
+<!-- ============================ MODAL: CONSTRUCTOR POR PASOS ============================ -->
+<div *ngIf="editando" class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
+     (click)="cerrarEditor()">
+  <div class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[94vh] flex flex-col"
+       role="dialog" aria-modal="true" aria-labelledby="titulo-constructor" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-base-200">
+      <span class="p-2.5 rounded-xl text-white" [style.background-color]="color" aria-hidden="true"><i [class]="icono"></i></span>
+      <div class="flex-1 min-w-0">
+        <h3 id="titulo-constructor" class="font-bold text-lg truncate">{{ editId ? 'Editar reporte' : 'Nuevo reporte' }}</h3>
+        <p class="text-xs opacity-70">Paso {{ paso + 1 }} de {{ pasos.length }} · {{ pasos[paso].titulo }}</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="cerrarEditor()" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <!-- Pasos -->
+    <nav class="px-3 sm:px-5 pt-4 overflow-x-auto" aria-label="Pasos del reporte">
+      <ul class="steps w-full min-w-[34rem] text-xs">
+        <li *ngFor="let p of pasos; let i = index" class="step" [ngClass]="i <= paso ? 'step-primary' : ''"
+            [attr.data-content]="i < paso && pasoValido(i) ? '✓' : i + 1">
+          <button type="button" class="font-medium disabled:opacity-40" [disabled]="!pasoAlcanzable(i)" (click)="irAPaso(i)"
+                  [attr.aria-current]="i === paso ? 'step' : null">
+            {{ p.titulo }}
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="overflow-y-auto px-5 py-5 min-h-[18rem]">
+      <!-- Paso 1: tabla -->
+      <div *ngIf="paso === 0">
+        <h4 class="font-semibold mb-1">¿De qué es el reporte?</h4>
+        <p class="text-xs opacity-70 mb-3">Elija los datos con los que se arma.</p>
+        <div class="grid gap-2 sm:grid-cols-2">
+          <button *ngFor="let t of tablas" type="button" (click)="elegirTabla(t)"
+                  class="text-left rounded-xl border-2 p-4 flex gap-3 transition"
+                  [ngClass]="def.tabla === t.clave ? 'border-primary bg-primary/5' : 'border-base-200 hover:bg-base-200/50'">
+            <i [class]="t.icono" class="text-primary text-xl mt-0.5" aria-hidden="true"></i>
+            <span><span class="block font-semibold text-sm">{{ t.nombre }}</span>
+              <span class="block text-xs opacity-70">{{ t.descripcion }}</span></span>
+          </button>
+        </div>
+      </div>
+
+      <ng-container *ngIf="tablaElegida as t">
+        <!-- Paso 2: detalle o resumen -->
+        <div *ngIf="paso === 1" class="space-y-4">
+          <div>
+            <h4 class="font-semibold mb-1">¿Cómo lo quiere ver?</h4>
+            <p class="text-xs opacity-70 mb-3">El detalle trae una fila por registro; el resumen, totales agrupados.</p>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <button type="button" (click)="cambiarModo(false)" class="text-left rounded-xl border-2 p-4 flex gap-3 transition"
+                      [ngClass]="!esResumen ? 'border-primary bg-primary/5' : 'border-base-200 hover:bg-base-200/50'">
+                <i class="fa-solid fa-list text-primary text-xl mt-0.5" aria-hidden="true"></i>
+                <span><span class="block font-semibold text-sm">Detalle</span>
+                  <span class="block text-xs opacity-70">Una fila por registro, con las columnas que elija.</span></span>
+              </button>
+              <button type="button" (click)="cambiarModo(true)" class="text-left rounded-xl border-2 p-4 flex gap-3 transition"
+                      [ngClass]="esResumen ? 'border-primary bg-primary/5' : 'border-base-200 hover:bg-base-200/50'">
+                <i class="fa-solid fa-chart-pie text-primary text-xl mt-0.5" aria-hidden="true"></i>
+                <span><span class="block font-semibold text-sm">Resumen</span>
+                  <span class="block text-xs opacity-70">Totales agrupados (por área, agente, sucursal, mes...).</span></span>
+              </button>
+            </div>
+          </div>
+          <div *ngIf="esResumen">
+            <div class="text-sm font-semibold mb-2">Totales <span class="font-normal text-xs opacity-60">(al menos uno)</span></div>
+            <div class="flex flex-wrap gap-1.5">
+              <button *ngFor="let m of t.medidas" type="button" class="badge badge-lg gap-1 cursor-pointer border"
+                      [ngClass]="def.medidas?.includes(m.clave) ? 'badge-secondary' : 'badge-ghost'"
+                      [attr.aria-pressed]="def.medidas?.includes(m.clave)" (click)="alternarMedida(m.clave)">
+                <i class="fa-solid" [ngClass]="def.medidas?.includes(m.clave) ? 'fa-check' : 'fa-plus'" aria-hidden="true"></i>
+                {{ m.etiqueta }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 3: columnas -->
+        <div *ngIf="paso === 2" class="grid gap-4 lg:grid-cols-2">
+          <div>
+            <h4 class="font-semibold mb-1">{{ esResumen ? 'Agrupar por (hasta ' + maxGrupos + ')' : 'Columnas' }}</h4>
+            <p class="text-xs opacity-70 mb-3">Toque para añadir o quitar.</p>
+            <div class="flex flex-wrap gap-1.5">
+              <button *ngFor="let c of columnasDisponibles(t)" type="button" class="badge badge-lg gap-1 cursor-pointer border"
+                      [ngClass]="def.columnas.includes(c.clave) ? 'badge-primary' : 'badge-ghost'"
+                      [attr.aria-pressed]="def.columnas.includes(c.clave)" (click)="alternarColumna(c.clave)">
+                <i class="fa-solid" [ngClass]="def.columnas.includes(c.clave) ? 'fa-check' : 'fa-plus'" aria-hidden="true"></i>
+                {{ c.etiqueta }}
+              </button>
+            </div>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-1">{{ esResumen ? 'Orden de los grupos' : 'Orden de las columnas' }}</h4>
+            <p *ngIf="!def.columnas.length" class="text-xs text-warning">Elija al menos una columna.</p>
+            <ol class="space-y-1 mt-3">
+              <li *ngFor="let c of def.columnas; let i = index" class="flex items-center gap-2 text-sm rounded-lg bg-base-200/60 px-2 py-1">
+                <span class="opacity-50 w-5 text-right">{{ i + 1 }}</span>
+                <span class="flex-1 truncate">{{ etiquetaColumna(c) }}</span>
+                <button type="button" class="btn btn-ghost btn-xs" (click)="moverColumna(i, -1)" [disabled]="i === 0" aria-label="Subir">
+                  <i class="fa-solid fa-arrow-up" aria-hidden="true"></i></button>
+                <button type="button" class="btn btn-ghost btn-xs" (click)="moverColumna(i, 1)" [disabled]="i === def.columnas.length - 1" aria-label="Bajar">
+                  <i class="fa-solid fa-arrow-down" aria-hidden="true"></i></button>
+                <button type="button" class="btn btn-ghost btn-xs text-error" (click)="alternarColumna(c)" aria-label="Quitar">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Paso 4: filtros -->
+        <div *ngIf="paso === 3">
+          <h4 class="font-semibold mb-1">Filtros</h4>
+          <p class="text-xs opacity-70 mb-3">Opcionales. El periodo se elige al verlo o exportarlo.</p>
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div *ngFor="let f of t.filtros" class="form-control">
+              <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">{{ f.etiqueta }}</span></div>
+              <app-master-select [ngModel]="def.filtros[f.clave] || null" (ngModelChange)="cambiarFiltro(f.clave, $event)"
+                                 [ngModelOptions]="{ standalone: true }" [options]="opcionesFiltro[f.clave] || []"
+                                 [allowEmpty]="true" emptyLabel="Todos" placeholder="Todos" [label]="f.etiqueta"></app-master-select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 5: nombre, icono y color -->
+        <div *ngIf="paso === 4" class="grid gap-5 lg:grid-cols-3">
+          <div class="lg:col-span-2 space-y-3">
+            <label class="form-control">
+              <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Nombre <span class="text-error">*</span></span></div>
+              <input class="input input-bordered input-sm" maxlength="150" [(ngModel)]="nombre" placeholder="Ej.: Tickets del mes por agente" />
+            </label>
+            <label class="form-control">
+              <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Descripción</span></div>
+              <textarea class="textarea textarea-bordered textarea-sm min-h-16" maxlength="500" [(ngModel)]="descripcion"
+                        placeholder="Para qué sirve (opcional)"></textarea>
+            </label>
+            <div>
+              <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Icono</span></div>
+              <div class="flex flex-wrap gap-1.5">
+                <button *ngFor="let i of iconosSugeridos" type="button" class="btn btn-sm btn-square"
+                        [ngClass]="icono === i ? 'btn-primary text-white' : 'btn-ghost border border-base-300'"
+                        (click)="icono = i" [attr.aria-pressed]="icono === i" [attr.aria-label]="'Icono ' + i">
+                  <i [class]="i" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+            <div>
+              <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Color</span></div>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button *ngFor="let c of coloresSugeridos" type="button" class="w-7 h-7 rounded-full border-2"
+                        [style.background-color]="c" [ngClass]="color === c ? 'border-base-content' : 'border-transparent'"
+                        (click)="color = c" [attr.aria-pressed]="color === c" [attr.aria-label]="'Color ' + c"></button>
+                <input type="color" class="w-8 h-8 rounded cursor-pointer bg-transparent" [(ngModel)]="color" aria-label="Otro color" />
+              </div>
+            </div>
+          </div>
+          <!-- Cómo se verá la tarjeta -->
+          <div>
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Así se verá</span></div>
+            <div class="card bg-base-100 border border-base-200 border-t-4 rounded-2xl shadow-sm" [style.border-top-color]="color">
+              <div class="card-body p-4 gap-2">
+                <div class="flex items-start gap-3">
+                  <span class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
+                        [style.background-color]="color + '14'" [style.border-color]="color + '33'" [style.color]="color" aria-hidden="true">
+                    <i [class]="icono"></i>
+                  </span>
+                  <div class="min-w-0">
+                    <p class="font-semibold text-sm line-clamp-2">{{ nombre || 'Nombre del reporte' }}</p>
+                    <p class="text-xs opacity-70 line-clamp-2">{{ descripcion || t.descripcion }}</p>
+                  </div>
+                </div>
+                <span class="badge badge-sm badge-ghost gap-1 self-start">
+                  <i class="fa-solid text-[10px]" [ngClass]="esResumen ? 'fa-chart-pie' : 'fa-list'" aria-hidden="true"></i>
+                  {{ esResumen ? 'Resumen' : def.columnas.length + ' columnas' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 6: vista previa -->
+        <div *ngIf="paso === 5" class="space-y-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex-1 min-w-0">
+              <h4 class="font-semibold">Vista previa</h4>
+              <p class="text-xs opacity-70">Del {{ desde | date: 'dd/MM/yyyy' }} al {{ hasta | date: 'dd/MM/yyyy' }} ({{ etiquetaPeriodo }}).</p>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm gap-2 border border-base-300" (click)="previsualizar()" [disabled]="cargandoVista">
+              <i class="fa-solid fa-rotate-right" [class.fa-spin]="cargandoVista" aria-hidden="true"></i> Actualizar
+            </button>
+          </div>
+          <div *ngIf="cargandoVista" class="flex justify-center py-10"><span class="loading loading-spinner loading-lg"></span></div>
+          <ng-container *ngIf="vista && !cargandoVista">
+            <ng-container *ngTemplateOutlet="tablaVista"></ng-container>
+          </ng-container>
+          <p *ngIf="!vista && !cargandoVista && errorVista" class="alert alert-error text-sm">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> {{ errorVista }}
+          </p>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2 px-5 py-4 border-t border-base-200">
+      <button type="button" class="btn btn-ghost btn-sm" (click)="cerrarEditor()" [disabled]="guardando">Cancelar</button>
+      <span class="flex-1"></span>
+      <button *ngIf="paso > 0" type="button" class="btn btn-ghost btn-sm gap-2 border border-base-300" (click)="anterior()">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Anterior
+      </button>
+      <button *ngIf="!esUltimoPaso" type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="siguiente()"
+              [disabled]="!pasoValido(paso)">
+        Siguiente <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      </button>
+      <button *ngIf="esUltimoPaso" type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="guardar()" [disabled]="!puedeGuardar">
+        <span *ngIf="guardando" class="loading loading-spinner loading-xs"></span>
+        <i *ngIf="!guardando" class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar reporte
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ MODAL: VER UN GUARDADO ============================ -->
+<div *ngIf="vistaDe" class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
+     (click)="cerrarVista()">
+  <div class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[94vh] flex flex-col"
+       role="dialog" aria-modal="true" aria-labelledby="titulo-vista" (click)="$event.stopPropagation()">
+    <div class="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-base-200">
+      <span class="p-2.5 rounded-xl" [style.background-color]="colorDe(vistaDe) + '1F'" [style.color]="colorDe(vistaDe)" aria-hidden="true">
+        <i [class]="iconoDe(vistaDe)"></i></span>
+      <div class="flex-1 min-w-0">
+        <h3 id="titulo-vista" class="font-bold text-lg truncate">{{ vistaDe.nombre }}</h3>
+        <p class="text-xs opacity-70">Del {{ desde | date: 'dd/MM/yyyy' }} al {{ hasta | date: 'dd/MM/yyyy' }}</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm gap-1" (click)="exportar(vistaDe, 'PDF')"><i class="fa-regular fa-file-pdf text-error" aria-hidden="true"></i> PDF</button>
+      <button type="button" class="btn btn-ghost btn-sm gap-1" (click)="exportar(vistaDe, 'EXCEL')"><i class="fa-regular fa-file-excel text-success" aria-hidden="true"></i> Excel</button>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="cerrarVista()" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="overflow-auto px-5 py-4">
+      <div *ngIf="cargandoVista" class="flex justify-center py-10"><span class="loading loading-spinner loading-lg"></span></div>
+      <ng-container *ngIf="vista && !cargandoVista">
+        <ng-container *ngTemplateOutlet="tablaVista"></ng-container>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- Tabla de resultados, compartida por los dos modales -->
+<ng-template #tablaVista>
+  <p *ngIf="vista && !vista.filas.length" class="text-sm opacity-70 text-center py-6">No hay datos en ese periodo.</p>
+  <div *ngIf="vista && vista.filas.length" class="space-y-2">
+    <p class="text-xs opacity-70">
+      {{ vista.filas.length }} filas{{ vista.recortada ? ' (vista previa: la exportación trae todas)' : '' }}
+    </p>
+    <div class="overflow-auto max-h-[50vh] rounded-xl border border-base-200">
+      <table class="table table-xs table-pin-rows">
+        <thead><tr><th *ngFor="let c of vista.columnas" class="whitespace-nowrap">{{ c }}</th></tr></thead>
+        <tbody><tr *ngFor="let f of vista.filas"><td *ngFor="let v of f" class="whitespace-nowrap max-w-xs truncate" [title]="v">{{ v }}</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</ng-template>

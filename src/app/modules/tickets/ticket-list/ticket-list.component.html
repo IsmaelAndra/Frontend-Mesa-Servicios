@@ -16,7 +16,7 @@
       </div>
     </div>
 
-    <button class="btn btn-primary btn-sm gap-2" routerLink="/tickets/new">
+    <button class="btn btn-primary btn-sm gap-2" routerLink="/tickets/nuevo">
       <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
       Nuevo ticket
     </button>
@@ -46,16 +46,16 @@
             ></app-master-select>
           </div>
 
-        <!-- Sede -->
+        <!-- Sucursal -->
         <div class="w-full sm:w-48">
           <app-master-select
             [(ngModel)]="sucursalId"
             (ngModelChange)="loadTickets()"
             [options]="sucursalOptions"
             [allowEmpty]="true"
-            emptyLabel="Todas las sedes"
-            placeholder="Todas las sedes"
-            label="Filtrar por sede"
+            emptyLabel="Todas las sucursales"
+            placeholder="Todas las sucursales"
+            label="Filtrar por sucursal"
           ></app-master-select>
         </div>
 
@@ -80,7 +80,7 @@
           <tr>
             <th class="text-center">#</th>
             <th class="text-center">Título</th>
-            <th class="text-center">Sede</th>
+            <th class="text-center">Sucursal</th>
             <th class="text-center">Categoría</th>
             <th class="text-center">Prioridad</th>
             <th class="text-center">Estado</th>
@@ -114,7 +114,7 @@
               </div>
             </td>
 
-            <!-- Sede -->
+            <!-- Sucursal -->
             <td class="text-center">
               <span
                 *ngIf="t.sucursal; else sinSede"
@@ -129,7 +129,7 @@
                 <span class="truncate">{{ t.sucursal }}</span>
               </span>
               <ng-template #sinSede>
-                <span class="text-xs opacity-40" title="El ticket hereda la sede del solicitante">—</span>
+                <span class="text-xs opacity-40" title="El ticket hereda la sucursal del solicitante">—</span>
               </ng-template>
             </td>
 
@@ -232,7 +232,7 @@
                 </span>
                 <span class="font-semibold">Aún no hay tickets aquí</span>
                 <span class="text-sm opacity-60">Cuando se registre uno, aparecerá en esta lista.</span>
-                <button class="btn btn-sm btn-primary gap-2 mt-1" routerLink="/tickets/new">
+                <button class="btn btn-sm btn-primary gap-2 mt-1" routerLink="/tickets/nuevo">
                   <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
                   Crear ticket
                 </button>

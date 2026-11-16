@@ -1,3 +1,4 @@
+import { MENSAJE_TELEFONO, telefonoInvalido } from '../../../core/utils/telefono.util';
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdminService } from '../../../core/services/admin.service';
@@ -97,7 +98,20 @@ export class SettingsProfileComponent implements OnInit {
 
   toggleEdit(): void { this.editMode = !this.editMode; if (this.editMode) this.form = { ...this.user! }; }
 
+  readonly telefonoInvalido = telefonoInvalido;
+
+  /** La identificación se muestra enmascarada hasta que se pide verla. */
+  verCedula = false;
+
+  enmascarar(v: string): string {
+    return v.length <= 4 ? v : '•'.repeat(v.length - 4) + v.slice(-4);
+  }
+
   save(): void {
+    if (telefonoInvalido(this.form.phoneUser, this.user?.phoneUser)) {
+      this.toastService.error(MENSAJE_TELEFONO);
+      return;
+    }
     if (!this.user) return;
     this.loading = true;
 

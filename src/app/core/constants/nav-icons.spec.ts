@@ -37,6 +37,7 @@ describe('nav-icons', () => {
     ['report-templates', 'Reportes Personalizados'],
     ['activities', 'Actividades'],
     ['calendar', 'Calendario'],
+    ['proyectos', 'Proyectos'],
     ['reports', 'Reportes'],
     ['settings', 'Configuración'],
     ['profile', 'Mi Perfil'],
@@ -56,7 +57,8 @@ describe('nav-icons', () => {
     Object.entries(NAV_ICONS).forEach(([clave, icono]) => {
       expect(icono)
         .withContext(`el icono de ${clave} debe incluir la clase de estilo`)
-        .toMatch(/^fa-(solid|regular|brands)\s+fa-/);
+        // icono-mapi: el lobito de MAPI (imagen, en styles.css) para la IA.
+        .toMatch(/^(fa-(solid|regular|brands)\s+fa-|icono-mapi$)/);
     });
   });
 

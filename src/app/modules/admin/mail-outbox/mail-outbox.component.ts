@@ -38,6 +38,14 @@ const TIPOS: Record<string, string> = {
   ESCALATION: 'Escalación',
   MONTHLY_EVALUATION: 'Evaluación mensual',
   TASK_ASIGNADA: 'Tarea asignada',
+  TAREA_POR_VENCER: 'Actividad por vencer',
+  PROYECTO_INVITACION: 'Invitación a proyecto',
+  PROYECTO_RESPUESTA: 'Respuesta a invitación',
+  PROYECTO_MIEMBRO: 'Nuevo en un proyecto',
+  PROYECTO_TAREA: 'Tarea de proyecto',
+  PROYECTO_MENCION: 'Mención en un proyecto',
+  ACTA_ACTIVO: 'Acta de equipos',
+  GARANTIA_POR_VENCER: 'Garantía por vencer',
   CHAT_MENSAJE: 'Mensaje en el chat',
   CREACION_USUARIO: 'Cuenta nueva',
   RESET_PASSWORD: 'Restablecer contraseña',
@@ -176,7 +184,7 @@ export class MailOutboxComponent implements OnInit, OnDestroy {
   }
 
   cancelar(c: CorreoEnCola): void {
-    void Swal.fire({
+    void Swal.fire({ cancelButtonColor: '#6b7280',
       title: '¿Cancelar este correo?',
       text: `No se enviará a ${c.to}.`,
       icon: 'warning',
@@ -200,7 +208,7 @@ export class MailOutboxComponent implements OnInit, OnDestroy {
 
   reintentarFallidos(): void {
     const n = this.resumen?.fallidos ?? 0;
-    void Swal.fire({
+    void Swal.fire({ cancelButtonColor: '#6b7280',
       title: `¿Reintentar ${n} ${n === 1 ? 'correo fallido' : 'correos fallidos'}?`,
       text: 'Vuelven a la cola y salen al ritmo normal.',
       icon: 'question',

@@ -1,3 +1,89 @@
+<!-- ============ Ticket confidencial sin acceso (súper admin / auditor) ============ -->
+<div *ngIf="!ticket && confidencialBloqueado" class="space-y-6">
+  <header class="page-head flex items-center gap-3">
+    <div class="page-head__icono p-3 rounded-2xl bg-warning/15 text-warning shrink-0" aria-hidden="true">
+      <i class="fa-solid fa-user-lock text-2xl"></i>
+    </div>
+    <div class="min-w-0">
+      <h1 class="page-head__titulo text-2xl sm:text-3xl font-bold leading-tight">Ticket confidencial</h1>
+      <p class="text-sm opacity-70">Su contenido está protegido. Puede pedir acceso de solo lectura.</p>
+    </div>
+  </header>
+
+  <div class="grid gap-6 xl:grid-cols-12">
+    <!-- Cómo funciona -->
+    <section class="card bg-base-100 shadow-sm border border-base-200 xl:col-span-7">
+      <div class="card-body gap-5">
+        <div>
+          <h2 class="font-semibold text-lg">¿Quién lo ve?</h2>
+          <div class="grid gap-2 sm:grid-cols-3 mt-3">
+            <div class="rounded-xl border border-base-200 p-3 flex items-center gap-2">
+              <i class="fa-solid fa-user text-primary" aria-hidden="true"></i><span class="text-sm">El solicitante</span></div>
+            <div class="rounded-xl border border-base-200 p-3 flex items-center gap-2">
+              <i class="fa-solid fa-headset text-primary" aria-hidden="true"></i><span class="text-sm">Quien lo atiende</span></div>
+            <div class="rounded-xl border border-base-200 p-3 flex items-center gap-2">
+              <i class="fa-solid fa-user-tie text-primary" aria-hidden="true"></i><span class="text-sm">El jefe del área</span></div>
+          </div>
+          <p class="text-xs opacity-70 mt-2">Y las personas que ellos autoricen. El súper admin y el auditor no lo ven sin permiso.</p>
+        </div>
+        <div>
+          <h2 class="font-semibold text-lg mb-3">Cómo pedir acceso</h2>
+          <ol class="space-y-3">
+            <li class="flex gap-3">
+              <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shrink-0">1</span>
+              <div><p class="font-medium text-sm">Explique el motivo</p>
+                <p class="text-xs opacity-70">Lo lee el jefe del área que atiende el ticket.</p></div>
+            </li>
+            <li class="flex gap-3">
+              <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shrink-0">2</span>
+              <div><p class="font-medium text-sm">El jefe decide</p>
+                <p class="text-xs opacity-70">Le llega el aviso al momento; usted recibe la respuesta en la campana.</p></div>
+            </li>
+            <li class="flex gap-3">
+              <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shrink-0">3</span>
+              <div><p class="font-medium text-sm">Lectura por {{ horasAcceso }} horas</p>
+                <p class="text-xs opacity-70">Solo lectura. Cada apertura queda registrada en la auditoría.</p></div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Solicitud -->
+    <section class="card bg-base-100 shadow-sm border border-base-200 xl:col-span-5 self-start">
+      <div class="card-body gap-3">
+        <h2 class="font-semibold text-lg flex items-center gap-2"><i class="fa-solid fa-key text-warning" aria-hidden="true"></i> Solicitud de acceso</h2>
+        <ng-container [ngSwitch]="miAcceso?.estado">
+          <div *ngSwitchCase="'PENDIENTE'" class="alert alert-info text-sm">
+            <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+            Enviada el {{ miAcceso?.creada | date: 'dd/MM HH:mm' }}. Esperando la decisión del jefe del área.
+          </div>
+          <div *ngSwitchCase="'RECHAZADO'" class="alert alert-error text-sm">
+            <i class="fa-solid fa-ban" aria-hidden="true"></i>
+            Su solicitud fue rechazada<span *ngIf="miAcceso?.comentario">: {{ miAcceso?.comentario }}</span>. Puede pedirla otra vez.
+          </div>
+        </ng-container>
+        <div *ngIf="miAcceso?.estado !== 'PENDIENTE'" class="space-y-2">
+          <label class="form-control w-full">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Motivo de la solicitud <span class="text-error">*</span></span>
+              <span class="label-text-alt text-[11px] opacity-60">{{ motivoAcceso.trim().length }}/500 · mínimo 10</span></div>
+            <textarea class="textarea textarea-bordered w-full min-h-32" maxlength="500" [(ngModel)]="motivoAcceso"
+                      placeholder="Ej.: auditoría del proceso de reclamos de noviembre"></textarea>
+          </label>
+          <button type="button" class="btn btn-primary text-white w-full gap-2" (click)="solicitarAcceso()"
+                  [disabled]="enviandoAcceso || motivoAcceso.trim().length < 10">
+            <span *ngIf="enviandoAcceso" class="loading loading-spinner loading-sm"></span>
+            <i *ngIf="!enviandoAcceso" class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+            Solicitar acceso
+          </button>
+        </div>
+        <a routerLink="/tickets/tablero" class="btn btn-ghost btn-sm gap-2 self-start">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Volver a los tickets</a>
+      </div>
+    </section>
+  </div>
+</div>
+
 <div *ngIf="ticket" class="space-y-6">
   <!-- Encabezado -->
   <header
@@ -18,6 +104,18 @@
           <span class="font-mono text-lg opacity-70"
             >#{{ ticket.numberTicket }}</span
           >
+          <!-- Un solo control: quien gestiona lo pulsa para cambiar quién lo ve; el resto solo ve la insignia. -->
+          <span *ngIf="ticket.confidencial && !canManage" class="badge badge-warning gap-1 text-xs font-semibold"
+                title="Solo lo ven las personas autorizadas">
+            <i class="fa-solid fa-user-lock" aria-hidden="true"></i> Confidencial
+          </span>
+          <button *ngIf="canManage" type="button" class="btn btn-xs gap-1"
+                  [ngClass]="ticket.confidencial ? 'btn-warning' : 'btn-ghost'"
+                  (click)="abrirConfidencialidad()"
+                  [title]="ticket.confidencial ? 'Confidencial: cambiar quién puede verlo' : 'Marcar como confidencial'">
+            <i class="fa-solid" [ngClass]="ticket.confidencial ? 'fa-user-lock' : 'fa-lock-open'" aria-hidden="true"></i>
+            {{ ticket.confidencial ? 'Confidencial' : 'Marcar confidencial' }}
+          </button>
         </h1>
         <p class="text-sm opacity-70 truncate" [title]="ticket.titleTicket | tituloPlano" [innerHTML]="ticket.titleTicket | tituloEnfasis">
         </p>
@@ -28,7 +126,7 @@
     <div class="flex flex-wrap gap-2 shrink-0">
       <!-- Cambiar estado -->
       <!-- Cambiar estado: muestra el estado actual con icono y color -->
-      <div class="dropdown dropdown-end" *ngIf="canManage">
+      <div class="dropdown xl:dropdown-end" *ngIf="canManage" (keydown.escape)="cerrarMenu()">
         <div
           tabindex="0"
           role="button"
@@ -47,7 +145,7 @@
             class="text-sm"
             aria-hidden="true"
           ></i>
-          <span class="font-medium">{{ ticket.status }}</span>
+          <span class="font-medium">{{ estadoTexto(ticket.status) }}</span>
           <i
             class="fa-solid fa-chevron-down text-[10px] opacity-70"
             aria-hidden="true"
@@ -58,7 +156,8 @@
           tabindex="0"
           class="menu-colores dropdown-content menu menu-sm p-1 mt-1 z-[1] bg-base-100 rounded-xl w-56 shadow-lg border border-base-200 max-h-80 overflow-y-auto"
         >
-          <li *ngFor="let s of statuses">
+          <li *ngIf="ticket.status === 'CERRADO'" class="menu-title text-[11px] normal-case">Un ticket cerrado solo puede reabrirse</li>
+          <li *ngFor="let s of estadosElegibles">
             <!-- --tono: el hover y la opción activa toman el color del estado -->
             <a
               (click)="changeStatus(s)"
@@ -85,7 +184,7 @@
                   s === ticket.status ? statusMeta(s).color || '#059669' : null
                 "
               >
-                {{ s }}
+                {{ s === 'REABIERTO' && ticket.status === 'CERRADO' ? 'Reabrir ticket' : estadoTexto(s) }}
               </span>
               <i
                 *ngIf="s === ticket.status"
@@ -746,7 +845,7 @@
                 class="text-sm"
               ></i>
             </span>
-            <span class="opacity-60">Área:</span>
+            <span class="opacity-60" title="Área del solicitante">Área del solicitante:</span>
             <span
               class="badge badge-sm kanban-tag min-w-0 shrink border"
               [style.background-color]="
@@ -766,7 +865,41 @@
             </span>
           </div>
 
-          <!-- Sede del caso (puede no ser la del solicitante). -->
+          <!-- Área que atiende el ticket (V28) y traslado a otra área. -->
+          <div *ngIf="ticket.areaDestino" class="flex items-center gap-2">
+            <span
+              class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+              [style.background]="(areaMeta(ticket.areaDestino).color || '#062e86') + '22'"
+              [style.color]="areaMeta(ticket.areaDestino).color || '#062e86'"
+              aria-hidden="true"
+            >
+              <i [class]="areaMeta(ticket.areaDestino).icon || 'fa-solid fa-building'" class="text-sm"></i>
+            </span>
+            <span class="opacity-60">Atiende:</span>
+            <span
+              class="badge badge-sm kanban-tag min-w-0 shrink border"
+              [style.background-color]="(areaMeta(ticket.areaDestino).color || '#062e86') + '1F'"
+              [style.--bc]="areaMeta(ticket.areaDestino).color || '#062e86'"
+              [style.border-color]="areaMeta(ticket.areaDestino).color || '#062e86'"
+              [style.color]="areaMeta(ticket.areaDestino).color || '#062e86'"
+              [title]="ticket.areaDestino"
+            >
+              <i [class]="areaMeta(ticket.areaDestino).icon || 'fa-solid fa-building'" class="shrink-0" aria-hidden="true"></i>
+              <span class="truncate">{{ ticket.areaDestino }}</span>
+            </span>
+            <button
+              *ngIf="puedeTrasladar"
+              type="button"
+              class="btn btn-ghost btn-xs gap-1 ml-auto"
+              (click)="abrirTraslado()"
+              title="Trasladar el ticket a otra área"
+            >
+              <i class="fa-solid fa-right-left" aria-hidden="true"></i>
+              Trasladar
+            </button>
+          </div>
+
+          <!-- Sucursal del caso (puede no ser la del solicitante). -->
           <div *ngIf="ticket.sucursal" class="flex items-center gap-2">
             <span
               class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
@@ -776,7 +909,7 @@
             >
               <i [class]="sucursalMeta(ticket.sucursalId).icon" class="text-sm"></i>
             </span>
-            <span class="opacity-60">Sede:</span>
+            <span class="opacity-60">Sucursal:</span>
             <span
               class="badge badge-sm kanban-tag min-w-0 shrink border"
               [style.background-color]="sucursalMeta(ticket.sucursalId).color + '1F'"
@@ -1218,7 +1351,7 @@
         <div class="relative">
         <div
           #chatScroll
-          class="ticket-chat-scroll chat-wa-bg space-y-4 p-3 rounded-lg h-[clamp(440px,calc(100vh-24rem),760px)] overflow-y-auto"
+          class="ticket-chat-scroll chat-wa-bg space-y-4 p-3 rounded-lg h-[clamp(300px,calc(100dvh-31rem),720px)] overflow-y-auto"
           (scroll)="alDesplazarChat()"
           (click)="alPulsarEnChat($event)"
         >
@@ -1584,10 +1717,23 @@
         </button>
         </div>
 
-        <!-- Editor -->
+        <!-- Solo lectura: lo ve (p. ej. seguimiento o la cola de su área) pero no responde. -->
+        <div *ngIf="!puedeComentar" class="mt-4 flex items-center gap-2 p-3 rounded-xl bg-base-200 text-sm">
+          <i class="fa-solid fa-eye text-primary" aria-hidden="true"></i>
+          Puede ver este ticket, pero no responder en él.
+        </div>
+
+        <!-- Ticket cerrado: la conversación queda como constancia -->
+        <div *ngIf="puedeComentar && ticket?.status === 'CERRADO'" class="mt-4 flex items-center gap-2 p-3 rounded-xl bg-base-200 text-sm">
+          <i class="fa-solid fa-lock text-base-content/60" aria-hidden="true"></i>
+          El ticket está cerrado. Para seguir conversando, reábralo desde el menú de estado.
+        </div>
+
+        <!-- Editor (se oculta, no se destruye: Quill vive en este nodo) -->
         <div
           class="mt-4 ticket-editor-wrap relative"
           [ngClass]="toolbarOpen ? 'toolbar-open' : ''"
+          [class.hidden]="ticket.status === 'CERRADO'"
         >
           <!-- Respondiendo a / Editando: lo que va a pasar al enviar -->
           <div *ngIf="citando || editando" class="chat-contexto" [class.chat-contexto--edicion]="editando">
@@ -1848,14 +1994,154 @@
 </div>
 
 <!-- Estado de carga -->
-<app-skeleton *ngIf="!ticket" tipo="panel" [cantidad]="8" etiqueta="Cargando ticket..."></app-skeleton>
+<app-skeleton *ngIf="!ticket && !confidencialBloqueado" tipo="panel" [cantidad]="8" etiqueta="Cargando ticket..."></app-skeleton>
 
+<!-- MAPI ayuda a responder y a resumir el ticket: sin ticket a la vista no aporta. -->
 <app-ai-float-button
+  *ngIf="ticket"
   [context]="aiContext"
-  [session]="'detalle-' + (ticket?.idTicket || '')"
+  [session]="'detalle-' + ticket.idTicket"
   [usarRespuestaHabilitado]="esPersonal"
   (usarRespuesta)="usarRespuestaIa($event)"
 ></app-ai-float-button>
+
+<!-- ============================ Solicitudes de acceso (jefe) ============================ -->
+<div *ngIf="ticket && accesosDelTicket.length" class="fixed bottom-4 right-4 z-40 w-[22rem] max-w-[calc(100vw-2rem)] space-y-2">
+  <div *ngFor="let a of accesosDelTicket" class="card bg-base-100 border border-warning shadow-xl">
+    <div class="card-body p-4 gap-2">
+      <div class="flex items-center gap-2 font-semibold text-sm">
+        <i class="fa-solid fa-user-lock text-warning" aria-hidden="true"></i> Solicitud de acceso
+      </div>
+      <p class="text-xs"><b>{{ a.solicitante }}</b> pide ver este ticket confidencial ({{ horasAcceso }} h, solo lectura).</p>
+      <p class="text-xs opacity-80 italic">"{{ a.motivo }}"</p>
+      <div class="flex justify-end gap-2">
+        <button type="button" class="btn btn-ghost btn-xs" (click)="decidirAcceso(a, false)">Rechazar</button>
+        <button type="button" class="btn btn-warning btn-xs" (click)="decidirAcceso(a, true)">Aprobar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Modal: confidencialidad ============================ -->
+<div *ngIf="editandoConfidencialidad" class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+     (click)="cerrarConfidencialidad()">
+  <div class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto"
+       role="dialog" aria-modal="true" aria-labelledby="titulo-confidencialidad" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 px-6 py-4 border-b border-base-200">
+      <span class="p-2.5 rounded-xl bg-warning text-white" aria-hidden="true"><i class="fa-solid fa-user-shield"></i></span>
+      <div class="flex-1 min-w-0">
+        <h3 id="titulo-confidencialidad" class="font-bold text-lg leading-tight">Confidencialidad</h3>
+        <p class="text-xs opacity-70 truncate">Ticket #{{ ticket?.numberTicket }} · Quién puede verlo</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="cerrarConfidencialidad()" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <label class="flex items-start gap-3 cursor-pointer">
+        <input type="checkbox" class="toggle toggle-warning mt-0.5" [(ngModel)]="conf.confidencial" />
+        <span class="text-sm"><span class="font-semibold">Confidencial</span>
+          <span class="block text-xs opacity-70">Solo lo ven el solicitante, el agente asignado y el jefe del área que lo atiende. El súper admin necesita su aprobación.</span>
+        </span>
+      </label>
+      <ng-container *ngIf="conf.confidencial">
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" class="checkbox checkbox-sm mt-0.5" [(ngModel)]="conf.todaElArea" />
+          <span class="text-sm"><span class="font-semibold">Visible para toda el área</span>
+            <span class="block text-xs opacity-70">Además lo ven todos los agentes del área que lo atiende.</span>
+          </span>
+        </label>
+        <div class="space-y-2">
+          <div class="text-sm font-semibold">Personas autorizadas</div>
+          <div class="flex flex-wrap gap-2">
+            <button *ngFor="let p of agents" type="button" class="badge badge-lg gap-1.5 cursor-pointer border"
+                    [ngClass]="conf.personas.includes(p.idUser) ? 'badge-warning' : 'badge-ghost'"
+                    [attr.aria-pressed]="conf.personas.includes(p.idUser)" (click)="alternarAutorizado(p.idUser)">
+              <i class="fa-solid" [ngClass]="conf.personas.includes(p.idUser) ? 'fa-circle-check' : 'fa-user'" aria-hidden="true"></i>
+              {{ agentLabel(p) }}
+            </button>
+          </div>
+          <p class="text-xs opacity-70">Solo pueden verlo; no lo gestionan.</p>
+        </div>
+      </ng-container>
+    </div>
+    <div class="flex justify-end gap-2 px-6 py-4 border-t border-base-200">
+      <button type="button" class="btn btn-ghost" (click)="cerrarConfidencialidad()" [disabled]="guardandoConfidencialidad">Cancelar</button>
+      <button type="button" class="btn btn-primary text-white gap-2" (click)="guardarConfidencialidad()" [disabled]="guardandoConfidencialidad">
+        <span *ngIf="guardandoConfidencialidad" class="loading loading-spinner loading-sm"></span>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Modal: trasladar a otra área ============================ -->
+<div *ngIf="trasladando" class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+     (click)="cerrarTraslado()">
+  <div class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto"
+       role="dialog" aria-modal="true" aria-labelledby="titulo-trasladar" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 px-6 py-4 border-b border-base-200">
+      <span class="p-2.5 rounded-xl bg-primary text-white" aria-hidden="true"><i class="fa-solid fa-right-left"></i></span>
+      <div class="flex-1 min-w-0">
+        <h3 id="titulo-trasladar" class="font-bold text-lg leading-tight">Trasladar a otra área</h3>
+        <p class="text-xs opacity-70 truncate">Ticket #{{ ticket?.numberTicket }} · Ahora lo atiende {{ ticket?.areaDestino }}</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="cerrarTraslado()" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <div class="form-control w-full">
+        <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Área que lo atenderá <span class="text-error">*</span></span></div>
+        <app-master-select
+          [ngModel]="trasladoArea"
+          (ngModelChange)="elegirAreaTraslado($event)"
+          [ngModelOptions]="{ standalone: true }"
+          [options]="opcionesAreaTraslado"
+          [allowEmpty]="false"
+          icon="fa-solid fa-building"
+          placeholder="Seleccione el área"
+          label="Área que lo atenderá"
+        ></app-master-select>
+        <p *ngIf="!opcionesAreaTraslado.length" class="text-xs text-warning mt-1">
+          <i class="fa-solid fa-triangle-exclamation mr-1" aria-hidden="true"></i>
+          Ninguna otra área atiende tickets todavía: primero hay que crearle un equipo y una categoría.
+        </p>
+      </div>
+      <div class="form-control w-full">
+        <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Categoría</span></div>
+        <app-master-select
+          [ngModel]="trasladoCategoria"
+          (ngModelChange)="trasladoCategoria = $event"
+          [ngModelOptions]="{ standalone: true }"
+          [options]="opcionesCategoriaTraslado"
+          [allowEmpty]="true"
+          emptyLabel="La primera del área"
+          placeholder="La primera del área"
+          label="Categoría"
+        ></app-master-select>
+      </div>
+      <label class="form-control w-full">
+        <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Motivo <span class="text-error">*</span></span></div>
+        <textarea class="textarea textarea-bordered w-full min-h-24" maxlength="500"
+                  [ngModel]="trasladoMotivo" (ngModelChange)="trasladoMotivo = $event" [ngModelOptions]="{ standalone: true }"
+                  placeholder="Por qué lo atiende otra área (lo verá quien lo reciba)"></textarea>
+      </label>
+      <p class="text-xs opacity-70">
+        El ticket vuelve a <b>Nuevo</b>, sin agente, y el área que lo recibe lo asigna. El traslado queda en el historial.
+      </p>
+    </div>
+    <div class="flex justify-end gap-2 px-6 py-4 border-t border-base-200">
+      <button type="button" class="btn btn-ghost" (click)="cerrarTraslado()" [disabled]="enviandoTraslado">Cancelar</button>
+      <button type="button" class="btn btn-primary text-white gap-2" (click)="confirmarTraslado()"
+              [disabled]="enviandoTraslado || !trasladoArea || !trasladoMotivo.trim()">
+        <span *ngIf="enviandoTraslado" class="loading loading-spinner loading-sm"></span>
+        <i *ngIf="!enviandoTraslado" class="fa-solid fa-right-left" aria-hidden="true"></i>
+        Trasladar
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- ============================ Modal: calificar con estrellas ============================ -->
 <div *ngIf="calificando" class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"

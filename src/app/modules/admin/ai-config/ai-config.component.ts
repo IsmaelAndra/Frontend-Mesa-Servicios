@@ -159,12 +159,15 @@ export class AiConfigComponent implements OnInit {
     "- Devuelve una confianza de 0 a 1 y sea austero: confianza baja o ticket sin datos se marcan como no decidido.",
   ].join("\n");
 
+  // ------------------------------------------------------------ icono del asistente
+
+  /** Vacío = la imagen de MAPI. */
   iconPreview(): string {
     return (this.aiForm.get("providerIcon")?.value || "").trim();
   }
 
   isUrl(value: string): boolean {
-    return /^https?:\/\//i.test(value);
+    return /^(https?:\/\/|\/)/i.test(value);
   }
 
   isFa(value: string): boolean {
@@ -173,8 +176,43 @@ export class AiConfigComponent implements OnInit {
   }
 
   iconError(): void {
-    this.aiForm.patchValue({ providerIcon: "" }, { emitEvent: false });
+    this.toastService.error("No se pudo cargar esa imagen; se usará la de MAPI");
+    this.aiForm.patchValue({ providerIcon: "" });
   }
+
+  usarIcono(valor: string): void {
+    this.aiForm.patchValue({ providerIcon: valor });
+    this.aiForm.markAsDirty();
+  }
+
+  subiendoIcono = false;
+
+  /** Sube una imagen propia; queda en el formulario y se guarda con "Guardar". */
+  subirIcono(archivos: File[]): void {
+    const f = archivos?.[0];
+    if (!f || this.subiendoIcono) return;
+    this.subiendoIcono = true;
+    this.adminService.subirIconoAsistente(f).subscribe({
+      next: (r) => {
+        this.subiendoIcono = false;
+        this.usarIcono(r.url);
+        this.toastService.success("Imagen lista: pulse Guardar para aplicarla");
+      },
+      error: (e: HttpErrorResponse) => {
+        this.subiendoIcono = false;
+        this.toastService.error(e?.error?.message || "No se pudo subir la imagen");
+      },
+    });
+  }
+
+  readonly iconosSugeridos: { value: string; label: string }[] = [
+    { value: "fa-solid fa-robot", label: "Robot" },
+    { value: "fa-solid fa-wand-magic-sparkles", label: "Mágico" },
+    { value: "fa-solid fa-comment-dots", label: "Chat" },
+    { value: "fa-solid fa-brain", label: "Cerebro" },
+    { value: "fa-solid fa-headset", label: "Soporte" },
+    { value: "fa-solid fa-lightbulb", label: "Idea" },
+  ];
 
   ngOnInit(): void {
     this.loadConfig();
@@ -218,10 +256,8 @@ export class AiConfigComponent implements OnInit {
         { emitEvent: false },
       );
     }
-    const icon = this.providerIcons[provider];
-    if (icon) {
-      this.aiForm.patchValue({ providerIcon: icon }, { emitEvent: false });
-    }
+    // El icono del asistente NO cambia con el proveedor: antes se ponía el del
+    // proveedor (⚡) y el botón dejaba de mostrar a MAPI sin que nadie lo pidiera.
   }
 
   onSave(): void {
@@ -267,13 +303,4 @@ export class AiConfigComponent implements OnInit {
         },
       });
   }
-
-  readonly iconosSugeridos: { value: string; label: string }[] = [
-    { value: "fa-solid fa-robot", label: "Robot" },
-    { value: "fa-solid fa-wand-magic-sparkles", label: "Mágico" },
-    { value: "fa-solid fa-comment-dots", label: "Chat" },
-    { value: "fa-solid fa-brain", label: "Cerebro" },
-    { value: "fa-solid fa-sparkles", label: "Destellos" },
-    { value: "fa-solid fa-lightbulb", label: "Idea" },
-  ];
 }

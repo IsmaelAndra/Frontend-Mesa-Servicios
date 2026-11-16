@@ -352,7 +352,8 @@
                     type="button"
                     class="btn btn-xs btn-ghost text-success hover:bg-success/10 gap-1"
                     (click)="activar(w)"
-                    title="Activar"
+                    [disabled]="!w.currentVersion"
+                    [title]="w.currentVersion ? 'Activar' : 'Publique una versión antes de activarlo'"
                     aria-label="Activar"
                   >
                     <i

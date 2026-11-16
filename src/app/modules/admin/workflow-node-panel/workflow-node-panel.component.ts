@@ -48,7 +48,7 @@ export class WorkflowNodePanelComponent {
   /** Campo de texto al que se insertará la variable elegida. */
   readonly campoVariable = signal<string | null>(null);
   readonly placeholderTicketId = "{{nodos.ticket_create_1.ticketId}}";
-  readonly roles = ["SUPER_ADMIN", "ADMIN", "AGENT", "USER"];
+  readonly roles = ["SUPER_ADMIN", "AREA_MANAGER", "AGENT", "USER"];
 
   /** Opciones de los maestros con icono y color (mismo select que el resto de pantallas). */
   readonly opcCategorias = computed(() => (this.editor.lookups()?.categories ?? []).map(opcion));
@@ -91,7 +91,7 @@ export class WorkflowNodePanelComponent {
 
   readonly opcRoles: MasterOption[] = [
     { value: "SUPER_ADMIN", label: "Super administrador", icon: "fa-solid fa-crown", color: "#7C3AED" },
-    { value: "ADMIN", label: "Administrador", icon: "fa-solid fa-user-shield", color: "#2563EB" },
+    { value: "AREA_MANAGER", label: "Jefe de área", icon: "fa-solid fa-user-tie", color: "#B45309" },
     { value: "AGENT", label: "Agente", icon: "fa-solid fa-headset", color: "#0E7490" },
     { value: "USER", label: "Usuario", icon: "fa-regular fa-user", color: "#64748B" },
   ];

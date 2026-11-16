@@ -5,8 +5,8 @@ import { AdminService } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { AssetAssignableUser, AssetRequest } from '../../../models/asset.model';
-import { TIPOS_ACTIVO, etiquetaTipoActivo, iconoTipoActivo } from '../../../core/utils/asset-type.util';
+import { AssetAssignableUser, AssetRequest, AssetTipo, ESTADOS_FISICOS } from '../../../models/asset.model';
+import { etiquetaTipoActivo, iconoTipoActivo } from '../../../core/utils/asset-type.util';
 import { metaEstadoActivo } from '../../../core/utils/asset-status.util';
 import { inicialesDe, urlFotoUsuario } from '../../../core/utils/user-photo.util';
 import { compararPorNombre } from '../../../core/utils/user-list.util';
@@ -15,10 +15,12 @@ import { MasterOption } from '../../shared/components/master-select/master-selec
 /**
  * Alta y edición de un activo.
  *
- * El estado del formulario no ofrece "Asignado" ni "Disponible" por separado:
- * los decide la asignación (con persona, asignado; sin ella, disponible). Aquí
- * solo se elige si está operativo, en reparación o dado de baja. Antes se podía
- * guardar "Asignado" sin persona o "Disponible" con persona.
+ * El estado del formulario no ofrece "Asignado" ni "En bodega" por separado:
+ * los decide la asignación (con persona, asignado; sin ella, en bodega). Aquí
+ * solo se elige si está operativo, en reparación o dado de baja. La entrega a
+ * una persona se hace con un acta (ficha del activo), no aquí: el formulario
+ * solo permite asignar al registrar o al corregir datos.
+ * Las fotos y los PDF (garantía, factura) se suben en la ficha, ya creado.
  */
 @Component({
   selector: 'app-asset-form',
@@ -34,8 +36,14 @@ export class AssetFormComponent implements OnInit, OnDestroy {
   request: AssetRequest = {
     codeAsset: '',
     nameAsset: '',
-    typeAsset: 'LAPTOP',
-    statusAsset: 'DISPONIBLE',
+    assetTypeId: null,
+    statusAsset: 'EN_BODEGA',
+    estadoFisicoAsset: 'BUENO',
+    descriptionAsset: '',
+    ubicacionAsset: '',
+    accesoriosAsset: '',
+    configuracionAsset: '',
+    novedadesAsset: '',
     brandAsset: '',
     modelAsset: '',
     serialNumberAsset: '',
@@ -47,17 +55,20 @@ export class AssetFormComponent implements OnInit, OnDestroy {
   };
 
   /** Mismos límites que AssetRequest en el backend: si no, un 400 al guardar. */
-  readonly max = { codigo: 50, nombre: 150, marca: 100, modelo: 100, serie: 100, proveedor: 150, url: 500 };
+  readonly max = { codigo: 50, nombre: 150, marca: 100, modelo: 100, serie: 100, proveedor: 150, url: 500, ubicacion: 300 };
 
-  readonly typeOptions: MasterOption[] = TIPOS_ACTIVO.map((t) => ({
-    value: t,
-    label: etiquetaTipoActivo(t),
-    icon: iconoTipoActivo(t)
-  }));
+  /** Tipos del maestro (Activos → Configuración). */
+  typeOptions: MasterOption[] = [];
+  private tipos: AssetTipo[] = [];
+  /** Ejemplo del siguiente código automático (configuración de numeración). */
+  ejemploCodigo = '';
+
+  readonly estadoFisicoOptions: MasterOption[] = ESTADOS_FISICOS
+    .map((e) => ({ value: e.valor, label: e.texto, icon: e.icono, color: e.color }));
 
   /** "Operativo" cubre asignado y disponible: lo decide tener o no persona. */
   readonly statusOptions: MasterOption[] = [
-    { value: 'DISPONIBLE', label: 'Operativo', icon: 'fa-solid fa-circle-check', color: '#059669' },
+    { value: 'EN_BODEGA', label: 'Operativo', icon: 'fa-solid fa-circle-check', color: '#059669' },
     { value: 'EN_REPARACION', label: 'En reparación', icon: metaEstadoActivo('EN_REPARACION').icono, color: metaEstadoActivo('EN_REPARACION').color },
     { value: 'BAJA', label: 'Dado de baja', icon: metaEstadoActivo('BAJA').icono, color: metaEstadoActivo('BAJA').color }
   ];
@@ -80,13 +91,11 @@ export class AssetFormComponent implements OnInit, OnDestroy {
   }
 
   get esAdmin(): boolean {
-    return this.role === 'SUPER_ADMIN' || this.role === 'ADMIN';
+    return this.role === 'SUPER_ADMIN';
   }
 
-  /** El jefe de área no elige área: el activo queda en la suya (lo fuerza el backend). */
-  get areaBloqueada(): boolean {
-    return !this.esAdmin;
-  }
+  /** Tecnología y Desarrollo gestionan todos los activos: el área se elige libremente. */
+  readonly areaBloqueada = false;
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id');
@@ -94,15 +103,28 @@ export class AssetFormComponent implements OnInit, OnDestroy {
 
     this.adminService.catalog().subscribe({
       next: (c) => {
-        this.areaOptions = (c?.areas || []).map((a) => ({ value: a.id, label: a.name, icon: a.icon, color: a.color }));
-        // El jefe de área ve ya elegida la suya (el backend la fuerza igualmente).
-        if (this.areaBloqueada && !this.request.areaId) {
-          const suArea = this.authService.currentUserSnapshot()?.area;
-          this.request.areaId = (c?.areas || []).find((a) => a.name === suArea)?.id;
-        }
+        this.areaOptions = (c?.areas || []).filter((a) => a.status !== false).map((a) => ({ value: a.id, label: a.name, icon: a.icon, color: a.color }));
         this.sucursalOptions = (c?.sucursales || []).map((s) => ({
           value: s.id, label: `${s.code} - ${s.name}`, icon: s.icon, color: s.color
         }));
+      },
+      error: () => undefined
+    });
+
+    this.assetService.tipos().subscribe({
+      next: (t) => {
+        this.tipos = (t || []).filter((x) => x.activo || x.id === this.request.assetTypeId);
+        this.typeOptions = this.tipos.map((x) => ({
+          value: x.id, label: x.nombre, detail: x.prefijo, icon: x.icono || 'fa-solid fa-box', color: x.color || undefined,
+        }));
+        this.actualizarEjemplo();
+      },
+      error: () => undefined
+    });
+    this.assetService.config().subscribe({
+      next: (c) => {
+        this.formatoCodigo = c.formatoCodigo;
+        this.actualizarEjemplo();
       },
       error: () => undefined
     });
@@ -132,16 +154,21 @@ export class AssetFormComponent implements OnInit, OnDestroy {
             codeAsset: a.codeAsset,
             nameAsset: a.nameAsset,
             typeAsset: a.typeAsset,
-            // Asignado y disponible se muestran como "Operativo".
-            statusAsset: a.statusAsset === 'ASIGNADO' ? 'DISPONIBLE' : a.statusAsset,
+            assetTypeId: a.assetTypeId ?? null,
+            // Asignado y en bodega se muestran como "Operativo".
+            statusAsset: a.statusAsset === 'ASIGNADO' || a.statusAsset === 'DISPONIBLE' ? 'EN_BODEGA' : a.statusAsset,
+            estadoFisicoAsset: a.estadoFisicoAsset || 'BUENO',
+            descriptionAsset: a.descriptionAsset || '',
+            ubicacionAsset: a.ubicacionAsset || '',
+            accesoriosAsset: a.accesoriosAsset || '',
+            configuracionAsset: a.configuracionAsset || '',
+            novedadesAsset: a.novedadesAsset || '',
             brandAsset: a.brandAsset || '',
             modelAsset: a.modelAsset || '',
             serialNumberAsset: a.serialNumberAsset || '',
             providerAsset: a.providerAsset || '',
             costAsset: a.costAsset ?? undefined,
             notesAsset: a.notesAsset || '',
-            imageUrlAsset: a.imageUrlAsset || '',
-            documentUrlAsset: a.documentUrlAsset || '',
             purchaseDateAsset: this.aInputDate(a.purchaseDateAsset),
             warrantyUntilAsset: this.aInputDate(a.warrantyUntilAsset),
             areaId: a.areaId || undefined,
@@ -178,6 +205,21 @@ export class AssetFormComponent implements OnInit, OnDestroy {
     return fecha.length > 10 ? fecha : `${fecha}T00:00:00-05:00`;
   }
 
+  private formatoCodigo = '';
+
+  /** "TI-LAP-000124" con el prefijo del tipo elegido (solo orientativo). */
+  actualizarEjemplo(): void {
+    const t = this.tipos.find((x) => x.id === this.request.assetTypeId);
+    this.ejemploCodigo = this.formatoCodigo
+      ? this.formatoCodigo.replace('{TIPO}', t?.prefijo || 'TIPO').replace('{ANIO}', String(new Date().getFullYear()))
+        .replace(/\{NUM(?::(\d+))?\}/, (_m, n) => '0'.repeat(Math.max(0, Number(n || 1) - 1)) + 'N')
+      : '';
+  }
+
+  get tipoElegido(): AssetTipo | undefined {
+    return this.tipos.find((x) => x.id === this.request.assetTypeId);
+  }
+
   typeIcon(type?: string | null): string {
     return iconoTipoActivo(type);
   }
@@ -193,9 +235,9 @@ export class AssetFormComponent implements OnInit, OnDestroy {
 
   /** Estado con el que quedará el activo al guardar. */
   get estadoResultante(): string {
-    const pedido = this.request.statusAsset || 'DISPONIBLE';
+    const pedido = this.request.statusAsset || 'EN_BODEGA';
     if (pedido === 'EN_REPARACION' || pedido === 'BAJA') return pedido;
-    return this.request.assignedUserId ? 'ASIGNADO' : 'DISPONIBLE';
+    return this.request.assignedUserId ? 'ASIGNADO' : 'EN_BODEGA';
   }
 
   estado(status: string) {
@@ -203,12 +245,13 @@ export class AssetFormComponent implements OnInit, OnDestroy {
   }
 
   get valido(): boolean {
-    return !!this.request.codeAsset?.trim() && !!this.request.nameAsset?.trim() && !!this.request.typeAsset;
+    // El código puede ir vacío: el sistema pone el siguiente de la numeración.
+    return !!this.request.nameAsset?.trim() && !!this.request.assetTypeId;
   }
 
   guardar(): void {
     if (!this.valido) {
-      this.toastService.warn('El código, el nombre y el tipo del activo son obligatorios');
+      this.toastService.warn('El nombre y el tipo del activo son obligatorios');
       return;
     }
     if (this.request.statusAsset === 'BAJA' && this.request.assignedUserId) {
@@ -219,6 +262,8 @@ export class AssetFormComponent implements OnInit, OnDestroy {
     this.guardando = true;
     const payload: AssetRequest = {
       ...this.request,
+      codeAsset: this.request.codeAsset?.trim() || undefined,
+      typeAsset: undefined,
       purchaseDateAsset: this.aOffset(this.request.purchaseDateAsset),
       warrantyUntilAsset: this.aOffset(this.request.warrantyUntilAsset)
     };

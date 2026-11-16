@@ -7,8 +7,8 @@ import { SettingsSoundsComponent } from './sounds/sounds.component';
 export const SETTINGS_ROUTES: Routes = [
   // /settings a secas no tenia hoja: caia en ** y abria el 404. El
   // breadcrumb lo muestra como ruta intermedia, asi que redirige.
-  { path: '', redirectTo: 'profile', pathMatch: 'full' },
-  { path: 'profile', component: SettingsProfileComponent },
-  { path: 'password', component: SettingsPasswordComponent },
-  { path: 'sounds', component: SettingsSoundsComponent },
+  { path: '', redirectTo: 'perfil', pathMatch: 'full' },
+  { path: 'perfil', component: SettingsProfileComponent },
+  { path: 'contrasena', component: SettingsPasswordComponent },
+  { path: 'sonidos', component: SettingsSoundsComponent },
 ];

@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-2 shrink-0">
+    <div class="flex items-center gap-2 shrink-0" *ngIf="!soloLectura">
       <button
         class="btn btn-sm btn-primary gap-2"
         (click)="openCreateStepper()"
@@ -104,8 +104,8 @@
       class="relative card bg-base-100 shadow-md hover:shadow-xl hover:-translate-y-0.5 border border-base-200 border-t-4 rounded-[1.5rem] overflow-hidden transition duration-200 group"
       [style.border-top-color]="sesionColor(u)"
     >
-      <!-- Dropdown de acciones -->
-      <div class="dropdown dropdown-end absolute top-3 right-3 z-10">
+      <!-- Dropdown de acciones (el auditor solo consulta) -->
+      <div class="dropdown dropdown-end absolute top-3 right-3 z-10" *ngIf="!soloLectura">
         <button
           tabindex="0"
           class="btn btn-ghost btn-xs btn-circle opacity-60 hover:opacity-100"
@@ -129,7 +129,7 @@
               Editar
             </a>
           </li>
-          <li>
+          <li *ngIf="!esYo(u)">
             <a (click)="setStatus(u)" class="gap-2">
               <i
                 *ngIf="u.statusUser === 'ACTIVE'"
@@ -144,7 +144,7 @@
               {{ u.statusUser === "ACTIVE" ? "Desactivar" : "Activar" }}
             </a>
           </li>
-          <li class="border-t border-base-200 mt-1 pt-1">
+          <li *ngIf="!esYo(u)" class="border-t border-base-200 mt-1 pt-1">
             <a
               (click)="deleteUser(u)"
               class="gap-2 text-error hover:bg-error/10"
@@ -251,7 +251,7 @@
         </div>
 
         <!-- Acciones -->
-        <div class="flex gap-2 mt-5 w-full">
+        <div class="flex gap-2 mt-5 w-full" *ngIf="!soloLectura">
           <button
             class="btn btn-sm btn-primary flex-1 gap-1.5"
             (click)="createOrEditUser(u)"
@@ -261,6 +261,7 @@
             Editar
           </button>
           <button
+            *ngIf="!esYo(u)"
             class="btn btn-sm flex-1 gap-1.5 hover:!text-white"
             [ngClass]="
               u.statusUser === 'ACTIVE'
@@ -318,6 +319,7 @@
           Intenta con otros filtros o crea uno nuevo para empezar.
         </p>
         <button
+          *ngIf="!soloLectura"
           class="btn btn-sm btn-primary gap-2 mt-2"
           (click)="openCreateStepper()"
         >
@@ -460,7 +462,7 @@
         <span
           class="text-center w-10"
           [ngClass]="step >= 4 ? 'text-primary' : 'text-base-content/40'"
-          >Sede</span
+          >Sucursal</span
         >
       </div>
     </div>
@@ -478,7 +480,7 @@
           <div>
             <h4 class="font-semibold">Datos básicos</h4>
             <p class="text-xs opacity-60">
-              Los datos se obtienen automáticamente de Microsoft Graph
+              Todos son obligatorios (salen en las actas de equipos). Nombre, apellidos y foto llegan de Microsoft Graph por el correo; las cuentas genéricas toman el nombre del correo (superadmin&#64;… → superadmin).
             </p>
           </div>
         </div>
@@ -496,11 +498,25 @@
             placeholder="usuario@coacmagisterio.fin.ec"
           />
         </label>
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Cédula <span class="text-error">*</span></span>
+          </div>
+          <label class="input input-bordered input-sm flex items-center gap-2 w-full focus-within:ring-2 focus-within:ring-primary/25"
+                 [class.input-error]="cedulaInvalida()">
+            <i class="fa-solid fa-id-card text-xs opacity-60" aria-hidden="true"></i>
+            <input type="text" inputmode="numeric" maxlength="10" class="grow bg-transparent outline-none"
+                   placeholder="Ej. 1712345678" [(ngModel)]="newUser.identificacion" aria-label="Cédula" />
+          </label>
+          <div *ngIf="cedulaInvalida()" class="label pb-0">
+            <span class="label-text-alt text-error">Deben ser 10 números</span>
+          </div>
+        </label>
 
         <label class="form-control w-full">
           <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Extensión telefónica</span>
-            <span class="label-text-alt text-[11px] opacity-60">Opcional · para llamar desde los tickets</span>
+            <span class="label-text text-xs font-medium">Extensión telefónica <span class="text-error">*</span></span>
+            <span class="label-text-alt text-[11px] opacity-60">Para llamar desde los tickets</span>
           </div>
           <label class="input input-bordered input-sm flex items-center gap-2 w-full focus-within:ring-2 focus-within:ring-primary/25"
                  [class.input-error]="extensionNuevaInvalida()">
@@ -512,6 +528,23 @@
             <span class="label-text-alt text-error">Solo números, hasta 10 dígitos</span>
           </div>
         </label>
+
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Cargo <span class="text-error">*</span></span>
+            <span class="label-text-alt text-[11px] opacity-60">Sale en las actas de equipos</span>
+          </div>
+          <label class="input input-bordered input-sm flex items-center gap-2 w-full focus-within:ring-2 focus-within:ring-primary/25">
+            <i class="fa-solid fa-id-badge text-xs opacity-60" aria-hidden="true"></i>
+            <input type="text" maxlength="150" class="grow bg-transparent outline-none"
+                   placeholder="Ej. Asistente de Tecnología" [(ngModel)]="newUser.cargo" aria-label="Cargo" />
+          </label>
+        </label>
+
+        <p *ngIf="faltanDatosDelAlta().length" class="text-xs text-warning flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+          Para continuar falta: {{ faltanDatosDelAlta().join(', ') }}.
+        </p>
 
         <div
           class="flex items-start gap-2 text-xs p-3 rounded-xl bg-info/5 border border-info/20 text-base-content/80"
@@ -627,7 +660,7 @@
           </label>
         </div>
       </div>
-      <!-- ============ PASO 4: Sede ============ -->
+      <!-- ============ PASO 4: Sucursal ============ -->
       <div *ngIf="step === 4" class="space-y-4">
         <div class="flex items-center gap-3 mb-4">
           <div
@@ -636,10 +669,10 @@
             <i class="fa-solid fa-city text-xl" aria-hidden="true"></i>
           </div>
           <div>
-            <h4 class="font-semibold">Seleccione la sede</h4>
+            <h4 class="font-semibold">Seleccione la sucursal</h4>
             <p class="text-xs opacity-60">
               Oficina donde trabaja. Es opcional: si no la elige, sus tickets toman
-              la sede que elija al abrirlos.
+              la sucursal que elija al abrirlos.
             </p>
           </div>
         </div>
@@ -660,7 +693,7 @@
               [(ngModel)]="newUser.sucursalId"
               class="radio radio-primary radio-sm"
             />
-            <span class="text-sm font-medium opacity-70">Sin sede</span>
+            <span class="text-sm font-medium opacity-70">Sin sucursal</span>
           </label>
           <label
             *ngFor="let s of sucursales"
@@ -690,7 +723,7 @@
             *ngIf="!sucursales.length"
             class="text-xs opacity-60 col-span-full py-3 text-center"
           >
-            No hay sedes registradas todavía.
+            No hay sucursales registradas todavía.
           </p>
         </div>
       </div>
@@ -826,6 +859,19 @@
 
         <label class="form-control w-full">
           <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Cédula <span class="text-error">*</span></span>
+            <span class="label-text-alt text-[11px] opacity-60">10 números</span>
+          </div>
+          <label class="input input-bordered input-sm flex items-center gap-2 w-full focus-within:ring-2 focus-within:ring-primary/25"
+                 [class.input-error]="cedulaEdicionInvalida()">
+            <i class="fa-solid fa-id-card text-xs opacity-60" aria-hidden="true"></i>
+            <input type="text" name="identificacionEdicion" inputmode="numeric" maxlength="10" autocomplete="off"
+                   class="grow bg-transparent outline-none" placeholder="Ej. 1712345678" [(ngModel)]="edicion.identification" />
+          </label>
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">Extensión telefónica</span>
             <span class="label-text-alt text-[11px] opacity-60">Para llamar desde los tickets</span>
           </div>
@@ -834,6 +880,18 @@
             <i class="fa-solid fa-phone text-xs opacity-60" aria-hidden="true"></i>
             <input type="text" name="extension" inputmode="numeric" maxlength="10" class="grow bg-transparent outline-none"
                    placeholder="Ej. 182" [(ngModel)]="edicion.extension" />
+          </label>
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Cargo</span>
+            <span class="label-text-alt text-[11px] opacity-60">Sale en las actas de equipos</span>
+          </div>
+          <label class="input input-bordered input-sm flex items-center gap-2 w-full focus-within:ring-2 focus-within:ring-primary/25">
+            <i class="fa-solid fa-id-badge text-xs opacity-60" aria-hidden="true"></i>
+            <input type="text" name="cargo" maxlength="150" class="grow bg-transparent outline-none"
+                   placeholder="Ej. Contadora" [(ngModel)]="edicion.cargo" />
           </label>
         </label>
 
@@ -852,9 +910,9 @@
 
         <div class="form-control w-full">
           <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Sede</span>
+            <span class="label-text text-xs font-medium">Sucursal</span>
           </div>
-          <app-master-select name="sede" label="Sede" placeholder="Sin sede" [allowEmpty]="true" emptyLabel="Sin sede"
+          <app-master-select name="sucursal" label="Sucursal" placeholder="Sin sucursal" [allowEmpty]="true" emptyLabel="Sin sucursal"
                              [options]="sedeOpciones" [(ngModel)]="edicion.sucursalId"></app-master-select>
         </div>
       </section>
@@ -886,12 +944,22 @@
             Esta cuenta es Super Administrador; si le asigna otro rol perderá ese acceso.
           </p>
         </div>
+
+        <!-- El jefe responde por UNA sola área: la que se elige arriba (V33). -->
+        <p *ngIf="edicion.roleName === 'AREA_MANAGER'" class="text-xs opacity-70 pt-2">
+          <i class="fa-solid fa-sitemap mr-1" aria-hidden="true"></i>
+          Como jefe, responderá por el área elegida arriba (una sola).
+        </p>
       </section>
 
       <button type="submit" class="hidden" aria-hidden="true" tabindex="-1"></button>
     </form>
 
-    <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-base-200 bg-base-200/30">
+    <div class="flex flex-wrap items-center justify-end gap-2 px-6 py-4 border-t border-base-200 bg-base-200/30">
+      <!-- El botón no se desactiva sin decir por qué -->
+      <p *ngIf="motivoEdicion as m" class="mr-auto text-xs text-error flex items-center gap-1.5" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ m }}
+      </p>
       <button type="button" class="btn btn-sm btn-ghost" (click)="cerrarEdicion()" [disabled]="guardandoEdicion">
         Cancelar
       </button>

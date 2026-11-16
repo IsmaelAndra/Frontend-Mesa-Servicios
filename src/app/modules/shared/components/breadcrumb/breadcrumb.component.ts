@@ -20,6 +20,21 @@ export interface Crumb {
 /** Las claves son uuid desde la migración de ids (V3__ids_uuid.sql). */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Las rutas están en español (nov 2026); las tablas de etiquetas e iconos
+ * conservan sus claves de siempre. Cada segmento se traduce a su clave.
+ */
+const CLAVE_DE_SEGMENTO: Record<string, string> = {
+  inicio: 'dashboard', nuevo: 'new', mios: 'mine', asignados: 'assigned', tablero: 'kanban',
+  administracion: 'admin', usuarios: 'users', equipos: 'teams', categorias: 'categories',
+  evaluaciones: 'sla-config', escalaciones: 'escalations', plantillas: 'templates', marca: 'branding',
+  'paginas-sistema': 'pages-system', 'tipos-ticket': 'ticket-types', 'inteligencia-artificial': 'ai-config',
+  'correo-microsoft': 'microsoft-graph', 'seguridad-sesion': 'session-config', auditoria: 'audit-sistema',
+  'acuses-lectura': 'chat-config', 'cola-correo': 'mail-outbox', reportes: 'reports',
+  automatizaciones: 'workflows', actividades: 'activities', calendario: 'calendar', 'mi-cuenta': 'settings',
+  perfil: 'profile', contrasena: 'password', sonidos: 'sounds', notificaciones: 'notifications',
+};
+
 const LABELS: Record<string, string> = {
   dashboard: 'Inicio',
   tickets: 'Tickets',
@@ -32,13 +47,14 @@ const LABELS: Record<string, string> = {
   users: 'Usuarios',
   teams: 'Equipos',
   areas: 'Áreas',
-  sucursales: 'Sedes',
+  sucursales: 'Sucursales',
   categories: 'Categorías',
   sla: 'SLA',
   'sla-config': 'Evaluaciones mensuales',
   'report-templates': 'Reportes personalizados',
   escalations: 'Escalaciones',
   templates: 'Plantillas',
+  'plantillas-area': 'Plantillas por área',
   branding: 'Marca',
   'pages-system': 'Páginas del Sistema',
   mfa: 'Autenticación MFA',
@@ -52,6 +68,10 @@ const LABELS: Record<string, string> = {
   'ticket-types': 'Tipos de ticket',
   'audit-sistema': 'Auditoría del sistema',
   reports: 'Reportes',
+  proyectos: 'Proyectos',
+  'mis-equipos': 'Mis equipos',
+  actas: 'Actas',
+  configuracion: 'Configuración de activos',
   workflows: 'Automatizaciones',
   ejecuciones: 'Ejecuciones',
   aprobaciones: 'Aprobaciones',
@@ -59,12 +79,13 @@ const LABELS: Record<string, string> = {
   mantenimiento: 'Mantenimiento',
   activities: 'Actividades',
   calendar: 'Calendario',
-  settings: 'Configuración',
+  settings: 'Mi cuenta',
   profile: 'Perfil',
   password: 'Cambiar contraseña',
   sounds: 'Sonidos de Notificaciones',
   notifications: 'Notificaciones',
   privacidad: 'Privacidad',
+  'solo-computador': 'Disponible en el computador',
   '404': 'Página no encontrada',
   '403': 'Acceso no autorizado',
   '500': 'Error interno del servidor',
@@ -160,9 +181,11 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
     let previo = '';
 
     deepest.pathFromRoot.forEach((sn: ActivatedRouteSnapshot) => {
-      sn.url.forEach((seg: UrlSegment) => {
-        url += '/' + seg.path;
-        if (url === '/dashboard') {
+      sn.url.forEach((original: UrlSegment) => {
+        url += '/' + original.path;
+        // Etiquetas, iconos y contexto van por la clave (inglés), no por la ruta.
+        const seg = { path: CLAVE_DE_SEGMENTO[original.path] ?? original.path } as UrlSegment;
+        if (url === '/inicio') {
           crumbs.length = 0;
           previo = seg.path;
           return;
@@ -173,24 +196,24 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
           url,
           icon: this.segmentIcon(seg, previo),
           // Solo se enlaza lo que existe como ruta: /workflows/5 no la es.
-          enlazable: !esId || previo === 'tickets' || previo === 'activos',
+          enlazable: !esId || previo === 'tickets' || previo === 'activos' || previo === 'proyectos',
         });
         previo = seg.path;
       });
     });
 
-    if (crumbs.length && crumbs[0].url !== '/dashboard') {
-      crumbs.unshift({ label: 'Inicio', url: '/dashboard', icon: 'fa-solid fa-house', enlazable: true });
+    if (crumbs.length && crumbs[0].url !== '/inicio') {
+      crumbs.unshift({ label: 'Inicio', url: '/inicio', icon: 'fa-solid fa-house', enlazable: true });
     }
 
     // Automatizaciones cuelga del grupo "Administración" del menú lateral,
     // aunque su ruta sea top-level (/workflows). El breadcrumb lo refleja
     // insertando el nivel /admin delante para que la ruta no se pierda.
-    const workflows = crumbs.findIndex((c) => c.url === '/workflows');
+    const workflows = crumbs.findIndex((c) => c.url === '/automatizaciones');
     if (workflows > 0) {
       crumbs.splice(workflows, 0, {
         label: 'Administración',
-        url: '/admin',
+        url: '/administracion',
         icon: navIcon('admin'),
         enlazable: true,
       });
@@ -220,14 +243,15 @@ export class BreadcrumbComponent implements OnInit, OnDestroy {
    * contexto, un numero es una ruta propia (las pantallas de error son /404, /403…).
    */
   private esId(seg: UrlSegment, previo: string): boolean {
-    return (previo === 'tickets' || previo === 'workflows' || previo === 'activos') && UUID_RE.test(seg.path);
+    return (previo === 'tickets' || previo === 'workflows' || previo === 'activos' || previo === 'proyectos')
+      && UUID_RE.test(seg.path);
   }
 
   /**
    * Label de un segmento. El segmento anterior da el contexto: un id suelto es
    * "Detalle del ticket" o "Proceso" segun de que ruta venga (el uuid no se
    * muestra: no dice nada a quien lo lee), y "reports" bajo
-   * "/admin" es la gestion de plantillas, no la pantalla de reportes.
+   * "/administracion" es la gestion de plantillas, no la pantalla de reportes.
    */
   private segmentLabel(seg: UrlSegment, previo: string): string {
     if (this.esId(seg, previo)) {

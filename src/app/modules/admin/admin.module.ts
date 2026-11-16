@@ -1,3 +1,4 @@
+import { PlantillasAreaComponent } from './plantillas-area/plantillas-area.component';
 import { NgModule } from '@angular/core';
 import { TeamManagementComponent } from './team-management/team-management.component';
 import { AreaManagementComponent } from './area-management/area-management.component';
@@ -19,7 +20,6 @@ import { SessionConfigComponent } from './session-config/session-config.componen
 import { MfaConfigComponent } from './mfa-config/mfa-config.component';
 import { AuditSistemaComponent } from './audit-sistema/audit-sistema.component';
 import { ChatConfigComponent } from './chat-config/chat-config.component';
-import { ReportManagementComponent } from './report-management/report-management.component';
 import { PagesSystemComponent } from './pages-system/pages-system.component';
 import { BrandingLogosComponent } from './branding-logos/branding-logos.component';
 import { BrandingImagenesComponent } from './branding-imagenes/branding-imagenes.component';
@@ -29,10 +29,12 @@ import { RouterModule } from '@angular/router';
 import { SharedModule } from '../shared/shared.module';
 import { ADMIN_ROUTES } from './admin.routes';
 import { NgChartsModule } from 'ng2-charts';
+import { SelectorIconoComponent } from '../shared/components/selector-icono/selector-icono.component';
 import { MailOutboxComponent } from './mail-outbox/mail-outbox.component';
 
 @NgModule({
   declarations: [
+    PlantillasAreaComponent,
     MailOutboxComponent,
     BrandingLogosComponent, BrandingImagenesComponent, BrandingColoresComponent, BrandingCargaComponent,
     AdminDashboardComponent,
@@ -55,10 +57,9 @@ import { MailOutboxComponent } from './mail-outbox/mail-outbox.component';
     MfaConfigComponent,
     AuditSistemaComponent,
     ChatConfigComponent,
-    ReportManagementComponent,
     PagesSystemComponent
   ],
-  imports: [SharedModule, NgChartsModule, RouterModule.forChild(ADMIN_ROUTES)],
+  imports: [SharedModule, NgChartsModule, SelectorIconoComponent, RouterModule.forChild(ADMIN_ROUTES)],
   exports: [
     AdminDashboardComponent,
     UserManagementComponent,
@@ -80,7 +81,6 @@ import { MailOutboxComponent } from './mail-outbox/mail-outbox.component';
     MfaConfigComponent,
     AuditSistemaComponent,
     ChatConfigComponent,
-    ReportManagementComponent,
     PagesSystemComponent
   ]
 })

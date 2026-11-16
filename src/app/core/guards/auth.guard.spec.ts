@@ -17,36 +17,36 @@ describe('AuthGuard', () => {
 
   it('redirige a login si no está autenticado', () => {
     auth.isAuthenticated.and.returnValue(false);
-    const result = guard.canActivate({} as any, snapshot('/dashboard'));
+    const result = guard.canActivate({} as any, snapshot('/inicio'));
     expect(result).toBeTruthy();
-    expect(router.createUrlTree).toHaveBeenCalledWith(['/auth/login']);
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/acceso/ingresar']);
   });
 
   it('deja pasar si está autenticado sin mustChangePassword', () => {
     auth.isAuthenticated.and.returnValue(true);
     auth.mustChangePassword.and.returnValue(false);
-    expect(guard.canActivate({} as any, snapshot('/dashboard'))).toBe(true);
+    expect(guard.canActivate({} as any, snapshot('/inicio'))).toBe(true);
   });
 
   it('deja pasar si mustChangePassword y está en /settings/password (sin bucle)', () => {
     auth.isAuthenticated.and.returnValue(true);
     auth.mustChangePassword.and.returnValue(true);
-    expect(guard.canActivate({} as any, snapshot('/settings/password'))).toBe(true);
+    expect(guard.canActivate({} as any, snapshot('/mi-cuenta/contrasena'))).toBe(true);
     expect(router.createUrlTree).not.toHaveBeenCalled();
   });
 
   it('redirige a /settings/password si mustChangePassword en otra ruta', () => {
     auth.isAuthenticated.and.returnValue(true);
     auth.mustChangePassword.and.returnValue(true);
-    const result = guard.canActivate({} as any, snapshot('/dashboard'));
+    const result = guard.canActivate({} as any, snapshot('/inicio'));
     expect(result).toBeTruthy();
-    expect(router.createUrlTree).toHaveBeenCalledWith(['/settings/password']);
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/mi-cuenta/contrasena']);
   });
 
   it('reconoce la url de la ruta hija de settings', () => {
     auth.isAuthenticated.and.returnValue(true);
     auth.mustChangePassword.and.returnValue(true);
-    const result = guard.canActivate({} as any, snapshot('/settings/password?x=1'));
+    const result = guard.canActivate({} as any, snapshot('/mi-cuenta/contrasena?x=1'));
     expect(result).toBe(true);
   });
 });

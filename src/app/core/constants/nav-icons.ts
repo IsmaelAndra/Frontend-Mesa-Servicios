@@ -34,7 +34,7 @@ export const NAV_ICONS: Record<string, string> = {
   users: 'fa-solid fa-users',
   teams: 'fa-solid fa-diagram-project',
   areas: 'fa-solid fa-building',
-  // Sedes: el breadcrumb resuelve por el segmento "sucursales".
+  // Sucursales: el breadcrumb resuelve por el segmento "sucursales".
   sucursales: 'fa-solid fa-location-dot',
   // Auditoria del sistema (segmento "audit-sistema", sin item de menu).
   'audit-sistema': 'fa-solid fa-clipboard-list',
@@ -50,8 +50,10 @@ export const NAV_ICONS: Record<string, string> = {
   'sla-config': 'fa-solid fa-chart-simple',
   escalations: 'fa-solid fa-arrow-trend-up',
   templates: 'fa-solid fa-file-pen',
+  'plantillas-area': 'fa-solid fa-envelope-open-text',
+  'solo-computador': 'fa-solid fa-desktop',
   branding: 'fa-solid fa-palette',
-  'ai-config': 'fa-solid fa-bolt',
+  'ai-config': 'icono-mapi',
   'microsoft-graph': 'fa-solid fa-share-nodes',
   telefonia: 'fa-solid fa-phone-volume',
   'temas-temporada': 'fa-solid fa-wand-magic-sparkles',
@@ -60,9 +62,14 @@ export const NAV_ICONS: Record<string, string> = {
   'mail-outbox': 'fa-solid fa-paper-plane',
   mantenimiento: 'fa-solid fa-screwdriver-wrench',
   reports: 'fa-solid fa-chart-column',
+  proyectos: 'fa-solid fa-diagram-project',
+  'mis-equipos': 'fa-solid fa-laptop-house',
+  actas: 'fa-solid fa-file-signature',
+  // Bajo /activos: tipos de equipo y numeración.
+  configuracion: 'fa-solid fa-boxes-stacked',
   // /admin/reports es la gestion de plantillas de reporte, no la pantalla de
   // reportes. El breadcrumb ve el segmento "reports" con su contexto: bajo
-  // "/admin" usa esta clave, y suelto (pagina propia) usa la de arriba.
+  // "/administracion" usa esta clave, y suelto (pagina propia) usa la de arriba.
   'report-templates': 'fa-solid fa-flask',
   // Motor de workflows. La clave coincide con el segmento de ruta, asi que el
   // breadcrumb muestra el mismo icono que el menu.

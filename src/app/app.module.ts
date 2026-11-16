@@ -10,7 +10,6 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { AuthService } from './core/services/auth.service';
 
 import { AuthModule } from './modules/auth/auth.module';
-import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { SharedModule } from './modules/shared/shared.module';
 import { RouteReuseStrategy } from '@angular/router';
 import { ReutilizacionRutasStrategy } from './core/routing/reutilizacion-rutas.strategy';
@@ -23,7 +22,6 @@ import { ReutilizacionRutasStrategy } from './core/routing/reutilizacion-rutas.s
     HttpClientModule,
     AppRoutingModule,
     AuthModule,
-    DashboardModule,
     SharedModule
   ],
   providers: [

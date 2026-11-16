@@ -12,7 +12,7 @@
     </div>
 
     <button class="btn btn-primary btn-sm gap-2" (click)="showNew = !showNew">
-      <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
+      <i class="fa-solid text-[15px]" [ngClass]="showNew ? 'fa-xmark' : 'fa-plus'" aria-hidden="true"></i>
       {{ showNew ? 'Cerrar' : 'Nueva Escalación' }}
     </button>
   </header>

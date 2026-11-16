@@ -341,10 +341,12 @@
 }
 
 /* ============================ Mapa de calor ============================ */
+/* Las 24 horas siempre caben en el panel: las celdas se encogen (antes un
+   ancho mínimo de 34rem escondía las últimas horas tras un desplazamiento). */
 .calor {
   display: grid;
-  grid-template-columns: 2.25rem repeat(24, minmax(0, 1fr));
-  gap: 3px;
+  grid-template-columns: 2rem repeat(24, minmax(0, 1fr));
+  gap: 2px;
   align-items: center;
 }
 .calor__hora {
@@ -372,8 +374,28 @@
 .calor__celda--3 { background: oklch(var(--p) / 0.66); }
 .calor__celda--4 { background: oklch(var(--p) / 0.95); }
 
+/* ============================ Entrada escalonada ============================ */
+/* Las tarjetas aparecen una tras otra al cargar el inicio (40 ms entre una y
+   otra, como mucho 6 escalones). Es decorativo: nada espera a la animación. */
+.dash-kpi,
+.dash-panel {
+  animation: dash-entra 420ms var(--ease-out) both;
+}
+.dash-kpi:nth-child(2), .dash-panel:nth-child(2) { animation-delay: 40ms; }
+.dash-kpi:nth-child(3), .dash-panel:nth-child(3) { animation-delay: 80ms; }
+.dash-kpi:nth-child(4), .dash-panel:nth-child(4) { animation-delay: 120ms; }
+.dash-kpi:nth-child(5), .dash-panel:nth-child(5) { animation-delay: 160ms; }
+.dash-kpi:nth-child(n + 6), .dash-panel:nth-child(n + 6) { animation-delay: 200ms; }
+@keyframes dash-entra {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
 /* ============================ Movimiento reducido ============================ */
 @media (prefers-reduced-motion: reduce) {
+  .dash-kpi, .dash-panel { animation: none; }
   .dash-kpi:hover { translate: none; }
   .dash-barra,
   .dash-barra-tramo { animation: none; }

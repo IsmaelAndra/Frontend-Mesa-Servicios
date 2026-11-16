@@ -12,7 +12,7 @@
     </div>
 
     <button class="btn btn-primary btn-sm gap-2" (click)="showCreate = !showCreate">
-      <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
+      <i class="fa-solid text-[15px]" [ngClass]="showCreate ? 'fa-xmark' : 'fa-plus'" aria-hidden="true"></i>
       {{ showCreate ? 'Cerrar' : 'Nueva Categoría' }}
     </button>
   </header>
@@ -64,18 +64,13 @@
         <!-- Icono -->
         <label class="form-control w-full">
           <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Icono (Font Awesome)</span>
+            <span class="label-text text-xs font-medium">Icono</span>
           </div>
           <div class="flex items-center gap-2">
             <span class="p-1.5 rounded-lg bg-base-200 shrink-0" aria-hidden="true">
               <i [class]="newCategory.iconCategory || 'fa-solid fa-tags'" class="text-base"></i>
             </span>
-            <input
-              [(ngModel)]="newCategory.iconCategory"
-              name="iconCategory"
-              class="input input-bordered input-sm w-full font-mono"
-              placeholder="fa-solid fa-tag"
-            />
+            <app-selector-icono [(ngModel)]="newCategory.iconCategory" name="iconCategory" [color]="newCategory.colorCategory || '#062e86'"></app-selector-icono>
           </div>
         </label>
 
@@ -188,7 +183,7 @@
               </td>
 
               <td>
-                <!-- El icono se ve tal cual; la clase, en pequeño y en una sola línea. -->
+                <!-- Solo el icono: la clase "fa-…" no le dice nada a quien administra. -->
                 <span class="flex items-center gap-2 min-w-0" [title]="cat.iconCategory || 'fa-solid fa-tags'">
                   <span
                     class="w-7 h-7 rounded-lg inline-flex items-center justify-center shrink-0"
@@ -196,7 +191,6 @@
                     [style.color]="cat.colorCategory || '#2563EB'"
                     aria-hidden="true"
                   ><i [class]="cat.iconCategory || 'fa-solid fa-tags'" class="text-[13px]"></i></span>
-                  <code class="text-[10px] opacity-60 truncate max-w-[9rem] whitespace-nowrap">{{ (cat.iconCategory || 'fa-solid fa-tags').replace('fa-solid ', '').replace('fa-regular ', '') }}</code>
                 </span>
               </td>
 
@@ -278,11 +272,7 @@
                       <span class="p-1.5 rounded-lg bg-base-200 shrink-0" aria-hidden="true">
                         <i [class]="editCategory.iconCategory || 'fa-solid fa-tags'" class="text-base"></i>
                       </span>
-                      <input
-                        [(ngModel)]="editCategory.iconCategory"
-                        class="input input-bordered input-sm w-32"
-                        placeholder="fa-solid fa-tags"
-                      />
+                      <app-selector-icono [(ngModel)]="editCategory.iconCategory" [color]="editCategory.colorCategory || '#062e86'"></app-selector-icono>
                     </div>
                   </label>
 

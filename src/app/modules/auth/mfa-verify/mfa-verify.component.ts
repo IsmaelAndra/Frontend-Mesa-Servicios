@@ -85,7 +85,7 @@ export class MfaVerifyComponent implements AfterViewInit, OnDestroy {
     // Sin desafío no hay nada que hacer aquí: se vuelve al acceso. Puede pasar si
     // el usuario recarga la página en medio del proceso.
     if (!this.challenge) {
-      this.router.navigate(['/auth/login']);
+      this.router.navigate(['/acceso/ingresar']);
       return;
     }
     if (this.challenge.status === 'ENROLAR' && this.challenge.qrUri) {
@@ -263,10 +263,10 @@ export class MfaVerifyComponent implements AfterViewInit, OnDestroy {
   /** Avanza al destino de siempre, respetando el cambio de contraseña pendiente. */
   private entrar(): void {
     if (this.auth.mustChangePassword()) {
-      this.router.navigate(['/settings/password']);
+      this.router.navigate(['/mi-cuenta/contrasena']);
       return;
     }
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/inicio']);
   }
 
   /**
@@ -279,7 +279,7 @@ export class MfaVerifyComponent implements AfterViewInit, OnDestroy {
    */
   volverAlAcceso(): void {
     this.auth.limpiarDesafioMfa();
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/acceso/ingresar']);
   }
 
   copiarCodigos(): void {

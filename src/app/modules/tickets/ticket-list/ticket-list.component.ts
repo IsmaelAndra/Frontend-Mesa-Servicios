@@ -25,12 +25,12 @@ export class TicketListComponent implements OnInit {
 
   statuses = ['NUEVO', 'ASIGNADO', 'EN_PROCESO', 'RESUELTO', 'CERRADO', 'REABIERTO', 'ESCALADO'];
 
-  /** Sede por la que filtrar; vacio significa "todas". */
+  /** Sucursal por la que filtrar; vacio significa "todas". */
   sucursalId: string | null = null;
 
   catalog: Catalog | null = null;
 
-  /** Sede elegida en el filtro, para mostrar su icono y color en la columna. */
+  /** Sucursal elegida en el filtro, para mostrar su icono y color en la columna. */
   sucursalFiltro(): { icon?: string; color?: string } | undefined {
     return this.catalog?.sucursales?.find((s) => s.id === this.sucursalId);
   }
@@ -57,7 +57,10 @@ export class TicketListComponent implements OnInit {
       error: () => undefined
     });
     if (!this.esUsuarioFinal) {
-      this.router.navigate(['/tickets/kanban'], { replaceUrl: true });
+      // El personal trabaja en el tablero; se conserva la búsqueda que traía.
+      this.router.navigate(['/tickets/tablero'], this.keyword
+        ? { replaceUrl: true, queryParams: { keyword: this.keyword } }
+        : { replaceUrl: true });
       return;
     }
     this.loadTickets();
@@ -159,7 +162,7 @@ const matchStatus = !this.status || t.status === this.status;
   }
 
   get canManage(): boolean {
-    return this.role === 'ADMIN' || this.role === 'AGENT';
+    return this.role === 'AREA_MANAGER' || this.role === 'AGENT';
   }
 
   get isUser(): boolean {
@@ -172,7 +175,7 @@ const matchStatus = !this.status || t.status === this.status;
 
   /** Usuario final: USER o jefe de área (fuera de Activos es un usuario más). */
   private get esUsuarioFinal(): boolean {
-    return this.role === 'USER' || this.role === 'AREA_MANAGER';
+    return this.role === 'USER';
   }
 
   color(priority: string): string {
@@ -198,7 +201,7 @@ const matchStatus = !this.status || t.status === this.status;
     return { icon: a?.icon || 'fa-solid fa-building', color: a?.color || '#062e86' };
   }
 
-  /** Opciones del filtro de sede, con el icono y color del maestro. */
+  /** Opciones del filtro de sucursal, con el icono y color del maestro. */
   get sucursalOptions(): MasterOption[] {
     return (this.catalog?.sucursales || []).map((s) => ({
       value: s.id,
@@ -208,7 +211,7 @@ const matchStatus = !this.status || t.status === this.status;
     }));
   }
 
-  /** Icono y color de la sede de un ticket, para la columna de la lista. */
+  /** Icono y color de la sucursal de un ticket, para la columna de la lista. */
   sucursalMeta(t: Ticket): { icon: string; color: string } {
     const s = this.catalog?.sucursales?.find((x) => x.id === t.sucursalId);
     return { icon: s?.icon || 'fa-solid fa-city', color: s?.color || '#94a3b8' };

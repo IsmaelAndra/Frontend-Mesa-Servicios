@@ -125,12 +125,12 @@ describe('notification-presentation', () => {
 
     it('la evaluacion mensual va a la configuracion de SLA', () => {
       expect(notificationTarget({ ticketId: null, typeNotification: 'MONTHLY_EVALUATION' }))
-        .toEqual(['/admin/sla-config']);
+        .toEqual(['/administracion/evaluaciones']);
     });
 
     it('la tarea asignada, que tampoco tiene ticket, va a Actividades', () => {
       expect(notificationTarget({ ticketId: null, typeNotification: 'TASK_ASIGNADA' }))
-        .toEqual(['/activities']);
+        .toEqual(['/actividades']);
     });
 
     it('devuelve null cuando no hay ni ticket ni destino conocido', () => {

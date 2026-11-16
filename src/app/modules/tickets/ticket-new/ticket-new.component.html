@@ -104,12 +104,12 @@
             ></app-master-select>
           </div>
 
-          <!-- Sede donde ocurre el problema. Opcional: si se deja vacía, el backend
-               hereda la del solicitante. Un ticket puede atender una sede distinta
+          <!-- Sucursal donde ocurre el problema. Opcional: si se deja vacía, el backend
+               hereda la del solicitante. Un ticket puede atender una sucursal distinta
                a la del solicitante (por ejemplo, un problema en otra oficina). -->
           <div class="form-control w-full">
             <div class="label pt-0 pb-1">
-              <span class="label-text text-xs font-medium">Sede</span>
+              <span class="label-text text-xs font-medium">Sucursal</span>
             </div>
             <app-master-select
               formControlName="sucursalId"
@@ -117,9 +117,43 @@
               [allowEmpty]="true"
               emptyLabel="La del solicitante"
               placeholder="La del solicitante"
-              label="Sede"
+              label="Sucursal"
             ></app-master-select>
           </div>
+
+          <!-- Área que atiende: decide qué categorías hay y qué equipo lo recibe. -->
+          <div class="form-control w-full">
+            <div class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">
+                Área que atiende <span class="text-error">*</span>
+              </span>
+            </div>
+            <app-master-select
+              formControlName="areaDestinoId"
+              [options]="masterOptions(areasQueAtienden)"
+              [allowEmpty]="false"
+              icon="fa-solid fa-building"
+              placeholder="Seleccione el área"
+              label="Área que atiende"
+              (elegido)="alCambiarArea()"
+            ></app-master-select>
+            <div
+              *ngIf="form.get('areaDestinoId')?.invalid && form.get('areaDestinoId')?.touched"
+              class="label pt-1 pb-0"
+            >
+              <span class="label-text-alt text-error text-xs">Debe seleccionar el área</span>
+            </div>
+          </div>
+
+          <!-- Confidencial: un tema personal o delicado. Solo lo ven quien lo
+               atiende y el jefe de esa área; ni el súper admin sin permiso. -->
+          <label class="flex items-start gap-3 p-3 rounded-xl border border-base-300 cursor-pointer md:col-span-2">
+            <input type="checkbox" class="checkbox checkbox-sm checkbox-primary mt-0.5" formControlName="confidencial" />
+            <span class="text-sm">
+              <span class="font-semibold"><i class="fa-solid fa-user-lock mr-1 text-primary" aria-hidden="true"></i>Ticket confidencial</span>
+              <span class="block text-xs opacity-70">Para temas personales o delicados: solo lo verán quien lo atienda y el jefe del área que lo atiende.</span>
+            </span>
+          </label>
 
           <!-- Categoría (solo agentes/admin; el usuario final se asigna a la categoría por defecto) -->
           <div class="form-control w-full">
@@ -132,7 +166,7 @@
             <app-master-select
               *ngIf="!isUser"
               formControlName="categoryId"
-              [options]="masterOptions(categories)"
+              [options]="masterOptions(categoriasDelArea)"
               [allowEmpty]="false"
               placeholder="Seleccione la categoría"
               label="Categoría"

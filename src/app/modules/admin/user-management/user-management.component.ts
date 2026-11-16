@@ -1,3 +1,4 @@
+import { confirmar } from '../../../core/utils/confirmar.util';
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import Swal from "sweetalert2";
 import { ActivatedRoute } from "@angular/router";
@@ -8,6 +9,7 @@ import { metaSesion } from "../../../core/utils/session-presence.util";
 import { Paginacion } from "../../../core/utils/pagination.util";
 import { MasterOption } from "../../shared/components/master-select/master-select.component";
 import { urlDelApi } from '../../../core/utils/url-api.util';
+import { AuthService } from "../../../core/services/auth.service";
 
 @Component({
   selector: "app-user-management",
@@ -22,9 +24,16 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   private presenciaTimer?: ReturnType<typeof setInterval>;
   users: User[] = [];
   areas: { id: string; name: string; icon?: string; color?: string }[] = [];
-  /** Sedes activas, del mismo catálogo público que usa el resto de selectores. */
+  /** Sucursales activas, del mismo catálogo público que usa el resto de selectores. */
   sucursales: { id: string; code: string; name: string; icon?: string; color?: string }[] = [];
-  roles = ["ADMIN", "AGENT", "AREA_MANAGER", "USER"];
+  /**
+   * Roles que se pueden asignar desde aquí. Un jefe de Tecnología o Desarrollo
+   * crea jefes, agentes y usuarios; el súper admin además auditores (súper
+   * admin no se asigna desde esta pantalla). El backend aplica la misma regla.
+   */
+  roles: string[] = ["AREA_MANAGER", "AGENT", "USER"];
+  /** El auditor ve la pantalla sin poder crear, editar ni desactivar. */
+  soloLectura = false;
   search = "";
   role = "";
   status = "";
@@ -38,7 +47,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
 
   roleLabels: Record<string, string> = {
     SUPER_ADMIN: "Super Administrador",
-    ADMIN: "Administrador",
+    AUDITOR: "Auditor",
     AGENT: "Agente",
     USER: "Usuario",
     AREA_MANAGER: "Jefe de área",
@@ -46,10 +55,10 @@ export class UserManagementComponent implements OnInit, OnDestroy {
 
   roleDescriptions: Record<string, string> = {
     SUPER_ADMIN: "Acceso total: administración y configuración avanzada",
-    ADMIN: "Gestiona usuarios, áreas, configuraciones y reportes",
-    AGENT: "Atiende y resuelve los tickets asignados",
+    AUDITOR: "Consulta tickets, auditoría, activos y reportes, sin modificar nada",
+    AGENT: "Atiende los tickets de su área; no reasigna",
     USER: "Crea y da seguimiento a sus propios tickets",
-    AREA_MANAGER: "Como un usuario, y además ve y gestiona los activos de su área",
+    AREA_MANAGER: "Gestiona los tickets, el equipo y la configuración de su área",
   };
 
   /** Roles con su icono y color, para el filtro. */
@@ -72,8 +81,8 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     switch (role) {
       case 'SUPER_ADMIN':
         return 'fa-solid fa-crown';
-      case 'ADMIN':
-        return 'fa-solid fa-user-shield';
+      case 'AUDITOR':
+        return 'fa-solid fa-magnifying-glass-chart';
       case 'AGENT':
         return 'fa-solid fa-headset';
       case 'USER':
@@ -90,8 +99,8 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     switch (role) {
       case 'SUPER_ADMIN':
         return '#7C3AED';
-      case 'ADMIN':
-        return '#062e86';
+      case 'AUDITOR':
+        return '#0F766E';
       case 'AGENT':
         return '#0E7490';
       case 'USER':
@@ -166,9 +175,15 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     private adminService: AdminService,
     private toastService: ToastService,
     private route: ActivatedRoute,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
+    const rolActual = this.authService.getRole();
+    this.soloLectura = rolActual === "AUDITOR";
+    if (rolActual === "SUPER_ADMIN") {
+      this.roles = ["AREA_MANAGER", "AGENT", "USER", "AUDITOR"];
+    }
     this.presenciaTimer = setInterval(() => this.refrescarPresencia(), 30_000);
     // La búsqueda global llega con el término aplicado (?search=...).
     const searchParam = this.route.snapshot.queryParams?.['search'];
@@ -176,7 +191,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     this.loadUsers();
     this.adminService
       .catalog()
-      .subscribe({ next: (c: Catalog) => { this.areas = c.areas; this.sucursales = c.sucursales || []; } });
+      .subscribe({ next: (c: Catalog) => { this.areas = (c.areas || []).filter((a) => a.status !== false); this.sucursales = c.sucursales || []; } });
   }
 
   ngOnDestroy(): void {
@@ -191,15 +206,28 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         this.users.forEach((u) => {
           if (porId.has(u.idUser)) u.sessionState = porId.get(u.idUser);
         });
+        this.marcarmeEnLinea();
       },
       error: () => undefined,
     });
+  }
+
+  /**
+   * Quien mira esta pantalla está, por definición, en línea. El backend lo sabe
+   * por la conexión SSE, que puede tardar en abrirse (o caer un momento), y la
+   * propia cuenta salía como desconectada.
+   */
+  private marcarmeEnLinea(): void {
+    const yo = this.authService.currentUserSnapshot()?.idUser;
+    const mia = yo ? this.users.find((x) => x.idUser === yo) : undefined;
+    if (mia) mia.sessionState = 'EN_LINEA';
   }
 
   loadUsers(): void {
     this.adminService.users(this.role, this.status, this.search).subscribe({
       next: (u) => {
         this.users = u;
+        this.marcarmeEnLinea();
         this.pag.reiniciar();
       },
       error: () =>
@@ -207,10 +235,24 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  setStatus(u: User): void {
+  async setStatus(u: User): Promise<void> {
+    if (this.esYo(u)) return;
     const newStatus = u.statusUser === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    const desactivar = newStatus === "INACTIVE";
+    const ok = await confirmar({
+      titulo: desactivar ? "¿Desactivar la cuenta?" : "¿Activar la cuenta?",
+      texto: desactivar
+        ? `${u.corporateEmailUser} no podrá ingresar y se cerrarán sus sesiones abiertas.`
+        : `${u.corporateEmailUser} podrá volver a ingresar.`,
+      accion: desactivar ? "Desactivar" : "Activar",
+      peligro: desactivar,
+    });
+    if (!ok) return;
     this.adminService.setUserStatus(u.idUser, newStatus).subscribe({
-      next: () => this.loadUsers(),
+      next: () => {
+        this.toastService.success(desactivar ? "Cuenta desactivada" : "Cuenta activada");
+        this.loadUsers();
+      },
       error: (e) =>
         this.toastService.error(
           e?.error?.message || "No se pudo cambiar el estado",
@@ -228,16 +270,19 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   }
 
   deleteUser(u: User): void {
-    Swal.fire({
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar', focusCancel: true,
       title: "¿Eliminar usuario?",
       text: u.corporateEmailUser,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
+      confirmButtonColor: "#dc2626",
     }).then((r) => {
       if (r.isConfirmed) {
         this.adminService.deleteUser(u.idUser).subscribe({
-          next: () => this.loadUsers(),
+          next: () => {
+            this.toastService.success("Usuario eliminado");
+            this.loadUsers();
+          },
           error: (e) =>
             this.toastService.error(e?.error?.message || "No se pudo eliminar"),
         });
@@ -257,9 +302,13 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     areaId: string | null;
     sucursalId: string | null;
     extension: string;
-  } = { corporateEmail: "", password: "", roleName: "", areaId: null, sucursalId: null, extension: "" };
+    /** Cargo; sale en las actas de activos. */
+    cargo: string;
+    /** Cédula: obligatoria también al editar (como en el alta). */
+    identification: string;
+  } = { corporateEmail: "", password: "", roleName: "", areaId: null, sucursalId: null, extension: "", cargo: "", identification: "" };
 
-  /** Opciones de área y sede para los selects con icono (app-master-select). */
+  /** Opciones de área y sucursal para los selects con icono (app-master-select). */
   get areaOpciones(): MasterOption[] {
     // Icono y color del maestro (Admin → Áreas), como el estado en el detalle del ticket.
     return this.areas.map((a) => ({
@@ -290,7 +339,32 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       areaId: this.areas.find((a) => a.name === u.area)?.id ?? null,
       sucursalId: u.sucursalId ?? this.sucursales.find((s) => s.name === u.sucursal)?.id ?? null,
       extension: u.extensionUser ?? "",
+      cargo: u.cargoUser ?? "",
+      identification: /^[0-9]{10}$/.test(u.identificationUser ?? "") ? u.identificationUser! : "",
     };
+  }
+
+  /** Por qué no se puede guardar la edición (null = se puede). Lo mismo que exige el alta. */
+  get motivoEdicion(): string | null {
+    const e = this.edicion;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.corporateEmail.trim())) return "Escriba un correo válido";
+    if (!/^[0-9]{10}$/.test(e.identification.trim())) return "La cédula debe tener 10 números";
+    if (!e.cargo.trim()) return "Escriba el cargo";
+    if (!/^[0-9]{1,10}$/.test(e.extension.trim())) return "La extensión es obligatoria y solo lleva números";
+    if (!e.roleName) return "Elija el rol";
+    if (!e.areaId) return "Elija el área";
+    if (e.password && e.password.length < 8) return "La contraseña debe tener al menos 8 caracteres";
+    return null;
+  }
+
+  cedulaEdicionInvalida(): boolean {
+    const c = this.edicion.identification.trim();
+    return !!c && !/^[0-9]{10}$/.test(c);
+  }
+
+  /** Quien mira la pantalla: no puede desactivarse ni eliminarse a sí mismo. */
+  esYo(u: User): boolean {
+    return u.idUser === this.authService.currentUserSnapshot()?.idUser;
   }
 
   /** La extensión solo admite números (hasta 10). Vacía = sin extensión. */
@@ -305,14 +379,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
 
   /** Correo con forma de correo y, si se escribe, contraseña de al menos 8 caracteres. */
   get edicionValida(): boolean {
-    const e = this.edicion;
-    return (
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.corporateEmail.trim()) &&
-      !!e.roleName &&
-      !!e.areaId &&
-      /^[0-9]{0,10}$/.test(e.extension.trim()) &&
-      (!e.password || e.password.length >= 8)
-    );
+    return this.motivoEdicion === null;
   }
 
   guardarEdicion(): void {
@@ -325,12 +392,41 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       sucursalId: e.sucursalId || null,
       // "" quita la extensión; el backend solo acepta números.
       extension: e.extension.trim(),
+      cargo: e.cargo.trim(),
+      identification: e.identification.trim(),
     };
     if (e.password) {
       payload.password = e.password;
     }
     this.guardandoEdicion = true;
-    this.adminService.updateUser(this.editando.idUser, payload).subscribe({
+    const idUsuario = this.editando.idUser;
+    // Con MFA activo, editar a otra persona pide el código del autenticador.
+    this.authService.pideCodigoMfa().subscribe((pide) => {
+      if (!pide) {
+        this.enviarEdicion(idUsuario, payload, null);
+        return;
+      }
+      Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280',
+        title: "Código de verificación",
+        text: "Escriba el código de 6 dígitos de su aplicación autenticadora para guardar los cambios.",
+        input: "text",
+        inputAttributes: { inputmode: "numeric", autocomplete: "one-time-code", maxlength: "6" },
+        showCancelButton: true,
+        confirmButtonText: "Guardar",
+        cancelButtonText: "Cancelar",
+        inputValidator: (v) => (/^\d{6}$/.test((v || "").trim()) ? null : "Son 6 dígitos"),
+      }).then((r) => {
+        if (!r.isConfirmed) {
+          this.guardandoEdicion = false;
+          return;
+        }
+        this.enviarEdicion(idUsuario, payload, String(r.value).trim());
+      });
+    });
+  }
+
+  private enviarEdicion(idUsuario: string, payload: RegisterRequest, codigoMfa: string | null): void {
+    this.adminService.updateUser(idUsuario, payload, codigoMfa).subscribe({
       next: () => {
         this.guardandoEdicion = false;
         this.editando = null;
@@ -353,13 +449,19 @@ newUser: {
       corporateEmail: string;
       roleName: string;
       areaId: string | null;
-      /** Sede de la persona; opcional. */
+      /** Sucursal de la persona; opcional. */
       sucursalId: string | null;
       /** Extensión telefónica; opcional. */
       extension: string;
+      /** Cargo; sale en las actas de activos. */
+      cargo: string;
+      /** Cédula (o pasaporte). */
+      identificacion: string;
     } = {
       corporateEmail: "",
       extension: "",
+      cargo: "",
+      identificacion: "",
       roleName: "",
       areaId: null,
       sucursalId: null,
@@ -372,6 +474,8 @@ newUser: {
 this.newUser = {
         corporateEmail: "",
         extension: "",
+        cargo: "",
+          identificacion: "",
         roleName: "",
         areaId: null,
         sucursalId: null,
@@ -401,7 +505,8 @@ nextStep(): void {
   /** Valida si se puede avanzar del paso actual */
   canGoNext(): boolean {
     if (this.step === 1) {
-      return !!this.newUser.corporateEmail && !this.extensionNuevaInvalida();
+      // Todo lo que imprime un acta de activos se pide en el alta (V: nov 2026).
+      return this.faltanDatosDelAlta().length === 0;
     }
     if (this.step === 2) {
       return !!this.newUser.roleName;
@@ -409,15 +514,32 @@ nextStep(): void {
     return true;
   }
 
-  /** La extensión del alta: vacía o solo números (hasta 10), como en el backend. */
+  /** La extensión del alta: solo números (hasta 10), como en el backend. */
   extensionNuevaInvalida(): boolean {
     return !/^[0-9]{0,10}$/.test((this.newUser.extension || "").trim());
+  }
+
+  /** Cédula: 10 números. */
+  cedulaInvalida(): boolean {
+    const c = (this.newUser.identificacion || "").trim();
+    return !!c && !/^[0-9]{10}$/.test(c);
+  }
+
+  /** Campos obligatorios del alta que siguen vacíos o mal escritos. */
+  faltanDatosDelAlta(): string[] {
+    const u = this.newUser;
+    const f: string[] = [];
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((u.corporateEmail || "").trim())) f.push("correo");
+    if (!(u.identificacion || "").trim() || this.cedulaInvalida()) f.push("cédula");
+    if (!(u.cargo || "").trim()) f.push("cargo");
+    if (!(u.extension || "").trim() || this.extensionNuevaInvalida()) f.push("extensión");
+    return f;
   }
 
   /** Valida si se puede enviar el formulario */
   canSubmit(): boolean {
     return (
-      !!this.newUser.corporateEmail &&
+      this.faltanDatosDelAlta().length === 0 &&
       !!this.newUser.roleName &&
       this.newUser.areaId !== null
     );
@@ -435,6 +557,8 @@ const payload: RegisterRequest = {
           areaId: this.newUser.areaId!,
           sucursalId: this.newUser.sucursalId,
           extension: (this.newUser.extension || "").trim(),
+          cargo: (this.newUser.cargo || "").trim() || undefined,
+          identification: (this.newUser.identificacion || "").trim(),
         };
 
     this.adminService.createUser(payload).subscribe({

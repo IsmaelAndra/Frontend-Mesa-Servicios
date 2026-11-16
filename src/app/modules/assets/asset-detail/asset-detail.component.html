@@ -53,7 +53,7 @@
             <div class="activo-dato"><dt>Modelo</dt><dd>{{ asset.modelAsset || '—' }}</dd></div>
             <div class="activo-dato"><dt>Número de serie</dt><dd class="font-mono">{{ asset.serialNumberAsset || '—' }}</dd></div>
             <div class="activo-dato"><dt>Área</dt><dd>{{ asset.area || '—' }}</dd></div>
-            <div class="activo-dato"><dt>Sede</dt><dd>{{ asset.sucursal || '—' }}</dd></div>
+            <div class="activo-dato"><dt>Sucursal</dt><dd>{{ asset.sucursal || '—' }}</dd></div>
             <div class="activo-dato"><dt>Proveedor</dt><dd>{{ asset.providerAsset || '—' }}</dd></div>
             <div class="activo-dato">
               <dt>Costo</dt>
@@ -70,20 +70,132 @@
             </div>
           </dl>
 
-          <div *ngIf="asset.notesAsset" class="rounded-xl bg-base-200/50 border border-base-200 p-3">
-            <div class="text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-1">Notas</div>
-            <p class="text-sm whitespace-pre-line">{{ asset.notesAsset }}</p>
+          <div *ngIf="asset.descriptionAsset" class="rounded-xl bg-base-200/50 border border-base-200 p-3">
+            <div class="text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-1">Descripción</div>
+            <p class="text-sm whitespace-pre-line">{{ asset.descriptionAsset }}</p>
           </div>
 
-          <div *ngIf="asset.imageUrlAsset || asset.documentUrlAsset" class="flex flex-wrap gap-2">
-            <a *ngIf="asset.imageUrlAsset" [href]="asset.imageUrlAsset" target="_blank" rel="noopener"
-              class="btn btn-sm btn-outline gap-2">
-              <i class="fa-solid fa-image text-[13px]" aria-hidden="true"></i> Ver imagen
-            </a>
-            <a *ngIf="asset.documentUrlAsset" [href]="asset.documentUrlAsset" target="_blank" rel="noopener"
-              class="btn btn-sm btn-outline gap-2">
-              <i class="fa-solid fa-file-lines text-[13px]" aria-hidden="true"></i> Ver documento
-            </a>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="activo-dato sm:col-span-2"><dt>Ubicación detallada</dt><dd>{{ asset.ubicacionAsset || '—' }}</dd></div>
+            <div class="activo-dato">
+              <dt>Estado del bien</dt>
+              <dd><span class="inline-flex items-center gap-1.5" [style.color]="estadoFisico(asset.estadoFisicoAsset).color">
+                <i [class]="estadoFisico(asset.estadoFisicoAsset).icono" class="text-xs" aria-hidden="true"></i>
+                {{ estadoFisico(asset.estadoFisicoAsset).texto }}</span></dd>
+            </div>
+            <div class="activo-dato"><dt>Accesorios</dt><dd class="whitespace-pre-line">{{ asset.accesoriosAsset || '—' }}</dd></div>
+            <div class="activo-dato"><dt>Configuración y software</dt><dd class="whitespace-pre-line">{{ asset.configuracionAsset || '—' }}</dd></div>
+            <div class="activo-dato"><dt>Novedades</dt><dd class="whitespace-pre-line">{{ asset.novedadesAsset || 'Ninguna' }}</dd></div>
+          </dl>
+
+          <div *ngIf="asset.notesAsset" class="rounded-xl bg-base-200/50 border border-base-200 p-3">
+            <div class="text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-1">Notas internas</div>
+            <p class="text-sm whitespace-pre-line">{{ asset.notesAsset }}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Fotos -->
+      <section class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="card-title text-base flex-1">
+              <i class="fa-solid fa-camera text-primary" aria-hidden="true"></i>
+              Fotos <span class="badge badge-ghost badge-sm">{{ fotos.length }}/{{ limites.fotos }}</span>
+            </h2>
+            <label *ngIf="puedeGestionar && quedanFotos > 0" class="btn btn-sm btn-primary text-white gap-2" [class.btn-disabled]="subiendo">
+              <span *ngIf="subiendo" class="loading loading-spinner loading-xs"></span>
+              <i *ngIf="!subiendo" class="fa-solid fa-camera" aria-hidden="true"></i> Tomar o subir foto
+              <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp" capture="environment" multiple
+                     (change)="subirFotos($event)" />
+            </label>
+          </div>
+          <p class="text-xs opacity-60">Hasta {{ limites.fotos }} fotos de {{ limites.fotoMb }} MB (JPG, PNG o WEBP). En el teléfono abre la cámara.</p>
+          <div *ngIf="fotos.length; else sinFotos" class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            <div *ngFor="let f of fotos; trackBy: trackFoto" class="relative group aspect-square">
+              <button type="button" class="w-full h-full" (click)="fotoAmpliada = f.url" [attr.aria-label]="'Ver ' + f.archivo.nombre">
+                <img [src]="f.url" [alt]="f.archivo.nombre" class="w-full h-full object-cover rounded-xl border border-base-200" />
+              </button>
+              <button *ngIf="puedeGestionar" type="button" class="btn btn-xs btn-circle btn-error absolute top-1 right-1 opacity-80"
+                      (click)="borrarArchivo(f.archivo)" [attr.aria-label]="'Eliminar ' + f.archivo.nombre">
+                <i class="fa-solid fa-xmark text-[10px]" aria-hidden="true"></i></button>
+            </div>
+          </div>
+          <ng-template #sinFotos><p class="text-sm opacity-60 text-center py-3">Sin fotos.</p></ng-template>
+        </div>
+      </section>
+
+      <!-- Documentos -->
+      <section class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-3">
+          <h2 class="card-title text-base">
+            <i class="fa-solid fa-file-pdf text-primary" aria-hidden="true"></i>
+            Garantía, factura y documentos
+          </h2>
+          <div *ngIf="puedeGestionar" class="flex flex-col lg:flex-row gap-2 lg:items-end">
+            <label class="form-control">
+              <span class="label-text text-xs mb-1">Vence la garantía</span>
+              <input type="date" class="input input-bordered input-sm" [(ngModel)]="venceGarantia" />
+            </label>
+            <label class="btn btn-sm btn-outline gap-2" [class.btn-disabled]="subiendo">
+              <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Subir garantía (PDF)
+              <input type="file" class="hidden" accept="application/pdf,.pdf" (change)="subirDocumento($event, 'GARANTIA')" />
+            </label>
+            <label class="btn btn-sm btn-outline gap-2" [class.btn-disabled]="subiendo">
+              <i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i> Subir factura (PDF)
+              <input type="file" class="hidden" accept="application/pdf,.pdf" (change)="subirDocumento($event, 'FACTURA')" />
+            </label>
+            <label class="btn btn-sm btn-ghost gap-2" [class.btn-disabled]="subiendo">
+              <i class="fa-solid fa-paperclip" aria-hidden="true"></i> Otro PDF
+              <input type="file" class="hidden" accept="application/pdf,.pdf" (change)="subirDocumento($event, 'OTRO')" />
+            </label>
+          </div>
+          <p class="text-xs opacity-60">PDF de hasta {{ limites.pdfMb }} MB. Con la fecha de vencimiento de la garantía, el sistema avisa antes de que venza.</p>
+          <ul *ngIf="documentos.length; else sinDocs" class="divide-y divide-base-200 rounded-xl border border-base-200">
+            <li *ngFor="let d of documentos; trackBy: trackArchivo" class="flex items-center gap-3 px-3 py-2">
+              <i class="fa-regular fa-file-pdf text-error" aria-hidden="true"></i>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium truncate">{{ etiquetaDocumento(d.tipo) }} · {{ d.nombre }}</p>
+                <p class="text-xs opacity-60">{{ tamano(d.tamano) }} · {{ formatDate(d.subido) }}<span *ngIf="d.vence"> · vence {{ formatDate(d.vence) }}</span></p>
+              </div>
+              <button type="button" class="btn btn-ghost btn-xs gap-1" (click)="abrirArchivo(d)"><i class="fa-solid fa-eye" aria-hidden="true"></i> Ver</button>
+              <button *ngIf="puedeGestionar" type="button" class="btn btn-ghost btn-xs text-error" (click)="borrarArchivo(d)"
+                      [attr.aria-label]="'Eliminar ' + d.nombre"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+            </li>
+          </ul>
+          <ng-template #sinDocs><p class="text-sm opacity-60 text-center py-3">Sin documentos.</p></ng-template>
+        </div>
+      </section>
+
+      <!-- Actas -->
+      <section class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body gap-3">
+          <h2 class="card-title text-base">
+            <i class="fa-solid fa-file-signature text-primary" aria-hidden="true"></i>
+            Actas <span class="badge badge-ghost badge-sm">{{ actas.length }}</span>
+          </h2>
+          <p *ngIf="!actas.length" class="text-sm opacity-60 text-center py-3">Aún no hay actas de este equipo.</p>
+          <div *ngFor="let a of actas; trackBy: trackActa" class="rounded-xl border border-base-200 p-3 flex flex-col md:flex-row md:items-center gap-2">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold flex flex-wrap items-center gap-2">
+                <span class="font-mono">{{ a.numero }}</span>
+                <span class="badge badge-sm kanban-tag border gap-1" [style.background-color]="tiposActa[a.tipo].color + '1F'"
+                      [style.--bc]="tiposActa[a.tipo].color" [style.border-color]="tiposActa[a.tipo].color" [style.color]="tiposActa[a.tipo].color">
+                  <i [class]="tiposActa[a.tipo].icono" aria-hidden="true"></i> {{ tiposActa[a.tipo].texto }}</span>
+                <span class="badge badge-sm kanban-tag border gap-1" [style.background-color]="estadosActa[a.estado].color + '1F'"
+                      [style.--bc]="estadosActa[a.estado].color" [style.border-color]="estadosActa[a.estado].color" [style.color]="estadosActa[a.estado].color">
+                  <i [class]="estadosActa[a.estado].icono" aria-hidden="true"></i> {{ estadosActa[a.estado].texto }}</span>
+              </p>
+              <p class="text-xs opacity-70">{{ formatDate(a.fecha) }} · custodio {{ a.custodio.nombre }}<span *ngIf="a.items.length > 1"> · {{ a.items.length }} equipos</span></p>
+            </div>
+            <div class="flex flex-wrap gap-1">
+              <button type="button" class="btn btn-ghost btn-xs gap-1" (click)="verActa(a)"><i class="fa-regular fa-file-pdf" aria-hidden="true"></i> Acta</button>
+              <button *ngIf="a.firmada" type="button" class="btn btn-ghost btn-xs gap-1" (click)="verFirmada(a)"><i class="fa-solid fa-file-signature" aria-hidden="true"></i> Firmada</button>
+              <label *ngIf="puedeGestionar && !a.firmada" class="btn btn-ghost btn-xs gap-1">
+                <i class="fa-solid fa-upload" aria-hidden="true"></i> Subir firmada
+                <input type="file" class="hidden" accept="application/pdf,.pdf,image/jpeg,image/png" capture="environment" (change)="subirFirmada($event, a)" />
+              </label>
+            </div>
           </div>
         </div>
       </section>
@@ -179,17 +291,18 @@
             </div>
           </ng-template>
 
-          <!-- Acciones de asignación: una fila, mismo tamaño -->
+          <!-- Movimientos con acta FOR-POL-TIC-01-10 -->
           <div *ngIf="puedeGestionar" class="grid gap-2" [class.grid-cols-2]="!!asset.assignedUser">
-            <button type="button" class="btn btn-sm btn-primary gap-2 text-white"
-              [disabled]="!asignable" (click)="abrir('asignar')">
-              <i class="fa-solid" [class.fa-right-left]="asset.assignedUser" [class.fa-user-plus]="!asset.assignedUser"
-                aria-hidden="true"></i>
-              {{ asset.assignedUser ? 'Reasignar' : 'Asignar' }}
+            <button *ngIf="!asset.assignedUser" type="button" class="btn btn-sm btn-primary gap-2 text-white"
+              [disabled]="!asignable" (click)="abrirActa('ENTREGA')">
+              <i class="fa-solid fa-hand-holding" aria-hidden="true"></i> Entregar con acta
             </button>
-            <button *ngIf="asset.assignedUser" type="button" class="btn btn-sm btn-outline gap-2" (click)="abrir('devolver')">
-              <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
-              Devolver
+            <button *ngIf="asset.assignedUser" type="button" class="btn btn-sm btn-primary gap-2 text-white"
+              [disabled]="!asignable" (click)="abrirActa('REASIGNACION')">
+              <i class="fa-solid fa-right-left" aria-hidden="true"></i> Reasignar
+            </button>
+            <button *ngIf="asset.assignedUser" type="button" class="btn btn-sm btn-outline gap-2" (click)="abrirActa('DEVOLUCION')">
+              <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Devolver
             </button>
           </div>
           <p *ngIf="puedeGestionar && !asignable" class="text-xs opacity-60 -mt-1">
@@ -206,7 +319,11 @@
             Gestión
           </h3>
 
-          <button *ngIf="estadoActual === 'DISPONIBLE' || estadoActual === 'ASIGNADO'" type="button"
+          <button type="button" class="btn btn-sm btn-outline w-full justify-start gap-2" (click)="imprimirEtiqueta()">
+            <i class="fa-solid fa-barcode w-4" aria-hidden="true"></i>
+            Imprimir etiqueta
+          </button>
+          <button *ngIf="estadoActual === 'EN_BODEGA' || estadoActual === 'DISPONIBLE' || estadoActual === 'ASIGNADO'" type="button"
             class="btn btn-sm btn-outline btn-warning w-full justify-start gap-2 hover:!text-white" (click)="abrir('reparar')">
             <i class="fa-solid fa-screwdriver-wrench w-4" aria-hidden="true"></i>
             Enviar a reparación
@@ -303,4 +420,14 @@
     </div>
   </div>
   <div class="modal-backdrop" (click)="cerrar()"></div>
+</div>
+
+<!-- Acta de entrega, devolución o reasignación -->
+<app-acta-modal *ngIf="actaTipo && asset" [tipo]="actaTipo" [activos]="[asset]" (cerrado)="actaCerrada($event)"></app-acta-modal>
+
+<!-- Foto ampliada -->
+<div *ngIf="fotoAmpliada" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" (click)="fotoAmpliada = null"
+     role="dialog" aria-modal="true" aria-label="Foto ampliada">
+  <img [src]="fotoAmpliada" alt="Foto del activo" class="max-w-full max-h-full rounded-xl" />
+  <button type="button" class="btn btn-circle btn-sm absolute top-4 right-4" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
 </div>

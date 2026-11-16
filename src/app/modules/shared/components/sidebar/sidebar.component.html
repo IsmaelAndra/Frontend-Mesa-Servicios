@@ -1,6 +1,7 @@
 <aside
   class="sb fixed md:relative top-0 left-0 h-screen app-chrome flex flex-col overflow-hidden"
   [class.sb--contraido]="contraido"
+  [class.sb--listo]="listo"
   [ngClass]="{
     'w-64': !isMobile && !collapsed,
     'w-[4.75rem]': contraido,
@@ -16,7 +17,7 @@
 
   <!-- ============ Marca ============ -->
   <div class="sb__marca">
-    <a routerLink="/dashboard" class="relative flex items-center gap-3 min-w-0" aria-label="Ir al inicio">
+    <a routerLink="/inicio" class="relative flex items-center gap-3 min-w-0" aria-label="Ir al inicio">
       <span class="temporada-adorno temporada-adorno--sb" aria-hidden="true"></span>
       <span class="sb__logo">
         <img *ngIf="iconUrl || logoUrl" [src]="iconUrl || logoUrl" alt="Logo del sistema" class="w-full h-full object-contain" />
@@ -114,6 +115,7 @@
             <div class="sb__sub" [class.sb__sub--abierto]="item.expanded && !contraido">
               <ul class="sb__sub-lista">
                 <ng-container *ngFor="let child of item.children; trackBy: trackItem">
+                  <li *ngIf="tituloDeGrupo(item, child) as titulo" class="sb__grupo" aria-hidden="true">{{ titulo }}</li>
                   <li *ngIf="isVisible(child)">
                     <a
                       [routerLink]="child.route"
@@ -139,7 +141,7 @@
   <div class="sb__pie">
     <div class="sb__usuario">
       <a
-        routerLink="/settings/profile"
+        routerLink="/mi-cuenta/perfil"
         class="flex items-center gap-3 min-w-0 flex-1"
         (mouseenter)="mostrarEtiqueta($event, displayName)"
         (focus)="mostrarEtiqueta($event, displayName)"
@@ -213,6 +215,7 @@
     {{ g.item.label }}
   </p>
   <ng-container *ngFor="let child of g.item.children; trackBy: trackItem">
+    <p *ngIf="tituloDeGrupo(g.item, child) as titulo" class="sb-flyout__grupo">{{ titulo }}</p>
     <a
       *ngIf="isVisible(child)"
       [routerLink]="child.route"

@@ -41,7 +41,18 @@ export const NOTIFICATION_ICONS: Record<string, string> = {
   ERROR: 'fa-solid fa-triangle-exclamation',
   ALERT: 'fa-solid fa-triangle-exclamation',
   ALERTA_SEGURIDAD: 'fa-solid fa-shield-halved',
-  WORKFLOW_APROBACION: 'fa-solid fa-user-check'
+  WORKFLOW_APROBACION: 'fa-solid fa-user-check',
+  ACCESO_CONFIDENCIAL: 'fa-solid fa-user-lock',
+  // Fase 3: actividades y proyectos.
+  TAREA_POR_VENCER: 'fa-solid fa-hourglass-half',
+  PROYECTO_INVITACION: 'fa-solid fa-handshake',
+  PROYECTO_RESPUESTA: 'fa-solid fa-diagram-project',
+  PROYECTO_MIEMBRO: 'fa-solid fa-people-group',
+  PROYECTO_TAREA: 'fa-solid fa-clipboard-check',
+  PROYECTO_MENCION: 'fa-solid fa-at',
+  // Fase 4: actas y garantías de activos.
+  ACTA_ACTIVO: 'fa-solid fa-file-signature',
+  GARANTIA_POR_VENCER: 'fa-solid fa-shield-halved'
 };
 
 /** Clases de fondo de daisyUI segun el tipo, para que el avatar sea el color. */
@@ -65,7 +76,16 @@ export const NOTIFICATION_COLORS: Record<string, string> = {
   ERROR: 'bg-error',
   ALERT: 'bg-error',
   ALERTA_SEGURIDAD: 'bg-error',
-  WORKFLOW_APROBACION: 'bg-warning'
+  WORKFLOW_APROBACION: 'bg-warning',
+  ACCESO_CONFIDENCIAL: 'bg-warning',
+  TAREA_POR_VENCER: 'bg-warning',
+  PROYECTO_INVITACION: 'bg-secondary',
+  PROYECTO_RESPUESTA: 'bg-secondary',
+  PROYECTO_MIEMBRO: 'bg-secondary',
+  PROYECTO_TAREA: 'bg-secondary',
+  PROYECTO_MENCION: 'bg-primary',
+  ACTA_ACTIVO: 'bg-primary',
+  GARANTIA_POR_VENCER: 'bg-warning'
 };
 
 /** Icono del tipo, con la campana para lo que no este contemplatesdo. */
@@ -101,6 +121,15 @@ export const NOTIFICATION_LABELS: Record<string, string> = {
   ALERT: 'Alerta',
   ALERTA_SEGURIDAD: 'Alerta de seguridad',
   WORKFLOW_APROBACION: 'Aprobación',
+  ACCESO_CONFIDENCIAL: 'Acceso a confidencial',
+  TAREA_POR_VENCER: 'Actividad por vencer',
+  PROYECTO_INVITACION: 'Invitación a proyecto',
+  PROYECTO_RESPUESTA: 'Respuesta a invitación',
+  PROYECTO_MIEMBRO: 'Nuevo en un proyecto',
+  PROYECTO_TAREA: 'Tarea de proyecto',
+  PROYECTO_MENCION: 'Mención en un proyecto',
+  ACTA_ACTIVO: 'Acta de equipos',
+  GARANTIA_POR_VENCER: 'Garantía por vencer',
   CREACION_USUARIO: 'Cuenta nueva',
   RESET_PASSWORD: 'Restablecer contraseña',
 };
@@ -135,6 +164,7 @@ export const NOTIFICATION_URGENCY: Record<string, NotificationUrgency> = {
   ESCALATION: 'urgent',
   ERROR: 'urgent',
   ALERT: 'urgent',
+  ACCESO_CONFIDENCIAL: 'urgent',
 
   // Avisos de trabajo: asignaciones, avances y cierres.
   TICKET_ASIGNADO: 'normal',
@@ -144,6 +174,14 @@ export const NOTIFICATION_URGENCY: Record<string, NotificationUrgency> = {
   TICKET_CERRADO: 'normal',
   TICKET: 'normal',
   TASK_ASIGNADA: 'normal',
+  TAREA_POR_VENCER: 'normal',
+  PROYECTO_INVITACION: 'normal',
+  PROYECTO_RESPUESTA: 'normal',
+  PROYECTO_MIEMBRO: 'normal',
+  PROYECTO_TAREA: 'normal',
+  PROYECTO_MENCION: 'normal',
+  ACTA_ACTIVO: 'normal',
+  GARANTIA_POR_VENCER: 'normal',
   RATING_REQUEST: 'normal',
   MONTHLY_EVALUATION: 'normal',
   MENTION: 'normal',
@@ -171,13 +209,23 @@ export function notificationUrgency(type?: string | null): NotificationUrgency {
  * tiene un destino propio.
  *
  * Ojo con `MONTHLY_EVALUATION`: el destinatario es el agente evaluado, pero
- * `/admin/sla-config` está restringida a SUPER_ADMIN, así que un AGENT que la
+ * `/administracion/evaluaciones` está restringida a SUPER_ADMIN, así que un AGENT que la
  * pulse seguirá sin poder abrirla.
  */
 export const NOTIFICATION_TARGETS: Record<string, (string | number)[]> = {
-  MONTHLY_EVALUATION: ['/admin/sla-config'],
+  MONTHLY_EVALUATION: ['/administracion/evaluaciones'],
   // Las tareas se gestionan en Actividades (tablero), no en el inicio.
-  TASK_ASIGNADA: ['/activities']
+  TASK_ASIGNADA: ['/actividades'],
+  TAREA_POR_VENCER: ['/actividades'],
+  // Las invitaciones se aceptan o rechazan desde la lista de proyectos.
+  PROYECTO_INVITACION: ['/proyectos'],
+  PROYECTO_RESPUESTA: ['/proyectos'],
+  PROYECTO_MIEMBRO: ['/proyectos'],
+  PROYECTO_TAREA: ['/proyectos'],
+  PROYECTO_MENCION: ['/proyectos'],
+  // El custodio acepta sus actas en Mis equipos; Tecnología ve la lista completa.
+  ACTA_ACTIVO: ['/activos/mis-equipos'],
+  GARANTIA_POR_VENCER: ['/activos']
 };
 
 /**

@@ -45,7 +45,7 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <a routerLink="/tickets/new" class="btn btn-sm bg-white text-primary border-0 hover:bg-white/90 gap-2 shadow-sm">
+        <a routerLink="/tickets/nuevo" class="btn btn-sm bg-white text-primary border-0 hover:bg-white/90 gap-2 shadow-sm">
           <i class="fa-solid fa-plus text-[13px]" aria-hidden="true"></i>
           Nuevo ticket
         </a>
@@ -204,7 +204,10 @@
           </div>
           <div class="min-w-0">
             <p class="dash-kpi__titulo">Cumplimiento SLA</p>
-            <p class="text-xs opacity-60 mt-0.5">Terminados dentro del plazo</p>
+            <p class="text-xs opacity-60 mt-0.5">
+              <ng-container *ngIf="stats.slaTerminados; else sinTerminados">{{ stats.slaATiempo | number }} de {{ stats.slaTerminados | number }} terminados a tiempo</ng-container>
+              <ng-template #sinTerminados>Aún no hay tickets terminados</ng-template>
+            </p>
             <span
               *ngIf="tendencia(stats.slaComplianceRate, stats.prevSlaComplianceRate, false, true) as t"
               class="tendencia mt-2"
@@ -221,9 +224,9 @@
           <div>
             <p class="dash-kpi__titulo">Resolución media</p>
             <p class="dash-kpi__valor">
-              <span *ngIf="stats.avgResolutionHours !== null" [appContador]="stats.avgResolutionHours" [decimales]="1"></span>
+              <span *ngIf="stats.avgResolutionHours !== null" [appContador]="valorResolucion(stats.avgResolutionHours)" [decimales]="1"></span>
               <span *ngIf="stats.avgResolutionHours === null">—</span>
-              <span class="text-sm font-semibold opacity-50 ml-1">h</span>
+              <span class="text-sm font-semibold opacity-50 ml-1">{{ enDias(stats.avgResolutionHours) ? 'días' : 'h' }}</span>
             </p>
           </div>
           <span class="dash-kpi__icono bg-info/10 text-info" aria-hidden="true">
@@ -427,7 +430,7 @@
           <span class="dash-panel__icono bg-accent/10 text-accent" aria-hidden="true"><i class="fa-solid fa-users"></i></span>
           <div>
             <h2 class="dash-panel__titulo">Carga del equipo</h2>
-            <p class="dash-panel__sub">En curso y terminados por agente</p>
+            <p class="dash-panel__sub">Tickets en curso, terminados y tiempo medio de resolución por agente</p>
           </div>
           <span class="ml-auto flex items-center gap-3 text-[11px] opacity-70">
             <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-warning" aria-hidden="true"></span>En curso</span>
@@ -445,9 +448,13 @@
             <div class="min-w-0 flex-1">
               <div class="flex items-center justify-between gap-2 text-xs mb-1">
                 <span class="font-medium truncate" [title]="a.name">{{ a.name }}</span>
-                <span class="tabular-nums opacity-70 shrink-0">
-                  {{ a.openTickets }} · {{ a.resolvedTickets }}
-                  <span *ngIf="a.avgResolutionHours !== null" class="opacity-70">· {{ a.avgResolutionHours | number: '1.0-1' }} h</span>
+                <!-- Cada cifra dice qué es (antes "15 · 2 · 10.2 h" no se entendía) -->
+                <span class="flex items-center gap-2 text-[11px] tabular-nums shrink-0">
+                  <span class="text-warning font-semibold" [title]="a.openTickets + ' en curso'"><i class="fa-solid fa-spinner text-[9px]" aria-hidden="true"></i> {{ a.openTickets }} en curso</span>
+                  <span class="text-success font-semibold" [title]="a.resolvedTickets + ' terminados'"><i class="fa-solid fa-check text-[9px]" aria-hidden="true"></i> {{ a.resolvedTickets }} terminados</span>
+                  <span *ngIf="a.avgResolutionHours !== null" class="opacity-70" title="Tiempo medio de resolución">
+                    <i class="fa-solid fa-stopwatch text-[9px]" aria-hidden="true"></i> {{ valorResolucion(a.avgResolutionHours) | number: '1.0-1' }} {{ enDias(a.avgResolutionHours) ? 'días' : 'h' }}
+                  </span>
                 </span>
               </div>
               <div class="flex h-2 rounded-full bg-base-200 overflow-hidden">
@@ -471,10 +478,10 @@
             </p>
           </div>
         </div>
-        <div class="overflow-x-auto">
-          <div class="calor min-w-[34rem]" role="img" aria-label="Mapa de calor de tickets creados por día y hora">
+        <div class="overflow-x-auto px-1 py-1">
+          <div class="calor min-w-[18rem]" role="img" aria-label="Mapa de calor de tickets creados por día y hora">
             <span></span>
-            <span *ngFor="let h of horas" class="calor__hora">{{ h % 3 === 0 ? h : '' }}</span>
+            <span *ngFor="let h of horas" class="calor__hora">{{ h % 3 === 0 || h === 23 ? h : '' }}</span>
             <ng-container *ngFor="let fila of stats.activityHeatmap; let d = index">
               <span class="calor__dia">{{ dias[d] }}</span>
               <span

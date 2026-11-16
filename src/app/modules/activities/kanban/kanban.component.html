@@ -37,16 +37,23 @@
       <!-- Lista de tareas -->
       <div cdkDropList [id]="col.key" [cdkDropListData]="col.tasks" [cdkDropListConnectedTo]="columnIds"
         class="flex-1 overflow-y-auto p-2 space-y-2 kanban-list" (cdkDropListDropped)="drop($event)">
+        <!-- Clic en la tarjeta = abrirla (arrastrar no la abre: openEdit ignora el clic tras un arrastre). -->
         <div *ngFor="let task of tareasVisibles(col)" cdkDrag (cdkDragStarted)="onDragStart()" (cdkDragEnded)="onDragEnd()"
-          class="kanban-card bg-base-100 rounded-lg shadow-sm border border-base-200 border-l-4 p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition group relative"
-          [style.borderLeftColor]="col.color">
-          <!-- Botón editar (aparece al hover) -->
+          (click)="openEdit(task)" (keydown.enter)="openEdit(task)" tabindex="0" role="button" [attr.aria-label]="'Abrir ' + task.title"
+          class="kanban-card bg-base-100 rounded-lg shadow-sm border border-base-200 border-l-4 p-3 cursor-pointer hover:shadow-md transition group relative"
+          [class.tarea-vencida]="vencida(task)"
+          [style.borderLeftColor]="vencida(task) ? '#dc2626' : col.color">
+          <!-- Botón editar: siempre visible (en el teléfono no hay "pasar el mouse") -->
           <button type="button"
-            class="absolute top-2 right-2 btn btn-ghost btn-xs btn-square opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            class="absolute top-2 right-2 btn btn-ghost btn-xs btn-square opacity-60 hover:opacity-100 transition-opacity z-10"
             (click)="openEdit(task); $event.stopPropagation()" aria-label="Editar tarea">
             <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
           </button>
 
+          <p *ngIf="vencida(task)" class="mb-1 inline-flex items-center gap-1 text-[10.5px] font-semibold text-error">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            Vencida {{ task.due | date: 'dd MMM, HH:mm' }}
+          </p>
           <!-- Título -->
           <p class="text-sm font-medium leading-snug line-clamp-2 pr-6" [title]="task.title">
             {{ task.title }}
@@ -94,6 +101,12 @@
               {{ task.start | date: 'dd MMM' }}
             </span>
           </div>
+          <!-- Quién la encargó (o a quién se la encargué): las actividades son personales. -->
+          <p *ngIf="origenTarea(task) as o" class="mt-2 text-[11px] opacity-70 flex items-center gap-1.5 truncate"
+             [title]="o.texto">
+            <i class="fa-solid text-[10px]" [ngClass]="o.icono" aria-hidden="true"></i>
+            <span class="truncate">{{ o.texto }}</span>
+          </p>
         </div>
 
         <!-- Estado vacío de columna -->

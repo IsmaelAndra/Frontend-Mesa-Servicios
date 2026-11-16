@@ -2,7 +2,7 @@ import { TemaTemporadaService } from '../../core/services/tema-temporada.service
 import { TemaActual } from '../../models/tema-temporada.model';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { ChartData, ChartOptions } from 'chart.js';
+import { Chart, ChartData, ChartOptions } from 'chart.js';
 import { DashboardService, EvaluationService } from '../../core/services/dashboard.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -115,13 +115,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private browserNotif: BrowserNotificationService
   ) {}
 
+  /**
+   * Chart.js solo esconde su cuadro de información con mouseout; al desplazar
+   * con la rueda el puntero no sale del lienzo y el cuadro se quedaba pegado.
+   * Se escucha en captura porque desplaza el contenedor del layout, no la ventana.
+   */
+  private readonly ocultarTooltips = (): void => {
+    Object.values(Chart.instances).forEach((c) => {
+      if (c.tooltip?.getActiveElements().length) {
+        c.tooltip.setActiveElements([], { x: 0, y: 0 });
+        c.setActiveElements([]);
+        c.update('none');
+      }
+    });
+  };
+
   ngOnInit(): void {
+    window.addEventListener('scroll', this.ocultarTooltips, { capture: true, passive: true });
     this.subscriptions.push(this.temaTemporada.temaVisible$.subscribe((t) => (this.tema = t)));
     this.rol = this.authService.getRole();
     this.isAgent = this.rol === 'AGENT';
     // Un agente solo ve su propia información: la operación en tiempo real es
     // una vista de supervisión y no le corresponde.
-    this.canSeeOps = this.rol === 'ADMIN' || this.rol === 'SUPER_ADMIN';
+    this.canSeeOps = this.rol === 'SUPER_ADMIN' || this.rol === 'AUDITOR';
     this.nombre = this.primerNombre(this.authService.currentUserSnapshot()?.displayName || '');
 
     // Los gráficos toman los colores del tema: en oscuro, rejilla y textos claros.
@@ -153,6 +169,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    window.removeEventListener('scroll', this.ocultarTooltips, { capture: true });
     this.subscriptions.forEach((s) => s.unsubscribe());
     if (this.refreshTimer) {
       clearTimeout(this.refreshTimer);
@@ -174,8 +191,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Qué abarca el tablero según el rol, para que nadie compare cifras de alcances distintos. */
   get alcance(): string {
     switch (this.rol) {
-      case 'USER':
-      case 'AREA_MANAGER': return 'Tus tickets';
+      case 'USER': return 'Tus tickets';
+      // El jefe ve lo que atienden sus áreas (y la carga de sus agentes).
+      case 'AREA_MANAGER': return 'Tickets que atienden tus áreas';
       case 'AGENT': return 'Tickets asignados a ti';
       default: return 'Toda la mesa de servicios';
     }
@@ -468,6 +486,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   iniciales(nombre: string): string {
     const partes = (nombre || '?').replace(/@.*/, '').split(/[\s._]+/).filter(Boolean);
     return ((partes[0]?.[0] ?? '?') + (partes[1]?.[0] ?? '')).toUpperCase();
+  }
+
+  // ============================ Resolución media ============================
+
+  /** Hasta 48 h se lee en horas; más allá, en días ("29,8 días" en vez de "715,6 h"). */
+  enDias(horas: number | null | undefined): boolean {
+    return horas != null && horas >= 48;
+  }
+
+  valorResolucion(horas: number): number {
+    return this.enDias(horas) ? Math.round((horas / 24) * 10) / 10 : horas;
   }
 
   // ============================ Mapa de calor ============================

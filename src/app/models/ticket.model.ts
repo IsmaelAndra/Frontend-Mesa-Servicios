@@ -12,7 +12,7 @@ export interface Ticket {
   agent: string | null;
   team: string | null;
   area: string;
-  /** Sede a la que corresponde el caso. */
+  /** Sucursal a la que corresponde el caso. */
   sucursal?: string;
   sucursalId?: string | null;
   category: string;
@@ -25,6 +25,35 @@ export interface Ticket {
   updatedAtTicket: string;
   /** Número correlativo que ve la gente ("#43"); idTicket es la clave (uuid). */
   numberTicket?: number | null;
+  /** Área que ATIENDE el ticket; "area" es la del solicitante. */
+  areaDestinoId?: string | null;
+  areaDestino?: string | null;
+  /** Solo en el detalle: lo que quien lo abre puede hacer con este ticket. */
+  puedeGestionar?: boolean | null;
+  puedeComentar?: boolean | null;
+  /** Confidencial: solo lo ven las personas autorizadas. */
+  confidencial?: boolean | null;
+}
+
+/** Confidencialidad de un ticket (GET/PUT /tickets/{id}/confidencialidad). */
+export interface Confidencialidad {
+  confidencial: boolean;
+  todaElArea: boolean;
+  personas: { id: string; nombre: string; correo: string }[];
+}
+
+/** Solicitud de acceso de emergencia a un confidencial. */
+export interface AccesoConfidencial {
+  id: string;
+  ticketId: string;
+  ticketNumber: number | null;
+  solicitante: string;
+  motivo: string;
+  /** PENDIENTE | APROBADO | RECHAZADO | VENCIDO */
+  estado: string;
+  comentario: string | null;
+  creada: string;
+  vence: string | null;
 }
 
 export interface TicketRequest {
@@ -33,12 +62,30 @@ export interface TicketRequest {
   categoryId?: string;
   priorityId?: string;
   typeId?: string;
-  /** Sede del caso; si no se manda, se toma la del solicitante. */
+  /** Sucursal del caso; si no se manda, se toma la del solicitante. */
   sucursalId?: string;
   /** Solicitante cuando el personal abre el ticket a nombre de otra persona. */
   requesterId?: string;
   /** La persona eligió la prioridad a mano: MAPI no la cambia después. */
   priorityManual?: boolean;
+  /** Área que atiende; sin categoría se usa la primera de esa área. */
+  areaDestinoId?: string;
+  /** Confidencial desde el alta. */
+  confidencial?: boolean;
+}
+
+/** Trasladar un ticket a otra área (POST /tickets/{id}/trasladar). */
+export interface TrasladoRequest {
+  areaId: string;
+  categoryId?: string;
+  motivo: string;
+}
+
+/** Plazo de resolución de un ticket abierto (POST /tickets/sla/plazos). */
+export interface PlazoSla {
+  vence: string;
+  vencido: boolean;
+  pausado: boolean;
 }
 
 /** Plazos del SLA de un ticket (GET /tickets/{id}/sla). */

@@ -18,10 +18,14 @@ import { MasterOption } from '../../shared/components/master-select/master-selec
 export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
   form: FormGroup;
   loading = false;
-  categories: { id: string; name: string; teamId: string | null; icon?: string; color?: string }[] = [];
+  categories: { id: string; name: string; teamId: string | null; icon?: string; color?: string; areaId?: string | null }[] = [];
+  /** Áreas que atienden tickets (las que tienen al menos una categoría). */
+  areasQueAtienden: { id: string; name: string; icon?: string; color?: string }[] = [];
+  /** Categorías del área elegida; se recalcula al cambiar de área, no en un getter. */
+  categoriasDelArea: { id: string; name: string; teamId: string | null; icon?: string; color?: string; areaId?: string | null }[] = [];
   ticketTypes: { id: string; name: string; icon?: string; color?: string }[] = [];
   priorities: { id: string; name: string; level: number; icon?: string; color?: string }[] = [];
-  /** Sede donde se reporta el problema. Opcional: si no se elige, el backend
+  /** Sucursal donde se reporta el problema. Opcional: si no se elige, el backend
    * hereda la del solicitante. */
   sucursales: { id: string; code: string; name: string; icon?: string; color?: string }[] = [];
   files: File[] = [];
@@ -50,7 +54,7 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
     // Ticket a nombre de otra persona (desde la búsqueda global). Solo el
     // personal: el backend lo vuelve a comprobar y responde 403 a un solicitante.
     const q = route.snapshot.queryParamMap;
-    if (q.get('solicitante') && ['AGENT', 'ADMIN', 'SUPER_ADMIN'].includes(this.userRole ?? '')) {
+    if (q.get('solicitante') && ['AGENT', 'AREA_MANAGER', 'SUPER_ADMIN'].includes(this.userRole ?? '')) {
       this.aNombreDe = {
         id: q.get('solicitante')!,
         nombre: q.get('nombre') || q.get('correo') || 'otra persona',
@@ -60,6 +64,8 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
     const controls: Record<string, unknown> = {
       title: ['', [Validators.required, noSoloEspacios, Validators.maxLength(255)]],
       description: ['', Validators.required],
+      areaDestinoId: [null, Validators.required],
+      confidencial: [false],
       categoryId: [null],
       typeId: [null],
       priorityId: [null],
@@ -72,7 +78,7 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   get isUser(): boolean {
-    return this.userRole === 'USER' || this.userRole === 'AREA_MANAGER';
+    return this.userRole === 'USER';
   }
 
   /**
@@ -147,10 +153,38 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  /** Filtra las categorías por el área elegida y suelta la categoría si era de otra. */
+  alCambiarArea(): void {
+    const area = this.form.get('areaDestinoId')?.value as string | null;
+    this.categoriasDelArea = this.categories.filter((c) => !area || c.areaId === area);
+    const cat = this.form.get('categoryId')?.value as string | null;
+    if (cat && !this.categoriasDelArea.some((c) => c.id === cat)) {
+      this.form.patchValue({ categoryId: null });
+    }
+  }
+
+  /** Si se elige (o MAPI propone) una categoría de otra área, el área la sigue. */
+  private alCambiarCategoria(id: string | null): void {
+    const area = this.categories.find((c) => c.id === id)?.areaId;
+    if (area && area !== this.form.get('areaDestinoId')?.value) {
+      this.form.patchValue({ areaDestinoId: area }, { emitEvent: false });
+      this.alCambiarArea();
+    }
+  }
+
   ngOnInit(): void {
+    this.form.get('categoryId')?.valueChanges.subscribe((id) => this.alCambiarCategoria(id));
     this.adminService.catalog().subscribe({
       next: (c: Catalog) => {
         this.categories = c.categories;
+        const conCategoria = new Set(this.categories.map((x) => x.areaId).filter(Boolean));
+        this.areasQueAtienden = (c.areas || []).filter((a) => a.status !== false && conCategoria.has(a.id));
+        // Casi todo lo que llega es de Tecnología: se propone por defecto.
+        const tecnologia = this.areasQueAtienden.find((a) => (a.name || '').toLowerCase().startsWith('tecnolog')) ?? this.areasQueAtienden[0];
+        if (tecnologia && !this.form.get('areaDestinoId')?.value) {
+          this.form.patchValue({ areaDestinoId: tecnologia.id });
+        }
+        this.alCambiarArea();
         this.ticketTypes = c.ticketTypes || [];
         this.priorities = c.priorities || [];
           this.sucursales = c.sucursales || [];
@@ -170,8 +204,8 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
       },
       error: () => this.toastService.warn('No se pudieron cargar los catálogos')
     });
-    // Sede de la persona por defecto (se puede cambiar). No aplica cuando el
-    // personal abre el ticket a nombre de otra persona: su sede puede ser otra.
+    // Sucursal de la persona por defecto (se puede cambiar). No aplica cuando el
+    // personal abre el ticket a nombre de otra persona: su sucursal puede ser otra.
     if (!this.aNombreDe) {
       this.authService.me().subscribe({
         next: (u) => {
@@ -308,6 +342,7 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
       const faltan = [
         this.form.get('title')?.invalid ? 'título' : '',
         this.form.get('description')?.invalid ? 'descripción' : '',
+        this.form.get('areaDestinoId')?.invalid ? 'área que atiende' : '',
         this.form.get('categoryId')?.invalid ? 'categoría' : '',
       ].filter(Boolean);
       this.toastService.warn(`Falta completar: ${faltan.join(', ') || 'campos obligatorios'}`);
@@ -323,6 +358,8 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
       title: String(this.form.value.title).trim(),
       description,
       categoryId: this.form.value.categoryId ?? undefined,
+      areaDestinoId: this.form.value.areaDestinoId ?? undefined,
+      confidencial: !!this.form.value.confidencial,
       typeId: this.form.value.typeId ?? undefined,
       priorityId: this.form.value.priorityId ?? undefined,
       // Solo cuenta como elegida si la persona tocó el selector (no la MEDIA

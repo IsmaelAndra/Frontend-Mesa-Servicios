@@ -61,8 +61,9 @@ describe('session-presence', () => {
       });
     });
 
-    it('el punto de desconectado es rojo y el de conectado no', () => {
-      expect(SESION_PUNTO_NAVBAR.DESCONECTADO).toContain('bg-error');
+    it('desconectado es gris (el rojo queda para alertas) y conectado blanco', () => {
+      expect(SESION_PUNTO_NAVBAR.DESCONECTADO).not.toContain('bg-error');
+      expect(SESION_META.DESCONECTADO.dot).not.toContain('bg-error');
       expect(SESION_PUNTO_NAVBAR.EN_LINEA).not.toContain('bg-error');
       expect(SESION_PUNTO_NAVBAR.EN_LINEA).toContain('bg-white');
     });

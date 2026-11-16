@@ -11,54 +11,43 @@
       </div>
     </div>
 
-    <button class="btn btn-primary btn-sm gap-2" (click)="showCreate = !showCreate">
-      <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
-      {{ showCreate ? 'Cerrar' : 'Nueva Área' }}
+    <button class="btn btn-sm gap-2" [ngClass]="showCreate ? 'btn-ghost border-base-300' : 'btn-primary'" (click)="alternarFormulario()"
+            [attr.aria-expanded]="showCreate">
+      <i class="fa-solid text-[15px]" [ngClass]="showCreate ? 'fa-xmark' : 'fa-plus'" aria-hidden="true"></i>
+      {{ showCreate ? 'Cerrar' : 'Nueva área' }}
     </button>
   </header>
 
   <!-- Formulario de creación -->
-  <div class="card bg-base-100 shadow-md border border-base-200" *ngIf="showCreate">
+  <div class="card bg-base-100 shadow-md border border-base-200 area-form" *ngIf="showCreate">
     <div class="card-body">
       <div class="flex items-center gap-2 mb-2">
         <div class="p-1.5 rounded-lg bg-primary/10 text-primary" aria-hidden="true">
-<i class="fa-solid fa-plus text-[15px]"></i>
+          <i class="fa-solid fa-plus text-[15px]"></i>
         </div>
-        <h3 class="card-title text-base">Nueva Área</h3>
+        <h3 class="card-title text-base">Nueva área</h3>
       </div>
 
-      <form class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2" (ngSubmit)="create()">
+      <form class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2" (ngSubmit)="create()" novalidate>
         <!-- Nombre -->
         <label class="form-control w-full md:col-span-2">
           <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">
-              Nombre <span class="text-error">*</span>
-            </span>
+            <span class="label-text text-xs font-medium">Nombre <span class="text-error">*</span></span>
+            <span class="label-text-alt text-[10px] opacity-60">{{ (newArea.nameArea || '').length }}/100</span>
           </div>
-          <input
-            [(ngModel)]="newArea.nameArea"
-            name="nameArea"
-            class="input input-bordered input-sm w-full"
-            required
-            placeholder="Ej. Tecnología"
-          />
+          <input [(ngModel)]="newArea.nameArea" name="nameArea" class="input input-bordered input-sm w-full"
+                 maxlength="100" required placeholder="Ej. Talento Humano" />
         </label>
 
         <!-- Prioridad -->
-        <label class="form-control w-full">
+        <div class="form-control w-full">
           <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Prioridad</span>
+            <span class="label-text text-xs font-medium">Prioridad <span class="text-error">*</span></span>
           </div>
-          <input
-            type="number"
-            [(ngModel)]="newArea.priorityLevel"
-            name="priorityLevel"
-            class="input input-bordered input-sm w-full"
-            min="1"
-            max="10"
-            placeholder="1-10"
-          />
-        </label>
+          <select [(ngModel)]="newArea.priorityLevel" name="priorityLevel" class="select select-bordered select-sm w-full">
+            <option *ngFor="let o of opcionesPrioridad" [ngValue]="o.valor">{{ o.texto }}</option>
+          </select>
+        </div>
 
         <!-- Estado -->
         <div class="form-control w-full">
@@ -73,26 +62,17 @@
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">Descripción</span>
           </div>
-          <input
-            [(ngModel)]="newArea.descriptionArea"
-            name="descriptionArea"
-            class="input input-bordered input-sm w-full"
-            placeholder="Descripción del área"
-          />
+          <input [(ngModel)]="newArea.descriptionArea" name="descriptionArea" class="input input-bordered input-sm w-full"
+                 maxlength="255" placeholder="Qué atiende o de qué se encarga" />
         </label>
 
         <!-- Icono -->
-        <label class="form-control w-full">
+        <div class="form-control w-full">
           <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Icono (Font Awesome)</span>
+            <span class="label-text text-xs font-medium">Icono</span>
           </div>
-          <input
-            [(ngModel)]="newArea.iconArea"
-            name="iconArea"
-            class="input input-bordered input-sm w-full font-mono"
-            placeholder="fa-solid fa-building"
-          />
-        </label>
+          <app-selector-icono [(ngModel)]="newArea.iconArea" name="iconArea" [color]="newArea.colorArea || '#062e86'"></app-selector-icono>
+        </div>
 
         <!-- Color -->
         <label class="form-control w-full">
@@ -100,138 +80,141 @@
             <span class="label-text text-xs font-medium">Color</span>
           </div>
           <div class="flex items-center gap-2">
-            <input
-              type="color"
-              [(ngModel)]="newArea.colorArea"
-              name="colorArea"
-              class="w-10 h-9 cursor-pointer rounded-lg border border-base-300 p-0.5 shrink-0"
-              aria-label="Color del área"
-            />
-            <input
-              [(ngModel)]="newArea.colorArea"
-              name="colorAreaHex"
-              class="input input-bordered input-sm flex-1 font-mono"
-              placeholder="#062e86"
-            />
+            <input type="color" [(ngModel)]="newArea.colorArea" name="colorArea"
+                   class="w-10 h-9 cursor-pointer rounded-lg border border-base-300 p-0.5 shrink-0" aria-label="Color del área" />
+            <input [(ngModel)]="newArea.colorArea" name="colorAreaHex" class="input input-bordered input-sm flex-1 font-mono"
+                   maxlength="7" placeholder="#062e86" aria-label="Color en hexadecimal" />
           </div>
         </label>
 
         <!-- Acciones -->
-        <div class="md:col-span-4 flex justify-end gap-2 pt-2 border-t border-base-200">
-          <button type="button" class="btn btn-sm btn-ghost" (click)="showCreate = false">
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            class="btn btn-sm btn-primary gap-2"
-            [disabled]="loading || !newArea.nameArea"
-          >
-            <span *ngIf="loading" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
-            <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
-            {{ loading ? 'Creando...' : 'Crear área' }}
+        <div class="md:col-span-4 flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-base-200">
+          <p *ngIf="error(newArea) as e" class="mr-auto text-xs text-error flex items-center gap-1.5" role="alert">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ e }}
+          </p>
+          <button type="button" class="btn btn-sm btn-ghost" (click)="showCreate = false">Cancelar</button>
+          <button type="submit" class="btn btn-sm btn-primary gap-2" [disabled]="guardando || !!error(newArea)">
+            <span *ngIf="guardando" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+            <i *ngIf="!guardando" class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
+            {{ guardando ? 'Creando…' : 'Crear área' }}
           </button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Tabla -->
-  <div class="card bg-base-100 shadow-md border border-base-200 overflow-hidden">
+  <!-- Barra: buscar + exportar -->
+  <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+    <label class="input input-bordered input-sm flex items-center gap-2 w-full sm:max-w-xs">
+      <i class="fa-solid fa-magnifying-glass text-xs opacity-60" aria-hidden="true"></i>
+      <input type="search" class="grow" placeholder="Buscar área…" [(ngModel)]="busqueda" (ngModelChange)="alBuscar()" aria-label="Buscar área" />
+    </label>
+    <span class="text-xs opacity-60 sm:ml-1">{{ areasVisibles().length }} de {{ areas.length }}</span>
+    <button type="button" class="btn btn-sm btn-ghost border-base-300 gap-2 sm:ml-auto" (click)="exportar()" [disabled]="!areas.length">
+      <i class="fa-solid fa-file-excel text-success" aria-hidden="true"></i> Exportar a Excel
+    </button>
+  </div>
+
+  <!-- Tarjetas en el teléfono -->
+  <div class="md:hidden space-y-2">
+    <app-skeleton *ngIf="loading" tipo="filas" etiqueta="Cargando áreas..."></app-skeleton>
+    <article *ngFor="let area of pagAreas.vista; trackBy: trackArea"
+             class="card bg-base-100 border border-base-200 shadow-sm fila-area"
+             [class.fila-resaltada]="resaltada === area.idArea" [class.fila-saliendo]="saliendo === area.idArea">
+      <div class="card-body p-3 gap-2">
+        <div class="flex items-center gap-2">
+          <span class="p-2 rounded-lg shrink-0" [style.background-color]="(area.colorArea || '#062e86') + '22'"
+                [style.color]="area.colorArea || '#062e86'" aria-hidden="true">
+            <i [class]="area.iconArea || 'fa-solid fa-building'"></i>
+          </span>
+          <h3 class="font-semibold flex-1 min-w-0 truncate">{{ area.nameArea }}</h3>
+          <span class="badge badge-sm" [ngClass]="area.statusArea ? 'badge-success' : 'badge-ghost'">{{ area.statusArea ? 'Activa' : 'Inactiva' }}</span>
+        </div>
+        <p *ngIf="area.descriptionArea" class="text-xs opacity-70 line-clamp-2">{{ area.descriptionArea }}</p>
+        <div class="flex items-center gap-2">
+          <span class="badge badge-sm gap-1" [ngClass]="nivel(area.priorityLevel).clase">
+            <i class="fa-solid text-[10px]" [ngClass]="nivel(area.priorityLevel).icono" aria-hidden="true"></i>
+            {{ nivel(area.priorityLevel).etiqueta }} · {{ area.priorityLevel }}
+          </span>
+          <div class="ml-auto flex gap-1">
+            <button class="btn btn-xs btn-ghost gap-1" (click)="edit(area); showCreate = false" aria-label="Editar área">
+              <i class="fa-solid fa-pen" aria-hidden="true"></i> Editar
+            </button>
+            <button class="btn btn-xs btn-ghost text-error gap-1" (click)="delete(area)" aria-label="Eliminar área">
+              <i class="fa-solid fa-trash" aria-hidden="true"></i> Eliminar
+            </button>
+          </div>
+        </div>
+        <!-- Edición dentro de la tarjeta -->
+        <ng-container *ngIf="editArea && editArea.idArea === area.idArea">
+          <ng-container *ngTemplateOutlet="formEdicion"></ng-container>
+        </ng-container>
+      </div>
+    </article>
+    <p *ngIf="!loading && !areasVisibles().length" class="text-center text-sm opacity-60 py-8">
+      {{ areas.length ? 'Ninguna área coincide con la búsqueda' : 'No hay áreas registradas' }}
+    </p>
+  </div>
+
+  <!-- Tabla (tableta y computador) -->
+  <div class="hidden md:block card bg-base-100 shadow-md border border-base-200 overflow-hidden">
     <div class="overflow-x-auto">
       <table class="table table-sm table-zebra">
         <thead class="bg-primary text-white">
           <tr>
-            <th class="text-center">Nombre</th>
-            <th class="text-center">Descripción</th>
-            <th class="text-center">Prioridad</th>
-            <th class="text-center">Estado</th>
-            <th class="text-center">Acciones</th>
+            <th [attr.aria-sort]="ariaOrden('nombre')">
+              <button type="button" class="th-orden" (click)="ordenarPor('nombre')">Nombre <i class="fa-solid" [ngClass]="iconoOrden('nombre')" aria-hidden="true"></i></button>
+            </th>
+            <th>Descripción</th>
+            <th [attr.aria-sort]="ariaOrden('prioridad')">
+              <button type="button" class="th-orden" (click)="ordenarPor('prioridad')">Prioridad <i class="fa-solid" [ngClass]="iconoOrden('prioridad')" aria-hidden="true"></i></button>
+            </th>
+            <th [attr.aria-sort]="ariaOrden('estado')">
+              <button type="button" class="th-orden" (click)="ordenarPor('estado')">Estado <i class="fa-solid" [ngClass]="iconoOrden('estado')" aria-hidden="true"></i></button>
+            </th>
+            <th class="text-right">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <!-- Cargando -->
           <tr *ngIf="loading">
-            <td colspan="5">
-              <app-skeleton tipo="filas" etiqueta="Cargando áreas..."></app-skeleton>
-            </td>
+            <td colspan="5"><app-skeleton tipo="filas" etiqueta="Cargando áreas..."></app-skeleton></td>
           </tr>
 
-          <!-- Filas -->
-          <ng-container *ngFor="let area of pagAreas.vista">
+          <ng-container *ngFor="let area of pagAreas.vista; trackBy: trackArea">
             <!-- Modo visualización -->
-            <tr
-              *ngIf="!editArea || editArea.idArea !== area.idArea"
-              class="hover:bg-base-200/50 transition-colors"
-            >
+            <tr *ngIf="!editArea || editArea.idArea !== area.idArea" class="fila-area hover:bg-base-200/50"
+                [class.fila-resaltada]="resaltada === area.idArea" [class.fila-saliendo]="saliendo === area.idArea">
               <td>
                 <div class="flex items-center gap-2">
-                  <div
-                    class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
-                    [style.background-color]="(area.colorArea || '#062e86') + '22'"
-                    [style.color]="area.colorArea || '#062e86'"
-                    aria-hidden="true"
-                  >
+                  <div class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
+                       [style.background-color]="(area.colorArea || '#062e86') + '22'" [style.color]="area.colorArea || '#062e86'" aria-hidden="true">
                     <i [class]="area.iconArea || 'fa-solid fa-building'" class="text-[15px]"></i>
                   </div>
-                  <span
-                    class="badge badge-sm gap-1.5 font-medium min-w-0 uppercase"
-                    [style.background-color]="(area.colorArea || '#062e86') + '22'"
-                    [style.color]="(area.colorArea || '#062e86') + '!important'"
-                    [title]="area.nameArea"
-                  >
-                    <span class="truncate">{{ area.nameArea }}</span>
-                  </span>
+                  <span class="font-medium truncate max-w-[16rem]" [title]="area.nameArea">{{ area.nameArea }}</span>
                 </div>
               </td>
-
-              <!-- Ancho mínimo para que no se parta palabra a palabra; dos líneas como mucho. -->
               <td class="opacity-80 min-w-[12rem] max-w-xs">
                 <span class="line-clamp-2" [title]="area.descriptionArea || ''">{{ area.descriptionArea || '—' }}</span>
               </td>
-
               <td>
-                <span
-                  class="badge badge-sm gap-1"
-                  [ngClass]="{
-                    'badge-error': area.priorityLevel >= 8,
-                    'badge-warning': area.priorityLevel >= 5 && area.priorityLevel < 8,
-                    'badge-info': area.priorityLevel < 5
-                  }"
-                >
-                  <i class="fa-solid fa-arrow-trend-down text-xs" aria-hidden="true"></i>
-                  Nivel {{ area.priorityLevel }}
+                <span class="badge badge-sm gap-1 whitespace-nowrap" [ngClass]="nivel(area.priorityLevel).clase">
+                  <i class="fa-solid text-xs" [ngClass]="nivel(area.priorityLevel).icono" aria-hidden="true"></i>
+                  {{ nivel(area.priorityLevel).etiqueta }} · {{ area.priorityLevel }}
                 </span>
               </td>
-
               <td>
-                <span
-                  class="badge badge-sm gap-1"
-                  [ngClass]="area.statusArea ? 'badge-success' : 'badge-error'"
-                >
-                  <i *ngIf="area.statusArea" class="fa-solid fa-check text-xs" aria-hidden="true"></i>
-                  <i *ngIf="!area.statusArea" class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+                <span class="badge badge-sm gap-1" [ngClass]="area.statusArea ? 'badge-success' : 'badge-ghost'">
+                  <i class="fa-solid text-xs" [ngClass]="area.statusArea ? 'fa-check' : 'fa-pause'" aria-hidden="true"></i>
                   {{ area.statusArea ? 'Activa' : 'Inactiva' }}
                 </span>
               </td>
-
               <td class="text-right">
                 <div class="flex justify-end gap-1 whitespace-nowrap">
-                  <button
-                    class="btn btn-xs btn-ghost gap-1"
-                    (click)="edit(area)"
-                    aria-label="Editar área"
-                  >
-                    <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
-                    Editar
+                  <button class="btn btn-xs btn-ghost gap-1" (click)="edit(area)" aria-label="Editar área">
+                    <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i> Editar
                   </button>
-
-                  <button
-                    class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
-                    (click)="delete(area)"
-                    aria-label="Eliminar área"
-                  >
-                    <i class="fa-solid fa-trash text-sm" aria-hidden="true"></i>
-                    Eliminar
+                  <button class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1" (click)="delete(area)" aria-label="Eliminar área">
+                    <i class="fa-solid fa-trash text-sm" aria-hidden="true"></i> Eliminar
                   </button>
                 </div>
               </td>
@@ -239,119 +222,17 @@
 
             <!-- Modo edición -->
             <tr *ngIf="editArea && editArea.idArea === area.idArea" class="bg-base-200/50">
-              <td colspan="5">
-                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 p-2 items-end">
-                  <!-- Nombre -->
-                  <div class="form-control">
-                    <div class="label pt-0 pb-1">
-                      <span class="label-text text-xs font-medium">Nombre</span>
-                    </div>
-                    <input
-                      [(ngModel)]="editArea.nameArea"
-                      class="input input-bordered input-sm w-full"
-                      required
-                    />
-                  </div>
-
-                  <!-- Descripción -->
-                  <div class="form-control">
-                    <div class="label pt-0 pb-1">
-                      <span class="label-text text-xs font-medium">Descripción</span>
-                    </div>
-                    <input
-                      [(ngModel)]="editArea.descriptionArea"
-                      class="input input-bordered input-sm w-full"
-                    />
-                  </div>
-
-                  <!-- Prioridad -->
-                  <div class="form-control">
-                    <div class="label pt-0 pb-1">
-                      <span class="label-text text-xs font-medium">Prioridad</span>
-                    </div>
-                    <input
-                      type="number"
-                      [(ngModel)]="editArea.priorityLevel"
-                      class="input input-bordered input-sm w-full"
-                      min="1"
-                      max="10"
-                    />
-                  </div>
-
-                  <!-- Icono -->
-                  <div class="form-control">
-                    <div class="label pt-0 pb-1">
-                      <span class="label-text text-xs font-medium">Icono (Font Awesome)</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <span
-                        class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
-                        [style.background-color]="(editArea.colorArea || '#062e86') + '22'"
-                        [style.color]="editArea.colorArea || '#062e86'"
-                        aria-hidden="true"
-                      >
-                        <i [class]="editArea.iconArea || 'fa-solid fa-building'" class="text-[15px]"></i>
-                      </span>
-                      <input
-                        [(ngModel)]="editArea.iconArea"
-                        class="input input-bordered input-sm w-full font-mono"
-                        placeholder="fa-solid fa-building"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Color -->
-                  <div class="form-control">
-                    <div class="label pt-0 pb-1">
-                      <span class="label-text text-xs font-medium">Color</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <input
-                        type="color"
-                        [(ngModel)]="editArea.colorArea"
-                        class="w-9 h-8 shrink-0 cursor-pointer rounded-lg border border-base-300 p-0.5"
-                        aria-label="Color del área"
-                      />
-                      <input
-                        [(ngModel)]="editArea.colorArea"
-                        class="input input-bordered input-sm w-full font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Activa -->
-                  <div class="form-control">
-                    <div class="label pt-0 pb-1">
-                      <span class="label-text text-xs font-medium">Estado</span>
-                    </div>
-                    <app-estado-activo [(ngModel)]="editArea.statusArea" [femenino]="true" etiqueta="Estado"></app-estado-activo>
-                  </div>
-
-                  <!-- Acciones -->
-                  <div class="col-span-2 md:col-span-3 xl:col-span-6 flex justify-end gap-2 pt-2 border-t border-base-200">
-                    <button class="btn btn-sm btn-ghost gap-1" (click)="cancelEdit()">
-                      <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i>
-                      Cancelar
-                    </button>
-                    <button class="btn btn-sm btn-primary gap-1" (click)="saveEdit()">
-                      <i class="fa-solid fa-check text-[15px]" aria-hidden="true"></i>
-                      Guardar
-                    </button>
-                  </div>
-                </div>
-              </td>
+              <td colspan="5"><ng-container *ngTemplateOutlet="formEdicion"></ng-container></td>
             </tr>
           </ng-container>
 
-          <!-- Estado vacío -->
-          <tr *ngIf="!loading && areas.length === 0">
+          <tr *ngIf="!loading && !areasVisibles().length">
             <td colspan="5">
               <div class="flex flex-col items-center justify-center py-12 gap-3 opacity-70">
-<i class="fa-solid fa-building text-4xl" aria-hidden="true"></i>
-                <span class="text-sm">No hay áreas registradas</span>
-                <button class="btn btn-sm btn-primary gap-2 mt-1" (click)="showCreate = true">
-<i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
-                  Crear la primera
+                <i class="fa-solid fa-building text-4xl" aria-hidden="true"></i>
+                <span class="text-sm">{{ areas.length ? 'Ninguna área coincide con la búsqueda' : 'No hay áreas registradas' }}</span>
+                <button *ngIf="!areas.length" class="btn btn-sm btn-primary gap-2 mt-1" (click)="alternarFormulario()">
+                  <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i> Crear la primera
                 </button>
               </div>
             </td>
@@ -360,11 +241,59 @@
       </table>
     </div>
   </div>
-    <app-paginator
-    [total]="areas.length"
+
+  <app-paginator
+    [total]="pagAreas.total"
     [page]="pagAreas.page"
     [pageSize]="pagAreas.pageSize"
     (pageChange)="pagAreas.cambiarPagina($event)"
     (pageSizeChange)="pagAreas.cambiarTamano($event)"
-    ></app-paginator>
+  ></app-paginator>
 </div>
+
+<!-- Formulario de edición (fila de la tabla o tarjeta del teléfono) -->
+<ng-template #formEdicion>
+  <div *ngIf="editArea" class="form-en-fila grid gap-3 p-2 items-end">
+    <label class="form-control">
+      <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Nombre <span class="text-error">*</span></span></div>
+      <input [(ngModel)]="editArea.nameArea" class="input input-bordered input-sm w-full" maxlength="100" required />
+    </label>
+    <label class="form-control">
+      <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Descripción</span></div>
+      <input [(ngModel)]="editArea.descriptionArea" class="input input-bordered input-sm w-full" maxlength="255" />
+    </label>
+    <div class="form-control">
+      <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Prioridad</span></div>
+      <select [(ngModel)]="editArea.priorityLevel" class="select select-bordered select-sm w-full" aria-label="Prioridad">
+        <option *ngFor="let o of opcionesPrioridad" [ngValue]="o.valor">{{ o.texto }}</option>
+      </select>
+    </div>
+    <div class="form-control">
+      <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Icono</span></div>
+      <app-selector-icono [(ngModel)]="editArea.iconArea" [color]="editArea.colorArea || '#062e86'"></app-selector-icono>
+    </div>
+    <label class="form-control">
+      <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Color</span></div>
+      <div class="flex items-center gap-2">
+        <input type="color" [(ngModel)]="editArea.colorArea" class="w-9 h-8 shrink-0 cursor-pointer rounded-lg border border-base-300 p-0.5" aria-label="Color del área" />
+        <input [(ngModel)]="editArea.colorArea" class="input input-bordered input-sm w-full font-mono" maxlength="7" aria-label="Color en hexadecimal" />
+      </div>
+    </label>
+    <div class="form-control">
+      <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Estado</span></div>
+      <app-estado-activo [(ngModel)]="editArea.statusArea" [femenino]="true" etiqueta="Estado"></app-estado-activo>
+    </div>
+    <div class="col-span-full flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-base-200">
+      <p *ngIf="error(editArea) as e" class="mr-auto text-xs text-error flex items-center gap-1.5" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ e }}
+      </p>
+      <button class="btn btn-sm btn-ghost gap-1" (click)="cancelEdit()">
+        <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i> Cancelar
+      </button>
+      <button class="btn btn-sm btn-primary gap-1" (click)="saveEdit()" [disabled]="guardando || !!error(editArea)">
+        <span *ngIf="guardando" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+        <i *ngIf="!guardando" class="fa-solid fa-check text-[15px]" aria-hidden="true"></i> Guardar
+      </button>
+    </div>
+  </div>
+</ng-template>

@@ -33,7 +33,7 @@
   </div>
 
   <!-- ============ Centro: logo del sistema ============ -->
-  <a routerLink="/dashboard" class="nav__marca" aria-label="Ir al inicio">
+  <a routerLink="/inicio" class="nav__marca" aria-label="Ir al inicio">
     <img *ngIf="tema?.logoUrl || logoUrl" [src]="tema?.logoUrl || logoUrl" alt="Logo del sistema" class="nav__logo" />
     <span *ngIf="!(tema?.logoUrl || logoUrl)" class="nav__marca-texto">Mesa de Servicios</span>
     <!-- Adorno del tema de temporada (el dibujo lo pone styles.css según data-temporada). -->
@@ -547,7 +547,7 @@
         <!-- ============ FOOTER ============ -->
         <div class="border-t border-base-200 p-2 bg-base-200/20">
           <a
-            routerLink="/notifications"
+            routerLink="/notificaciones"
             class="flex items-center justify-center gap-1.5 text-primary text-sm font-medium py-2 rounded-lg hover:bg-primary/10 transition-colors"
           >
             <i class="fa-solid fa-list text-xs" aria-hidden="true"></i>
@@ -633,14 +633,14 @@
         <!-- Items del menú -->
         <ul class="menu menu-sm p-2 w-full">
           <li>
-            <a routerLink="/settings/profile" class="gap-3">
+            <a routerLink="/mi-cuenta/perfil" class="gap-3">
               <i class="fa-solid fa-user text-xs"></i>
               Mi Perfil
             </a>
           </li>
 
           <li>
-            <a routerLink="/settings/password" class="gap-3">
+            <a routerLink="/mi-cuenta/contrasena" class="gap-3">
               <i class="fa-solid fa-key text-xs"></i>
               Cambiar Contraseña
             </a>
@@ -649,7 +649,7 @@
           <!-- Bloque admin -->
           <ng-container *ngIf="isSuperAdmin">
             <li class="mt-1 pt-1 border-t border-base-200">
-              <a routerLink="/admin/branding" class="gap-3 mt-1">
+              <a routerLink="/administracion/marca" class="gap-3 mt-1">
                 <i class="fa-solid fa-palette text-xs"></i>
                 Configuración de Marca
               </a>
@@ -679,7 +679,7 @@
             <!-- Configuracion por tipo de notificacion: se abre desde aqui y
                  desde el menu lateral, siempre en Configuracion. -->
             <li>
-              <a routerLink="/settings/sounds" class="gap-3">
+              <a routerLink="/mi-cuenta/sonidos" class="gap-3">
                 <i class="fa-solid fa-music text-xs" aria-hidden="true"></i>
                 Configurar sonidos
               </a>

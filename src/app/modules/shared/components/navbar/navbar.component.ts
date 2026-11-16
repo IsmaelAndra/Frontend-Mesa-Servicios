@@ -102,7 +102,7 @@ private sseService: SseService,
     ) {
     this.role = this.authService.getRole();
     this.email = this.authService.getEmail();
-    this.isAdmin = this.role?.toUpperCase() === "ADMIN";
+    this.isAdmin = this.role?.toUpperCase() === "SUPER_ADMIN";
     this.isSuperAdmin = this.role?.toUpperCase() === "SUPER_ADMIN";
     this.loadLogo();
     this.themeService.theme
@@ -444,8 +444,10 @@ private sseService: SseService,
     switch (this.role?.toUpperCase()) {
       case "SUPER_ADMIN":
         return "Super Administrador";
-      case "ADMIN":
-        return "Administrador";
+      case "AREA_MANAGER":
+        return "Jefe de área";
+      case "AUDITOR":
+        return "Auditor";
       case "AGENT":
         return "Agente";
       case "USER":
@@ -463,7 +465,7 @@ private sseService: SseService,
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(["/auth/login"]);
+    this.router.navigate(["/acceso/ingresar"]);
   }
 
   // El icono y el color de cada tipo viven en core/constants para que el

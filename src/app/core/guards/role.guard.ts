@@ -12,6 +12,6 @@ export class RoleGuard implements CanActivate {
     if (!allowed || allowed.some((r) => mios.includes(r))) {
       return true;
     }
-    return this.router.createUrlTree(['/dashboard']);
+    return this.router.createUrlTree(['/inicio']);
   }
 }

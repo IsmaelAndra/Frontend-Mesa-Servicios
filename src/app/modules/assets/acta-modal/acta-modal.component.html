@@ -1,0 +1,147 @@
+<div class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
+     (click)="cerrar()">
+  <div class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[94vh] flex flex-col"
+       role="dialog" aria-modal="true" aria-labelledby="titulo-acta" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-base-200">
+      <span class="p-2.5 rounded-xl text-white" [style.background-color]="tipos[tipo].color" aria-hidden="true">
+        <i [class]="tipos[tipo].icono"></i>
+      </span>
+      <div class="flex-1 min-w-0">
+        <h3 id="titulo-acta" class="font-bold text-lg leading-tight">{{ tipos[tipo].texto }} con acta</h3>
+        <p class="text-xs opacity-70">Formulario FOR-POL-TIC-01-10 · el movimiento y el acta se hacen juntos</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="cerrar()" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <!-- ============ Acta creada ============ -->
+    <div *ngIf="creada" class="px-5 py-8 flex flex-col items-center text-center gap-3">
+      <span class="w-14 h-14 rounded-full bg-success/15 text-success flex items-center justify-center text-2xl" aria-hidden="true">
+        <i class="fa-solid fa-check"></i>
+      </span>
+      <h4 class="font-bold text-lg">Acta {{ creada.numero }} generada</h4>
+      <p class="text-sm opacity-75 max-w-md">
+        {{ creada.custodio.nombre }} recibió el aviso para aceptarla en el sistema. Imprima el acta, recoja las firmas a mano y
+        suba el escaneo desde «Actas».
+      </p>
+      <div class="flex flex-wrap justify-center gap-2 pt-2">
+        <button type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="verPdf()">
+          <i class="fa-regular fa-file-pdf" aria-hidden="true"></i> Ver e imprimir el acta
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="cerrar()">Cerrar</button>
+      </div>
+    </div>
+
+    <!-- ============ Formulario ============ -->
+    <ng-container *ngIf="!creada">
+      <div class="overflow-y-auto px-5 py-4 space-y-4">
+        <!-- Equipos -->
+        <div>
+          <div class="text-sm font-semibold mb-2">Equipos <span class="font-normal text-xs opacity-60">(el primero es el principal; los demás salen en «Accesorios entregados»)</span></div>
+          <ul class="space-y-1.5">
+            <li *ngFor="let e of equipos; let i = index; trackBy: trackEquipo"
+                class="flex items-center gap-2 rounded-xl border border-base-200 px-3 py-2" [ngClass]="i === 0 ? 'bg-primary/5' : ''">
+              <i [class]="icono(e)" class="text-primary w-5 text-center" aria-hidden="true"></i>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium truncate">{{ e.nameAsset }}</p>
+                <p class="text-xs opacity-60 font-mono truncate">{{ e.codeAsset }}<span *ngIf="e.serialNumberAsset"> · {{ e.serialNumberAsset }}</span></p>
+              </div>
+              <span *ngIf="i === 0" class="badge badge-sm badge-primary">Principal</span>
+              <button *ngIf="i > 0" type="button" class="btn btn-ghost btn-xs" (click)="hacerPrincipal(i)" title="Hacer principal">
+                <i class="fa-solid fa-arrow-up" aria-hidden="true"></i></button>
+              <button type="button" class="btn btn-ghost btn-xs text-error" (click)="quitar(i)" [attr.aria-label]="'Quitar ' + e.codeAsset">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </li>
+          </ul>
+          <p *ngIf="!equipos.length" class="text-xs text-warning mt-1">Añada al menos un equipo.</p>
+          <div class="flex flex-col sm:flex-row gap-2 sm:items-end mt-2">
+            <div class="flex-1 min-w-0">
+              <app-master-select [(ngModel)]="agregar" [options]="disponibles" icon="fa-solid fa-plus"
+                [placeholder]="tipo === 'ENTREGA' ? 'Sumar otro equipo en bodega' : 'Sumar otro equipo de la misma persona'"
+                label="Sumar equipo"></app-master-select>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline gap-1" (click)="sumar()" [disabled]="!agregar">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i> Sumar</button>
+          </div>
+        </div>
+
+        <!-- Personas -->
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div *ngIf="tipo !== 'DEVOLUCION'" class="form-control">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">
+              {{ tipo === 'ENTREGA' ? 'Se entrega a (custodio)' : 'Nuevo custodio' }} <span class="text-error">*</span></span></div>
+            <app-master-select [(ngModel)]="custodioId" (ngModelChange)="revisarFaltantes()" [options]="personas" icon="fa-solid fa-user"
+              placeholder="Elija a la persona" label="Custodio"></app-master-select>
+          </div>
+          <div *ngIf="tipo !== 'ENTREGA'" class="form-control">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">
+              {{ tipo === 'DEVOLUCION' ? 'Devuelve' : 'Custodio anterior' }}</span></div>
+            <div class="input input-bordered input-sm flex items-center gap-2 opacity-80">
+              <i class="fa-solid fa-user text-xs" aria-hidden="true"></i>{{ titular || '—' }}</div>
+          </div>
+          <div class="form-control">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Revisado por</span></div>
+            <app-master-select [(ngModel)]="revisadoPorId" (ngModelChange)="revisarFaltantes()" [options]="revisores" [allowEmpty]="true" emptyLabel="Sin revisor"
+              icon="fa-solid fa-user-check" placeholder="Alguien de Tecnología o Desarrollo" label="Revisado por"></app-master-select>
+          </div>
+          <div class="form-control">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Agencia o sucursal</span></div>
+            <app-master-select [(ngModel)]="sucursalId" [options]="sucursales" [allowEmpty]="true" emptyLabel="La del custodio"
+              icon="fa-solid fa-store" placeholder="La del custodio" label="Sucursal"></app-master-select>
+          </div>
+        </div>
+        <p class="text-xs opacity-60 -mt-2">«Autorizado por» sale automáticamente: el jefe de Tecnología. El cargo de cada persona se toma de su ficha de usuario.</p>
+
+        <!-- Datos del documento -->
+        <div class="grid gap-3 sm:grid-cols-3">
+          <label class="form-control">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Ciudad</span></div>
+            <input class="input input-bordered input-sm" maxlength="80" [(ngModel)]="ciudad" />
+          </label>
+          <label class="form-control sm:col-span-2">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Asunto</span></div>
+            <input class="input input-bordered input-sm" maxlength="300" [(ngModel)]="asunto" />
+          </label>
+          <label class="form-control sm:col-span-3">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Cc</span></div>
+            <input class="input input-bordered input-sm" maxlength="300" [(ngModel)]="cc" placeholder="Nombre y cargo (opcional)" />
+          </label>
+          <label class="form-control sm:col-span-3">
+            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Observaciones</span></div>
+            <textarea class="textarea textarea-bordered textarea-sm" rows="2" [(ngModel)]="observaciones"
+              placeholder="Salen en «Novedades observadas», junto con las de cada equipo"></textarea>
+          </label>
+        </div>
+      </div>
+
+      <!-- El acta imprime nombre y cargo de cada firmante: se avisa antes de generarla -->
+      <div *ngIf="faltan.length" class="mx-5 mb-1 alert alert-warning text-sm items-start">
+        <i class="fa-solid fa-id-card mt-0.5" aria-hidden="true"></i>
+        <div>
+          <p class="font-semibold">Complete estos datos en Usuarios antes de generar el acta:</p>
+          <ul class="mt-1 space-y-0.5">
+            <li *ngFor="let f of faltan">
+              <a class="link" [routerLink]="['/administracion/usuarios']" [queryParams]="{ search: correoDe(f) }" target="_blank">{{ f }}</a>
+            </li>
+          </ul>
+          <button type="button" class="btn btn-xs btn-ghost mt-1 gap-1" (click)="revisarFaltantes()">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Ya los completé</button>
+        </div>
+      </div>
+      <div *ngIf="errorActa && !faltan.length" class="mx-5 mb-1 alert alert-error text-sm">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> {{ errorActa }}
+      </div>
+
+      <div class="flex justify-end gap-2 px-5 py-4 border-t border-base-200">
+        <button type="button" class="btn btn-ghost btn-sm" (click)="cerrar()" [disabled]="guardando">Cancelar</button>
+        <button type="button" class="btn btn-sm text-white gap-2" [style.background-color]="tipos[tipo].color"
+                [style.border-color]="tipos[tipo].color" (click)="crear()" [disabled]="!valido">
+          <span *ngIf="guardando" class="loading loading-spinner loading-xs"></span>
+          <i *ngIf="!guardando" class="fa-solid fa-file-signature" aria-hidden="true"></i>
+          Generar acta de {{ tipos[tipo].texto.toLowerCase() }}
+        </button>
+      </div>
+    </ng-container>
+  </div>
+</div>

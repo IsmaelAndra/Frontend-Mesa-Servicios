@@ -12,7 +12,7 @@
     </div>
 
     <button class="btn btn-primary btn-sm gap-2" (click)="showCreate = !showCreate">
-      <i class="fa-solid fa-plus text-[15px]" aria-hidden="true"></i>
+      <i class="fa-solid text-[15px]" [ngClass]="showCreate ? 'fa-xmark' : 'fa-plus'" aria-hidden="true"></i>
       {{ showCreate ? 'Cerrar' : 'Nuevo Equipo' }}
     </button>
   </header>
@@ -131,6 +131,15 @@
             [options]="metodosAsignacion" icon="fa-solid fa-shuffle" label="Método de asignación"></app-master-select>
         </label>
 
+        <label class="form-control w-full">
+          <div class="label pt-0 pb-1">
+            <span class="label-text text-xs font-medium">Área que atiende</span>
+          </div>
+          <app-master-select [(ngModel)]="newTeam.areaId" name="areaId"
+            [options]="areaOpciones" icon="fa-solid fa-building" placeholder="Seleccione el área"
+            label="Área que atiende"></app-master-select>
+        </label>
+
         <!-- Todos los agentes: los que existen y los que se creen después. -->
         <label class="label cursor-pointer justify-start gap-2 py-1 md:col-span-3">
           <input type="checkbox" class="checkbox checkbox-sm checkbox-primary"
@@ -144,7 +153,7 @@
         <!-- Icono -->
         <label class="form-control w-full">
           <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Icono (Font Awesome)</span>
+            <span class="label-text text-xs font-medium">Icono</span>
           </div>
           <div class="flex items-center gap-2">
             <span
@@ -155,12 +164,7 @@
             >
               <i [class]="newTeam.iconTeam || 'fa-solid fa-users'" class="text-base"></i>
             </span>
-            <input
-              [(ngModel)]="newTeam.iconTeam"
-              name="iconTeam"
-              class="input input-bordered input-sm w-full font-mono"
-              placeholder="fa-solid fa-users"
-            />
+            <app-selector-icono [(ngModel)]="newTeam.iconTeam" name="iconTeam" [color]="newTeam.colorTeam || '#062e86'"></app-selector-icono>
           </div>
         </label>
 
@@ -271,6 +275,12 @@
                   title="Incluye automáticamente a todos los agentes">
                   <i class="fa-solid fa-users-gear" aria-hidden="true"></i> Todos los agentes
                 </span>
+                <span *ngIf="areaDe(team.areaId) as a" class="badge badge-sm kanban-tag border gap-1 ml-1"
+                  [style.background-color]="(a.color || '#062e86') + '1F'" [style.--bc]="a.color || '#062e86'"
+                  [style.border-color]="a.color || '#062e86'" [style.color]="a.color || '#062e86'"
+                  title="Área que atiende">
+                  <i [class]="a.icon || 'fa-solid fa-building'" aria-hidden="true"></i> {{ a.name }}
+                </span>
               </td>
 
               <td>
@@ -288,20 +298,31 @@
                 <div class="flex justify-end gap-1 whitespace-nowrap">
                   <button
                     class="btn btn-xs btn-ghost gap-1"
+                    (click)="abrirMiembros(team)"
+                    aria-label="Miembros del equipo"
+                    title="Miembros"
+                  >
+                    <i class="fa-solid fa-user-group text-sm" aria-hidden="true"></i>
+                    <span class="hidden 2xl:inline">Miembros</span>
+                  </button>
+                  <button
+                    class="btn btn-xs btn-ghost gap-1"
                     (click)="edit(team)"
                     aria-label="Editar equipo"
+                    title="Editar"
                   >
                     <i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
-                    Editar
+                    <span class="hidden 2xl:inline">Editar</span>
                   </button>
 
                   <button
                     class="btn btn-xs btn-ghost text-error hover:bg-error/10 gap-1"
                     (click)="delete(team)"
                     aria-label="Eliminar equipo"
+                    title="Eliminar"
                   >
 <i class="fa-solid fa-trash text-sm" aria-hidden="true"></i>
-                    Eliminar
+                    <span class="hidden 2xl:inline">Eliminar</span>
                   </button>
                 </div>
               </td>
@@ -310,7 +331,7 @@
             <!-- Modo edición -->
             <tr *ngIf="editTeam && editTeam.idTeam === team.idTeam" class="bg-base-200/50">
               <td colspan="5">
-                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 p-2 items-end">
+                <div class="form-en-fila grid gap-3 p-2 items-end">
                   <!-- Nombre -->
                   <div class="form-control">
                     <div class="label pt-0 pb-1">
@@ -343,6 +364,15 @@
                       [options]="metodosAsignacion" icon="fa-solid fa-shuffle" label="Método de asignación"></app-master-select>
                   </div>
 
+                  <div class="form-control">
+                    <div class="label pt-0 pb-1">
+                      <span class="label-text text-xs font-medium">Área que atiende</span>
+                    </div>
+                    <app-master-select [(ngModel)]="editTeam.areaId"
+                      [options]="areaOpciones" icon="fa-solid fa-building" placeholder="Seleccione el área"
+                      label="Área que atiende"></app-master-select>
+                  </div>
+
                   <!-- Todos los agentes: los que existen y los que se creen después. -->
                   <label class="label cursor-pointer justify-start gap-2 py-1">
                     <input type="checkbox" class="checkbox checkbox-sm checkbox-primary"
@@ -353,7 +383,7 @@
                   <!-- Icono -->
                   <div class="form-control">
                     <div class="label pt-0 pb-1">
-                      <span class="label-text text-xs font-medium">Icono (Font Awesome)</span>
+                      <span class="label-text text-xs font-medium">Icono</span>
                     </div>
                     <div class="flex items-center gap-2">
                       <span
@@ -364,11 +394,7 @@
                       >
                         <i [class]="editTeam.iconTeam || 'fa-solid fa-users'" class="text-[15px]"></i>
                       </span>
-                      <input
-                        [(ngModel)]="editTeam.iconTeam"
-                        class="input input-bordered input-sm w-full font-mono"
-                        placeholder="fa-solid fa-users"
-                      />
+                      <app-selector-icono [(ngModel)]="editTeam.iconTeam" [color]="editTeam.colorTeam || '#062e86'"></app-selector-icono>
                     </div>
                   </div>
 
@@ -400,7 +426,7 @@
                   </div>
 
                   <!-- Acciones -->
-                  <div class="col-span-2 md:col-span-3 xl:col-span-6 flex justify-end gap-2 pt-2 border-t border-base-200">
+                  <div class="col-span-full flex justify-end gap-2 pt-2 border-t border-base-200">
                     <button class="btn btn-sm btn-ghost gap-1" (click)="cancelEdit()">
                       <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i>
                       Cancelar
@@ -439,4 +465,74 @@
     (pageChange)="pagTeams.cambiarPagina($event)"
     (pageSizeChange)="pagTeams.cambiarTamano($event)"
     ></app-paginator>
+</div>
+
+<!-- ============================ MODAL: MIEMBROS DEL EQUIPO ============================ -->
+<div *ngIf="equipoMiembros" class="overlay-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
+     (click)="cerrarMiembros()">
+  <div class="overlay-panel bg-base-100 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col"
+       role="dialog" aria-modal="true" aria-labelledby="titulo-miembros" (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-base-200">
+      <span class="p-2.5 rounded-xl text-white" [style.background-color]="equipoMiembros.colorTeam || '#2563EB'" aria-hidden="true">
+        <i [class]="equipoMiembros.iconTeam || 'fa-solid fa-users'"></i>
+      </span>
+      <div class="flex-1 min-w-0">
+        <h3 id="titulo-miembros" class="font-bold text-lg truncate">Miembros de {{ equipoMiembros.nameTeam }}</h3>
+        <p class="text-xs opacity-70">Quienes reciben los tickets de este equipo al repartirlos.</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm btn-circle" (click)="cerrarMiembros()" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="overflow-y-auto px-5 py-4 space-y-4">
+      <div *ngIf="equipoMiembros.autoMembersTeam" class="alert alert-info text-xs py-2">
+        <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
+        <span>Este equipo incluye automáticamente a todos los agentes de su área. Si quita a alguien a mano, no se vuelve a añadir solo.</span>
+      </div>
+
+      <!-- Añadir -->
+      <div class="flex flex-col sm:flex-row gap-2 sm:items-end">
+        <div class="form-control flex-1 min-w-0">
+          <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Añadir persona</span></div>
+          <app-master-select [(ngModel)]="candidatoElegido" [options]="candidatos" icon="fa-solid fa-user-plus"
+                             placeholder="Elija un agente o jefe del área" label="Añadir persona"></app-master-select>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm text-white gap-2" (click)="agregarMiembro()"
+                [disabled]="!candidatoElegido || guardandoMiembro">
+          <span *ngIf="guardandoMiembro" class="loading loading-spinner loading-xs"></span>
+          <i *ngIf="!guardandoMiembro" class="fa-solid fa-plus" aria-hidden="true"></i> Añadir
+        </button>
+      </div>
+      <p *ngIf="!candidatos.length && !cargandoMiembros" class="text-xs opacity-60 -mt-2">
+        No quedan agentes ni jefes del área por añadir.
+      </p>
+
+      <!-- Lista -->
+      <div *ngIf="cargandoMiembros" class="flex justify-center py-6"><span class="loading loading-spinner"></span></div>
+      <p *ngIf="!cargandoMiembros && !miembros.length" class="text-sm opacity-70 text-center py-4">
+        El equipo todavía no tiene miembros: sus tickets quedarán sin asignar.
+      </p>
+      <ul *ngIf="!cargandoMiembros && miembros.length" class="divide-y divide-base-200 rounded-xl border border-base-200">
+        <li *ngFor="let m of miembros; trackBy: trackMiembro" class="flex items-center gap-3 px-3 py-2">
+          <span class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0" aria-hidden="true">
+            {{ m.nombre.charAt(0).toUpperCase() }}
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-medium truncate">{{ m.nombre }}
+              <span *ngIf="m.rol === 'AREA_MANAGER'" class="badge badge-xs badge-ghost ml-1">Jefe</span>
+            </p>
+            <p class="text-xs opacity-60 truncate">{{ m.correo }}<span *ngIf="m.area"> · {{ m.area }}</span></p>
+          </div>
+          <span *ngIf="m.ultimaAsignacion" class="text-[11px] opacity-60 hidden sm:inline" title="Último ticket recibido">
+            {{ m.ultimaAsignacion | date: 'dd/MM HH:mm' }}
+          </span>
+          <button type="button" class="btn btn-ghost btn-xs text-error" (click)="quitarMiembro(m)"
+                  [attr.aria-label]="'Quitar a ' + m.nombre" title="Quitar del equipo">
+            <i class="fa-solid fa-user-minus" aria-hidden="true"></i>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
 </div>

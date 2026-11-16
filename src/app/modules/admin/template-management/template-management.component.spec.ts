@@ -8,6 +8,7 @@ import { PaginatorComponent } from '../../shared/components/paginator/paginator.
 import { MasterSelectComponent } from '../../shared/components/master-select/master-select.component';
 import { DropzoneComponent } from '../../shared/components/dropzone/dropzone.component';
 import { TemplateManagementComponent } from './template-management.component';
+import { SelectorIconoComponent } from '../../shared/components/selector-icono/selector-icono.component';
 
 /** Cuerpo con la misma forma que las plantillas de correo reales. */
 const CUERPO = `<div style="background:#f3f4f6;padding:32px;">
@@ -50,7 +51,7 @@ describe('Vista previa de plantillas', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [TemplateManagementComponent, PaginatorComponent, MasterSelectComponent, DropzoneComponent],
-      imports: [CommonModule, FormsModule],
+      imports: [CommonModule, FormsModule, SelectorIconoComponent],
       providers: [
         { provide: AdminService, useValue: adminServiceStub() },
         { provide: ToastService, useValue: { success: () => {}, error: () => {}, warn: () => {} } }

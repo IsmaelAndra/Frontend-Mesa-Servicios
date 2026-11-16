@@ -115,7 +115,8 @@
             ? 'btn-warning text-warning-content text-white'
             : 'btn-success text-success-content text-white'
         "
-        [disabled]="!workflow()"
+        [disabled]="!workflow() || (!workflow()!.active && !workflow()!.currentVersion)"
+        [title]="workflow() && !workflow()!.active && !workflow()!.currentVersion ? 'Publique una versión antes de activarlo' : ''"
         (click)="alternarActivo()"
       >
         <i

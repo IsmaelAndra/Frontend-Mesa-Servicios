@@ -151,7 +151,7 @@ export class TelefoniaConfigComponent implements OnInit, OnDestroy {
       this.pedirToken();
       return;
     }
-    Swal.fire({
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280',
       title: '¿Generar un token nuevo?',
       text: 'El token actual dejará de funcionar y el puente se desconectará hasta que actualice su archivo .env.',
       icon: 'warning',

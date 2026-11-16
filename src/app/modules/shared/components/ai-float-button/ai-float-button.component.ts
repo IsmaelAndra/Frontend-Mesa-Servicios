@@ -45,14 +45,6 @@ export class AiFloatButtonComponent implements OnInit {
   /** Texto (plano) que el agente quiere llevar al cuadro de respuesta del ticket. */
   @Output() usarRespuesta = new EventEmitter<string>();
 
-  private readonly providerGlyphs: Record<string, string> = {
-    GEMINI: '\u2728',
-    OPENAI: '\u25CE',
-    AZURE_OPENAI: '\u2601',
-    ANTHROPIC: '\u2726',
-    OLLAMA: '\u{1F42A}'
-  };
-
   constructor(
     private aiService: AiService,
     private authService: AuthService,
@@ -73,7 +65,7 @@ export class AiFloatButtonComponent implements OnInit {
    */
   /** Abre el formulario de nuevo ticket con el borrador de MAPI ya cargado. */
   crearConBorrador(borrador: AiTicketFill): void {
-    this.router?.navigate(['/tickets/new'], { state: { borradorMapi: borrador } });
+    this.router?.navigate(['/tickets/nuevo'], { state: { borradorMapi: borrador } });
     this.open = false;
   }
 
@@ -88,11 +80,11 @@ export class AiFloatButtonComponent implements OnInit {
 
   atajo(destino: 'crear' | 'estado'): void {
     if (destino === 'crear') {
-      this.router?.navigate(['/tickets/new']);
+      this.router?.navigate(['/tickets/nuevo']);
     } else {
       const rol = this.authService.getRole();
-      const personal = rol === 'AGENT' || rol === 'ADMIN' || rol === 'SUPER_ADMIN';
-      this.router?.navigate([personal ? '/tickets/kanban' : '/tickets/mine']);
+      const personal = rol === 'AGENT' || rol === 'AREA_MANAGER' || rol === 'SUPER_ADMIN';
+      this.router?.navigate([personal ? '/tickets/tablero' : '/tickets/mios']);
     }
     this.open = false;
   }
@@ -100,7 +92,7 @@ export class AiFloatButtonComponent implements OnInit {
   get canUseAi(): boolean {
     const role = this.authService.getRole();
     return (
-      role === 'ADMIN' ||
+      role === 'AUDITOR' ||
       role === 'SUPER_ADMIN' ||
       role === 'AGENT' ||
       role === 'USER' ||
@@ -112,8 +104,13 @@ export class AiFloatButtonComponent implements OnInit {
     return this.canUseAi && !!this.status?.enabled;
   }
 
+  /** Hay un icono configurado en Administración → IA; si no, se usa la imagen de MAPI. */
+  tieneIconoPropio(): boolean {
+    return !!(this.status?.providerIcon || '').trim();
+  }
+
   iconIsUrl(): boolean {
-    return /^https?:\/\//i.test(this.status?.providerIcon || '');
+    return /^(https?:\/\/|\/)/i.test((this.status?.providerIcon || '').trim());
   }
 
   iconIsFa(): boolean {
@@ -132,13 +129,10 @@ export class AiFloatButtonComponent implements OnInit {
     }
   }
 
+  /** Emoji configurado como icono (vac\u00edo si es imagen, Font Awesome o no hay). */
   iconGlyph(): string {
-    const icon = this.status?.providerIcon;
-    if (icon && !this.iconIsUrl() && !this.iconIsFa()) {
-      return icon;
-    }
-    const provider = (this.status?.provider || '').toUpperCase();
-    return this.providerGlyphs[provider] || '\u2728';
+    const icon = (this.status?.providerIcon || '').trim();
+    return icon && !this.iconIsUrl() && !this.iconIsFa() ? icon : '';
   }
 
   iconFaClass(): string {

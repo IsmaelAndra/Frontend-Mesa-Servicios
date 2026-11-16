@@ -307,7 +307,7 @@ export class WorkflowExecutionsComponent implements OnInit, OnDestroy {
       showCancelButton: true,
       confirmButtonText: "Sí, cancelar",
       cancelButtonText: "Volver",
-      confirmButtonColor: "#d33",
+      confirmButtonColor: "#dc2626",
       cancelButtonColor: "#64748b",
       reverseButtons: true,
       focusCancel: true,

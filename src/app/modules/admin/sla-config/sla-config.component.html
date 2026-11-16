@@ -27,6 +27,7 @@
       </span>
 
       <button
+        *ngIf="puedeGenerar"
         class="btn btn-primary btn-sm gap-2 shadow-md hover:shadow-lg transition"
         (click)="generateEvaluations()"
         [disabled]="loadingEvals"
@@ -424,6 +425,7 @@
           hacer el cierre del mes.
         </p>
         <button
+          *ngIf="puedeGenerar"
           class="btn btn-primary btn-sm gap-2 mt-2"
           (click)="generateEvaluations()"
           [disabled]="loadingEvals"

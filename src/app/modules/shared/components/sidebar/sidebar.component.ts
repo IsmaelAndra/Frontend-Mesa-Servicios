@@ -1,3 +1,4 @@
+import { esPantallaPequena, esSoloEscritorio } from '../../../../core/guards/solo-escritorio.guard';
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -21,6 +22,8 @@ interface NavItem {
   queryParams?: Record<string, string>;
   children?: NavItem[];
   expanded?: boolean;
+  /** Título del grupo dentro del submenú (solo hijos). */
+  grupo?: string;
   /** Sección del menú en la que va (solo los de primer nivel). */
   seccion?: 'principal' | 'trabajo' | 'gestion' | 'cuenta';
 }
@@ -40,8 +43,11 @@ const SECCIONES: { id: NonNullable<NavItem['seccion']>; titulo: string }[] = [
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   role = '';
-  isOpen = true;
-  isMobile = false;
+  /** En el teléfono el menú arranca cerrado: abierto tapaba toda la pantalla al cargar. */
+  isOpen = typeof window === 'undefined' || window.innerWidth >= 768;
+  isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  /** Activa las transiciones del menú tras el primer pintado (ver sidebar.component.css). */
+  listo = false;
   /**
    * Contraído o completo, recordado entre recargas y sesiones (localStorage).
    * Antes cada recarga volvía al menú completo aunque se hubiera contraído.
@@ -57,65 +63,76 @@ export class SidebarComponent implements OnInit, OnDestroy {
     {
       label: 'Inicio',
       seccion: 'principal',
-      route: '/dashboard',
+      route: '/inicio',
       icon: navIcon('dashboard'),
-      roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT', 'USER']
+      roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR']
     },
     {
       label: 'Tablero de Tickets',
       seccion: 'principal',
-      route: '/tickets/kanban',
+      route: '/tickets/tablero',
       icon: navIcon('kanban'),
-      roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT']
+      roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'AUDITOR']
     },
     {
       label: 'Mis Tickets',
       seccion: 'principal',
-      route: '/tickets/mine',
+      route: '/tickets/mios',
       icon: navIcon('mine'),
       roles: ['USER']
     },
     {
-      // Inventario de equipos. La lista la ve cualquiera con sesión: el servidor
-      // limita qué activos ve cada rol (USER solo los suyos).
+      // Inventario: Tecnología y Desarrollo (GESTOR_ACTIVOS, permiso del
+      // servidor), el súper admin y el auditor (solo lee).
       label: 'Activos de TI',
       seccion: 'principal',
       route: '/activos',
       icon: navIcon('activos'),
-      roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT', 'USER', 'AREA_MANAGER']
+      roles: ['SUPER_ADMIN', 'GESTOR_ACTIVOS', 'AUDITOR']
+    },
+    {
+      // Cada persona ve sus equipos y acepta sus actas de entrega.
+      label: 'Mis equipos',
+      seccion: 'principal',
+      route: '/activos/mis-equipos',
+      icon: navIcon('mis-equipos'),
+      roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR']
     },
     {
       label: 'Administración',
       seccion: 'gestion',
-      route: '/admin',
+      route: '/administracion',
       icon: navIcon('admin'),
-      roles: ['SUPER_ADMIN', 'ADMIN'],
+      roles: ['SUPER_ADMIN', 'GESTOR_USUARIOS', 'AUDITOR', 'AREA_MANAGER', 'GESTOR_ACTIVOS'],
       children: [
-        { label: 'Panel', route: '/admin', icon: navIcon('admin-panel'), roles: ['SUPER_ADMIN', 'ADMIN'] },
-        { label: 'Usuarios', route: '/admin/users', icon: navIcon('users'), roles: ['SUPER_ADMIN', 'ADMIN'] },
-        { label: 'Equipos', route: '/admin/teams', icon: navIcon('teams'), roles: ['SUPER_ADMIN'] },
-        { label: 'Áreas', route: '/admin/areas', icon: navIcon('areas'), roles: ['SUPER_ADMIN'] },
-        { label: 'Sedes', route: '/admin/sucursales', icon: navIcon('sucursales'), roles: ['SUPER_ADMIN'] },
-        { label: 'Categorías', route: '/admin/categories', icon: navIcon('categories'), roles: ['SUPER_ADMIN'] },
-        { label: 'SLA', route: '/admin/sla', icon: navIcon('sla'), roles: ['SUPER_ADMIN'] },
-        { label: 'Evaluaciones Mensuales', route: '/admin/sla-config', icon: navIcon('sla-evaluations'), roles: ['SUPER_ADMIN'] },
-        { label: 'Escalaciones', route: '/admin/escalations', icon: navIcon('escalations'), roles: ['SUPER_ADMIN'] },
-        { label: 'Tipos de Ticket', route: '/admin/ticket-types', icon: navIcon('categories'), roles: ['SUPER_ADMIN'] },
-        { label: 'Plantillas', route: '/admin/templates', icon: navIcon('templates'), roles: ['SUPER_ADMIN'] },
-        { label: 'Configuración de Marca', route: '/admin/branding', icon: navIcon('branding'), roles: ['SUPER_ADMIN'] },
-        { label: 'Temas de temporada', route: '/admin/temas-temporada', icon: navIcon('temas-temporada'), roles: ['SUPER_ADMIN'] },
-        { label: 'Páginas del Sistema', route: '/admin/pages-system', icon: navIcon('pages-system'), roles: ['SUPER_ADMIN'] },
-        { label: 'Autenticación MFA', route: '/admin/mfa', icon: navIcon('mfa'), roles: ['SUPER_ADMIN'] },
-        { label: 'Inteligencia Artificial', route: '/admin/ai-config', icon: navIcon('ai-config'), roles: ['SUPER_ADMIN'] },
-        { label: 'Microsoft Graph y Correo', route: '/admin/microsoft-graph', icon: navIcon('microsoft-graph'), roles: ['SUPER_ADMIN'] },
-        { label: 'Telefonía', route: '/admin/telefonia', icon: navIcon('telefonia'), roles: ['SUPER_ADMIN'] },
-        { label: 'Seguridad de Sesión', route: '/admin/session-config', icon: navIcon('session-config'), roles: ['SUPER_ADMIN'] },
-        { label: 'Acuses de Lectura', route: '/admin/chat-config', icon: navIcon('chat-config'), roles: ['SUPER_ADMIN'] },
-        { label: 'Cola de correo', route: '/admin/mail-outbox', icon: navIcon('mail-outbox'), roles: ['SUPER_ADMIN'] },
-        // Programar una automatizacion es escribir codigo con permisos ajenos,
-        // asi que queda fuera del ADMIN igual que en el backend.
-        { label: 'Automatizaciones', route: '/workflows', icon: navIcon('workflows'), roles: ['SUPER_ADMIN'] },
-        { label: 'Reportes Personalizados', route: '/admin/reports', icon: navIcon('report-templates'), roles: ['SUPER_ADMIN'] }
+        { label: 'Panel', route: '/administracion', icon: navIcon('admin-panel'), roles: ['SUPER_ADMIN'] },
+        // Agrupados por tema (el submenú pinta el título del grupo).
+        { grupo: 'Personas y estructura', label: 'Usuarios', route: '/administracion/usuarios', icon: navIcon('users'), roles: ['SUPER_ADMIN', 'GESTOR_USUARIOS', 'AUDITOR'] },
+        { grupo: 'Personas y estructura', label: 'Áreas', route: '/administracion/areas', icon: navIcon('areas'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Personas y estructura', label: 'Sucursales', route: '/administracion/sucursales', icon: navIcon('sucursales'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Personas y estructura', label: 'Equipos de atención', route: '/administracion/equipos', icon: navIcon('teams'), roles: ['SUPER_ADMIN', 'AREA_MANAGER'] },
+        // Las escalaciones son una pestaña de SLA (antes también había un ítem suelto).
+        { grupo: 'Atención de tickets', label: 'Categorías', route: '/administracion/categorias', icon: navIcon('categories'), roles: ['SUPER_ADMIN', 'AREA_MANAGER'] },
+        { grupo: 'Atención de tickets', label: 'Tipos de ticket', route: '/administracion/tipos-ticket', icon: navIcon('ticket-types'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Atención de tickets', label: 'SLA y escalaciones', route: '/administracion/sla', icon: navIcon('sla'), roles: ['SUPER_ADMIN', 'AREA_MANAGER'] },
+        { grupo: 'Atención de tickets', label: 'Evaluaciones mensuales', route: '/administracion/evaluaciones', icon: navIcon('sla-evaluations'), roles: ['SUPER_ADMIN', 'AREA_MANAGER'] },
+        { grupo: 'Atención de tickets', label: 'Acuses de lectura', route: '/administracion/acuses-lectura', icon: navIcon('chat-config'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Correos y avisos', label: 'Plantillas', route: '/administracion/plantillas', icon: navIcon('templates'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Correos y avisos', label: 'Plantillas por área', route: '/administracion/plantillas-area', icon: navIcon('plantillas-area'), roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AUDITOR'] },
+        { grupo: 'Correos y avisos', label: 'Microsoft Graph y correo', route: '/administracion/correo-microsoft', icon: navIcon('microsoft-graph'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Correos y avisos', label: 'Cola de correo', route: '/administracion/cola-correo', icon: navIcon('mail-outbox'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Apariencia', label: 'Marca', route: '/administracion/marca', icon: navIcon('branding'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Apariencia', label: 'Temas de temporada', route: '/administracion/temas-temporada', icon: navIcon('temas-temporada'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Apariencia', label: 'Páginas del sistema', route: '/administracion/paginas-sistema', icon: navIcon('pages-system'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Seguridad', label: 'Autenticación MFA', route: '/administracion/mfa', icon: navIcon('mfa'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Seguridad', label: 'Seguridad de sesión', route: '/administracion/seguridad-sesion', icon: navIcon('session-config'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Seguridad', label: 'Auditoría del sistema', route: '/administracion/auditoria', icon: navIcon('audit-sistema'), roles: ['SUPER_ADMIN', 'AUDITOR'] },
+        // Programar una automatizacion es escribir codigo con permisos ajenos: solo SUPER_ADMIN.
+        { grupo: 'Integraciones', label: 'Inteligencia artificial', route: '/administracion/inteligencia-artificial', icon: navIcon('ai-config'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Integraciones', label: 'Telefonía', route: '/administracion/telefonia', icon: navIcon('telefonia'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Integraciones', label: 'Automatizaciones', route: '/automatizaciones', icon: navIcon('workflows'), roles: ['SUPER_ADMIN'] },
+        // Maestros de activos: Tecnología y Desarrollo (GESTOR_ACTIVOS) y el súper admin.
+        { grupo: 'Activos', label: 'Configuración de activos', route: '/activos/configuracion', icon: navIcon('configuracion'), roles: ['SUPER_ADMIN', 'GESTOR_ACTIVOS'] }
       ]
     },
     {
@@ -125,39 +142,46 @@ export class SidebarComponent implements OnInit, OnDestroy {
       seccion: 'principal',
       route: '/aprobaciones',
       icon: navIcon('aprobaciones'),
-      roles: ['SUPER_ADMIN', 'ADMIN']
+      roles: ['SUPER_ADMIN', 'AREA_MANAGER']
     },
     {
       label: 'Actividades',
       seccion: 'trabajo',
-      route: '/activities',
+      route: '/actividades',
       icon: navIcon('kanban'),
-      roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT']
+      roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR']
+    },
+    {
+      label: 'Proyectos',
+      seccion: 'trabajo',
+      route: '/proyectos',
+      icon: navIcon('proyectos'),
+      roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR']
     },
     {
       label: 'Calendario',
       seccion: 'trabajo',
-      route: '/calendar',
+      route: '/calendario',
       icon: navIcon('calendar'),
-      roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT']
+      roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR']
     },
     {
       label: 'Reportes',
       seccion: 'trabajo',
-      route: '/reports',
+      route: '/reportes',
       icon: navIcon('reports'),
-      roles: ['SUPER_ADMIN', 'ADMIN']
+      roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AUDITOR']
     },
     {
       label: 'Configuración',
       seccion: 'cuenta',
-      route: '/settings',
+      route: '/mi-cuenta',
       icon: navIcon('settings'),
-      roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT', 'USER'],
+      roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR'],
       children: [
-        { label: 'Mi Perfil', route: '/settings/profile', icon: navIcon('profile'), roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT', 'USER'] },
-        { label: 'Cambiar Contraseña', route: '/settings/password', icon: navIcon('password'), roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT', 'USER'] },
-        { label: 'Sonidos de Notificaciones', route: '/settings/sounds', icon: navIcon('sounds'), roles: ['SUPER_ADMIN', 'ADMIN', 'AGENT', 'USER'] }
+        { label: 'Mi Perfil', route: '/mi-cuenta/perfil', icon: navIcon('profile'), roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR'] },
+        { label: 'Cambiar Contraseña', route: '/mi-cuenta/contrasena', icon: navIcon('password'), roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR'] },
+        { label: 'Sonidos de Notificaciones', route: '/mi-cuenta/sonidos', icon: navIcon('sounds'), roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR'] }
       ]
     }
   ];
@@ -215,7 +239,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Tras pintar el estado inicial ya puede animar (setTimeout y no
+    // requestAnimationFrame: este no corre en una pestaña en segundo plano).
+    setTimeout(() => (this.listo = true), 80);
     this.role = this.authService.getRole();
+    this.authService.cargarPermisos();
     // La ruta de entrada también cuenta: el menú solo se enteraba en la
     // siguiente navegación y, al abrir una página directamente, nada salía activo.
     this.currentRoute = this.router.url;
@@ -229,6 +257,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.grupoFlotante = null;
         this.flotante = null;
         this.role = this.authService.getRole();
+    this.authService.cargarPermisos();
         this.expandirGrupoActivo();
         if (this.isMobile) this.isOpen = false;
       }
@@ -313,8 +342,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   @HostListener('window:resize')
   checkScreenSize(): void {
+    const eraMovil = this.isMobile;
     this.isMobile = window.innerWidth < 768;
     if (!this.isMobile) this.isOpen = true;
+    // Al pasar a teléfono (girar la tableta, achicar la ventana) se cierra.
+    else if (!eraMovil) this.isOpen = false;
   }
 
   toggleSidebar(): void {
@@ -391,8 +423,21 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   isVisible(item: NavItem): boolean {
+    // En el teléfono no se ofrecen las pantallas de solo computador.
+    if (esPantallaPequena() && esSoloEscritorio(item.route)) return false;
     const mios = this.authService.rolesEfectivos();
     return item.roles.some((r) => mios.includes(r));
+  }
+
+  /**
+   * Título que va antes de este hijo: el de su grupo, solo si es el primer hijo
+   * visible de ese grupo (con los permisos de quien mira, algunos grupos quedan vacíos).
+   */
+  tituloDeGrupo(item: NavItem, child: NavItem): string | null {
+    if (!child.grupo || !this.isVisible(child)) return null;
+    const visibles = (item.children || []).filter((c) => this.isVisible(c));
+    const i = visibles.indexOf(child);
+    return i === 0 || visibles[i - 1].grupo !== child.grupo ? child.grupo : null;
   }
 
   hasVisibleChildren(item: NavItem): boolean {
@@ -400,8 +445,23 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   isActive(route: string): boolean {
-    return this.currentRoute === route || this.currentRoute.startsWith(route + '/');
+    if (this.currentRoute !== route && !this.currentRoute.startsWith(route + '/')) return false;
+    // Si otra entrada del menú es más concreta y también coincide (p. ej.
+    // /activos/mis-equipos frente a /activos), solo se marca esa.
+    return !this.rutasDelMenu.some(
+      (r) => r.length > route.length && r.startsWith(route + '/')
+        && (this.currentRoute === r || this.currentRoute.startsWith(r + '/'))
+    );
   }
+
+  /** Todas las rutas del menú (padres e hijos), para desempatar el activo. */
+  private get rutasDelMenu(): string[] {
+    if (!this._rutas) {
+      this._rutas = this.navItems.flatMap((i) => [i.route, ...(i.children || []).map((c) => c.route)]);
+    }
+    return this._rutas;
+  }
+  private _rutas: string[] | null = null;
 
   /** Indica si el grupo padre está activo (algún hijo visible en su sección). */
   hasActiveChild(item: NavItem): boolean {
@@ -430,7 +490,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   get roleLabel(): string {
     switch (this.role?.toUpperCase()) {
       case 'SUPER_ADMIN': return 'Super Administrador';
-      case 'ADMIN': return 'Administrador';
+      case 'AUDITOR': return 'Auditor';
       case 'AGENT': return 'Agente';
       case 'USER': return 'Usuario';
       case 'AREA_MANAGER': return 'Jefe de área';
@@ -440,6 +500,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/acceso/ingresar']);
   }
 }

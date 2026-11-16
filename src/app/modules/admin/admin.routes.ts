@@ -1,3 +1,4 @@
+import { PlantillasAreaComponent } from './plantillas-area/plantillas-area.component';
 import { Routes } from '@angular/router';
 import { RoleGuard } from '../../core/guards/role.guard';
 import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
@@ -11,14 +12,12 @@ import { SessionConfigComponent } from './session-config/session-config.componen
 import { MfaConfigComponent } from './mfa-config/mfa-config.component';
 import { AuditSistemaComponent } from './audit-sistema/audit-sistema.component';
 import { ChatConfigComponent } from './chat-config/chat-config.component';
-import { ReportManagementComponent } from './report-management/report-management.component';
 import { TeamManagementComponent } from './team-management/team-management.component';
 import { AreaManagementComponent } from './area-management/area-management.component';
 import { SucursalManagementComponent } from './sucursal-management/sucursal-management.component';
 import { PagesSystemComponent } from './pages-system/pages-system.component';
 import { CategoryManagementComponent } from './category-management/category-management.component';
 import { SlaManagementComponent } from './sla-management/sla-management.component';
-import { EscalationManagementComponent } from './escalation-management/escalation-management.component';
 import { TemplateManagementComponent } from './template-management/template-management.component';
 import { BrandingComponent } from './branding/branding.component';
 import { TicketTypeManagementComponent } from './ticket-type-management/ticket-type-management.component';
@@ -29,30 +28,34 @@ import { MailOutboxComponent } from './mail-outbox/mail-outbox.component';
  * aquí cada pantalla añade si es solo de SUPER_ADMIN.
  */
 export const ADMIN_ROUTES: Routes = [
-  { path: '', component: AdminDashboardComponent },
-  { path: 'users', component: UserManagementComponent },
-  { path: 'teams', component: TeamManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: '', component: AdminDashboardComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: 'usuarios', component: UserManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN', 'GESTOR_USUARIOS', 'AUDITOR'] } },
+  { path: 'equipos', component: TeamManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN', 'AREA_MANAGER'] } },
   { path: 'areas', component: AreaManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
   { path: 'sucursales', component: SucursalManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
-  { path: 'pages-system', component: PagesSystemComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
-  { path: 'categories', component: CategoryManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
-  { path: 'sla', component: SlaManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
-  { path: 'sla-config', component: SlaConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
-  { path: 'escalations', component: EscalationManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
-  { path: 'templates', component: TemplateManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: 'paginas-sistema', component: PagesSystemComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: 'categorias', component: CategoryManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN', 'AREA_MANAGER'] } },
+  { path: 'sla', component: SlaManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN', 'AREA_MANAGER'] } },
+  { path: 'evaluaciones', component: SlaConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN', 'AREA_MANAGER'] } },
+  // Las escalaciones se gestionan en la pestaña de SLA: una sola pantalla.
+  { path: 'escalaciones', redirectTo: 'sla?tab=escalations' },
+  // Versión de cada área de los correos de tickets (V38): jefe (su área), súper admin y auditor.
+  { path: 'plantillas-area', component: PlantillasAreaComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AUDITOR'] } },
+  { path: 'plantillas', component: TemplateManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
   // Esta queda fuera del guard de mantenimiento a proposito: es la
   // unica via para volver a encender el sistema.
-  { path: 'branding', component: BrandingComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
-  { path: 'ticket-types', component: TicketTypeManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN', 'ADMIN'] } },
-  { path: 'ai-config', component: AiConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
-  { path: 'microsoft-graph', component: MicrosoftGraphConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: 'marca', component: BrandingComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: 'tipos-ticket', component: TicketTypeManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: 'inteligencia-artificial', component: AiConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: 'correo-microsoft', component: MicrosoftGraphConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
   { path: 'telefonia', component: TelefoniaConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
   { path: 'temas-temporada', component: TemasTemporadaComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
-  { path: 'session-config', component: SessionConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: 'seguridad-sesion', component: SessionConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
   { path: 'mfa', component: MfaConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
-  { path: 'audit-sistema', component: AuditSistemaComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
-  { path: 'chat-config', component: ChatConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
-  { path: 'mail-outbox', component: MailOutboxComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: 'auditoria', component: AuditSistemaComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN', 'AUDITOR'] } },
+  { path: 'acuses-lectura', component: ChatConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: 'cola-correo', component: MailOutboxComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
 
-  { path: 'reports', component: ReportManagementComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } }
+  // Los reportes por SQL se retiraron (V32): el enlace antiguo lleva a Reportes.
+  { path: 'reportes', redirectTo: '/reportes', pathMatch: 'full' }
 ];

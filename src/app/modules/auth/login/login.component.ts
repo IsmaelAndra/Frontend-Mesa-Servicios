@@ -96,7 +96,7 @@ toggleTheme(): void {
   }
 
   forgotPassword(): void {
-    Swal.fire({
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280',
       title: 'Restablecer contraseña',
 html: `
           <p class="text-sm opacity-80 mb-2">Le enviaremos un enlace a su correo corporativo para que establezca su nueva contraseña.</p>
@@ -146,18 +146,18 @@ this.loading = true;
           // falta el segundo factor: no hay sesión todavía, así que hay que
           // llevarle a la pantalla del código en lugar de al panel.
           if (AuthService.esDesafio(res)) {
-            this.router.navigate(['/auth/mfa']);
+            this.router.navigate(['/acceso/verificacion']);
             return;
           }
           if (this.authService.mustChangePassword()) {
-          Swal.fire({
+          Swal.fire({ confirmButtonText: 'Entendido',
             icon: 'info',
             title: 'Cambia tu contraseña',
             text: 'Por seguridad debes crear una nueva contraseña antes de continuar.',
             timer: 2000,
             showConfirmButton: false
           });
-          this.router.navigate(['/settings/password']);
+          this.router.navigate(['/mi-cuenta/contrasena']);
           return;
         }
         this.toastService.success('Bienvenido');
@@ -165,11 +165,11 @@ this.loading = true;
         // Solo rutas internas: nunca otra web ("//sitio") ni el propio login.
         const volver = this.router.parseUrl(this.router.url).queryParams['volver'];
         if (typeof volver === 'string' && volver.startsWith('/') && !volver.startsWith('//')
-            && !volver.startsWith('/auth')) {
+            && !volver.startsWith('/acceso')) {
           this.router.navigateByUrl(volver);
           return;
         }
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/inicio']);
       },
       error: (err) => {
         this.loading = false;

@@ -71,11 +71,13 @@ export interface BrandingConfig {
 
 export type ChatBackgroundMode = 'light' | 'dark';
 
+export interface UsoArea { usuarios: number; equipos: number; categorias: number; ticketsAbiertos: number; proyectos: number; }
 export interface Area { idArea: string; nameArea: string; descriptionArea?: string; priorityLevel: number; statusArea: boolean; iconArea?: string; colorArea?: string; }
-export interface Category { idCategory: string; nameCategory: string; descriptionCategory?: string; iconCategory?: string; colorCategory?: string; teamCategory?: SupportTeam; }
-export interface SupportTeam { idTeam: string; nameTeam: string; descriptionTeam?: string; assignmentMethod: string; activeTeam: boolean; iconTeam?: string; colorTeam?: string; /** Incluye automáticamente a todos los agentes activos. */ autoMembersTeam?: boolean; }
-export interface SlaPolicy { idSlaPolicy: string; nameSlaPolicy: string; descriptionSlaPolicy?: string; responseTimeMinutes: number; resolutionTimeMinutes: number; activeSlaPolicy: boolean; iconSlaPolicy?: string; colorSlaPolicy?: string; }
-export interface SlaRule { idSlaRule: string; slaPolicyId: string; areaId: string; priorityId: string; categoryId?: string; typeId?: string; activeSlaRule: boolean; }
+export interface Category { idCategory: string; nameCategory: string; descriptionCategory?: string; iconCategory?: string; colorCategory?: string; teamCategory?: SupportTeam; /** Área de la categoría: la de su equipo (V28). */ areaId?: string | null; area?: string | null; }
+export interface SupportTeam { idTeam: string; nameTeam: string; descriptionTeam?: string; assignmentMethod: string; activeTeam: boolean; iconTeam?: string; colorTeam?: string; /** Incluye automáticamente a todos los agentes activos. */ autoMembersTeam?: boolean; /** Área que atiende el equipo (V28). */ areaId?: string | null; }
+/** areaSlaPolicy: área dueña (V32); null = global, solo la edita el súper admin. */
+export interface SlaPolicy { idSlaPolicy: string; nameSlaPolicy: string; descriptionSlaPolicy?: string; responseTimeMinutes: number; resolutionTimeMinutes: number; activeSlaPolicy: boolean; iconSlaPolicy?: string; colorSlaPolicy?: string; areaSlaPolicy?: string | null; }
+export interface SlaRule { idSlaRule: string; slaPolicyId: string; /** Nombre de la política (el jefe no lista las globales). */ slaPolicyName?: string | null; areaId: string; priorityId: string; categoryId?: string; typeId?: string; activeSlaRule: boolean; }
 export interface SlaEscalation { idEscalation: string; slaPolicyId: string; triggerPercentage: number; actionType: string; destinationTeamId?: string; destinationUserId?: string; notificationTemplateId?: string; }
 export interface NotificationTemplate { idTemplate: string; nameTemplate: string; typeTemplate: string; subjectTemplate: string; bodyTemplate: string; activeTemplate: boolean; recipientRule?: string; recipientEmail?: string | null; iconTemplate?: string; colorTemplate?: string; /** Imagen propia, para usarla en el HTML con [imagen] o [imagenUrl]. */ imageUrl?: string; }
 export interface TicketTypeConfig { id: string; name: string; description: string; icon?: string; color?: string; }
@@ -341,6 +343,16 @@ export interface AgentOption {
  */
 export type AssignableAgent = AgentOption | User;
 
+/** Persona de un equipo o candidata a serlo (GET /admin/teams/{id}/members|candidatos). */
+export interface MiembroEquipo {
+  idUser: string;
+  nombre: string;
+  correo: string;
+  rol: string | null;
+  area: string | null;
+  ultimaAsignacion: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private url = `${environment.apiUrl}/admin`;
@@ -406,6 +418,13 @@ export class AdminService {
   updateBranding(data: BrandingConfig): Observable<BrandingConfig> {
     this.marcaCompartida = undefined;
     return this.http.put<BrandingConfig>(`${this.url}/branding`, data);
+  }
+
+  /** Imagen propia para el botón del asistente (se guarda al pulsar Guardar en IA). */
+  subirIconoAsistente(file: File): Observable<{ url: string }> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<{ url: string }>(`${this.url}/ai-config/icono`, form);
   }
 
   uploadLogo(file: File): Observable<{ url: string }> {
@@ -478,8 +497,10 @@ export class AdminService {
     return this.http.post<User>(`${environment.apiUrl}/users`, data);
   }
 
-  updateUser(id: string, data: RegisterRequest): Observable<User> {
-    return this.http.put<User>(`${environment.apiUrl}/users/${id}`, data);
+  /** codigoMfa: código del autenticador de quien edita (si tiene MFA activo). */
+  updateUser(id: string, data: RegisterRequest, codigoMfa?: string | null): Observable<User> {
+    const headers = codigoMfa ? { 'X-Codigo-Mfa': codigoMfa } : undefined;
+    return this.http.put<User>(`${environment.apiUrl}/users/${id}`, data, { headers });
   }
 
   /**
@@ -512,10 +533,10 @@ agents(): Observable<AgentOption[]> {
   }
 
   // Áreas
-  // ============ SEDES ============
+  // ============ SUCURSALES ============
 
   /**
-   * Catálogo de sedes. Es lo que consumen los selectores de persona y de
+   * Catálogo de sucursales. Es lo que consumen los selectores de persona y de
    * ticket nuevo.
    */
   getSucursales(): Observable<Sucursal[]> {
@@ -546,8 +567,14 @@ agents(): Observable<AgentOption[]> {
     return this.http.put<Area>(`${this.url}/areas/${id}`, data);
   }
 
-  deleteArea(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.url}/areas/${id}`);
+  /** Si el área está en uso, el backend exige `reasignarA` (otra área). */
+  deleteArea(id: string, reasignarA?: string): Observable<void> {
+    const params: Record<string, string> = reasignarA ? { reasignarA } : {};
+    return this.http.delete<void>(`${this.url}/areas/${id}`, { params });
+  }
+
+  usoArea(id: string): Observable<UsoArea> {
+    return this.http.get<UsoArea>(`${this.url}/areas/${id}/uso`);
   }
 
   // Categorías
@@ -598,7 +625,8 @@ agents(): Observable<AgentOption[]> {
       active: data.activeTeam ?? true,
       icon: data.iconTeam ?? '',
       color: data.colorTeam ?? '',
-      autoMembers: !!data.autoMembersTeam
+      autoMembers: !!data.autoMembersTeam,
+      areaId: data.areaId ?? null
     };
   }
 
@@ -612,6 +640,16 @@ agents(): Observable<AgentOption[]> {
 
   removeMemberFromTeam(teamId: string, userId: string): Observable<void> {
     return this.http.delete<void>(`${this.url}/teams/${teamId}/members/${userId}`);
+  }
+
+  /** Miembros activos del equipo (vista compacta). */
+  teamMembers(teamId: string): Observable<MiembroEquipo[]> {
+    return this.http.get<MiembroEquipo[]>(`${this.url}/teams/${teamId}/members`);
+  }
+
+  /** Agentes y jefes del área del equipo que aún no son miembros. */
+  teamCandidatos(teamId: string): Observable<MiembroEquipo[]> {
+    return this.http.get<MiembroEquipo[]>(`${this.url}/teams/${teamId}/candidatos`);
   }
 
   /** Configuración global de asignación automática (lectura: ADMIN, escritura: SUPER_ADMIN). */
@@ -648,7 +686,8 @@ agents(): Observable<AgentOption[]> {
       resolutionMinutes: data.resolutionTimeMinutes ?? 0,
       active: data.activeSlaPolicy ?? true,
       icon: data.iconSlaPolicy ?? '',
-      color: data.colorSlaPolicy ?? ''
+      color: data.colorSlaPolicy ?? '',
+      areaId: data.areaSlaPolicy ?? null
     };
   }
 
