@@ -3,7 +3,8 @@
 <div *ngIf="d && !cargando" class="space-y-5">
   <!-- ============================ ENCABEZADO ============================ -->
   <header class="page-head flex flex-col lg:flex-row lg:items-center gap-4"
-          [class.franja-terminado]="d.proyecto.estado === 'TERMINADO'">
+          [class.franja-terminado]="d.proyecto.estado === 'TERMINADO'"
+          [class.franja-cancelado]="d.proyecto.estado === 'CANCELADO'">
     <div class="flex items-center gap-3 min-w-0 flex-1">
       <div class="p-3 rounded-2xl shrink-0" [style.background-color]="color + '1F'" [style.color]="color">
         <i [class]="d.proyecto.icono || 'fa-solid fa-diagram-project'" class="text-2xl" aria-hidden="true"></i>
@@ -36,6 +37,19 @@
       </button>
     </div>
   </header>
+
+  <!-- Proyecto cerrado: como un ticket cerrado, todo queda en solo lectura hasta reabrirlo -->
+  <div *ngIf="cerrado" class="flex flex-wrap items-center gap-3 p-3 rounded-xl border text-sm"
+       [ngClass]="d.proyecto.estado === 'CANCELADO' ? 'border-error/30 bg-error/10' : 'border-success/30 bg-success/10'">
+    <i class="fa-solid text-lg" [ngClass]="d.proyecto.estado === 'CANCELADO' ? 'fa-ban text-error' : 'fa-flag-checkered text-success'" aria-hidden="true"></i>
+    <span class="flex-1 min-w-[14rem]">
+      <b>Proyecto {{ d.proyecto.estado === 'CANCELADO' ? 'cancelado' : 'terminado' }}.</b>
+      El tablero y el chat quedan en solo lectura.
+    </span>
+    <button *ngIf="d.permisos.gestionar" type="button" class="btn btn-sm btn-primary text-white gap-2" (click)="reabrir()">
+      <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reabrir proyecto
+    </button>
+  </div>
 
   <!-- Avance -->
   <div class="card bg-base-100 border border-base-200 shadow-sm">
@@ -86,7 +100,8 @@
   </div>
 
   <!-- ============================ CHAT ============================ -->
-  <app-proyecto-chat *ngIf="pestana === 'chat'" [proyectoId]="id" [puedeEscribir]="d.permisos.editarTablero"></app-proyecto-chat>
+  <app-proyecto-chat *ngIf="pestana === 'chat'" [proyectoId]="id" [puedeEscribir]="d.permisos.editarTablero"
+                     [motivoSoloLectura]="cerrado ? 'El proyecto está ' + (d.proyecto.estado === 'CANCELADO' ? 'cancelado' : 'terminado') + ': reábralo para escribir.' : null"></app-proyecto-chat>
 
   <!-- ============================ TABLERO ============================ -->
   <section *ngIf="pestana === 'tablero'" class="space-y-3">

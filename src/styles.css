@@ -2011,11 +2011,13 @@ body.swal2-height-auto {
 /* ============ Proyecto terminado: franja diagonal ============ */
 /* Una franja que cruza la tarjeta de abajo a la izquierda hacia arriba a la
    derecha con la palabra "TERMINADO". No tapa los clics (pointer-events: none). */
-.franja-terminado {
+.franja-terminado,
+.franja-cancelado {
   position: relative;
   overflow: hidden;
 }
-.franja-terminado::after {
+.franja-terminado::after,
+.franja-cancelado::after {
   content: "TERMINADO";
   position: absolute;
   left: 50%;
@@ -2035,7 +2037,13 @@ body.swal2-height-auto {
   /* Detrás del contenido, como un sello: no tapa el título ni el selector de estado. */
   z-index: 0;
 }
-.franja-terminado > * {
+.franja-terminado > *,
+.franja-cancelado > * {
   position: relative;
   z-index: 1;
+}
+/* Terminado en verde; cancelado en rojo. */
+.franja-cancelado::after {
+  content: "CANCELADO";
+  background: rgb(220 38 38 / 0.5);
 }

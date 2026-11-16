@@ -312,6 +312,32 @@ export class ProyectoDetalleComponent implements OnInit, OnDestroy {
    */
   estadoVista: EstadoProyecto | null = null;
 
+  /** Terminado o cancelado: tablero y chat en solo lectura (el backend también lo exige). */
+  get cerrado(): boolean {
+    return this.d?.proyecto.estado === 'TERMINADO' || this.d?.proyecto.estado === 'CANCELADO';
+  }
+
+  async reabrir(): Promise<void> {
+    if (!this.d) return;
+    const ok = await confirmar({
+      titulo: '¿Reabrir el proyecto?',
+      texto: 'Vuelve a "En curso" y el equipo puede trabajar de nuevo en el tablero y el chat.',
+      accion: 'Reabrir',
+      peligro: false,
+    });
+    if (!ok) return;
+    const p = this.d.proyecto;
+    this.servicio.editar(this.id, {
+      nombre: p.nombre, descripcion: p.descripcion, estado: 'EN_CURSO', icono: p.icono, color: p.color, inicio: p.inicio, fin: p.fin,
+    }).subscribe({
+      next: () => {
+        this.toast.success('Proyecto reabierto');
+        this.cargar();
+      },
+      error: (e) => this.toast.error(e?.error?.message || 'No se pudo reabrir el proyecto'),
+    });
+  }
+
   cambiarEstado(estado: EstadoProyecto): void {
     if (!this.d || estado === this.d.proyecto.estado) return;
     const p = this.d.proyecto;
@@ -319,8 +345,9 @@ export class ProyectoDetalleComponent implements OnInit, OnDestroy {
       nombre: p.nombre, descripcion: p.descripcion, estado, icono: p.icono, color: p.color, inicio: p.inicio, fin: p.fin,
     }).subscribe({
       next: () => {
-        p.estado = estado;
         this.toast.success('Estado actualizado');
+        // Recarga: los permisos de tablero y chat dependen de si quedó cerrado.
+        this.cargar();
       },
       error: (e) => {
         this.toast.error(e?.error?.message || 'No se pudo cambiar el estado');

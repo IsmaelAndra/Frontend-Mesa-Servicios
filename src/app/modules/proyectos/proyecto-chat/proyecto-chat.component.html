@@ -220,6 +220,7 @@
     <p class="text-[10px] opacity-50 px-1">Enter envía · Mayús+Enter salta de línea · &#64; menciona · arrastre o pegue archivos (imágenes, PDF, Office, TXT, CSV, ZIP)</p>
   </footer>
   <footer *ngIf="!puedeEscribir" class="border-t border-base-200 px-4 py-3 text-xs opacity-70 flex items-center gap-2">
-    <i class="fa-solid fa-eye" aria-hidden="true"></i> Solo lectura: escribe el equipo del proyecto.
+    <i class="fa-solid" [ngClass]="motivoSoloLectura ? 'fa-lock' : 'fa-eye'" aria-hidden="true"></i>
+    {{ motivoSoloLectura || 'Solo lectura: escribe el equipo del proyecto.' }}
   </footer>
 </section>

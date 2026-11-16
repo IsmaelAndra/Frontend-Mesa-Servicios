@@ -53,6 +53,8 @@ export class ProyectoChatComponent implements OnInit, AfterViewInit, OnDestroy, 
   @Input({ required: true }) proyectoId!: string;
   /** El equipo escribe; el auditor (y quien solo sigue el proyecto) solo lee. */
   @Input() puedeEscribir = false;
+  /** Por qué no se puede escribir (p. ej. proyecto terminado); null = el texto de siempre. */
+  @Input() motivoSoloLectura: string | null = null;
 
   @ViewChild('lista') lista?: ElementRef<HTMLDivElement>;
   @ViewChild('editor') editorRef?: ElementRef<HTMLDivElement>;
