@@ -2007,3 +2007,35 @@ body.swal2-height-auto {
   font-style: italic;
   opacity: 0.6;
 }
+
+/* ============ Proyecto terminado: franja diagonal ============ */
+/* Una franja que cruza la tarjeta de abajo a la izquierda hacia arriba a la
+   derecha con la palabra "TERMINADO". No tapa los clics (pointer-events: none). */
+.franja-terminado {
+  position: relative;
+  overflow: hidden;
+}
+.franja-terminado::after {
+  content: "TERMINADO";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160%;
+  padding: 0.3rem 0;
+  transform: translate(-50%, -50%) rotate(-10deg);
+  background: rgb(22 163 74 / 0.45);
+  color: #fff;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.35em;
+  text-align: center;
+  box-shadow: 0 6px 16px -8px rgb(2 6 23 / 0.45);
+  pointer-events: none;
+  /* Detrás del contenido, como un sello: no tapa el título ni el selector de estado. */
+  z-index: 0;
+}
+.franja-terminado > * {
+  position: relative;
+  z-index: 1;
+}

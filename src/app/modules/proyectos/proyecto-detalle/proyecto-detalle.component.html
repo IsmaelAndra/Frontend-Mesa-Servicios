@@ -2,7 +2,8 @@
 
 <div *ngIf="d && !cargando" class="space-y-5">
   <!-- ============================ ENCABEZADO ============================ -->
-  <header class="page-head flex flex-col lg:flex-row lg:items-center gap-4">
+  <header class="page-head flex flex-col lg:flex-row lg:items-center gap-4"
+          [class.franja-terminado]="d.proyecto.estado === 'TERMINADO'">
     <div class="flex items-center gap-3 min-w-0 flex-1">
       <div class="p-3 rounded-2xl shrink-0" [style.background-color]="color + '1F'" [style.color]="color">
         <i [class]="d.proyecto.icono || 'fa-solid fa-diagram-project'" class="text-2xl" aria-hidden="true"></i>
@@ -17,7 +18,7 @@
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <div *ngIf="d.permisos.gestionar; else estadoFijo" class="w-48">
-        <app-master-select [ngModel]="d.proyecto.estado" (ngModelChange)="cambiarEstado($event)" [options]="opcionesEstadoProyecto"
+        <app-master-select [ngModel]="estadoVista ?? d.proyecto.estado" (ngModelChange)="cambiarEstado($event)" [options]="opcionesEstadoProyecto"
                            icon="fa-solid fa-flag" label="Estado del proyecto"></app-master-select>
       </div>
       <ng-template #estadoFijo>

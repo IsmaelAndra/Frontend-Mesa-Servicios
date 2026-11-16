@@ -169,7 +169,8 @@ export class ProyectoDetalleComponent implements OnInit, OnDestroy {
       .map((c) => {
         const peso = items.filter((i) => i.estado === c.clave).reduce((s, i) => s + i.peso, 0);
         const color = c.clave === 'POR_HACER' ? 'oklch(var(--bc) / 0.18)' : c.clave === 'HECHO' ? c.color : c.color + '99';
-        return { ...c, color, colorLeyenda: c.color, peso, pct: Math.min(100, peso) };
+        // Sobre 100 o sobre el total si lo pasa: la barra nunca se sale.
+        return { ...c, color, colorLeyenda: c.color, peso, pct: Math.round((100 * peso) / Math.max(100, total)) };
       });
   }
 
@@ -218,7 +219,9 @@ export class ProyectoDetalleComponent implements OnInit, OnDestroy {
     // Los pesos son % del proyecto: el avance es la suma de lo HECHO (una sola
     // tarjeta de 40% terminada = 40%, no 100%). Igual que ProyectoService.avance.
     const hecho = this.d.items.filter((i) => i.estado === 'HECHO').reduce((s, i) => s + i.peso, 0);
-    this.d.proyecto.avance = Math.min(100, hecho);
+    const total = this.d.items.reduce((s, i) => s + i.peso, 0);
+    // Igual que el backend: si los pesos antiguos pasan de 100, se reparte sobre ese total.
+    this.d.proyecto.avance = Math.round((100 * hecho) / Math.max(100, total));
     this.d.proyecto.hechas = this.d.items.filter((i) => i.estado === 'HECHO').length;
     // Mismo ajuste que hace el backend (ProyectoService.sincronizarEstado).
     const p = this.d.proyecto;
@@ -302,6 +305,13 @@ export class ProyectoDetalleComponent implements OnInit, OnDestroy {
 
   // ================================================================ proyecto
 
+  /**
+   * Valor que muestra el selector de estado. Si el servidor rechaza el cambio,
+   * se fuerza a volver al estado real: si no, el selector se quedaba mostrando
+   * "Terminado" aunque el proyecto no había cambiado.
+   */
+  estadoVista: EstadoProyecto | null = null;
+
   cambiarEstado(estado: EstadoProyecto): void {
     if (!this.d || estado === this.d.proyecto.estado) return;
     const p = this.d.proyecto;
@@ -312,7 +322,11 @@ export class ProyectoDetalleComponent implements OnInit, OnDestroy {
         p.estado = estado;
         this.toast.success('Estado actualizado');
       },
-      error: (e) => this.toast.error(e?.error?.message || 'No se pudo cambiar el estado'),
+      error: (e) => {
+        this.toast.error(e?.error?.message || 'No se pudo cambiar el estado');
+        this.estadoVista = estado;
+        setTimeout(() => (this.estadoVista = null));
+      },
     });
   }
 

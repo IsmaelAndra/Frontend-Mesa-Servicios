@@ -53,7 +53,8 @@
 
   <div *ngIf="!cargando && proyectos.length" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
     <button *ngFor="let p of proyectos; trackBy: trackProyecto" type="button" (click)="abrir(p)"
-            class="card bg-base-100 border border-base-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition text-left">
+            class="card bg-base-100 border border-base-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition text-left"
+            [class.franja-terminado]="p.estado === 'TERMINADO'">
       <div class="card-body p-4 gap-3">
         <div class="flex items-start gap-3">
           <span class="p-2.5 rounded-xl shrink-0" [style.background-color]="colorDe(p) + '1F'" [style.color]="colorDe(p)" aria-hidden="true">
