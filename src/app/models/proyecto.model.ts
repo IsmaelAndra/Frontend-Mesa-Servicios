@@ -162,6 +162,19 @@ export interface MensajeProyecto {
   creado: string;
   propio: boolean;
   adjuntos: AdjuntoMensaje[];
+  /** Última edición (se marca "editado"). */
+  editado?: string | null;
+  /** Eliminado: se ve "Se eliminó este mensaje", sin texto ni archivos. */
+  eliminado?: boolean;
+  /** Mensaje citado al responder. */
+  respondeA?: CitaMensaje | null;
+}
+
+export interface CitaMensaje {
+  id: string;
+  autor: string;
+  extracto: string;
+  eliminado: boolean;
 }
 
 /** Persona que se puede mencionar con @ en el chat del proyecto. */

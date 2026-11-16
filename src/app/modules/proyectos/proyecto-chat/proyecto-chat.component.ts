@@ -10,6 +10,7 @@ import { abrirBlob, tamanoLegible } from '../../../core/utils/abrir-blob.util';
 import { urlFotoUsuario } from '../../../core/utils/user-photo.util';
 import { ACCEPT_CHAT, AdjuntoMensaje, MensajeProyecto, ParticipanteChat } from '../../../models/proyecto.model';
 import { QuickReply } from '../../../models/quick-reply.model';
+import { confirmar } from '../../../core/utils/confirmar.util';
 
 /**
  * Mención (@Nombre) como formato propio de Quill: un <mark class="chat-mencion">.
@@ -93,6 +94,12 @@ export class ProyectoChatComponent implements OnInit, AfterViewInit, OnDestroy, 
   /** Ids mencionados en el borrador (se confirman al enviar contra el texto). */
   private mencionados = new Map<string, string>();
 
+  /** Mensaje al que se está respondiendo (cita) o que se está editando. */
+  respondiendo: MensajeProyecto | null = null;
+  editando: MensajeProyecto | null = null;
+  /** Igual que en tickets: se edita o elimina durante los primeros 15 minutos. */
+  readonly minutosEdicion = 15;
+
   private yo: string | undefined;
   private sub?: Subscription;
   private bajarAlFinal = false;
@@ -127,7 +134,13 @@ export class ProyectoChatComponent implements OnInit, AfterViewInit, OnDestroy, 
     });
     if (this.puedeEscribir) this.cargarParticipantes();
     this.sub = this.sse.proyectoChat$.subscribe((m) => {
-      if (m.proyectoId !== this.proyectoId || this.mensajes.some((x) => x.id === m.id)) return;
+      if (m.proyectoId !== this.proyectoId) return;
+      // Edición o eliminación de un mensaje que ya está en pantalla: se reemplaza.
+      if (this.mensajes.some((x) => x.id === m.id)) {
+        const [act] = this.marcarPropios([m]);
+        this.mensajes = this.mensajes.map((x) => (x.id === m.id ? act : x));
+        return;
+      }
       const [nuevo] = this.marcarPropios([m]);
       this.recienLlegados.add(nuevo.id);
       this.mensajes = [...this.mensajes, nuevo];
@@ -202,8 +215,11 @@ export class ProyectoChatComponent implements OnInit, AfterViewInit, OnDestroy, 
               escapeMencion: {
                 key: 'Escape',
                 handler: () => {
-                  if (!this.mencion && !this.panelRapidas) return true;
-                  this.zone.run(() => { this.mencion = null; this.panelRapidas = false; });
+                  if (!this.mencion && !this.panelRapidas && !this.respondiendo && !this.editando) return true;
+                  this.zone.run(() => {
+                    if (this.mencion || this.panelRapidas) { this.mencion = null; this.panelRapidas = false; }
+                    else this.cancelarContexto();
+                  });
                   return false;
                 },
               },
@@ -417,17 +433,114 @@ export class ProyectoChatComponent implements OnInit, AfterViewInit, OnDestroy, 
     return !this.enviando && (this.hayTexto || this.archivos.length > 0);
   }
 
+  // ---------------------------------------------------------------- responder / editar / eliminar
+
+  responder(m: MensajeProyecto): void {
+    this.editando = null;
+    this.respondiendo = m;
+    setTimeout(() => this.quill?.focus());
+  }
+
+  puedeEditar(m: MensajeProyecto): boolean {
+    if (!m.propio || m.eliminado || !this.puedeEscribir) return false;
+    const t = new Date(m.creado).getTime();
+    return Number.isFinite(t) && Date.now() - t < this.minutosEdicion * 60_000;
+  }
+
+  editar(m: MensajeProyecto): void {
+    const q = this.quill;
+    if (!q) return;
+    this.respondiendo = null;
+    this.editando = m;
+    this.archivos = [];
+    q.setContents([] as never);
+    q.clipboard.dangerouslyPasteHTML(0, this.htmlDe(m), 'user');
+    setTimeout(() => { q.focus(); q.setSelection(q.getLength(), 0); });
+  }
+
+  cancelarContexto(): void {
+    if (this.editando) this.quill?.setContents([] as never);
+    this.editando = null;
+    this.respondiendo = null;
+  }
+
+  async eliminar(m: MensajeProyecto): Promise<void> {
+    const ok = await confirmar({
+      titulo: '¿Eliminar el mensaje?',
+      texto: 'Todos verán "Se eliminó este mensaje" en su lugar.',
+    });
+    if (!ok) return;
+    this.servicio.eliminarMensaje(this.proyectoId, m.id).subscribe({
+      next: (v) => {
+        const [act] = this.marcarPropios([v]);
+        this.mensajes = this.mensajes.map((x) => (x.id === m.id ? act : x));
+        if (this.editando?.id === m.id) this.cancelarContexto();
+      },
+      error: (e) => this.toast.error(e?.error?.message || 'No se pudo eliminar el mensaje'),
+    });
+  }
+
+  /** Texto plano corto de un mensaje (barra "Respondiendo a"). */
+  textoCorto(m: MensajeProyecto): string {
+    const t = (m.texto || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+    if (t) return t.length > 90 ? t.slice(0, 90) + '…' : t;
+    return m.adjuntos.length ? 'Archivo adjunto' : '';
+  }
+
+  /** Salta al mensaje citado (si está cargado) y lo resalta un momento. */
+  irACita(id: string): void {
+    const el = document.getElementById('pm-' + id);
+    if (!el) {
+      this.toast.info('Ese mensaje es más antiguo: cargue los mensajes anteriores para verlo');
+      return;
+    }
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('chat-resaltado');
+    setTimeout(() => el.classList.remove('chat-resaltado'), 1500);
+  }
+
+  private guardarEdicion(): void {
+    const q = this.quill;
+    const m = this.editando;
+    if (!q || !m || this.enviando) return;
+    if (!this.hayTexto) {
+      this.toast.error('El mensaje no puede quedar vacío; si quiere quitarlo, elimínelo');
+      return;
+    }
+    this.enviando = true;
+    this.servicio.editarMensaje(this.proyectoId, m.id, q.root.innerHTML).subscribe({
+      next: (v) => {
+        this.enviando = false;
+        const [act] = this.marcarPropios([v]);
+        this.mensajes = this.mensajes.map((x) => (x.id === m.id ? act : x));
+        this.editando = null;
+        q.setContents([] as never);
+        this.hayTexto = false;
+      },
+      error: (e) => {
+        this.enviando = false;
+        this.toast.error(e?.error?.message || 'No se pudo editar el mensaje');
+      },
+    });
+  }
+
   enviar(): void {
     const q = this.quill;
+    if (this.editando) {
+      this.guardarEdicion();
+      return;
+    }
     if (!this.puedeEnviar || !q) return;
     const html = this.hayTexto ? q.root.innerHTML : '';
     const plano = q.getText();
     // Solo cuentan las menciones cuyo "@Nombre" sigue en el texto.
     const menciones = [...this.mencionados.entries()].filter(([, etiqueta]) => plano.includes(etiqueta)).map(([id]) => id);
     this.enviando = true;
-    this.servicio.enviarMensaje(this.proyectoId, html, this.archivos, menciones).subscribe({
+    const respondeA = this.respondiendo?.id ?? null;
+    this.servicio.enviarMensaje(this.proyectoId, html, this.archivos, menciones, respondeA).subscribe({
       next: (m) => {
         this.enviando = false;
+        this.respondiendo = null;
         q.setContents([] as never);
         this.archivos = [];
         this.mencionados.clear();

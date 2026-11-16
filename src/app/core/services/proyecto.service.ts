@@ -120,12 +120,23 @@ export class ProyectoService {
   }
 
   /** texto es HTML del editor; menciones = ids de las personas nombradas con @. */
-  enviarMensaje(id: string, texto: string, archivos: File[], menciones: string[] = []): Observable<MensajeProyecto> {
+  enviarMensaje(id: string, texto: string, archivos: File[], menciones: string[] = [], respondeA: string | null = null): Observable<MensajeProyecto> {
     const form = new FormData();
+    if (respondeA) form.append('respondeA', respondeA);
     if (texto) form.append('texto', texto);
     archivos.forEach((f) => form.append('archivos', f, f.name));
     menciones.forEach((m) => form.append('menciones', m));
     return this.http.post<MensajeProyecto>(`${this.url}/${id}/chat`, form);
+  }
+
+  /** Editar un mensaje propio (primeros 15 minutos). */
+  editarMensaje(id: string, mensajeId: string, texto: string): Observable<MensajeProyecto> {
+    return this.http.put<MensajeProyecto>(`${this.url}/${id}/chat/${mensajeId}`, { texto });
+  }
+
+  /** Eliminar un mensaje propio: queda "Se eliminó este mensaje". */
+  eliminarMensaje(id: string, mensajeId: string): Observable<MensajeProyecto> {
+    return this.http.delete<MensajeProyecto>(`${this.url}/${id}/chat/${mensajeId}`);
   }
 
   /** Personas que se pueden mencionar con @ en el chat. */

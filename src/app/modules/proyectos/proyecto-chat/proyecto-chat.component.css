@@ -195,3 +195,93 @@
   white-space: pre-wrap;
 }
 .chat-html ::ng-deep a { color: oklch(var(--p)); text-decoration: underline; }
+
+/* ============ Responder / editar / eliminar ============ */
+/* Acciones del mensaje: aparecen al pasar el mouse o con el teclado (como en tickets). */
+.chat-acciones-p {
+  position: absolute;
+  top: -0.85rem;
+  right: 0.5rem;
+  z-index: 3;
+  display: flex;
+  gap: 0.1rem;
+  padding: 0.1rem;
+  border-radius: 9999px;
+  border: 1px solid oklch(var(--bc) / 0.12);
+  background: oklch(var(--b1));
+  box-shadow: 0 4px 12px -6px rgb(2 6 23 / 0.35);
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 140ms ease-out, transform 140ms ease-out;
+  pointer-events: none;
+}
+.chat-acciones-p--propio {
+  right: auto;
+  left: 0.5rem;
+}
+.group\/burbuja:hover .chat-acciones-p,
+.chat-acciones-p:focus-within {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.chat-acciones-p button {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+}
+.chat-acciones-p button:hover {
+  background: oklch(var(--bc) / 0.08);
+}
+/* En pantallas táctiles no hay "pasar el mouse": siempre visibles. */
+@media (hover: none) {
+  .chat-acciones-p {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+
+/* Cita dentro de la burbuja (clic = ir al mensaje original). */
+.chat-cita {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 0.35rem;
+  padding: 0.3rem 0.55rem;
+  border-left: 3px solid oklch(var(--p) / 0.7);
+  border-radius: 0.4rem;
+  background: oklch(var(--bc) / 0.06);
+}
+.chat-cita:hover {
+  background: oklch(var(--bc) / 0.1);
+}
+
+/* Barra "Respondiendo a" / "Editando" encima del redactor. */
+.chat-contexto-p {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.6rem;
+  border-left: 3px solid oklch(var(--p));
+  border-radius: 0.6rem;
+  background: oklch(var(--p) / 0.08);
+  color: oklch(var(--p));
+}
+.chat-contexto-p--edicion {
+  border-left-color: oklch(var(--wa));
+  background: oklch(var(--wa) / 0.1);
+  color: oklch(var(--wa));
+}
+.chat-contexto-p p {
+  color: oklch(var(--bc));
+}
+
+/* Mensaje al que se saltó desde una cita: se ilumina un momento. */
+.chat-resaltado .chat-burbuja {
+  animation: chat-resaltado 1.4s ease-out;
+}
+@keyframes chat-resaltado {
+  0%, 35% { box-shadow: 0 0 0 3px oklch(var(--p) / 0.45); }
+}

@@ -1996,3 +1996,14 @@ body.swal2-height-auto {
   color: #93c5fd;
   background: rgb(147 197 253 / 0.16);
 }
+
+/* ============ Mensaje eliminado (chat de tickets y de proyectos) ============ */
+.chat-eliminado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  opacity: 0.6;
+}

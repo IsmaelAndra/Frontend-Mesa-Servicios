@@ -35,7 +35,7 @@
       <ng-container *ngFor="let m of mensajes; let i = index; trackBy: trackMensaje">
         <div *ngIf="separador(i) as dia" class="chat-dia" role="separator"><span>{{ dia }}</span></div>
 
-        <div class="flex items-end gap-2.5"
+        <div class="flex items-end gap-2.5 chat-fila" [id]="'pm-' + m.id"
              [class.chat-continua]="continuacion(i)"
              [class.chat-entra]="recienLlegados.has(m.id)"
              [class.chat-entra--propio]="recienLlegados.has(m.id) && m.propio"
@@ -57,12 +57,41 @@
               <time [attr.datetime]="m.creado" [title]="m.creado | date: 'dd/MM/yyyy HH:mm'">{{ m.creado | date: 'HH:mm' }}</time>
             </div>
 
-            <!-- HTML del editor: Angular lo sanea al pintarlo ([innerHTML]) y el backend ya quitó scripts. -->
-            <div *ngIf="m.texto" class="chat-burbuja chat-html px-4 py-3 rounded-2xl shadow-sm break-words text-sm"
-                 [ngClass]="m.propio
-                   ? 'chat-message chat-message-user bg-primary/25 text-base-content border border-primary/40 rounded-ee-sm'
-                   : 'chat-message chat-message-other bg-base-200/70 text-base-content border border-base-300 rounded-es-sm'"
-                 [innerHTML]="htmlDe(m)"></div>
+            <!-- Burbuja + acciones (responder, editar, eliminar), como en el chat de tickets -->
+            <div class="relative group/burbuja max-w-full" [class.self-end]="m.propio">
+              <div *ngIf="puedeEscribir && !m.eliminado" class="chat-acciones-p" [class.chat-acciones-p--propio]="m.propio">
+                <button type="button" (click)="responder(m)" title="Responder" aria-label="Responder a este mensaje">
+                  <i class="fa-solid fa-reply" aria-hidden="true"></i></button>
+                <ng-container *ngIf="puedeEditar(m)">
+                  <button type="button" (click)="editar(m)" title="Editar" aria-label="Editar mensaje">
+                    <i class="fa-solid fa-pen" aria-hidden="true"></i></button>
+                  <button type="button" class="text-error" (click)="eliminar(m)" title="Eliminar" aria-label="Eliminar mensaje">
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i></button>
+                </ng-container>
+              </div>
+
+              <!-- Eliminado: queda el aviso en su sitio, como en WhatsApp -->
+              <div *ngIf="m.eliminado" class="chat-burbuja px-4 py-2.5 rounded-2xl text-sm border border-dashed border-base-300 bg-base-100/70">
+                <p class="chat-eliminado"><i class="fa-solid fa-ban" aria-hidden="true"></i>
+                  {{ m.propio ? 'Eliminaste este mensaje' : 'Se eliminó este mensaje' }}</p>
+              </div>
+
+              <div *ngIf="!m.eliminado && (m.texto || m.respondeA)" class="chat-burbuja px-4 py-3 rounded-2xl shadow-sm break-words text-sm"
+                   [ngClass]="m.propio
+                     ? 'chat-message chat-message-user bg-primary/25 text-base-content border border-primary/40 rounded-ee-sm'
+                     : 'chat-message chat-message-other bg-base-200/70 text-base-content border border-base-300 rounded-es-sm'">
+                <!-- Cita del mensaje al que responde -->
+                <button *ngIf="m.respondeA as c" type="button" class="chat-cita" (click)="irACita(c.id)" [title]="'Ir al mensaje de ' + c.autor">
+                  <span class="font-semibold text-[11px] block">{{ c.autor }}</span>
+                  <span class="text-[11px] opacity-75 line-clamp-2">{{ c.eliminado ? 'Mensaje eliminado' : c.extracto }}</span>
+                </button>
+                <div *ngIf="m.texto" class="chat-html" [innerHTML]="htmlDe(m)"></div>
+                <span *ngIf="m.editado" class="block text-right text-[10px] opacity-55 mt-0.5"
+                      [title]="'Editado el ' + (m.editado | date: 'dd/MM/yyyy HH:mm')">editado</span>
+              </div>
+            </div>
+
+
 
             <!-- Archivos -->
             <div *ngIf="m.adjuntos.length" class="flex flex-wrap gap-1.5" [ngClass]="m.propio ? 'justify-end' : ''">
@@ -126,6 +155,17 @@
           {{ respuestasRapidas.length ? 'Ninguna coincide.' : 'Todavía no tiene respuestas rápidas (se crean desde el chat de un ticket).' }}
         </p>
       </div>
+    </div>
+
+    <!-- Respondiendo a / Editando -->
+    <div *ngIf="respondiendo || editando" class="chat-contexto-p" [class.chat-contexto-p--edicion]="editando">
+      <i class="fa-solid" [ngClass]="editando ? 'fa-pen' : 'fa-reply'" aria-hidden="true"></i>
+      <div class="flex-1 min-w-0">
+        <p class="text-[11px] font-semibold">{{ editando ? 'Editando su mensaje' : 'Respondiendo a ' + (respondiendo!.propio ? 'usted' : respondiendo!.autor) }}</p>
+        <p *ngIf="respondiendo" class="text-[11px] opacity-70 truncate">{{ textoCorto(respondiendo) }}</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-xs btn-square" (click)="cancelarContexto()" aria-label="Cancelar">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
     </div>
 
     <div *ngIf="archivos.length" class="flex flex-wrap gap-1.5">

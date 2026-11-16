@@ -175,6 +175,8 @@ export interface Answer {
   editedAtAnswer?: string | null;
   /** Estaba sin leer por mí justo antes de abrir el hilo (separador "no leídos"). */
   unreadOnOpen?: boolean | null;
+  /** Eliminado por su autor: el chat muestra "Se eliminó este mensaje" (sin texto). */
+  deletedAnswer?: boolean | null;
   /** Solo en el frontend: 'enviando' o 'fallido' mientras el mensaje está en vuelo. */
   state?: 'enviando' | 'fallido';
 }

@@ -1509,7 +1509,7 @@
               >
                 <!-- Acciones del mensaje: aparecen al pasar el ratón o con el teclado -->
                 <div
-                  *ngIf="!a.state"
+                  *ngIf="!a.state && !a.deletedAnswer"
                   class="chat-acciones"
                   [class.chat-acciones--propio]="isMine(a)"
                 >
@@ -1526,12 +1526,18 @@
                     </button>
                   </ng-container>
                 </div>
+                <!-- Eliminado: como en WhatsApp, queda el aviso en su sitio -->
+                <p *ngIf="a.deletedAnswer" class="chat-eliminado">
+                  <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                  {{ isMine(a) ? "Eliminaste este mensaje" : "Se eliminó este mensaje" }}
+                </p>
                 <div
+                  *ngIf="!a.deletedAnswer"
                   [innerHTML]="a.messageAnswer"
                   class="message-html not-prose"
                 ></div>
                 <span
-                  *ngIf="a.editedAtAnswer"
+                  *ngIf="a.editedAtAnswer && !a.deletedAnswer"
                   class="chat-editado"
                   [title]="'Editado el ' + (a.editedAtAnswer | date: 'dd/MM/yyyy HH:mm')"
                 >editado</span>

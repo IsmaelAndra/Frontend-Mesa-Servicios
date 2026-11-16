@@ -876,7 +876,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ---------------- Editar / eliminar un mensaje propio
   puedeEditar(a: Answer): boolean {
-    if (!this.isMine(a) || a.state || a.idAnswer.startsWith("tmp-")) return false;
+    if (!this.isMine(a) || a.state || a.idAnswer.startsWith("tmp-") || a.deletedAnswer) return false;
     // En un ticket cerrado la conversación queda como constancia.
     if (this.ticket?.status === "CERRADO") return false;
     const creado = new Date(a.createdAtAnswer).getTime();
@@ -943,7 +943,9 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       if (!r.isConfirmed) return;
       this.ticketService.deleteAnswer(this.ticketId, a.idAnswer).subscribe({
         next: () => {
-          this.answers = this.answers.filter((x) => x.idAnswer !== a.idAnswer);
+          // Como WhatsApp: queda en su sitio como "Se eliminó este mensaje".
+          this.answers = this.answers.map((x) =>
+            x.idAnswer === a.idAnswer ? { ...x, deletedAnswer: true, messageAnswer: "" } : x);
           this.totalRespuestas = Math.max(0, this.totalRespuestas - 1);
           if (this.editando?.idAnswer === a.idAnswer) this.cancelarEdicion();
           this.toastService.info("Mensaje eliminado");
