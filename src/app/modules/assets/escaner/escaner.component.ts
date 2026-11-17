@@ -94,9 +94,17 @@ export class EscanerComponent implements AfterViewInit, OnDestroy {
         setTimeout(leer, 250);
       };
       leer();
-    } catch {
+    } catch (e) {
       this.conCamara = false;
-      this.motivoSinCamara = 'No se pudo abrir la cámara (permiso denegado o sin cámara): escriba el código.';
+      const nombre = (e as { name?: string } | null)?.name;
+      // Un mensaje que diga qué hacer: antes siempre era el mismo.
+      this.motivoSinCamara = !window.isSecureContext
+        ? 'La cámara solo funciona con https://: abra el sistema con su dirección segura o escriba el código.'
+        : nombre === 'NotAllowedError' || nombre === 'SecurityError'
+          ? 'El navegador tiene bloqueada la cámara para este sitio. Toque el candado junto a la dirección → Permisos → Cámara → Permitir, y vuelva a abrir el escáner. Mientras tanto, escriba el código.'
+          : nombre === 'NotFoundError' || nombre === 'OverconstrainedError'
+            ? 'No se encontró una cámara en este equipo: escriba el código.'
+            : 'No se pudo abrir la cámara (puede estar en uso por otra aplicación): escriba el código.';
     }
   }
 

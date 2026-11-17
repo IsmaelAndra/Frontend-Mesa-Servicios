@@ -113,10 +113,15 @@
           <p class="text-xs opacity-60">Hasta {{ limites.fotos }} fotos de {{ limites.fotoMb }} MB (JPG, PNG o WEBP). En el teléfono abre la cámara.</p>
           <div *ngIf="fotos.length; else sinFotos" class="grid grid-cols-3 sm:grid-cols-6 gap-2">
             <div *ngFor="let f of fotos; trackBy: trackFoto" class="relative group aspect-square">
-              <button type="button" class="w-full h-full" (click)="fotoAmpliada = f.url" [attr.aria-label]="'Ver ' + f.archivo.nombre">
-                <img [src]="f.url" [alt]="f.archivo.nombre" class="w-full h-full object-cover rounded-xl border border-base-200" />
+              <div *ngIf="!f.url" class="skeleton w-full h-full rounded-xl" aria-label="Cargando foto"></div>
+              <button *ngIf="f.url" type="button" class="w-full h-full" (click)="!f.subiendo && (fotoAmpliada = f.url)" [attr.aria-label]="'Ver ' + f.archivo.nombre">
+                <img [src]="f.url" [alt]="f.archivo.nombre" loading="lazy" decoding="async"
+                     class="w-full h-full object-cover rounded-xl border border-base-200" [class.opacity-60]="f.subiendo" />
               </button>
-              <button *ngIf="puedeGestionar" type="button" class="btn btn-xs btn-circle btn-error absolute top-1 right-1 opacity-80"
+              <span *ngIf="f.subiendo" class="absolute inset-0 grid place-items-center pointer-events-none">
+                <span class="loading loading-spinner loading-md text-white drop-shadow"></span>
+              </span>
+              <button *ngIf="puedeGestionar && !f.subiendo" type="button" class="btn btn-xs btn-circle btn-error absolute top-1 right-1 opacity-80"
                       (click)="borrarArchivo(f.archivo)" [attr.aria-label]="'Eliminar ' + f.archivo.nombre">
                 <i class="fa-solid fa-xmark text-[10px]" aria-hidden="true"></i></button>
             </div>
@@ -133,9 +138,9 @@
             Garantía, factura y documentos
           </h2>
           <div *ngIf="puedeGestionar" class="flex flex-col lg:flex-row gap-2 lg:items-end">
-            <label class="form-control">
+            <label class="form-control w-full lg:w-auto">
               <span class="label-text text-xs mb-1">Vence la garantía</span>
-              <input type="date" class="input input-bordered input-sm" [(ngModel)]="venceGarantia" />
+              <input type="date" class="input input-bordered input-sm w-full lg:w-44" [(ngModel)]="venceGarantia" />
             </label>
             <label class="btn btn-sm btn-outline gap-2" [class.btn-disabled]="subiendo">
               <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Subir garantía (PDF)

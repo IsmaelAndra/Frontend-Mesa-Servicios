@@ -7,6 +7,7 @@ import { AssetService } from '../../../core/services/asset.service';
 import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Acta, Asset, AssetArchivo, AssetAssignableUser, AssetHistory, ESTADOS_ACTA, ESTADOS_FISICOS, LIMITES_ARCHIVOS, TIPOS_ACTA, TipoActa } from '../../../models/asset.model';
+import { comprimirImagen } from '../../../core/utils/comprimir-imagen.util';
 import { abrirBlob, tamanoLegible } from '../../../core/utils/abrir-blob.util';
 import { etiquetaTipoActivo, iconoTipoActivo } from '../../../core/utils/asset-type.util';
 import { metaAccionActivo, metaEstadoActivo } from '../../../core/utils/asset-status.util';
@@ -38,8 +39,12 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
   readonly tiposActa = TIPOS_ACTA;
   readonly estadosActa = ESTADOS_ACTA;
   archivos: AssetArchivo[] = [];
-  /** Fotos con su URL de blob (llegan por la API con sesión, no hay URL pública). */
-  fotos: { archivo: AssetArchivo; url: string }[] = [];
+  /**
+   * Fotos con su URL de blob (llegan por la API con sesión, no hay URL pública).
+   * `url` null = aún descargando (se pinta un esqueleto); `subiendo` = vista previa local.
+   */
+  fotos: { archivo: AssetArchivo; url: string | null; subiendo?: boolean }[] = [];
+  private fotosSubiendo = 0;
   documentos: AssetArchivo[] = [];
   actas: Acta[] = [];
   subiendo = false;
@@ -183,36 +188,92 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Conserva las miniaturas que ya están en pantalla y solo descarga las nuevas:
+   * antes se vaciaba todo y, tras subir una foto, el bloque quedaba en blanco
+   * hasta volver a bajar cada imagen.
+   */
   private cargarFotos(lista: AssetArchivo[]): void {
-    this.liberarFotos();
+    const previas = new Map(this.fotos.filter((f) => !f.subiendo && f.url).map((f) => [f.archivo.id, f.url as string]));
+    const ids = new Set(lista.map((f) => f.id));
+    previas.forEach((url, id) => { if (!ids.has(id)) URL.revokeObjectURL(url); });
+    const enCurso = this.fotos.filter((f) => f.subiendo);
+    this.fotos = [...lista.map((f) => ({ archivo: f, url: previas.get(f.id) ?? null })), ...enCurso];
     for (const f of lista) {
+      if (previas.has(f.id)) continue;
       this.assetService.descargarArchivo(this.id, f.id).subscribe({
-        next: (b) => (this.fotos = [...this.fotos, { archivo: f, url: URL.createObjectURL(b) }]),
+        next: (b) => this.ponerUrl(f.id, URL.createObjectURL(b)),
         error: () => undefined,
       });
     }
   }
 
+  private ponerUrl(id: string, url: string): void {
+    if (!this.fotos.some((f) => f.archivo.id === id)) {
+      URL.revokeObjectURL(url);
+      return;
+    }
+    this.fotos = this.fotos.map((f) => (f.archivo.id === id ? { ...f, url } : f));
+  }
+
   private liberarFotos(): void {
-    this.fotos.forEach((f) => URL.revokeObjectURL(f.url));
+    this.fotos.forEach((f) => f.url && URL.revokeObjectURL(f.url));
     this.fotos = [];
   }
 
   get quedanFotos(): number {
-    return Math.max(0, this.limites.fotos - this.archivos.filter((a) => a.tipo === 'FOTO').length);
+    return Math.max(0, this.limites.fotos - this.archivos.filter((a) => a.tipo === 'FOTO').length - this.fotosSubiendo);
   }
 
-  /** Fotos desde la galería o la cámara del teléfono (input con capture). */
-  subirFotos(ev: Event): void {
+  /**
+   * Fotos desde la galería o la cámara del teléfono (input con capture).
+   * Se comprimen en el navegador (1600 px, JPEG) antes de subir: una foto de
+   * teléfono pasa de varios MB a unos cientos de KB. Mientras sube se ve la
+   * vista previa local, y al terminar se reutiliza esa misma imagen.
+   */
+  async subirFotos(ev: Event): Promise<void> {
     const input = ev.target as HTMLInputElement;
-    const lista = Array.from(input.files || []).slice(0, this.quedanFotos);
+    const elegidas = Array.from(input.files || []).slice(0, this.quedanFotos);
     input.value = '';
+    if (!elegidas.length) return;
+    this.subiendo = true;
+    const lista = await Promise.all(elegidas.map((f) => comprimirImagen(f)));
     const grandes = lista.filter((f) => f.size > this.limites.fotoMb * 1024 * 1024);
     if (grandes.length) {
+      this.subiendo = this.fotosSubiendo > 0;
       this.toastService.warn(`Cada foto puede pesar hasta ${this.limites.fotoMb} MB`);
       return;
     }
-    this.subirVarios(lista, 'FOTO');
+    let pendientes = lista.length;
+    let fallidas = 0;
+    this.fotosSubiendo += lista.length;
+    lista.forEach((f, i) => {
+      const local: AssetArchivo = { id: `local-${Date.now()}-${i}`, tipo: 'FOTO', nombre: f.name } as AssetArchivo;
+      const url = URL.createObjectURL(f);
+      this.fotos = [...this.fotos, { archivo: local, url, subiendo: true }];
+      const terminar = () => {
+        this.fotosSubiendo--;
+        if (--pendientes > 0) return;
+        this.subiendo = false;
+        if (fallidas < lista.length) this.toastService.success(lista.length - fallidas > 1 ? 'Fotos subidas' : 'Foto subida');
+        this.cargarArchivos();
+      };
+      this.assetService.subirArchivo(this.id, 'FOTO', f).subscribe({
+        next: (a) => {
+          // La foto subida conserva la vista previa local: no se vuelve a descargar.
+          this.fotos = this.fotos.map((x) => (x.archivo.id === local.id ? { archivo: a, url } : x));
+          this.archivos = [...this.archivos, a];
+          terminar();
+        },
+        error: (e) => {
+          fallidas++;
+          URL.revokeObjectURL(url);
+          this.fotos = this.fotos.filter((x) => x.archivo.id !== local.id);
+          this.toastService.error(e?.error?.message || `No se pudo subir ${f.name}`);
+          terminar();
+        },
+      });
+    });
   }
 
   subirDocumento(ev: Event, tipo: 'GARANTIA' | 'FACTURA' | 'OTRO'): void {

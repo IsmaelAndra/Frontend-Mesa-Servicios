@@ -498,6 +498,7 @@
             placeholder="usuario@coacmagisterio.fin.ec"
           />
         </label>
+        <div class="grid grid-cols-2 gap-3 items-start">
         <label class="form-control w-full">
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium">Cédula <span class="text-error">*</span></span>
@@ -515,8 +516,7 @@
 
         <label class="form-control w-full">
           <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Extensión telefónica <span class="text-error">*</span></span>
-            <span class="label-text-alt text-[11px] opacity-60">Para llamar desde los tickets</span>
+            <span class="label-text text-xs font-medium" title="Para llamar desde los tickets">Extensión <span class="text-error">*</span></span>
           </div>
           <label class="input input-bordered input-sm flex items-center gap-2 w-full focus-within:ring-2 focus-within:ring-primary/25"
                  [class.input-error]="extensionNuevaInvalida()">
@@ -528,6 +528,7 @@
             <span class="label-text-alt text-error">Solo números, hasta 10 dígitos</span>
           </div>
         </label>
+        </div>
 
         <label class="form-control w-full">
           <div class="label pt-0 pb-1">
@@ -857,10 +858,10 @@
           </div>
         </label>
 
+        <div class="grid grid-cols-2 gap-3 items-start">
         <label class="form-control w-full">
           <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Cédula <span class="text-error">*</span></span>
-            <span class="label-text-alt text-[11px] opacity-60">10 números</span>
+            <span class="label-text text-xs font-medium" title="10 números">Cédula <span class="text-error">*</span></span>
           </div>
           <label class="input input-bordered input-sm flex items-center gap-2 w-full focus-within:ring-2 focus-within:ring-primary/25"
                  [class.input-error]="cedulaEdicionInvalida()">
@@ -872,8 +873,7 @@
 
         <label class="form-control w-full">
           <div class="label pt-0 pb-1">
-            <span class="label-text text-xs font-medium">Extensión telefónica</span>
-            <span class="label-text-alt text-[11px] opacity-60">Para llamar desde los tickets</span>
+            <span class="label-text text-xs font-medium" title="Para llamar desde los tickets">Extensión</span>
           </div>
           <label class="input input-bordered input-sm flex items-center gap-2 w-full focus-within:ring-2 focus-within:ring-primary/25"
                  [class.input-error]="extensionInvalida()">
@@ -882,6 +882,7 @@
                    placeholder="Ej. 182" [(ngModel)]="edicion.extension" />
           </label>
         </label>
+        </div>
 
         <label class="form-control w-full">
           <div class="label pt-0 pb-1">

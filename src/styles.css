@@ -2047,3 +2047,23 @@ body.swal2-height-auto {
   content: "CANCELADO";
   background: rgb(220 38 38 / 0.5);
 }
+
+/* ===== Fechas en el teléfono =====
+   Safari de iPhone pinta el input de fecha con su propio aspecto: sin valor queda
+   aplastado (sin alto) y con valor el texto sale centrado o cortado. Se le quita el
+   aspecto nativo, se fija el alto del input de daisyUI y el texto va a la izquierda. */
+input[type='date'].input,
+input[type='datetime-local'].input,
+input[type='time'].input {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+input[type='date'].input::-webkit-date-and-time-value,
+input[type='datetime-local'].input::-webkit-date-and-time-value,
+input[type='time'].input::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.25em;
+}

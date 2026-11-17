@@ -44,13 +44,16 @@ export class AppComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.isAuthPage = this.router.url.startsWith('/acceso');
+    this.isAuthPage = this.router.url.startsWith('/acceso') || this.router.url.startsWith('/auth');
     this.loadBrandingIcons();
     // Tema de temporada (Halloween, Navidad...): público, vale también en el login.
     this.temaTemporada.cargar().subscribe();
     this.routerSub = this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(event => {
-      const url = (event as NavigationEnd).url;
-      this.isAuthPage = url.startsWith('/acceso');
+      // urlAfterRedirects: si se entra por una dirección vieja (/auth/login, la de
+      // la app instalada o un marcador) que redirige a /acceso/ingresar, "url"
+      // seguía siendo la vieja y el login salía dentro del menú y la barra.
+      const url = (event as NavigationEnd).urlAfterRedirects || (event as NavigationEnd).url;
+      this.isAuthPage = url.startsWith('/acceso') || url.startsWith('/auth');
       this.ocultarSplash();
       if (url.startsWith('/administracion/marca')) {
         this.loadBrandingIcons();
