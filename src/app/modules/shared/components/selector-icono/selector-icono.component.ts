@@ -127,7 +127,7 @@ export const ICONOS_SELECCIONABLES: { clase: string; nombre: string }[] = [
     </div>
   `,
   styles: [`
-    :host { display: block; position: relative; }
+    :host { display: block; position: relative; flex: 1 1 auto; min-width: 0; }
     .selector-icono-panel { position: fixed; z-index: 1100; width: 19rem; max-width: calc(100vw - 1rem);
       animation: selector-icono-entra 150ms cubic-bezier(0.23, 1, 0.32, 1) both; transform-origin: top left; }
     @keyframes selector-icono-entra { from { opacity: 0; transform: scale(0.97) translateY(-4px); } }

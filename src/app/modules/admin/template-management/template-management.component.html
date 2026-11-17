@@ -72,14 +72,6 @@
             <span class="label-text text-xs font-medium">Icono</span>
           </div>
           <div class="flex items-center gap-2">
-            <span
-              class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
-              [style.background-color]="(newTemplate.colorTemplate || '#64748B') + '22'"
-              [style.color]="newTemplate.colorTemplate || '#64748B'"
-              aria-hidden="true"
-            >
-              <i [class]="newTemplate.iconTemplate || 'fa-regular fa-envelope'" class="text-[15px]"></i>
-            </span>
             <app-selector-icono [(ngModel)]="newTemplate.iconTemplate" name="iconTemplate" [color]="newTemplate.colorTemplate || '#062e86'"></app-selector-icono>
           </div>
         </div>
@@ -320,14 +312,6 @@
             <span class="label-text text-xs font-medium">Icono</span>
           </div>
           <div class="flex items-center gap-2">
-            <span
-              class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
-              [style.background-color]="(editingTemplate.colorTemplate || '#64748B') + '22'"
-              [style.color]="editingTemplate.colorTemplate || '#64748B'"
-              aria-hidden="true"
-            >
-              <i [class]="editingTemplate.iconTemplate || 'fa-regular fa-envelope'" class="text-[15px]"></i>
-            </span>
             <app-selector-icono [(ngModel)]="editingTemplate.iconTemplate" name="editIconTemplate" [color]="editingTemplate.colorTemplate || '#062e86'"></app-selector-icono>
           </div>
         </div>

@@ -299,6 +299,7 @@ export class KanbanComponent implements OnInit {
       confirmButtonText: 'Guardar',
       cancelButtonText: 'Cancelar',
       focusConfirm: false,
+      didOpen: (popup) => enlazarDuracion(popup),
       preConfirm: () => {
         const popup = Swal.getPopup();
         const title = (popup?.querySelector('#tk-title') as HTMLInputElement)?.value.trim() ?? '';
@@ -406,6 +407,30 @@ export class KanbanComponent implements OnInit {
 
 function pad(n: number): string {
   return n < 10 ? '0' + n : String(n);
+}
+
+/**
+ * La duración sigue a las fechas: con inicio y fin se calcula sola (09:00–11:00 → 120)
+ * y, si se escribe la duración con un inicio puesto, se mueve el fin.
+ */
+function enlazarDuracion(popup: HTMLElement): void {
+  const inicio = popup.querySelector('#tk-start') as HTMLInputElement | null;
+  const fin = popup.querySelector('#tk-end') as HTMLInputElement | null;
+  const duracion = popup.querySelector('#tk-duration') as HTMLInputElement | null;
+  if (!inicio || !fin || !duracion) return;
+  const desdeFechas = () => {
+    if (!inicio.value || !fin.value) return;
+    const min = Math.round((new Date(fin.value).getTime() - new Date(inicio.value).getTime()) / 60000);
+    if (min > 0) duracion.value = String(min);
+  };
+  inicio.addEventListener('change', desdeFechas);
+  fin.addEventListener('change', desdeFechas);
+  duracion.addEventListener('change', () => {
+    const min = Number(duracion.value);
+    if (!inicio.value || !(min > 0)) return;
+    fin.value = toLocalInput(new Date(new Date(inicio.value).getTime() + min * 60000).toISOString());
+  });
+  desdeFechas();
 }
 
 function toLocalInput(iso?: string): string {

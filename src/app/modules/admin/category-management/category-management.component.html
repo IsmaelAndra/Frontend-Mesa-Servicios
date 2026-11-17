@@ -67,9 +67,6 @@
             <span class="label-text text-xs font-medium">Icono</span>
           </div>
           <div class="flex items-center gap-2">
-            <span class="p-1.5 rounded-lg bg-base-200 shrink-0" aria-hidden="true">
-              <i [class]="newCategory.iconCategory || 'fa-solid fa-tags'" class="text-base"></i>
-            </span>
             <app-selector-icono [(ngModel)]="newCategory.iconCategory" name="iconCategory" [color]="newCategory.colorCategory || '#062e86'"></app-selector-icono>
           </div>
         </label>
@@ -269,9 +266,6 @@
                       <span class="label-text text-xs font-medium">Icono</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <span class="p-1.5 rounded-lg bg-base-200 shrink-0" aria-hidden="true">
-                        <i [class]="editCategory.iconCategory || 'fa-solid fa-tags'" class="text-base"></i>
-                      </span>
                       <app-selector-icono [(ngModel)]="editCategory.iconCategory" [color]="editCategory.colorCategory || '#062e86'"></app-selector-icono>
                     </div>
                   </label>

@@ -103,7 +103,7 @@
             [class.input-error]="telefonoInvalido(newSucursal.phoneSucursal)"
             name="phoneSucursal"
             class="input input-bordered input-sm w-full"
-            placeholder="02 2xxxxxxx"
+            placeholder="Ej. 02 2345678"
           />
         </label>
 
@@ -136,15 +136,6 @@
             <span class="label-text text-xs font-medium">Icono</span>
           </div>
           <div class="flex items-center gap-2">
-            <span
-              class="p-1.5 rounded-lg bg-base-200 shrink-0"
-              aria-hidden="true"
-            >
-              <i
-                [class]="newSucursal.iconSucursal || 'fa-solid fa-city'"
-                class="text-base"
-              ></i>
-            </span>
             <app-selector-icono [(ngModel)]="newSucursal.iconSucursal" name="iconSucursal" [color]="newSucursal.colorSucursal || '#062e86'"></app-selector-icono>
           </div>
         </label>
@@ -375,15 +366,6 @@
                       <span class="label-text text-xs font-medium">Icono</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <span
-                        class="p-1.5 rounded-lg bg-base-200 shrink-0"
-                        aria-hidden="true"
-                      >
-                        <i
-                          [class]="editSucursal.iconSucursal || 'fa-solid fa-city'"
-                          class="text-base"
-                        ></i>
-                      </span>
                       <app-selector-icono [(ngModel)]="editSucursal.iconSucursal" [color]="editSucursal.colorSucursal || '#062e86'"></app-selector-icono>
                     </div>
                   </label>

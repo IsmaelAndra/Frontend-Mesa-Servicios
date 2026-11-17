@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import Swal from 'sweetalert2';
 import { saveAs } from 'file-saver';
 import { AdminService } from '../../../core/services/admin.service';
@@ -417,6 +417,14 @@ export class MisReportesComponent implements OnInit {
         this.toast.error(err?.error?.message || 'No se pudo abrir el reporte');
       },
     });
+  }
+
+  /** Escape cierra el modal abierto (antes solo se cerraba con la ✕). */
+  @HostListener('document:keydown.escape')
+  alPulsarEscape(): void {
+    if (Swal.isVisible()) return;
+    if (this.vistaDe) this.cerrarVista();
+    else if (this.editando && !this.guardando) this.cerrarEditor();
   }
 
   cerrarVista(): void {

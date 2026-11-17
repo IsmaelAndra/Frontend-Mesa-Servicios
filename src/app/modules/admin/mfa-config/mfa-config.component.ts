@@ -52,6 +52,9 @@ export class MfaConfigComponent implements OnInit {
     this.adminService.getMfaSetting().subscribe({
       next: (c) => {
         this.config = c;
+        // Lo leído es lo guardado: sin esto, con el doble factor activo (o un emisor
+        // distinto del de fábrica) la pantalla abría marcando "cambios sin guardar".
+        this.configOriginal = { ...c };
         this.loading = false;
       },
       error: (err) => {

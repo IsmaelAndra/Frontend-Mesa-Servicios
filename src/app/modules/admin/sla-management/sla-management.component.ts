@@ -9,6 +9,7 @@ import { MasterOption } from '../../shared/components/master-select/master-selec
 import { ACCIONES_ESCALACION, metaAccionEscalacion } from '../../../core/utils/sla-escalacion.util';
 import { duracionLegible } from '../../../core/utils/duracion.util';
 import { AuthService } from '../../../core/services/auth.service';
+import { escaparHtml } from '../../../core/utils/escapar-html.util';
 
 @Component({
   selector: 'app-sla-management',
@@ -264,13 +265,13 @@ export class SlaManagementComponent implements OnInit {
   }
 
   deletePolicy(p: SlaPolicy): void {
-    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar', focusCancel: true, title: '¿Eliminar política?', html: `<b>${p.nameSlaPolicy}</b> quedará desactivada y sus tickets dejarán de usar su SLA.`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626' })
-      .then((r) => { if (r.isConfirmed) this.adminService.deleteSlaPolicy(p.idSlaPolicy).subscribe({ next: () => this.load(), error: (e) => this.toastService.error(e?.error?.message || 'No se pudo eliminar') }); });
+    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar', focusCancel: true, title: '¿Eliminar política?', html: `<b>${escaparHtml(p.nameSlaPolicy)}</b> quedará desactivada y sus tickets dejarán de usar su SLA.`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626' })
+      .then((r) => { if (r.isConfirmed) this.adminService.deleteSlaPolicy(p.idSlaPolicy).subscribe({ next: () => { this.load(); this.toastService.success('Política eliminada'); }, error: (e) => this.toastService.error(e?.error?.message || 'No se pudo eliminar') }); });
   }
 
   deleteRule(rule: SlaRule): void {
     Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar', focusCancel: true, title: '¿Eliminar regla?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626' })
-      .then((result) => { if (result.isConfirmed) this.adminService.deleteSlaRule(rule.idSlaRule).subscribe({ next: () => this.load(), error: (e) => this.toastService.error(e?.error?.message || 'No se pudo eliminar') }); });
+      .then((result) => { if (result.isConfirmed) this.adminService.deleteSlaRule(rule.idSlaRule).subscribe({ next: () => { this.load(); this.toastService.success('Regla eliminada'); }, error: (e) => this.toastService.error(e?.error?.message || 'No se pudo eliminar') }); });
   }
 
   // ============================ ESCALACIONES ============================

@@ -101,12 +101,6 @@
               <span class="label-text text-xs font-medium">Icono</span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
-                [style.background-color]="(newPolicy.colorSlaPolicy || '#D97706') + '22'"
-                [style.color]="newPolicy.colorSlaPolicy || '#D97706'"
-                aria-hidden="true">
-                <i [class]="policyIcon(newPolicy)" class="text-[15px]"></i>
-              </span>
               <app-selector-icono [(ngModel)]="newPolicy.iconSlaPolicy" name="iconSlaPolicy" [color]="newPolicy.colorSlaPolicy || '#062e86'"></app-selector-icono>
             </div>
           </div>
@@ -189,12 +183,6 @@
                         <span class="label-text text-xs font-medium">Icono</span>
                       </div>
                       <div class="flex items-center gap-2">
-                        <span class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
-                          [style.background-color]="policyColor(editPolicy!) + '22'"
-                          [style.color]="policyColor(editPolicy!)"
-                          aria-hidden="true">
-                          <i [class]="policyIcon(editPolicy!)" class="text-[15px]"></i>
-                        </span>
                         <app-selector-icono [(ngModel)]="editPolicy!.iconSlaPolicy" [color]="editPolicy!.colorSlaPolicy || '#062e86'"></app-selector-icono>
                       </div>
                     </div>

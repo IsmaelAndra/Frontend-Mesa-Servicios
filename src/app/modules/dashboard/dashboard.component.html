@@ -34,8 +34,8 @@
           </span>
           <ng-container *ngIf="stats && !loading">
             <span class="opacity-50">·</span>
-            <span>
-              <b>{{ stats.openTickets | number }}</b> en curso
+            <span title="Tickets creados en el período elegido que aún no están resueltos ni cerrados">
+              <b>{{ stats.openTickets | number }}</b> en curso del período
               <ng-container *ngIf="stats.slaBreachedOpen > 0">
                 · <b class="text-[#fecaca]">{{ stats.slaBreachedOpen }}</b> con SLA vencido
               </ng-container>
@@ -150,7 +150,7 @@
             class="tendencia tendencia--informativa"
             [title]="t.titulo"
           ><i [class]="t.icono" aria-hidden="true"></i>{{ t.texto }}</span>
-          <span *ngIf="!tendencia(stats.totalTickets, stats.prevTotalTickets)" class="text-xs opacity-50">{{ stats.openTickets | number }} en curso</span>
+          <span *ngIf="!tendencia(stats.totalTickets, stats.prevTotalTickets)" class="text-xs opacity-50" title="De los creados en el período">{{ stats.openTickets | number }} en curso del período</span>
           <svg *ngIf="sparkline(stats.ticketsLast12Weeks) as sp" viewBox="0 0 100 28" class="w-24 h-7 shrink-0 text-primary" preserveAspectRatio="none" aria-hidden="true">
             <polygon [attr.points]="sp.area" class="fill-current opacity-10" />
             <polyline [attr.points]="sp.linea" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />
@@ -563,7 +563,7 @@
     <div class="grid gap-6 xl:grid-cols-5">
       <!-- Cifras de hoy -->
       <div *ngIf="operations" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-2 gap-3 xl:col-span-2 content-start">
-        <div class="dash-mini"><span class="dash-mini__icono text-warning bg-warning/10"><i class="fa-regular fa-clock" aria-hidden="true"></i></span><span class="dash-mini__txt">Abiertos</span><b class="dash-mini__num" [appContador]="operations.openTickets"></b></div>
+        <div class="dash-mini" title="Todos los tickets sin resolver ni cerrar, de cualquier fecha (no solo del período)"><span class="dash-mini__icono text-warning bg-warning/10"><i class="fa-regular fa-clock" aria-hidden="true"></i></span><span class="dash-mini__txt">Abiertos (todos)</span><b class="dash-mini__num" [appContador]="operations.openTickets"></b></div>
         <div class="dash-mini"><span class="dash-mini__icono text-error bg-error/10"><i class="fa-regular fa-user" aria-hidden="true"></i></span><span class="dash-mini__txt">Sin asignar</span><b class="dash-mini__num" [appContador]="operations.unassignedTickets"></b></div>
         <div class="dash-mini"><span class="dash-mini__icono text-primary bg-primary/10"><i class="fa-solid fa-plus" aria-hidden="true"></i></span><span class="dash-mini__txt">Creados hoy</span><b class="dash-mini__num" [appContador]="operations.createdToday"></b></div>
         <div class="dash-mini"><span class="dash-mini__icono text-success bg-success/10"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span><span class="dash-mini__txt">Resueltos hoy</span><b class="dash-mini__num" [appContador]="operations.resolvedToday"></b></div>

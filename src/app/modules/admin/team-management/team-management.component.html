@@ -156,14 +156,6 @@
             <span class="label-text text-xs font-medium">Icono</span>
           </div>
           <div class="flex items-center gap-2">
-            <span
-              class="p-1.5 rounded-lg shrink-0"
-              [style.background-color]="(newTeam.colorTeam || '#2563EB') + '22'"
-              [style.color]="newTeam.colorTeam || '#2563EB'"
-              aria-hidden="true"
-            >
-              <i [class]="newTeam.iconTeam || 'fa-solid fa-users'" class="text-base"></i>
-            </span>
             <app-selector-icono [(ngModel)]="newTeam.iconTeam" name="iconTeam" [color]="newTeam.colorTeam || '#062e86'"></app-selector-icono>
           </div>
         </label>
@@ -386,14 +378,6 @@
                       <span class="label-text text-xs font-medium">Icono</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <span
-                        class="p-1.5 rounded-lg shrink-0 flex items-center justify-center"
-                        [style.background-color]="(editTeam.colorTeam || '#2563EB') + '22'"
-                        [style.color]="editTeam.colorTeam || '#2563EB'"
-                        aria-hidden="true"
-                      >
-                        <i [class]="editTeam.iconTeam || 'fa-solid fa-users'" class="text-[15px]"></i>
-                      </span>
                       <app-selector-icono [(ngModel)]="editTeam.iconTeam" [color]="editTeam.colorTeam || '#062e86'"></app-selector-icono>
                     </div>
                   </div>
