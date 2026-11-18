@@ -35,7 +35,7 @@
       <section class="card bg-base-100 border border-base-200 shadow-sm">
         <div class="card-body gap-3">
           <h2 class="font-semibold flex items-center gap-2"><i class="fa-solid fa-download text-primary" aria-hidden="true"></i> Descargar copia</h2>
-          <p class="text-sm opacity-75">Baja toda la base en un archivo <b>.dump</b>. Úselo para llevar producción a pruebas o como respaldo.</p>
+          <p class="text-sm opacity-75">Baja un <b>.zip</b> con toda la base y todos los archivos subidos: logos y fondos de marca, adjuntos de tickets, fotos y documentos de activos, actas firmadas y archivos de proyectos. Úselo para llevar producción a pruebas o como respaldo.</p>
           <p class="text-xs opacity-60">Contiene datos personales y claves cifradas: guárdelo en un lugar seguro y bórrelo cuando ya no lo necesite.</p>
           <div class="mt-auto">
             <button type="button" class="btn btn-primary btn-sm gap-2 text-white w-full"
@@ -52,10 +52,10 @@
       <section class="card bg-base-100 border border-base-200 shadow-sm">
         <div class="card-body gap-3">
           <h2 class="font-semibold flex items-center gap-2"><i class="fa-solid fa-upload text-warning" aria-hidden="true"></i> Subir copia</h2>
-          <p class="text-sm opacity-75">Reemplaza <b>toda</b> la base por una copia.
+          <p class="text-sm opacity-75">Reemplaza <b>toda</b> la base y los archivos (imágenes, adjuntos) por los de la copia.
             <ng-container *ngIf="!esProduccion">Después se apagan el correo, la telefonía y las automatizaciones (es pruebas).</ng-container>
             Todos vuelven a iniciar sesión.</p>
-          <app-dropzone accept=".dump,.backup" (archivos)="elegirArchivo($event)"
+          <app-dropzone accept=".zip,.dump,.backup" (archivos)="elegirArchivo($event)"
                         [disabled]="!!motivoRestaurar || !!trabajando"></app-dropzone>
           <p *ngIf="archivo" class="text-xs"><i class="fa-solid fa-file text-primary mr-1" aria-hidden="true"></i>{{ archivo.name }} · {{ tamano(archivo) }}</p>
           <progress *ngIf="trabajando === 'subida'" class="progress progress-warning w-full" [value]="avance" max="100"></progress>
@@ -75,7 +75,7 @@
       <section class="card bg-base-100 border border-error/40 shadow-sm">
         <div class="card-body gap-3">
           <h2 class="font-semibold flex items-center gap-2 text-error"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Restablecer a cero</h2>
-          <p class="text-sm opacity-75">Deja la base como recién instalada. Se borra todo; solo queda su cuenta de súper admin con su contraseña actual.</p>
+          <p class="text-sm opacity-75">Deja la base como recién instalada. Se borran todos los datos y archivos (imágenes, adjuntos, fotos); solo queda su cuenta de súper admin con su contraseña actual.</p>
           <p class="text-xs opacity-60">Antes de borrar se hace una copia de seguridad automática: si algo falla, la base vuelve a como estaba.</p>
           <div class="mt-auto">
             <button type="button" class="btn btn-error btn-sm gap-2 text-white w-full"

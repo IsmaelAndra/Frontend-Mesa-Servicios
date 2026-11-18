@@ -69,8 +69,8 @@ export class BaseDatosComponent implements OnInit {
 
   elegirArchivo(files: File[]): void {
     const f = files?.[0] ?? null;
-    if (f && !/\.(dump|backup)$/i.test(f.name)) {
-      this.toast.warn('Elija una copia descargada desde esta pantalla (.dump)');
+    if (f && !/\.(zip|dump|backup)$/i.test(f.name)) {
+      this.toast.warn('Elija una copia descargada desde esta pantalla (.zip)');
       return;
     }
     this.archivo = f;
@@ -78,7 +78,7 @@ export class BaseDatosComponent implements OnInit {
 
   async descargar(): Promise<void> {
     const codigo = await pedirCodigoMfa({
-      html: 'La copia contiene <b>todos los datos</b> del sistema. Guárdela en un lugar seguro.',
+      html: 'La copia contiene <b>todos los datos</b> del sistema y sus archivos (imágenes, adjuntos, fotos). Guárdela en un lugar seguro.',
       accion: 'Descargar',
     });
     if (!codigo) return;
@@ -106,7 +106,7 @@ export class BaseDatosComponent implements OnInit {
     if (!this.archivo) return;
     const codigo = await pedirCodigoMfa({
       titulo: this.esProduccion ? 'Restaurar la base de PRODUCCIÓN' : 'Restaurar la base de pruebas',
-      html: `Se reemplazará <b>toda</b> la base por la copia <b>${this.archivo.name.replace(/[<>&"]/g, '')}</b>. `
+      html: `Se reemplazarán <b>toda</b> la base y los archivos por los de la copia <b>${this.archivo.name.replace(/[<>&"]/g, '')}</b>. `
         + (this.esProduccion
           ? 'Todos vuelven a iniciar sesión.'
           : 'Después se apagan el correo, la telefonía y las automatizaciones, y todos vuelven a iniciar sesión.'),
@@ -139,7 +139,7 @@ export class BaseDatosComponent implements OnInit {
     const codigo = await pedirCodigoMfa({
       titulo: this.esProduccion ? 'Restablecer PRODUCCIÓN a cero' : 'Restablecer pruebas a cero',
       html: 'Se borrarán <b>todos</b> los datos (tickets, usuarios, activos, proyectos, configuración). '
-        + 'Solo quedará su cuenta de súper admin, con su contraseña actual.',
+        + 'También las imágenes, adjuntos y fotos. Solo quedará su cuenta de súper admin, con su contraseña actual.',
       palabra: 'RESTABLECER',
     });
     if (!codigo) return;
