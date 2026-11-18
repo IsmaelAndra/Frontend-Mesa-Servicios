@@ -70,6 +70,20 @@ export class AppComponent implements OnInit, OnDestroy {
     this.cierreSub = this.authService.sesionCerrada$.subscribe((motivo) => {
       this.cerrarAvisoCierre();
       if (this.router.url.startsWith('/acceso')) return;
+      if (motivo === 'revocada') {
+        // Cerrada desde otro dispositivo: un aviso claro antes de llevar al
+        // login, en vez de saltar de golpe a otra pantalla.
+        const volver = this.router.url;
+        Swal.fire({
+          icon: 'info',
+          title: 'Sesión cerrada',
+          text: 'La sesión de este dispositivo se cerró desde otro dispositivo. Vuelva a iniciar sesión para continuar.',
+          confirmButtonText: 'Iniciar sesión',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+        }).then(() => this.router.navigate(['/acceso/ingresar'], { queryParams: { volver } }));
+        return;
+      }
       this.toast.warn(
         motivo === 'inactividad'
           ? `Tu sesión se cerró tras ${this.authService.idleMinutos()} minutos sin actividad. Vuelve a iniciar sesión.`
@@ -80,6 +94,9 @@ export class AppComponent implements OnInit, OnDestroy {
       this.router.navigate(['/acceso/ingresar'], { queryParams: { volver: this.router.url } });
     });
   }
+
+  /** Año del pie de página. */
+  readonly anioActual = new Date().getFullYear();
 
   private cierreSub?: Subscription;
   private avisoSub?: Subscription;

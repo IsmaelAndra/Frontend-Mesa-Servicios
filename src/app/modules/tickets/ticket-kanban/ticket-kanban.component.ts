@@ -44,6 +44,8 @@ function statusColor(status: string): string {
 export class TicketKanbanComponent implements OnInit, OnDestroy {
   /** En pantallas táctiles no se arrastra: el dedo desliza el tablero. */
   readonly sinArrastre = !arrastreHabilitado();
+  /** Teléfono: filtros además de la búsqueda, plegados por defecto. */
+  filtrosAbiertos = false;
   /** Plazo de resolución de cada ticket abierto (brillo si venció, cuenta regresiva si no). */
   plazos: Record<string, PlazoSla> = {};
   /** Se refresca cada 30 s para la cuenta regresiva. */

@@ -219,7 +219,13 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
     this.destroyCalendar();
 
     const saved = this.calendarState.obtener();
-    this.currentView = saved?.view ?? 'week';
+    // En el teléfono la semana mete 7 columnas en 375 px: se abre en el día
+    // (la persona puede cambiar a semana o mes con los botones).
+    const telefono = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 639px)').matches === true;
+    this.currentView = saved?.view ?? (telefono ? 'day' : 'week');
+    if (telefono && this.currentView === 'week') {
+      this.currentView = 'day';
+    }
     const fechaRestaurada = fechaForzada ?? (saved ? this.calendarState.aFecha(saved.date) : null);
 
     const cal = new Calendar(this.calendarEl.nativeElement, {
@@ -265,6 +271,11 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
         // En dos líneas ("Todo" / "el día"): en una sola no cabía en la
         // columna de horas y se cortaba. El centrado va en styles.css.
         alldayTitle: () => 'Todo<br>el día',
+        // Letra encima del número ("L" / "17"): en una sola línea, en el teléfono,
+        // la letra del día siguiente se montaba sobre el número.
+        weekDayName: (d: { date: number; dayName: string; isToday: boolean }) =>
+          `<span class="cal-cab${d.isToday ? ' cal-cab--hoy' : ''}"><span class="cal-cab__nom">${d.dayName}</span>`
+          + `<span class="cal-cab__num">${d.date}</span></span>`,
         time: (ev: EventObject) => plantillaEvento(ev, true),
         // En la vista de mes los eventos con hora también van como barra (ver
         // toToastEvent): ahí la hora se antepone para no perderla.
@@ -338,8 +349,22 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
     // El tema ya entró en el constructor, así que la primera rejilla ya sale con
     // los colores correctos y no hay un primer render sin tema.
     cal.render();
+    // La rejilla tiene las 24 h y empezaba arriba, a la 1 de la madrugada: se
+    // lleva a la hora actual para que se vean las actividades del día.
+    this.irAHoraActual();
     this.reloadForRange();
     this.cargarResumenHoy();
+  }
+
+  private irAHoraActual(): void {
+    if (this.currentView === 'month') return;
+    setTimeout(() => {
+      try {
+        this.calendar?.scrollToNow('auto');
+      } catch {
+        // sin rejilla horaria (vista de mes)
+      }
+    }, 50);
   }
 
   /** Cambia entre vista: 'week' | 'day' | 'month' */
@@ -351,6 +376,7 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
     setTimeout(() => {
       // La altura mínima depende de la vista; se repinta tras aplicarla.
       this.calendar?.render();
+      this.irAHoraActual();
       this.persistState();
       this.reloadForRange();
     });
@@ -580,6 +606,11 @@ function pad(n: number): string {
   return n < 10 ? '0' + n : String(n);
 }
 
+/** Columna de horas: más estrecha en el teléfono para dejar sitio a los días. */
+function anchoColumnaHoras(): string {
+  return typeof window !== 'undefined' && window.matchMedia?.('(max-width: 639px)').matches ? '52px' : '80px';
+}
+
 function calendarLightTheme(): CalendarTheme {
   return {
     common: {
@@ -600,7 +631,7 @@ function calendarLightTheme(): CalendarTheme {
       dayGrid: { borderRight: '1px solid #e5e7eb', backgroundColor: '#ffffff' },
       dayGridLeft: { borderRight: '1px solid #e5e7eb', backgroundColor: '#ffffff', width: '80px' },
       timeGrid: { borderRight: '1px solid #e5e7eb' },
-      timeGridLeft: { borderRight: '1px solid #e5e7eb', backgroundColor: '#ffffff', width: '80px' },
+      timeGridLeft: { borderRight: '1px solid #e5e7eb', backgroundColor: '#ffffff', width: anchoColumnaHoras() },
       timeGridHalfHourLine: { borderBottom: '1px dashed #e5e7eb' },
       timeGridHourLine: { borderBottom: '1px solid #e5e7eb' },
       nowIndicatorLabel: { color: '#062e86' },
@@ -651,7 +682,7 @@ function calendarDarkTheme(): CalendarTheme {
       dayGrid: { borderRight: '1px solid #374151', backgroundColor: '#1f2937' },
       dayGridLeft: { borderRight: '1px solid #374151', backgroundColor: '#111827', width: '80px' },
       timeGrid: { borderRight: '1px solid #374151' },
-      timeGridLeft: { borderRight: '1px solid #374151', backgroundColor: '#111827', width: '80px' },
+      timeGridLeft: { borderRight: '1px solid #374151', backgroundColor: '#111827', width: anchoColumnaHoras() },
       timeGridHalfHourLine: { borderBottom: '1px dashed #374151' },
       timeGridHourLine: { borderBottom: '1px solid #374151' },
       nowIndicatorLabel: { color: '#ec9811' },

@@ -228,7 +228,7 @@ export const TIPOS_ACTA: Record<TipoActa, { texto: string; color: string; icono:
 };
 
 export const ESTADOS_ACTA: Record<string, { texto: string; color: string; icono: string }> = {
-  PENDIENTE: { texto: 'Por aceptar', color: '#D97706', icono: 'fa-regular fa-clock' },
+  PENDIENTE: { texto: 'Por firmar', color: '#D97706', icono: 'fa-regular fa-clock' },
   ACEPTADA: { texto: 'Aceptada', color: '#2563EB', icono: 'fa-solid fa-check' },
   FIRMADA: { texto: 'Firmada', color: '#16A34A', icono: 'fa-solid fa-file-signature' },
   ANULADA: { texto: 'Anulada', color: '#64748B', icono: 'fa-solid fa-ban' },

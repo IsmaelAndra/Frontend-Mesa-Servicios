@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import Swal from 'sweetalert2';
 import { AssetService } from '../../../core/services/asset.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -22,7 +21,6 @@ export class MisEquiposComponent implements OnInit {
   cargando = true;
   readonly tiposActa = TIPOS_ACTA;
   readonly estadosActa = ESTADOS_ACTA;
-  aceptando: string | null = null;
   /** Mosaicos de arriba; se recalculan al cargar (no es un getter: lo pinta un ngFor). */
   resumen: { texto: string; valor: number; icono: string; color: string }[] = this.armarResumen();
 
@@ -63,7 +61,7 @@ export class MisEquiposComponent implements OnInit {
   private armarResumen(): { texto: string; valor: number; icono: string; color: string }[] {
     return [
       { texto: 'Equipos a mi nombre', valor: this.equipos?.length ?? 0, icono: 'fa-solid fa-laptop', color: '#2563EB' },
-      { texto: 'Actas por aceptar', valor: (this.actas || []).filter((a) => a.puedoAceptar).length,
+      { texto: 'Actas por firmar', valor: (this.actas || []).filter((a) => a.estado === 'PENDIENTE').length,
         icono: 'fa-solid fa-file-signature', color: '#D97706' },
       { texto: 'Actas firmadas', valor: (this.actas || []).filter((a) => a.estado === 'FIRMADA').length,
         icono: 'fa-solid fa-circle-check', color: '#16A34A' },
@@ -87,41 +85,10 @@ export class MisEquiposComponent implements OnInit {
   }
 
   get pendientes(): Acta[] {
-    return this.actas.filter((a) => a.puedoAceptar);
+    // Ya no se aceptan en el sistema: quedan pendientes hasta que se sube el escaneo firmado.
+    return this.actas.filter((a) => a.estado === 'PENDIENTE');
   }
 
-  aceptar(a: Acta): void {
-    const verbo = a.tipo === 'DEVOLUCION' ? 'devolvió' : 'recibió';
-    Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280',
-      title: `¿Acepta el acta ${a.numero}?`,
-      html: `Confirma que ${verbo} estos equipos en el estado descrito:<br><b>${a.items.map((i) => esc(i.codigo)).join(', ')}</b>.<br><br>`
-        + 'Revise el PDF antes de aceptar. Después firmará el acta impresa.',
-      icon: 'question',
-      showCancelButton: true,
-      showDenyButton: true,
-      denyButtonText: 'Ver el acta',
-      confirmButtonText: 'Acepto',
-      cancelButtonText: 'Ahora no',
-    }).then((r) => {
-      if (r.isDenied) {
-        this.ver(a);
-        return;
-      }
-      if (!r.isConfirmed) return;
-      this.aceptando = a.id;
-      this.assetService.aceptarActa(a.id).subscribe({
-        next: () => {
-          this.aceptando = null;
-          this.toast.success('Acta aceptada');
-          this.cargar();
-        },
-        error: (e) => {
-          this.aceptando = null;
-          this.toast.error(e?.error?.message || 'No se pudo aceptar el acta');
-        },
-      });
-    });
-  }
 
   ver(a: Acta): void {
     this.assetService.actaPdf(a.id).subscribe({
@@ -160,9 +127,4 @@ export class MisEquiposComponent implements OnInit {
   trackEquipo(_: number, a: Asset): string {
     return a.idAsset;
   }
-}
-
-/** Los códigos pueden escribirse a mano: se escapan antes de ir al HTML del diálogo. */
-function esc(s: string): string {
-  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

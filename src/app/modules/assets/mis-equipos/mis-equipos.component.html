@@ -28,14 +28,14 @@
     </div>
   </div>
 
-  <!-- Actas por aceptar -->
+  <!-- Actas por firmar (ya no se aceptan en el sistema: al subir el escaneo firmado quedan aceptadas) -->
   <section *ngIf="pendientes.length" class="card bg-base-100 border border-warning/50 border-l-4 border-l-warning shadow-sm">
     <div class="card-body p-4 gap-3">
       <h2 class="font-semibold flex items-center gap-2">
         <i class="fa-solid fa-file-signature text-warning" aria-hidden="true"></i>
-        Actas por aceptar <span class="badge badge-warning badge-sm">{{ pendientes.length }}</span>
+        Actas por firmar <span class="badge badge-warning badge-sm">{{ pendientes.length }}</span>
       </h2>
-      <p class="text-xs opacity-70 -mt-2">Revise el PDF y acepte si los equipos y su estado son correctos. Luego firmará el acta impresa.</p>
+      <p class="text-xs opacity-70 -mt-2">Revise el PDF. Cuando firme el acta impresa y Tecnología suba el escaneo, quedará firmada y aceptada.</p>
       <div *ngFor="let a of pendientes; trackBy: trackActa" class="rounded-xl bg-base-200/50 p-3 flex flex-col md:flex-row md:items-center gap-3">
         <div class="flex-1 min-w-0">
           <p class="font-medium flex flex-wrap items-center gap-2">
@@ -51,10 +51,6 @@
         </div>
         <div class="flex gap-2 shrink-0">
           <button type="button" class="btn btn-sm btn-ghost border border-base-300 gap-1" (click)="ver(a)"><i class="fa-regular fa-file-pdf text-error" aria-hidden="true"></i> Ver acta</button>
-          <button type="button" class="btn btn-sm btn-success text-white gap-1" (click)="aceptar(a)" [disabled]="aceptando === a.id">
-            <span *ngIf="aceptando === a.id" class="loading loading-spinner loading-xs"></span>
-            <i *ngIf="aceptando !== a.id" class="fa-solid fa-check" aria-hidden="true"></i> Aceptar
-          </button>
         </div>
       </div>
     </div>

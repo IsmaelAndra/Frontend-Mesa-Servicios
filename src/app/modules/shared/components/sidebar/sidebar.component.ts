@@ -126,6 +126,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { grupo: 'Apariencia', label: 'Páginas del sistema', route: '/administracion/paginas-sistema', icon: navIcon('pages-system'), roles: ['SUPER_ADMIN'] },
         { grupo: 'Seguridad', label: 'Autenticación MFA', route: '/administracion/mfa', icon: navIcon('mfa'), roles: ['SUPER_ADMIN'] },
         { grupo: 'Seguridad', label: 'Seguridad de sesión', route: '/administracion/seguridad-sesion', icon: navIcon('session-config'), roles: ['SUPER_ADMIN'] },
+        { grupo: 'Seguridad', label: 'Base de datos', route: '/administracion/base-datos', icon: navIcon('base-datos'), roles: ['SUPER_ADMIN'] },
         { grupo: 'Seguridad', label: 'Auditoría del sistema', route: '/administracion/auditoria', icon: navIcon('audit-sistema'), roles: ['SUPER_ADMIN', 'AUDITOR'] },
         // Programar una automatizacion es escribir codigo con permisos ajenos: solo SUPER_ADMIN.
         { grupo: 'Integraciones', label: 'Inteligencia artificial', route: '/administracion/inteligencia-artificial', icon: navIcon('ai-config'), roles: ['SUPER_ADMIN'] },

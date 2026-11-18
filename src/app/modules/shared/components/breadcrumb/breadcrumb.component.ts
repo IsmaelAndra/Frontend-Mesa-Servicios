@@ -65,6 +65,7 @@ const LABELS: Record<string, string> = {
   'session-config': 'Seguridad de Sesión',
   'chat-config': 'Acuses de Lectura',
   'mail-outbox': 'Cola de correo',
+  'base-datos': 'Base de datos',
   'ticket-types': 'Tipos de ticket',
   'audit-sistema': 'Auditoría del sistema',
   reports: 'Reportes',

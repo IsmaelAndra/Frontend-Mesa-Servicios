@@ -124,10 +124,21 @@
       <main class="flex-1 overflow-y-auto app-fondo">
         <!-- pb-24: el botón flotante del asistente (abajo a la derecha) no tapa
              el final de la página, p. ej. el botón de enviar del chat. -->
-        <div class="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 pt-6 pb-24">
+        <div class="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 pt-6 pb-8 min-h-[calc(100%-4.5rem)]">
           <app-breadcrumb></app-breadcrumb>
           <router-outlet></router-outlet>
         </div>
+        <!-- Pie de página. pb-24: el botón flotante del asistente (abajo a la
+             derecha) no tapa el final de la página. -->
+        <footer class="app-pie mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 pb-24">
+          <div class="border-t border-base-300 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-base-content/60">
+            <span>© {{ anioActual }} COAC Magisterio de Pichincha · Mesa de Servicios</span>
+            <nav class="flex items-center gap-4" aria-label="Pie de página">
+              <a routerLink="/privacidad" class="link link-hover">Política de privacidad</a>
+              <a routerLink="/mi-cuenta/dispositivos" class="link link-hover">Mis dispositivos</a>
+            </nav>
+          </div>
+        </footer>
       </main>
     </div>
   </div>

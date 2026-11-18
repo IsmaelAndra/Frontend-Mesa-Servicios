@@ -99,7 +99,7 @@ if (url.includes('/auth/login') || url.includes('/auth/register')
 
     return this.renovarToken().pipe(
       switchMap(() => this.retryAfterRefresh(req, next)),
-      catchError(() => this.expireSession())
+      catchError((e: unknown) => this.expireSession(AuthService.esSesionCerradaDesdeOtro(e)))
     );
   }
 
@@ -142,10 +142,10 @@ if (url.includes('/auth/login') || url.includes('/auth/register')
     );
   }
 
-  private expireSession(): Observable<never> {
+  private expireSession(revocada = false): Observable<never> {
     // El aviso y la redirección los hace la raíz (AppComponent) una sola vez,
     // aunque caduquen a la vez todas las peticiones de la pantalla.
-    this.authService.cerrarSesion('expirada');
+    this.authService.cerrarSesion(revocada ? 'revocada' : 'expirada');
     return throwError(() => new Error('Sesión expirada'));
   }
 }

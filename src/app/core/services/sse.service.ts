@@ -157,6 +157,11 @@ export class SseService {
       }
     });
 
+    // Se cerró una sesión de esta cuenta (Mi cuenta → Dispositivos): se
+    // comprueba la propia. Si era esta, la renovación falla y sale con aviso;
+    // si no, se renueva sin que la persona lo note.
+    source.addEventListener('sesion-revisar', () => this.authService.revisarSesion());
+
     // La conexión se rehace cada 8 minutos: así el backend vuelve a comprobar
     // que la cuenta sigue activa, igual que cuando el canal dependía del token.
     this.reconnectTimer = setTimeout(() => {

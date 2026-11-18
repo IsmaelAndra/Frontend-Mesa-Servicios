@@ -1,0 +1,87 @@
+<div class="space-y-6">
+  <header class="page-head flex items-center gap-3">
+    <div class="page-head__icono" aria-hidden="true"><i class="fa-solid fa-database"></i></div>
+    <div class="min-w-0">
+      <h1 class="page-head__titulo font-bold">Base de datos</h1>
+      <p class="text-sm opacity-70">Copias para llevar los datos de producción a pruebas, y volver a empezar desde cero.</p>
+    </div>
+  </header>
+
+  <div *ngIf="cargando" class="flex justify-center py-16" role="status"><span class="loading loading-spinner"></span></div>
+
+  <ng-container *ngIf="!cargando && estado">
+    <!-- Estado -->
+    <section class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body p-4 flex-row flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+        <span><i class="fa-solid fa-database text-primary mr-1" aria-hidden="true"></i>Base <b class="font-mono">{{ estado.baseDatos }}</b></span>
+        <span *ngIf="estado.tamano"><i class="fa-solid fa-weight-hanging text-primary mr-1" aria-hidden="true"></i>{{ estado.tamano }}</span>
+        <span class="badge badge-sm gap-1.5 font-medium" [ngClass]="estado.permiteRestaurar ? 'badge-warning' : 'badge-success text-success-content'">
+          <i class="fa-solid" [ngClass]="estado.permiteRestaurar ? 'fa-flask' : 'fa-shield-halved'" aria-hidden="true"></i>
+          {{ estado.permiteRestaurar ? 'Ambiente de pruebas: se puede reemplazar la base' : 'Solo descarga (producción)' }}
+        </span>
+        <span class="badge badge-sm gap-1.5 font-medium" [ngClass]="estado.autenticadorListo ? 'badge-success text-success-content' : 'badge-error text-error-content'">
+          <i class="fa-solid" [ngClass]="estado.autenticadorListo ? 'fa-mobile-screen' : 'fa-triangle-exclamation'" aria-hidden="true"></i>
+          {{ estado.autenticadorListo ? 'App de autenticación configurada' : 'Sin app de autenticación' }}
+        </span>
+        <span *ngIf="!estado.herramientas" class="text-error text-xs">El servidor no tiene pg_dump instalado.</span>
+      </div>
+    </section>
+
+    <div class="grid gap-6 xl:grid-cols-3">
+      <!-- Descargar -->
+      <section class="card bg-base-100 border border-base-200 shadow-sm">
+        <div class="card-body gap-3">
+          <h2 class="font-semibold flex items-center gap-2"><i class="fa-solid fa-download text-primary" aria-hidden="true"></i> Descargar copia</h2>
+          <p class="text-sm opacity-75">Baja toda la base en un archivo <b>.dump</b>. Úselo para llevar producción a pruebas o como respaldo.</p>
+          <p class="text-xs opacity-60">Contiene datos personales y claves cifradas: guárdelo en un lugar seguro y bórrelo cuando ya no lo necesite.</p>
+          <div class="mt-auto">
+            <button type="button" class="btn btn-primary btn-sm gap-2 text-white w-full"
+                    (click)="descargar()" [disabled]="!!motivoBloqueo || !!trabajando" [title]="motivoBloqueo">
+              <span *ngIf="trabajando === 'descarga'" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+              <i *ngIf="trabajando !== 'descarga'" class="fa-solid fa-download" aria-hidden="true"></i> Descargar
+            </button>
+            <p *ngIf="motivoBloqueo" class="text-xs opacity-60 mt-2">{{ motivoBloqueo }}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Subir -->
+      <section class="card bg-base-100 border border-base-200 shadow-sm">
+        <div class="card-body gap-3">
+          <h2 class="font-semibold flex items-center gap-2"><i class="fa-solid fa-upload text-warning" aria-hidden="true"></i> Subir copia</h2>
+          <p class="text-sm opacity-75">Reemplaza <b>toda</b> la base por una copia. Después se apagan el correo, la telefonía y las automatizaciones, y todos vuelven a iniciar sesión.</p>
+          <app-dropzone accept=".dump,.backup" (archivos)="elegirArchivo($event)"
+                        [disabled]="!!motivoRestaurar || !!trabajando"></app-dropzone>
+          <p *ngIf="archivo" class="text-xs"><i class="fa-solid fa-file text-primary mr-1" aria-hidden="true"></i>{{ archivo.name }} · {{ tamano(archivo) }}</p>
+          <progress *ngIf="trabajando === 'subida'" class="progress progress-warning w-full" [value]="avance" max="100"></progress>
+          <p *ngIf="trabajando === 'subida'" class="text-xs opacity-70">{{ avance < 100 ? 'Subiendo ' + avance + ' %…' : 'Restaurando la base… no cierre esta pestaña.' }}</p>
+          <div class="mt-auto">
+            <button type="button" class="btn btn-warning btn-sm gap-2 w-full"
+                    (click)="restaurar()" [disabled]="!!motivoRestaurar || !archivo || !!trabajando"
+                    [title]="motivoRestaurar || (!archivo ? 'Elija primero la copia' : '')">
+              <i class="fa-solid fa-upload" aria-hidden="true"></i> Restaurar esta copia
+            </button>
+            <p *ngIf="motivoRestaurar" class="text-xs opacity-60 mt-2">{{ motivoRestaurar }}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Restablecer -->
+      <section class="card bg-base-100 border border-error/40 shadow-sm">
+        <div class="card-body gap-3">
+          <h2 class="font-semibold flex items-center gap-2 text-error"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Restablecer a cero</h2>
+          <p class="text-sm opacity-75">Deja la base como recién instalada. Se borra todo; solo queda su cuenta de súper admin con su contraseña actual.</p>
+          <p class="text-xs opacity-60">Antes de borrar se hace una copia de seguridad automática: si algo falla, la base vuelve a como estaba.</p>
+          <div class="mt-auto">
+            <button type="button" class="btn btn-error btn-sm gap-2 text-white w-full"
+                    (click)="restablecer()" [disabled]="!!motivoRestaurar || !!trabajando" [title]="motivoRestaurar">
+              <span *ngIf="trabajando === 'restableciendo'" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+              <i *ngIf="trabajando !== 'restableciendo'" class="fa-solid fa-trash-can" aria-hidden="true"></i> Restablecer
+            </button>
+            <p *ngIf="motivoRestaurar" class="text-xs opacity-60 mt-2">{{ motivoRestaurar }}</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+</div>

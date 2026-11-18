@@ -18,6 +18,7 @@ export const RUTAS_SOLO_ESCRITORIO = [
   '/administracion/telefonia',
   '/administracion/inteligencia-artificial',
   '/administracion/cola-correo',
+  '/administracion/base-datos',
 ];
 
 /** Ancho por debajo del cual se considera teléfono (el "md" de Tailwind). */

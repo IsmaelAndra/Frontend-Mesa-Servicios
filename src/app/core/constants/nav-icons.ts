@@ -60,6 +60,7 @@ export const NAV_ICONS: Record<string, string> = {
   'session-config': 'fa-solid fa-shield-halved',
   'chat-config': 'fa-solid fa-check-double',
   'mail-outbox': 'fa-solid fa-paper-plane',
+  'base-datos': 'fa-solid fa-database',
   mantenimiento: 'fa-solid fa-screwdriver-wrench',
   reports: 'fa-solid fa-chart-column',
   proyectos: 'fa-solid fa-diagram-project',

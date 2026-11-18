@@ -297,14 +297,11 @@
           </ng-template>
 
           <!-- Movimientos con acta FOR-POL-TIC-01-10 -->
-          <div *ngIf="puedeGestionar" class="grid gap-2" [class.grid-cols-2]="!!asset.assignedUser">
+          <!-- Sin reasignación: para pasarlo a otra persona se devuelve y se vuelve a entregar. -->
+          <div *ngIf="puedeGestionar" class="grid gap-2">
             <button *ngIf="!asset.assignedUser" type="button" class="btn btn-sm btn-primary gap-2 text-white"
               [disabled]="!asignable" (click)="abrirActa('ENTREGA')">
               <i class="fa-solid fa-hand-holding" aria-hidden="true"></i> Entregar con acta
-            </button>
-            <button *ngIf="asset.assignedUser" type="button" class="btn btn-sm btn-primary gap-2 text-white"
-              [disabled]="!asignable" (click)="abrirActa('REASIGNACION')">
-              <i class="fa-solid fa-right-left" aria-hidden="true"></i> Reasignar
             </button>
             <button *ngIf="asset.assignedUser" type="button" class="btn btn-sm btn-outline gap-2" (click)="abrirActa('DEVOLUCION')">
               <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Devolver

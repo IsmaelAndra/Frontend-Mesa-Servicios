@@ -22,6 +22,7 @@ import { TemplateManagementComponent } from './template-management/template-mana
 import { BrandingComponent } from './branding/branding.component';
 import { TicketTypeManagementComponent } from './ticket-type-management/ticket-type-management.component';
 import { MailOutboxComponent } from './mail-outbox/mail-outbox.component';
+import { BaseDatosComponent } from './base-datos/base-datos.component';
 
 /**
  * Rutas bajo /admin. La ruta padre ya exige sesión y rol ADMIN o SUPER_ADMIN;
@@ -55,6 +56,7 @@ export const ADMIN_ROUTES: Routes = [
   { path: 'auditoria', component: AuditSistemaComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN', 'AUDITOR'] } },
   { path: 'acuses-lectura', component: ChatConfigComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
   { path: 'cola-correo', component: MailOutboxComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
+  { path: 'base-datos', component: BaseDatosComponent, canActivate: [RoleGuard], data: { roles: ['SUPER_ADMIN'] } },
 
   // Los reportes por SQL se retiraron (V32): el enlace antiguo lleva a Reportes.
   { path: 'reportes', redirectTo: '/reportes', pathMatch: 'full' }

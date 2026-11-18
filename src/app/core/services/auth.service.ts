@@ -122,6 +122,29 @@ export class AuthService {
     };
   }
 
+  /**
+   * Comprueba si la sesión de este dispositivo sigue abierta (aviso en vivo
+   * tras cerrar una desde "Dispositivos"). El access token se cortó para todos:
+   * la renovación decide. Si falla porque la cerraron, sale con su aviso.
+   */
+  revisarSesion(): void {
+    if (!this.tokenMemoria) return;
+    this.refreshSession().subscribe({
+      next: () => undefined,
+      error: (e: { status?: number; error?: { message?: string } }) => {
+        if (e?.status === 400 || e?.status === 401) {
+          this.cerrarSesion(AuthService.esSesionCerradaDesdeOtro(e) ? 'revocada' : 'expirada');
+        }
+      },
+    });
+  }
+
+  /** El refresh respondió que esta sesión se cerró desde otro dispositivo. */
+  static esSesionCerradaDesdeOtro(e: unknown): boolean {
+    const m = (e as { error?: { message?: string } })?.error?.message || '';
+    return m.includes('otro dispositivo');
+  }
+
   /** Pregunta a las otras pestañas por un token vigente; espera poco. */
   private pedirTokenAOtrasPestanas(): Promise<string | null> {
     if (!this.canal) return Promise.resolve(null);
@@ -146,11 +169,11 @@ export class AuthService {
    * borraba el token: la pantalla seguía abierta y, al volver al día
    * siguiente, cada acción salía con error sin decir por qué.
    */
-  readonly sesionCerrada$ = new Subject<'inactividad' | 'expirada'>();
+  readonly sesionCerrada$ = new Subject<'inactividad' | 'expirada' | 'revocada'>();
   private cierreAvisado = false;
 
   /** Cierra la sesión y avisa una sola vez, aunque fallen varias peticiones a la vez. */
-  cerrarSesion(motivo: 'inactividad' | 'expirada'): void {
+  cerrarSesion(motivo: 'inactividad' | 'expirada' | 'revocada'): void {
     if (this.cierreAvisado) return;
     this.cierreAvisado = true;
     // logout() y no solo limpiar: la cookie de renovación también tiene que

@@ -16,18 +16,18 @@
       <!-- Selector de vista -->
       <div role="tablist" class="tabs tabs-boxed bg-base-200 p-1">
         <button role="tab" class="tab tab-sm gap-1.5" [class.tab-active]="currentView === 'day'" (click)="setView('day')" aria-label="Ver por día">
-          <i class="fa-regular fa-calendar text-[15px]" aria-hidden="true"></i>
-          <span class="hidden sm:inline">Día</span>
+          <i class="fa-solid fa-calendar-day text-[15px]" aria-hidden="true"></i>
+          <span>Día</span>
         </button>
 
         <button role="tab" class="tab tab-sm gap-1.5" [class.tab-active]="currentView === 'week'" (click)="setView('week')" aria-label="Ver por semana">
           <i class="fa-solid fa-table-columns text-[15px]" aria-hidden="true"></i>
-          <span class="hidden sm:inline">Semana</span>
+          <span>Semana</span>
         </button>
 
         <button role="tab" class="tab tab-sm gap-1.5" [class.tab-active]="currentView === 'month'" (click)="setView('month')" aria-label="Ver por mes">
-          <i class="fa-regular fa-calendar text-[15px]" aria-hidden="true"></i>
-          <span class="hidden sm:inline">Mes</span>
+          <i class="fa-solid fa-calendar-days text-[15px]" aria-hidden="true"></i>
+          <span>Mes</span>
         </button>
       </div>
 

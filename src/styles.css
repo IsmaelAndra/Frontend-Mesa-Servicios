@@ -1033,6 +1033,20 @@ select.swal-daisy-input {
 .page-head.flex {
   flex-wrap: wrap;
 }
+/* En columna (móvil) con flex-wrap, cada línea toma el ancho de su contenido y
+   no el de la pantalla: un subtítulo con "truncate" empujaba la cabecera fuera
+   del teléfono (Proyectos, Reportes, Evaluaciones...). Nada más ancho que ella. */
+.page-head > * {
+  max-width: 100%;
+}
+/* Un elemento de rejilla no se encoge por debajo de su contenido (min-width:
+   auto): en el teléfono, una columna con un texto "truncate" o una tabla
+   empujaba la página fuera de la pantalla (Inicio, Configuración de activos).
+   Con min-width 0 la columna manda y el contenido se recorta o baja de línea. */
+main .grid > *,
+.chat-movil--abierto .grid > * {
+  min-width: 0;
+}
 /* Ancho mínimo y no flex-basis: con flex-basis 18rem, en un encabezado en
    columna (flex-col, el del editor de automatizaciones o cualquiera en móvil)
    esos 18rem se volvían ALTURA y quedaba un hueco en blanco enorme. */
@@ -1305,6 +1319,46 @@ main .ql-snow.ql-toolbar button.ql-active .ql-stroke {
 /* ============ Calendario: "Todo el día" en dos líneas y centrado ============ */
 /* La plantilla alldayTitle devuelve "Todo<br>el día". Estas reglas estaban en
    calendar.component.css y no se aplicaban (DOM de Toast UI, sin _ngcontent). */
+/* Cabecera de los días: letra encima del número (template weekDayName). */
+.calendar-wrap .cal-cab {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+  gap: 2px;
+}
+.calendar-wrap .cal-cab__nom {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+.calendar-wrap .cal-cab__num {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.calendar-wrap .cal-cab--hoy .cal-cab__num {
+  color: oklch(var(--p));
+}
+.calendar-wrap .toastui-calendar-day-name-item {
+  text-align: center !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+/* La celda mide 42 px con line-height 38: centrado en vertical, o el número
+   quedaba debajo, tapado por la fila siguiente. */
+.calendar-wrap .toastui-calendar-template-weekDayName {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  line-height: 1;
+}
+@media (max-width: 639px) {
+  .calendar-wrap .cal-cab__num { font-size: 0.95rem; }
+  .calendar-wrap .cal-cab__nom { font-size: 10px; }
+}
+
 .calendar-wrap .toastui-calendar-panel-title {
   display: flex !important;
   align-items: center;

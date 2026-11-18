@@ -31,11 +31,13 @@ import { ADMIN_ROUTES } from './admin.routes';
 import { NgChartsModule } from 'ng2-charts';
 import { SelectorIconoComponent } from '../shared/components/selector-icono/selector-icono.component';
 import { MailOutboxComponent } from './mail-outbox/mail-outbox.component';
+import { BaseDatosComponent } from './base-datos/base-datos.component';
 
 @NgModule({
   declarations: [
     PlantillasAreaComponent,
     MailOutboxComponent,
+    BaseDatosComponent,
     BrandingLogosComponent, BrandingImagenesComponent, BrandingColoresComponent, BrandingCargaComponent,
     AdminDashboardComponent,
     UserManagementComponent,

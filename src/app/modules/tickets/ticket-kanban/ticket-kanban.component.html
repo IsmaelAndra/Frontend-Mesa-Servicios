@@ -15,7 +15,7 @@
           Tablero de Tickets
         </h1>
         <p class="text-sm opacity-70">
-          Arrastra y suelta las tarjetas para cambiar el estado del ticket.
+          {{ sinArrastre ? "Toca una tarjeta para abrir el ticket y cambiar su estado." : "Arrastra y suelta las tarjetas para cambiar el estado del ticket." }}
         </p>
       </div>
     </div>
@@ -74,10 +74,17 @@
               autocomplete="off"
             />
           </label>
+          <!-- Teléfono: el resto de filtros se pliega para que el tablero se vea antes. -->
+          <button type="button" class="btn btn-ghost btn-xs gap-1.5 mt-2 self-start sm:hidden"
+                  (click)="filtrosAbiertos = !filtrosAbiertos" [attr.aria-expanded]="filtrosAbiertos">
+            <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+            {{ filtrosAbiertos ? "Ocultar filtros" : "Más filtros" }}
+            <span *ngIf="hasFilters && !filtrosAbiertos" class="badge badge-primary badge-xs">•</span>
+          </button>
         </label>
 
         <!-- Prioridad -->
-        <label class="form-control w-full">
+        <label class="form-control w-full" [ngClass]="filtrosAbiertos ? '' : 'hidden sm:flex'">
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium opacity-70"
               >Prioridad</span
@@ -95,7 +102,7 @@
           </label>
 
         <!-- Categoría -->
-        <label class="form-control w-full">
+        <label class="form-control w-full" [ngClass]="filtrosAbiertos ? '' : 'hidden sm:flex'">
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium opacity-70"
               >Categoría</span
@@ -113,7 +120,7 @@
           </label>
 
         <!-- Área -->
-        <label class="form-control w-full">
+        <label class="form-control w-full" [ngClass]="filtrosAbiertos ? '' : 'hidden sm:flex'">
           <div class="label pt-0 pb-1">
             <span class="label-text text-xs font-medium opacity-70">Área</span>
           </div>
@@ -130,7 +137,7 @@
       </div>
 
       <!-- Fila inferior -->
-      <div class="flex items-center justify-between gap-2 mt-4 flex-wrap">
+      <div class="items-center justify-between gap-2 mt-4 flex-wrap" [ngClass]="filtrosAbiertos ? 'flex' : 'hidden sm:flex'">
         <label
           class="inline-flex items-center gap-3 cursor-pointer select-none"
           *ngIf="canManage"
