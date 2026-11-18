@@ -534,6 +534,11 @@ agents(): Observable<AgentOption[]> {
     return this.http.get<AgentOption[]>(`${environment.apiUrl}/users/agents`);
   }
 
+  /** PRODUCCION o PRUEBAS (APP_AMBIENTE del servidor); público. */
+  ambiente(): Observable<{ ambiente: string }> {
+    return this.http.get<{ ambiente: string }>(`${environment.apiUrl}/pages/public/ambiente`);
+  }
+
   // Áreas
   // ============ SUCURSALES ============
 

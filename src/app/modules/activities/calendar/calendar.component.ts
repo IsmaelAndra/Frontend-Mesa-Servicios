@@ -10,6 +10,8 @@ import {
 import Calendar, { EventObject } from '@toast-ui/calendar';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Subscription } from 'rxjs';
+import { debounceTime, filter } from 'rxjs/operators';
+import { SseService } from '../../../core/services/sse.service';
 import { environment } from '../../../../environments/environment';
 import { CalendarEvent } from '../../../models/task.model';
 import { ResolvedTheme, ThemeService } from '../../../core/services/theme.service';
@@ -120,6 +122,7 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
   isDark = false;
 
   private themeSub?: Subscription;
+  private cambioSub?: Subscription;
 
   /** Tema resuelto vigente. El null inicial marca que aún no llegó la primera emisión. */
   private currentTheme: ResolvedTheme | null = null;
@@ -144,7 +147,8 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
     private themeService: ThemeService,
     private toastService: ToastService,
     private calendarState: CalendarStateService,
-    private zone: NgZone
+    private zone: NgZone,
+    private sse: SseService
   ) { }
 
   @HostListener('document:keydown.escape')
@@ -176,6 +180,14 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
     });
     // Red de seguridad: si la pestaña se cierra o se recarga, la fecha también queda.
     window.addEventListener('beforeunload', this.persistState);
+    // Actividades asignadas o cambiadas por otra persona: se recarga el rango visible.
+    this.cambioSub = this.sse.cambio$.pipe(
+      filter((c) => c.tipo === 'actividad'),
+      debounceTime(400),
+    ).subscribe(() => {
+      this.reloadForRange();
+      this.cargarResumenHoy();
+    });
   }
 
   /** Reconstruye el calendario conservando la fecha que se está viendo. */
@@ -193,6 +205,7 @@ export class CalendarComponent implements AfterViewInit, OnDestroy {
     this.persistState();
     window.removeEventListener('beforeunload', this.persistState);
     this.themeSub?.unsubscribe();
+    this.cambioSub?.unsubscribe();
     this.themeSub = undefined;
     this.destroyCalendar();
   }

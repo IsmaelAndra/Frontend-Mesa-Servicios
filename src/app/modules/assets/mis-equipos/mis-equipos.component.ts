@@ -1,4 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { debounceTime, filter } from 'rxjs/operators';
+import { SseService } from '../../../core/services/sse.service';
+
 import { AssetService } from '../../../core/services/asset.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -15,7 +19,8 @@ import { abrirBlob } from '../../../core/utils/abrir-blob.util';
   selector: 'app-mis-equipos',
   templateUrl: './mis-equipos.component.html',
 })
-export class MisEquiposComponent implements OnInit {
+export class MisEquiposComponent implements OnInit, OnDestroy {
+  private cambioSub?: Subscription;
   equipos: Asset[] = [];
   actas: Acta[] = [];
   cargando = true;
@@ -24,9 +29,17 @@ export class MisEquiposComponent implements OnInit {
   /** Mosaicos de arriba; se recalculan al cargar (no es un getter: lo pinta un ngFor). */
   resumen: { texto: string; valor: number; icono: string; color: string }[] = this.armarResumen();
 
-  constructor(private assetService: AssetService, private authService: AuthService, private toast: ToastService) {}
+  constructor(private assetService: AssetService, private authService: AuthService, private toast: ToastService,
+              private sse: SseService) {}
+
+  ngOnDestroy(): void {
+    this.cambioSub?.unsubscribe();
+  }
 
   ngOnInit(): void {
+    // Un acta nueva o subida firmada aparece sin salir y volver a entrar.
+    this.cambioSub = this.sse.cambio$.pipe(filter((c) => c.tipo === 'acta'), debounceTime(400))
+      .subscribe(() => this.cargar());
     this.assetService.tipos().subscribe({ error: () => undefined });
     this.cargar();
   }

@@ -1,5 +1,9 @@
 import { confirmar } from '../../../core/utils/confirmar.util';
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { debounceTime, filter } from 'rxjs/operators';
+import { SseService } from '../../../core/services/sse.service';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
@@ -105,14 +109,19 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     private assetService: AssetService,
     private authService: AuthService,
     private breadcrumbService: BreadcrumbService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private sse: SseService
   ) {
     this.role = this.authService.getRole();
   }
 
+  private cambioSub?: Subscription;
+
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id') || '';
     this.load();
+    this.cambioSub = this.sse.cambio$.pipe(filter((c) => c.tipo === 'acta'), debounceTime(400))
+      .subscribe(() => this.load());
     if (this.puedeGestionar) {
       this.assetService.asignables().subscribe({
         next: (u) => {
@@ -125,6 +134,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.cambioSub?.unsubscribe();
     this.breadcrumbService.quitar(`/activos/${this.id}`);
     this.liberarFotos();
   }

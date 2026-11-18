@@ -1,4 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { debounceTime, filter } from 'rxjs/operators';
+import { SseService } from '../../../core/services/sse.service';
+
 import { AssetService } from '../../../core/services/asset.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -15,7 +19,8 @@ import { MasterOption } from '../../shared/components/master-select/master-selec
   selector: 'app-actas',
   templateUrl: './actas.component.html',
 })
-export class ActasComponent implements OnInit {
+export class ActasComponent implements OnInit, OnDestroy {
+  private cambioSub?: Subscription;
   actas: Acta[] = [];
   filtradas: Acta[] = [];
   cargando = true;
@@ -30,13 +35,21 @@ export class ActasComponent implements OnInit {
     .map(([k, v]) => ({ value: k, label: v.texto, icon: v.icono, color: v.color }));
   readonly pag = new Paginacion<Acta>(() => this.filtradas);
 
-  constructor(private assetService: AssetService, private authService: AuthService, private toast: ToastService) {}
+  constructor(private assetService: AssetService, private authService: AuthService, private toast: ToastService,
+              private sse: SseService) {}
+
+  ngOnDestroy(): void {
+    this.cambioSub?.unsubscribe();
+  }
 
   get puedeGestionar(): boolean {
     return this.authService.gestionaActivos();
   }
 
   ngOnInit(): void {
+    // Un acta nueva o subida firmada aparece sin salir y volver a entrar.
+    this.cambioSub = this.sse.cambio$.pipe(filter((c) => c.tipo === 'acta'), debounceTime(400))
+      .subscribe(() => this.cargar());
     this.cargar();
   }
 

@@ -38,6 +38,8 @@
     <span *ngIf="!(tema?.logoUrl || logoUrl)" class="nav__marca-texto">Mesa de Servicios</span>
     <!-- Adorno del tema de temporada (el dibujo lo pone styles.css según data-temporada). -->
     <span *ngIf="tema" class="temporada-adorno" [title]="tema.name" aria-hidden="true"></span>
+    <!-- Ambiente de pruebas (APP_AMBIENTE=PRUEBAS): que nadie lo confunda con producción. -->
+    <span *ngIf="esPruebas" class="nav__ambiente" title="Ambiente de PRUEBAS: los datos no son los reales">PRUEBAS</span>
   </a>
 
   <!-- ============ Derecha ============ -->

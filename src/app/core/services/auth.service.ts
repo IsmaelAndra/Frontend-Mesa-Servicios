@@ -647,8 +647,11 @@ restoreSession(): Promise<void> {
       next: () => {
         this.renewing = false;
       },
-      error: () => {
+      error: (e: unknown) => {
         this.renewing = false;
+        // La cerraron desde otro dispositivo (y el aviso en vivo no llegó, p. ej.
+        // con la pestaña en segundo plano): se dice eso, no "su sesión expiró".
+        if (AuthService.esSesionCerradaDesdeOtro(e)) this.cerrarSesion('revocada');
       }
     });
   }
@@ -672,13 +675,31 @@ restoreSession(): Promise<void> {
     if (typeof document !== 'undefined' && !this.escuchaVuelta) {
       this.escuchaVuelta = true;
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') this.tick();
+        if (document.visibilityState === 'visible') {
+          this.tick();
+          this.comprobarAlVolver();
+        }
       });
       window.addEventListener('focus', () => this.tick());
     }
   }
 
   private escuchaVuelta = false;
+  private ultimaComprobacion = 0;
+
+  /**
+   * Al volver a la pestaña se pregunta al servidor (como mucho cada 30 s): si
+   * cerraron esta sesión desde otro dispositivo mientras estaba en segundo plano
+   * (el aviso en vivo no llega a una pestaña dormida), el 401 → renovación
+   * fallida → aviso "se cerró desde otro dispositivo" sale ahora y no más tarde
+   * como "su sesión expiró".
+   */
+  private comprobarAlVolver(): void {
+    const ahora = Date.now();
+    if (!this.tokenMemoria || ahora - this.ultimaComprobacion < 30_000) return;
+    this.ultimaComprobacion = ahora;
+    this.me(true).subscribe({ next: () => undefined, error: () => undefined });
+  }
 
   private clockStarted = false;
   private clock?: ReturnType<typeof setInterval>;

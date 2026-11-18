@@ -85,7 +85,7 @@ describe('NavbarComponent: aviso sonoro de las notificaciones', () => {
       imports: [CommonModule, FormsModule],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
-        { provide: AdminService, useValue: { getBranding: () => vacio } },
+        { provide: AdminService, useValue: { getBranding: () => vacio, ambiente: () => of({ ambiente: 'PRODUCCION' }) } },
         { provide: SonidosGlobalesService, useValue: { cargar: () => of(undefined) } },
         {
           provide: TemaTemporadaService,

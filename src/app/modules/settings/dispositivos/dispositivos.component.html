@@ -47,7 +47,7 @@
                 <span *ngIf="s.actual" class="badge badge-sm badge-success text-success-content ml-1">Este dispositivo</span>
               </p>
               <p class="text-xs opacity-70 truncate">
-                <span *ngIf="s.ip">{{ s.ip }} · </span>Activo {{ s.ultimoUso | date: 'dd/MM/yyyy HH:mm' }}
+                <span *ngIf="ip(s) as dir">{{ dir }} · </span>Activo {{ s.ultimoUso | date: 'dd/MM/yyyy HH:mm' }}
               </p>
               <p class="text-xs opacity-50 truncate">Inició sesión el {{ s.inicio | date: 'dd/MM/yyyy HH:mm' }}</p>
             </div>

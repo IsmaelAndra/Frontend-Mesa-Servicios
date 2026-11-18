@@ -1,5 +1,8 @@
 import { arrastreHabilitado } from '../../../core/utils/arrastre.util';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { debounceTime, filter } from 'rxjs/operators';
+import { SseService } from '../../../core/services/sse.service';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import Swal from 'sweetalert2';
 import { TaskService } from '../../../core/services/task.service';
@@ -15,7 +18,8 @@ import { urlDelApi } from '../../../core/utils/url-api.util';
   templateUrl: './kanban.component.html',
   styleUrls: ['./kanban.component.css']
 })
-export class KanbanComponent implements OnInit {
+export class KanbanComponent implements OnInit, OnDestroy {
+  private cambioSub?: Subscription;
   /** En pantallas táctiles no se arrastra: el dedo desliza el tablero. */
   readonly sinArrastre = !arrastreHabilitado();
   columns: { key: TaskStatus; label: string; color: string; tasks: TaskItem[] }[] = [];
@@ -62,10 +66,22 @@ export class KanbanComponent implements OnInit {
     private taskService: TaskService,
     private adminService: AdminService,
     private toastService: ToastService,
-    private authService: AuthService
+    private authService: AuthService,
+    private sse: SseService
   ) { }
 
+  ngOnDestroy(): void {
+    this.cambioSub?.unsubscribe();
+  }
+
   ngOnInit(): void {
+    // Una actividad que alguien me asignó (o cambió) aparece sin salir y volver a entrar.
+    this.cambioSub = this.sse.cambio$.pipe(
+      filter((c) => c.tipo === 'actividad'),
+      debounceTime(400),
+    ).subscribe(() => {
+      if (!this.dragging) this.load();
+    });
     this.columns = KANBAN_STATUSES.map((s) => ({ key: s.key, label: s.label, color: s.color, tasks: [] }));
     this.load();
     this.adminService.agents().subscribe({

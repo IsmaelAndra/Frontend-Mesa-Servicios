@@ -143,3 +143,16 @@
     display: none;
   }
 }
+
+/* Insignia del ambiente de pruebas junto al logo. */
+.nav__ambiente {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: #f59e0b;
+  color: #1f2937;
+  white-space: nowrap;
+}

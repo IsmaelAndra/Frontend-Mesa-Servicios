@@ -140,7 +140,14 @@ private sseService: SseService,
     this.temaTemporada.setOcultas(!this.temaTemporada.ocultas);
   }
 
+  /** Este servidor es el de pruebas (APP_AMBIENTE=PRUEBAS). */
+  esPruebas = false;
+
   ngOnInit(): void {
+    this.adminService.ambiente().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (a) => (this.esPruebas = a?.ambiente === 'PRUEBAS'),
+      error: () => undefined,
+    });
     this.escucharPedidosDeNotificaciones();
     this.loadUser();
     this.loadNotifications();

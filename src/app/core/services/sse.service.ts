@@ -18,6 +18,12 @@ import { MensajeProyecto } from '../../models/proyecto.model';
  * en su ngOnDestroy, así que al navegar se cortaba y había que recargar para ver
  * los mensajes nuevos.
  */
+/** Aviso en vivo del backend (AvisoEnVivoService): solo el tipo y, a veces, el id. */
+export interface CambioEnVivo {
+  tipo: 'actividad' | 'acta' | 'sesiones' | string;
+  id?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SseService {
   private source: EventSource | null = null;
@@ -32,6 +38,7 @@ export class SseService {
   private readonly lecturaEvents = new Subject<LecturaEvent>();
   private readonly workflowEvents = new Subject<WorkflowPasoEvento>();
   private readonly proyectoChatEvents = new Subject<MensajeProyecto>();
+  private readonly cambioEvents = new Subject<CambioEnVivo>();
 
   readonly status$ = this.status.asObservable();
   readonly ticketEvent$ = this.events.asObservable();
@@ -42,6 +49,8 @@ export class SseService {
   readonly workflow$ = this.workflowEvents.asObservable();
   /** Mensajes nuevos del chat de los proyectos donde participa la persona. */
   readonly proyectoChat$ = this.proyectoChatEvents.asObservable();
+  /** "Algo tuyo cambió": actividades, actas, dispositivos. La pantalla vuelve a pedir sus datos. */
+  readonly cambio$ = this.cambioEvents.asObservable();
 
   constructor(
     private authService: AuthService,
@@ -161,6 +170,13 @@ export class SseService {
     // comprueba la propia. Si era esta, la renovación falla y sale con aviso;
     // si no, se renueva sin que la persona lo note.
     source.addEventListener('sesion-revisar', () => this.authService.revisarSesion());
+    source.addEventListener('cambio', (evt: MessageEvent) => {
+      try {
+        this.cambioEvents.next(JSON.parse(evt.data) as CambioEnVivo);
+      } catch {
+        // evento malformado: se ignora
+      }
+    });
 
     // La conexión se rehace cada 8 minutos: así el backend vuelve a comprobar
     // que la cuenta sigue activa, igual que cuando el canal dependía del token.

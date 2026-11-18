@@ -1,4 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { debounceTime, filter } from 'rxjs/operators';
+import { SseService } from '../../../core/services/sse.service';
+
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
@@ -25,25 +29,40 @@ export interface SesionDispositivo {
   selector: 'app-settings-dispositivos',
   templateUrl: './dispositivos.component.html',
 })
-export class SettingsDispositivosComponent implements OnInit {
+export class SettingsDispositivosComponent implements OnInit, OnDestroy {
+  private cambioSub?: Subscription;
   sesiones: SesionDispositivo[] = [];
   cargando = true;
   /** Id de la sesión que se está cerrando, 'todas' o null. */
   cerrando: string | null = null;
   private readonly url = `${environment.apiUrl}/auth/sesiones`;
 
-  constructor(private http: HttpClient, private auth: AuthService, private toast: ToastService) {}
+  constructor(private http: HttpClient, private auth: AuthService, private toast: ToastService,
+              private sse: SseService) {}
 
   ngOnInit(): void {
     this.cargar();
+    // Un inicio de sesión en otro equipo, o una sesión cerrada, se ve sin recargar.
+    this.cambioSub = this.sse.cambio$.pipe(filter((c) => c.tipo === 'sesiones'), debounceTime(600))
+      .subscribe(() => this.cargar(false));
+  }
+
+  ngOnDestroy(): void {
+    this.cambioSub?.unsubscribe();
+  }
+
+  /** La IP del propio servidor (pruebas en el mismo equipo) se muestra con nombre. */
+  ip(s: SesionDispositivo): string | null {
+    if (!s.ip) return null;
+    return ['0:0:0:0:0:0:0:1', '::1', '127.0.0.1'].includes(s.ip) ? 'Este mismo equipo' : s.ip;
   }
 
   get otras(): number {
     return this.sesiones.filter((s) => !s.actual).length;
   }
 
-  cargar(): void {
-    this.cargando = true;
+  cargar(conSpinner = true): void {
+    this.cargando = conSpinner;
     this.http.get<SesionDispositivo[]>(this.url, { withCredentials: true }).subscribe({
       next: (l) => { this.sesiones = l || []; this.cargando = false; },
       error: () => { this.cargando = false; this.toast.error('No se pudieron cargar los dispositivos'); },
@@ -65,7 +84,7 @@ export class SettingsDispositivosComponent implements OnInit {
   async cerrar(s: SesionDispositivo): Promise<void> {
     const ok = await confirmar({
       titulo: s.actual ? '¿Cerrar la sesión aquí?' : '¿Cerrar la sesión en ese dispositivo?',
-      texto: `${s.dispositivo}${s.ip ? ' · ' + s.ip : ''}. Tendrá que volver a iniciar sesión en él.`,
+      texto: `${s.dispositivo}${this.ip(s) ? ' · ' + this.ip(s) : ''}. Tendrá que volver a iniciar sesión en él.`,
       accion: 'Cerrar sesión',
     });
     if (!ok) return;

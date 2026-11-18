@@ -1,3 +1,4 @@
+import { pedirCodigoMfa } from '../../../core/utils/codigo-mfa.util';
 import { confirmar } from '../../../core/utils/confirmar.util';
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import Swal from "sweetalert2";
@@ -406,21 +407,15 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         this.enviarEdicion(idUsuario, payload, null);
         return;
       }
-      Swal.fire({ reverseButtons: true, cancelButtonColor: '#6b7280',
-        title: "Código de verificación",
-        text: "Escriba el código de 6 dígitos de su aplicación autenticadora para guardar los cambios.",
-        input: "text",
-        inputAttributes: { inputmode: "numeric", autocomplete: "one-time-code", maxlength: "6" },
-        showCancelButton: true,
-        confirmButtonText: "Guardar",
-        cancelButtonText: "Cancelar",
-        inputValidator: (v) => (/^\d{6}$/.test((v || "").trim()) ? null : "Son 6 dígitos"),
-      }).then((r) => {
-        if (!r.isConfirmed) {
+      pedirCodigoMfa({
+        texto: "Escriba el código de 6 dígitos de su aplicación autenticadora para guardar los cambios.",
+        accion: "Guardar",
+      }).then((codigo) => {
+        if (!codigo) {
           this.guardandoEdicion = false;
           return;
         }
-        this.enviarEdicion(idUsuario, payload, String(r.value).trim());
+        this.enviarEdicion(idUsuario, payload, codigo);
       });
     });
   }

@@ -1,3 +1,4 @@
+import { instalarAjusteDeDesplegables } from './core/utils/desplegables-en-pantalla.util';
 import { TemaTemporadaService } from './core/services/tema-temporada.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
@@ -44,6 +45,8 @@ export class AppComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Menús desplegables dentro de la pantalla (en el teléfono se salían por un lado).
+    this.quitarAjusteDesplegables = instalarAjusteDeDesplegables();
     this.isAuthPage = this.router.url.startsWith('/acceso') || this.router.url.startsWith('/auth');
     this.loadBrandingIcons();
     // Tema de temporada (Halloween, Navidad...): público, vale también en el login.
@@ -94,6 +97,8 @@ export class AppComponent implements OnInit, OnDestroy {
       this.router.navigate(['/acceso/ingresar'], { queryParams: { volver: this.router.url } });
     });
   }
+
+  private quitarAjusteDesplegables?: () => void;
 
   /** Año del pie de página. */
   readonly anioActual = new Date().getFullYear();
@@ -155,6 +160,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private static readonly AVISO_CIERRE_MS = 60_000;
 
   ngOnDestroy(): void {
+    this.quitarAjusteDesplegables?.();
     if (this.hideTimer) clearTimeout(this.hideTimer);
     if (this.safetyTimer) clearTimeout(this.safetyTimer);
     this.routerSub?.unsubscribe();

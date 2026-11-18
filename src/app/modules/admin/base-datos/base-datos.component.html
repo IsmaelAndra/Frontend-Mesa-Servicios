@@ -15,9 +15,12 @@
       <div class="card-body p-4 flex-row flex-wrap items-center gap-x-6 gap-y-2 text-sm">
         <span><i class="fa-solid fa-database text-primary mr-1" aria-hidden="true"></i>Base <b class="font-mono">{{ estado.baseDatos }}</b></span>
         <span *ngIf="estado.tamano"><i class="fa-solid fa-weight-hanging text-primary mr-1" aria-hidden="true"></i>{{ estado.tamano }}</span>
-        <span class="badge badge-sm gap-1.5 font-medium" [ngClass]="estado.permiteRestaurar ? 'badge-warning' : 'badge-success text-success-content'">
-          <i class="fa-solid" [ngClass]="estado.permiteRestaurar ? 'fa-flask' : 'fa-shield-halved'" aria-hidden="true"></i>
-          {{ estado.permiteRestaurar ? 'Ambiente de pruebas: se puede reemplazar la base' : 'Solo descarga (producción)' }}
+        <span class="badge gap-1.5 font-semibold" [ngClass]="esProduccion ? 'badge-error text-error-content' : 'badge-warning'">
+          <i class="fa-solid" [ngClass]="esProduccion ? 'fa-industry' : 'fa-flask'" aria-hidden="true"></i>
+          {{ esProduccion ? 'PRODUCCIÓN' : 'PRUEBAS' }}
+        </span>
+        <span class="text-xs opacity-60" title="Se define con APP_AMBIENTE=PRODUCCION o APP_AMBIENTE=PRUEBAS en el .env del servidor">
+          <i class="fa-regular fa-circle-question" aria-hidden="true"></i> Ambiente definido en el servidor (APP_AMBIENTE)
         </span>
         <span class="badge badge-sm gap-1.5 font-medium" [ngClass]="estado.autenticadorListo ? 'badge-success text-success-content' : 'badge-error text-error-content'">
           <i class="fa-solid" [ngClass]="estado.autenticadorListo ? 'fa-mobile-screen' : 'fa-triangle-exclamation'" aria-hidden="true"></i>
@@ -49,7 +52,9 @@
       <section class="card bg-base-100 border border-base-200 shadow-sm">
         <div class="card-body gap-3">
           <h2 class="font-semibold flex items-center gap-2"><i class="fa-solid fa-upload text-warning" aria-hidden="true"></i> Subir copia</h2>
-          <p class="text-sm opacity-75">Reemplaza <b>toda</b> la base por una copia. Después se apagan el correo, la telefonía y las automatizaciones, y todos vuelven a iniciar sesión.</p>
+          <p class="text-sm opacity-75">Reemplaza <b>toda</b> la base por una copia.
+            <ng-container *ngIf="!esProduccion">Después se apagan el correo, la telefonía y las automatizaciones (es pruebas).</ng-container>
+            Todos vuelven a iniciar sesión.</p>
           <app-dropzone accept=".dump,.backup" (archivos)="elegirArchivo($event)"
                         [disabled]="!!motivoRestaurar || !!trabajando"></app-dropzone>
           <p *ngIf="archivo" class="text-xs"><i class="fa-solid fa-file text-primary mr-1" aria-hidden="true"></i>{{ archivo.name }} · {{ tamano(archivo) }}</p>

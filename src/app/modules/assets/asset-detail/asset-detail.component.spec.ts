@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
+import { SseService } from '../../../core/services/sse.service';
 import { AssetDetailComponent } from './asset-detail.component';
 import { AssetService } from '../../../core/services/asset.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -57,6 +58,7 @@ describe('AssetDetailComponent', () => {
         { provide: ToastService, useValue: toastService },
         { provide: Router, useValue: router },
         { provide: BreadcrumbService, useValue: breadcrumb },
+        { provide: SseService, useValue: { cambio$: new Subject() } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'a1' } } } }
       ],
       schemas: [NO_ERRORS_SCHEMA]

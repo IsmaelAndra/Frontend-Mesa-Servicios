@@ -5,10 +5,12 @@ import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { tamanoLegible } from '../../../core/utils/abrir-blob.util';
+import { pedirCodigoMfa } from '../../../core/utils/codigo-mfa.util';
 
 /** GET /admin/base-datos/estado */
 interface EstadoBaseDatos {
-  permiteRestaurar: boolean;
+  /** PRODUCCION o PRUEBAS (variable APP_AMBIENTE del servidor). */
+  ambiente: 'PRODUCCION' | 'PRUEBAS';
   herramientas: boolean;
   versionPgDump: string | null;
   baseDatos: string;
@@ -58,9 +60,11 @@ export class BaseDatosComponent implements OnInit {
   }
 
   get motivoRestaurar(): string {
-    if (this.motivoBloqueo) return this.motivoBloqueo;
-    if (!this.estado?.permiteRestaurar) return 'En este ambiente no se puede reemplazar la base (solo en pruebas, con BD_PERMITIR_RESTAURAR=true).';
-    return '';
+    return this.motivoBloqueo;
+  }
+
+  get esProduccion(): boolean {
+    return this.estado?.ambiente !== 'PRUEBAS';
   }
 
   elegirArchivo(files: File[]): void {
@@ -72,46 +76,11 @@ export class BaseDatosComponent implements OnInit {
     this.archivo = f;
   }
 
-  private async pedirCodigo(texto: string, palabra?: string): Promise<string | null> {
-    const r = await Swal.fire({
-      title: 'Código de verificación',
-      html: texto + (palabra ? `<br><br>Para confirmar, escriba también <b>${palabra}</b> abajo.` : ''),
-      input: 'text',
-      inputLabel: 'Código de 6 dígitos de su app de autenticación',
-      inputAttributes: { inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: '6' },
-      inputValidator: (v) => (/^\d{6}$/.test((v || '').trim()) ? null : 'Son 6 dígitos'),
-      showCancelButton: true,
-      reverseButtons: true,
-      confirmButtonText: 'Continuar',
-      cancelButtonText: 'Cancelar',
-      cancelButtonColor: '#6b7280',
-      confirmButtonColor: palabra ? '#dc2626' : undefined,
-      focusCancel: !!palabra,
-    });
-    if (!r.isConfirmed) return null;
-    const codigo = String(r.value || '').trim();
-    if (palabra) {
-      const c = await Swal.fire({
-        title: `Escriba ${palabra}`,
-        text: 'Esta acción borra la base de datos actual y no se puede deshacer.',
-        icon: 'warning',
-        input: 'text',
-        inputValidator: (v) => ((v || '').trim() === palabra ? null : `Escriba ${palabra} en mayúsculas`),
-        showCancelButton: true,
-        reverseButtons: true,
-        confirmButtonText: 'Borrar y continuar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        focusCancel: true,
-      });
-      if (!c.isConfirmed) return null;
-    }
-    return codigo;
-  }
-
   async descargar(): Promise<void> {
-    const codigo = await this.pedirCodigo('La copia contiene <b>todos los datos</b> del sistema. Guárdela en un lugar seguro.');
+    const codigo = await pedirCodigoMfa({
+      html: 'La copia contiene <b>todos los datos</b> del sistema. Guárdela en un lugar seguro.',
+      accion: 'Descargar',
+    });
     if (!codigo) return;
     this.trabajando = 'descarga';
     this.http.post<{ permiso: string }>(`${this.url}/descargar`, { codigoMfa: codigo }).subscribe({
@@ -135,10 +104,14 @@ export class BaseDatosComponent implements OnInit {
 
   async restaurar(): Promise<void> {
     if (!this.archivo) return;
-    const codigo = await this.pedirCodigo(
-      `Se reemplazará <b>toda</b> la base por la copia <b>${this.archivo.name.replace(/[<>&"]/g, '')}</b>. `
-      + 'Después se apagan el correo, la telefonía y las automatizaciones, y todos vuelven a iniciar sesión.',
-      'RESTAURAR');
+    const codigo = await pedirCodigoMfa({
+      titulo: this.esProduccion ? 'Restaurar la base de PRODUCCIÓN' : 'Restaurar la base de pruebas',
+      html: `Se reemplazará <b>toda</b> la base por la copia <b>${this.archivo.name.replace(/[<>&"]/g, '')}</b>. `
+        + (this.esProduccion
+          ? 'Todos vuelven a iniciar sesión.'
+          : 'Después se apagan el correo, la telefonía y las automatizaciones, y todos vuelven a iniciar sesión.'),
+      palabra: 'RESTAURAR',
+    });
     if (!codigo) return;
     this.trabajando = 'subida';
     this.avance = 0;
@@ -163,10 +136,12 @@ export class BaseDatosComponent implements OnInit {
   }
 
   async restablecer(): Promise<void> {
-    const codigo = await this.pedirCodigo(
-      'Se borrarán <b>todos</b> los datos (tickets, usuarios, activos, proyectos, configuración). '
-      + 'Solo quedará su cuenta de súper admin, con su contraseña actual.',
-      'RESTABLECER');
+    const codigo = await pedirCodigoMfa({
+      titulo: this.esProduccion ? 'Restablecer PRODUCCIÓN a cero' : 'Restablecer pruebas a cero',
+      html: 'Se borrarán <b>todos</b> los datos (tickets, usuarios, activos, proyectos, configuración). '
+        + 'Solo quedará su cuenta de súper admin, con su contraseña actual.',
+      palabra: 'RESTABLECER',
+    });
     if (!codigo) return;
     this.trabajando = 'restableciendo';
     this.http.post(`${this.url}/restablecer`, { codigoMfa: codigo, confirmacion: 'RESTABLECER' }).subscribe({
