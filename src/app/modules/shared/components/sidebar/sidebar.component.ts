@@ -103,7 +103,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       seccion: 'gestion',
       route: '/administracion',
       icon: navIcon('admin'),
-      roles: ['SUPER_ADMIN', 'GESTOR_USUARIOS', 'AUDITOR', 'AREA_MANAGER', 'GESTOR_ACTIVOS'],
+      roles: ['SUPER_ADMIN', 'GESTOR_USUARIOS', 'AUDITOR', 'AREA_MANAGER', 'CONFIG_ACTIVOS'],
       children: [
         { label: 'Panel', route: '/administracion', icon: navIcon('admin-panel'), roles: ['SUPER_ADMIN'] },
         // Agrupados por tema (el submenú pinta el título del grupo).
@@ -132,7 +132,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { grupo: 'Integraciones', label: 'Telefonía', route: '/administracion/telefonia', icon: navIcon('telefonia'), roles: ['SUPER_ADMIN'] },
         { grupo: 'Integraciones', label: 'Automatizaciones', route: '/automatizaciones', icon: navIcon('workflows'), roles: ['SUPER_ADMIN'] },
         // Maestros de activos: Tecnología y Desarrollo (GESTOR_ACTIVOS) y el súper admin.
-        { grupo: 'Activos', label: 'Configuración de activos', route: '/activos/configuracion', icon: navIcon('configuracion'), roles: ['SUPER_ADMIN', 'GESTOR_ACTIVOS'] }
+        { grupo: 'Activos', label: 'Configuración de activos', route: '/activos/configuracion', icon: navIcon('configuracion'), roles: ['SUPER_ADMIN', 'CONFIG_ACTIVOS'] }
       ]
     },
     {
@@ -181,7 +181,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
       children: [
         { label: 'Mi Perfil', route: '/mi-cuenta/perfil', icon: navIcon('profile'), roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR'] },
         { label: 'Cambiar Contraseña', route: '/mi-cuenta/contrasena', icon: navIcon('password'), roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR'] },
-        { label: 'Sonidos de Notificaciones', route: '/mi-cuenta/sonidos', icon: navIcon('sounds'), roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR'] }
+        { label: 'Sonidos de Notificaciones', route: '/mi-cuenta/sonidos', icon: navIcon('sounds'), roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR'] },
+        { label: 'Dispositivos', route: '/mi-cuenta/dispositivos', icon: navIcon('devices'), roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'USER', 'AUDITOR'] }
       ]
     }
   ];

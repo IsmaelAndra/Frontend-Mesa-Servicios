@@ -313,6 +313,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy(): void {
+    document.body.classList.remove("chat-movil-bloqueo");
     this.sseSub?.unsubscribe();
     if (this.relojSla) clearInterval(this.relojSla);
     if (this.typingTimer) clearTimeout(this.typingTimer);
@@ -737,6 +738,20 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       const reducir = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
       el.scrollTo({ top: el.scrollHeight, behavior: suave && !reducir ? "smooth" : "auto" });
     });
+  }
+
+  /** Teléfono: el chat abierto a pantalla completa. */
+  chatMovilAbierto = false;
+
+  abrirChatMovil(): void {
+    this.chatMovilAbierto = true;
+    document.body.classList.add("chat-movil-bloqueo");
+    this.scrollChat();
+  }
+
+  cerrarChatMovil(): void {
+    this.chatMovilAbierto = false;
+    document.body.classList.remove("chat-movil-bloqueo");
   }
 
   irAlFinalDelChat(): void {

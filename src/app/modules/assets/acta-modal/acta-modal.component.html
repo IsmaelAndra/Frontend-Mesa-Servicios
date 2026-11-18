@@ -80,11 +80,7 @@
             <div class="input input-bordered input-sm flex items-center gap-2 opacity-80">
               <i class="fa-solid fa-user text-xs" aria-hidden="true"></i>{{ titular || '—' }}</div>
           </div>
-          <div class="form-control">
-            <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Revisado por</span></div>
-            <app-master-select [(ngModel)]="revisadoPorId" (ngModelChange)="revisarFaltantes()" [options]="revisores" [allowEmpty]="true" emptyLabel="Sin revisor"
-              icon="fa-solid fa-user-check" placeholder="Alguien de Tecnología o Desarrollo" label="Revisado por"></app-master-select>
-          </div>
+          <!-- Sin "Revisado por": en el acta firman quien entrega, quien recibe y quien autoriza (que es quien revisa). -->
           <div class="form-control">
             <div class="label pt-0 pb-1"><span class="label-text text-xs font-medium">Agencia o sucursal</span></div>
             <app-master-select [(ngModel)]="sucursalId" [options]="sucursales" [allowEmpty]="true" emptyLabel="La del custodio"

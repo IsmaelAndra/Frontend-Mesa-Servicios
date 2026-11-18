@@ -335,6 +335,8 @@ export interface AgentOption {
   sessionState: string;
   /** Extensión telefónica, para llamarle desde el ticket. */
   extension?: string | null;
+  /** Área del agente (para ofrecer solo los del área que atiende). */
+  areaId?: string | null;
 }
 
 /**

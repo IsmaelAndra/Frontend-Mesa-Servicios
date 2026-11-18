@@ -1,10 +1,28 @@
-<section class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden relative"
+<!-- Teléfono: el chat se abre a pantalla completa -->
+<button type="button" class="lg:hidden card bg-base-100 shadow-sm border border-base-200 flex-row items-center gap-3 p-4 text-left w-full"
+        (click)="abrirChatMovil()">
+  <span class="p-2 rounded-xl bg-primary/10 text-primary" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
+  <span class="flex-1 min-w-0">
+    <span class="block font-semibold">Abrir chat</span>
+    <span class="block text-xs opacity-70">Chat del proyecto</span>
+  </span>
+  <i class="fa-solid fa-chevron-right opacity-50" aria-hidden="true"></i>
+</button>
+
+<section class="chat-movil card bg-base-100 border border-base-200 shadow-sm overflow-hidden relative"
+         [class.chat-movil--abierto]="chatMovilAbierto"
+         [attr.role]="chatMovilAbierto ? 'dialog' : null" [attr.aria-modal]="chatMovilAbierto ? 'true' : null"
+         [attr.aria-label]="chatMovilAbierto ? 'Chat del proyecto' : null"
          (dragover)="$event.preventDefault(); arrastrando = puedeEscribir" (dragleave)="arrastrando = false" (drop)="soltar($event)">
   <div *ngIf="arrastrando" class="chat-soltar" aria-hidden="true">
     <i class="fa-solid fa-cloud-arrow-up text-xl"></i> Suelte los archivos para adjuntarlos
   </div>
 
   <header class="flex items-center gap-3 px-4 py-3 border-b border-base-200">
+    <button type="button" class="lg:hidden btn btn-ghost btn-sm btn-square" (click)="cerrarChatMovil()"
+            title="Cerrar chat" aria-label="Cerrar chat">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+    </button>
     <span class="p-2 rounded-xl bg-primary/10 text-primary" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
     <div class="flex-1 min-w-0">
       <h2 class="font-semibold leading-tight">Chat del proyecto</h2>
@@ -12,9 +30,9 @@
     </div>
   </header>
 
-  <div class="p-3">
+  <div class="p-3 chat-movil__cuerpo">
     <!-- Mismo contenedor que el chat de los tickets: fondo de Marca + marca de agua -->
-    <div #lista class="proyecto-chat-scroll chat-wa-bg space-y-4 p-3 rounded-lg h-[clamp(300px,calc(100dvh-28rem),720px)] overflow-y-auto">
+    <div #lista class="chat-movil__scroll proyecto-chat-scroll chat-wa-bg space-y-4 p-3 rounded-lg h-[clamp(300px,calc(100dvh-28rem),720px)] overflow-y-auto">
       <div class="chat-watermark" aria-hidden="true"></div>
 
       <div *ngIf="cargando" class="flex justify-center py-10"><span class="loading loading-spinner"></span></div>

@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import Quill from 'quill';
-import { AdminService } from '../../../core/services/admin.service';
+import { AdminService, AgentOption } from '../../../core/services/admin.service';
 import { TicketService } from '../../../core/services/ticket.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -29,6 +29,10 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
    * hereda la del solicitante. */
   sucursales: { id: string; code: string; name: string; icon?: string; color?: string }[] = [];
   files: File[] = [];
+  /** Agentes activos (solo se cargan para jefe y SUPER_ADMIN). */
+  private agentes: AgentOption[] = [];
+  /** Agentes del área elegida que se pueden escoger al crear; vacío = no se ofrece. */
+  agentesDelArea: MasterOption[] = [];
   userRole = '';
   quill: Quill | null = null;
 
@@ -69,12 +73,35 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
       categoryId: [null],
       typeId: [null],
       priorityId: [null],
-      sucursalId: [null]
+      sucursalId: [null],
+      agentId: [null]
     };
     if (!this.isUser) {
       controls['categoryId'] = [null, Validators.required];
     }
     this.form = this.fb.group(controls);
+  }
+
+  /**
+   * El jefe del área que atiende y el SUPER_ADMIN pueden dejar el ticket ya
+   * asignado a un agente concreto (si no, se reparte como siempre).
+   */
+  get puedeElegirAgente(): boolean {
+    if (this.userRole === 'SUPER_ADMIN') return true;
+    const area = this.form?.get('areaDestinoId')?.value as string | null;
+    return this.userRole === 'AREA_MANAGER' && !!area && this.authService.areasACargo().includes(area);
+  }
+
+  /** Recalcula los agentes que se pueden elegir para el área actual. */
+  private recalcularAgentes(): void {
+    const area = this.form.get('areaDestinoId')?.value as string | null;
+    this.agentesDelArea = !this.puedeElegirAgente ? [] : this.agentes
+      .filter((a) => !area || a.areaId === area)
+      .map((a) => ({ value: a.idUser, label: a.displayName, icon: 'fa-solid fa-user-gear' }));
+    const elegido = this.form.get('agentId')?.value as string | null;
+    if (elegido && !this.agentesDelArea.some((a) => a.value === elegido)) {
+      this.form.patchValue({ agentId: null });
+    }
   }
 
   get isUser(): boolean {
@@ -161,6 +188,7 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
     if (cat && !this.categoriasDelArea.some((c) => c.id === cat)) {
       this.form.patchValue({ categoryId: null });
     }
+    this.recalcularAgentes();
   }
 
   /** Si se elige (o MAPI propone) una categoría de otra área, el área la sigue. */
@@ -173,6 +201,12 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
+    if (['AREA_MANAGER', 'SUPER_ADMIN'].includes(this.userRole)) {
+      this.adminService.agents().subscribe({
+        next: (l) => { this.agentes = l || []; this.recalcularAgentes(); },
+        error: () => { this.agentes = []; },
+      });
+    }
     this.form.get('categoryId')?.valueChanges.subscribe((id) => this.alCambiarCategoria(id));
     this.adminService.catalog().subscribe({
       next: (c: Catalog) => {
@@ -366,7 +400,8 @@ export class TicketNewComponent implements OnInit, OnDestroy, AfterViewInit {
       // por defecto ni la que propuso el asistente).
       priorityManual: !!this.form.get('priorityId')?.dirty && !!this.form.value.priorityId,
       sucursalId: this.form.value.sucursalId ?? undefined,
-      requesterId: this.aNombreDe?.id
+      requesterId: this.aNombreDe?.id,
+      agentId: (this.agentesDelArea.length && this.form.value.agentId) || undefined
     };
     this.ticketService.create(payload).subscribe({
       next: (t) => {

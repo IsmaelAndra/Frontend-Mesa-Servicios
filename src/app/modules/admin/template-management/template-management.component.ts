@@ -98,9 +98,13 @@ constructor(
     private sanitizer: DomSanitizer
   ) {}
 
-  /** Caché del preview: ver safePreviewHtml. */
-  private clavePreview: string | null = null;
-  private htmlPreview: SafeHtml | null = null;
+  /**
+   * Caché del preview por contenido: ver safePreviewHtml. Es un mapa y no una sola
+   * entrada porque en pantalla puede haber varios iframes a la vez (crear, editar,
+   * vista previa de la lista, visor): con una sola entrada cada uno invalidaba la del
+   * otro, el iframe se recargaba en cada ciclo y la plantilla se quedaba "cargando".
+   */
+  private readonly cachePreview = new Map<string, SafeHtml>();
 
   /**
    * Cuerpo del preview ya envuelto para `[srcdoc]`.
@@ -130,14 +134,16 @@ constructor(
     // La imagen de la plantilla entra en la clave: si sube o se quita, el
     // preview tiene que volver a renderizarse.
     const clave = `${body} ${this.logoUrl ?? ''} ${imagenUrl ?? ''}`;
-    if (this.clavePreview === clave && this.htmlPreview) {
-      return this.htmlPreview;
+    const enCache = this.cachePreview.get(clave);
+    if (enCache) {
+      return enCache;
     }
-    this.clavePreview = clave;
-    this.htmlPreview = this.sanitizer.bypassSecurityTrustHtml(
-      this.previewHtml(body, imagenUrl),
-    );
-return this.htmlPreview;
+    if (this.cachePreview.size > 30) {
+      this.cachePreview.clear();
+    }
+    const html = this.sanitizer.bypassSecurityTrustHtml(this.previewHtml(body, imagenUrl));
+    this.cachePreview.set(clave, html);
+    return html;
   }
 
   triggerLabel(t: NotificationTemplate): string {

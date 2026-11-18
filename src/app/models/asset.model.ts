@@ -235,4 +235,4 @@ export const ESTADOS_ACTA: Record<string, { texto: string; color: string; icono:
 };
 
 /** Límites de archivos (iguales al backend). */
-export const LIMITES_ARCHIVOS = { fotos: 6, fotoMb: 5, pdfMb: 10 };
+export const LIMITES_ARCHIVOS = { fotos: 2, fotoMb: 5, pdfMb: 10 };

@@ -131,7 +131,7 @@
         <div cdkDropList [id]="'col-' + c.clave" [cdkDropListConnectedTo]="idsColumnas"
              [cdkDropListData]="tablero[c.clave]" [cdkDropListDisabled]="!d.permisos.editarTablero"
              (cdkDropListDropped)="soltar($event, c.clave)" class="flex-1 p-2 space-y-2">
-          <div *ngFor="let i of tablero[c.clave]; trackBy: trackItem" cdkDrag [cdkDragData]="i"
+          <div *ngFor="let i of tablero[c.clave]; trackBy: trackItem" cdkDrag [cdkDragData]="i" [cdkDragDisabled]="sinArrastre"
                role="button" tabindex="0" (click)="d.permisos.editarTablero && editarTarjeta(i)"
                (keydown.enter)="d.permisos.editarTablero && editarTarjeta(i)"
                class="rounded-xl bg-base-100 border border-base-200 p-3 shadow-sm hover:shadow transition border-l-4"

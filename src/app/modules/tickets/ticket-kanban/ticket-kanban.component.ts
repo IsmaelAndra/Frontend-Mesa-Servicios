@@ -1,3 +1,4 @@
+import { arrastreHabilitado } from '../../../core/utils/arrastre.util';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
@@ -41,6 +42,8 @@ function statusColor(status: string): string {
   styleUrls: ['./ticket-kanban.component.css']
 })
 export class TicketKanbanComponent implements OnInit, OnDestroy {
+  /** En pantallas táctiles no se arrastra: el dedo desliza el tablero. */
+  readonly sinArrastre = !arrastreHabilitado();
   /** Plazo de resolución de cada ticket abierto (brillo si venció, cuenta regresiva si no). */
   plazos: Record<string, PlazoSla> = {};
   /** Se refresca cada 30 s para la cuenta regresiva. */

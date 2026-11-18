@@ -514,7 +514,9 @@ restoreSession(): Promise<void> {
     // gestiona usuarios (Tecnología y Desarrollo). El menú y las guardas lo
     // tratan como uno más para mostrar "Usuarios" solo a quien puede entrar.
     // GESTOR_ACTIVOS: personal de Tecnología y Desarrollo (y el súper admin).
-    return [rol, ...(this.gestionaUsuarios ? ['GESTOR_USUARIOS'] : []), ...(this.gestionaLosActivos ? ['GESTOR_ACTIVOS'] : [])];
+    // CONFIG_ACTIVOS: el JEFE de Tecnología o Desarrollo (los agentes no configuran tipos ni numeración).
+    return [rol, ...(this.gestionaUsuarios ? ['GESTOR_USUARIOS'] : []), ...(this.gestionaLosActivos ? ['GESTOR_ACTIVOS'] : []),
+      ...(this.gestionaLosActivos && rol === 'AREA_MANAGER' ? ['CONFIG_ACTIVOS'] : [])];
   }
 
   /** Usuario final: ve solo sus tickets. Desde la mesa multi-área el jefe es personal. */

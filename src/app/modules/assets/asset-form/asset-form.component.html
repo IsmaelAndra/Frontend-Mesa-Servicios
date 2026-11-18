@@ -54,10 +54,12 @@
 
             <div class="form-control">
               <label class="label"><span class="label-text font-medium">Código de inventario</span></label>
-              <input type="text" class="input input-bordered w-full font-mono" name="codeAsset" [(ngModel)]="request.codeAsset"
-                [maxlength]="max.codigo" [placeholder]="ejemploCodigo ? 'Automático: ' + ejemploCodigo : 'Automático'" />
+              <!-- No editable: el código lo pone la numeración al registrar y no cambia después. -->
+              <input type="text" class="input input-bordered w-full font-mono bg-base-200/60 cursor-not-allowed" name="codeAsset"
+                [value]="request.codeAsset || (ejemploCodigo ? 'Automático: ' + ejemploCodigo : 'Automático')" readonly
+                aria-readonly="true" tabindex="-1" />
               <label class="label"><span class="label-text-alt opacity-60">
-                Déjelo vacío para usar la numeración ({{ ejemploCodigo || 'automática' }}) o escriba el código que ya tenía.
+                {{ request.codeAsset ? 'El código no se puede cambiar.' : 'Se asigna solo al guardar, según la numeración configurada.' }}
               </span></label>
             </div>
 
@@ -161,7 +163,7 @@
           </h2>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="form-control sm:col-span-2">
+            <div class="form-control">
               <label class="label"><span class="label-text font-medium">Asignado a (usuario)</span></label>
               <app-master-select
                 name="assignedUserId"
@@ -192,7 +194,7 @@
               <label *ngIf="areaBloqueada" class="label"><span class="label-text-alt opacity-60">Los activos que registras quedan en tu área.</span></label>
             </div>
 
-            <div class="form-control sm:col-span-2">
+            <div class="form-control">
               <label class="label"><span class="label-text font-medium">Ubicación detallada</span></label>
               <input type="text" class="input input-bordered w-full" name="ubicacionAsset" [(ngModel)]="request.ubicacionAsset"
                 [maxlength]="max.ubicacion" placeholder="Ej. Matriz, piso 2, oficina de Contabilidad, escritorio 4" />
@@ -257,7 +259,7 @@
             Resumen
           </h3>
           <p class="text-sm opacity-70">
-            Los campos marcados con <span class="text-error">*</span> son obligatorios. El código, si lo escribe, debe ser único.
+            Los campos marcados con <span class="text-error">*</span> son obligatorios.
           </p>
           <div class="divider my-0"></div>
           <div class="text-sm space-y-2">

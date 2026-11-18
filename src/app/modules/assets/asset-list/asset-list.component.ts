@@ -184,6 +184,29 @@ export class AssetListComponent implements OnInit {
     return colorTipoActivo(type);
   }
 
+  exportando = false;
+
+  /** Descarga el inventario con los filtros de la pantalla (Tecnología/Desarrollo). */
+  exportar(formato: 'EXCEL' | 'PDF'): void {
+    if (this.exportando) return;
+    this.exportando = true;
+    this.assetService.exportar({
+      search: this.keyword.trim() || undefined,
+      status: this.status || undefined,
+      type: this.type || undefined,
+      areaId: this.areaId || undefined,
+    }, formato).subscribe({
+      next: (b) => {
+        this.exportando = false;
+        abrirBlob(b, formato === 'EXCEL' ? 'inventario-activos.xlsx' : 'inventario-activos.pdf');
+      },
+      error: (e) => {
+        this.exportando = false;
+        this.toastService.error(e?.error?.message || 'No se pudo exportar el inventario');
+      },
+    });
+  }
+
   loadAssets(): void {
     this.loading = true;
     this.assetService.search({

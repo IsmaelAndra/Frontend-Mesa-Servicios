@@ -72,6 +72,8 @@ export interface TicketRequest {
   areaDestinoId?: string;
   /** Confidencial desde el alta. */
   confidencial?: boolean;
+  /** Agente elegido al crear (solo jefe del área que atiende o SUPER_ADMIN). */
+  agentId?: string;
 }
 
 /** Trasladar un ticket a otra área (POST /tickets/{id}/trasladar). */

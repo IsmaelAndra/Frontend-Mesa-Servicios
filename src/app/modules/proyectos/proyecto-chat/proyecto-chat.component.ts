@@ -163,7 +163,22 @@ export class ProyectoChatComponent implements OnInit, AfterViewInit, OnDestroy, 
     }
   }
 
+  /** Teléfono: el chat abierto a pantalla completa. */
+  chatMovilAbierto = false;
+
+  abrirChatMovil(): void {
+    this.chatMovilAbierto = true;
+    this.bajarAlFinal = true;
+    document.body.classList.add('chat-movil-bloqueo');
+  }
+
+  cerrarChatMovil(): void {
+    this.chatMovilAbierto = false;
+    document.body.classList.remove('chat-movil-bloqueo');
+  }
+
   ngOnDestroy(): void {
+    document.body.classList.remove('chat-movil-bloqueo');
     this.sub?.unsubscribe();
     Object.values(this.miniaturas).forEach((u) => URL.revokeObjectURL(u));
   }

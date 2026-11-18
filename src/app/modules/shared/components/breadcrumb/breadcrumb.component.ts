@@ -32,7 +32,7 @@ const CLAVE_DE_SEGMENTO: Record<string, string> = {
   'correo-microsoft': 'microsoft-graph', 'seguridad-sesion': 'session-config', auditoria: 'audit-sistema',
   'acuses-lectura': 'chat-config', 'cola-correo': 'mail-outbox', reportes: 'reports',
   automatizaciones: 'workflows', actividades: 'activities', calendario: 'calendar', 'mi-cuenta': 'settings',
-  perfil: 'profile', contrasena: 'password', sonidos: 'sounds', notificaciones: 'notifications',
+  perfil: 'profile', contrasena: 'password', sonidos: 'sounds', dispositivos: 'devices', notificaciones: 'notifications',
 };
 
 const LABELS: Record<string, string> = {
@@ -83,6 +83,7 @@ const LABELS: Record<string, string> = {
   profile: 'Perfil',
   password: 'Cambiar contraseña',
   sounds: 'Sonidos de Notificaciones',
+  devices: 'Dispositivos',
   notifications: 'Notificaciones',
   privacidad: 'Privacidad',
   'solo-computador': 'Disponible en el computador',

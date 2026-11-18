@@ -1,3 +1,4 @@
+import { arrastreHabilitado } from '../../../core/utils/arrastre.util';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
@@ -24,6 +25,8 @@ type Pestana = 'tablero' | 'sprints' | 'objetivos' | 'equipo' | 'chat';
   templateUrl: './proyecto-detalle.component.html',
 })
 export class ProyectoDetalleComponent implements OnInit, OnDestroy {
+  /** En pantallas táctiles no se arrastra: el dedo desliza el tablero. */
+  readonly sinArrastre = !arrastreHabilitado();
   id = '';
   d: ProyectoDetalle | null = null;
   cargando = true;

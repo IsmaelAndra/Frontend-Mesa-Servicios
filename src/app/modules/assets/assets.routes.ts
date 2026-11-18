@@ -20,7 +20,8 @@ export const ASSETS_ROUTES: Routes = [
   { path: 'mis-equipos', component: MisEquiposComponent, canActivate: [AuthGuard] },
   { path: 'actas', component: ActasComponent, canActivate: [AuthGuard, RoleGuard], data: { roles: PERSONAL } },
   // Maestros de activos (en el menú de Administración): tipos y numeración juntos.
-  { path: 'configuracion', component: ConfiguracionActivosComponent, canActivate: [AuthGuard, RoleGuard], data: { roles: PERSONAL } },
+  // Solo el súper admin y los jefes (de Tecnología/Desarrollo: lo exige el backend); los agentes no.
+  { path: 'configuracion', component: ConfiguracionActivosComponent, canActivate: [AuthGuard, RoleGuard], data: { roles: ['SUPER_ADMIN', 'AREA_MANAGER'] } },
   { path: 'tipos', redirectTo: 'configuracion' },
   { path: 'nuevo', component: AssetFormComponent, canActivate: [AuthGuard, RoleGuard], data: { roles: PERSONAL } },
   { path: 'new', redirectTo: 'nuevo' },

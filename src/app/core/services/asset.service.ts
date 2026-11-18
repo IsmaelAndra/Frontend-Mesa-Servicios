@@ -112,6 +112,15 @@ export class AssetService {
     return this.http.get<Asset>(`${this.url}/codigo/${encodeURIComponent(codigo)}`);
   }
 
+  /** Inventario filtrado en Excel o PDF (solo quien gestiona activos). */
+  exportar(query: { search?: string; status?: string; type?: string; areaId?: string }, formato: 'EXCEL' | 'PDF'): Observable<Blob> {
+    let params = new HttpParams().set('formato', formato);
+    Object.entries(query).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));
+    });
+    return this.http.get(`${this.url}/exportar`, { params, responseType: 'blob' });
+  }
+
   etiquetas(ids: string[]): Observable<Blob> {
     return this.http.post(`${this.url}/etiquetas`, { ids }, { responseType: 'blob' });
   }

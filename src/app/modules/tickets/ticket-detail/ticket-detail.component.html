@@ -1274,9 +1274,27 @@
       </div>
     </div>
 
+    <!-- Teléfono: la conversación se abre a pantalla completa -->
+    <button
+      type="button"
+      class="lg:hidden card bg-base-100 shadow-md border border-base-200 flex-row items-center gap-3 p-4 text-left w-full"
+      (click)="abrirChatMovil()"
+    >
+      <span class="p-2 rounded-xl bg-primary/10 text-primary" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
+      <span class="flex-1 min-w-0">
+        <span class="block font-semibold">Abrir chat</span>
+        <span class="block text-xs opacity-70">{{ totalRespuestas || answers.length || 0 }} {{ (totalRespuestas || answers.length) === 1 ? "mensaje" : "mensajes" }}</span>
+      </span>
+      <i class="fa-solid fa-chevron-right opacity-50" aria-hidden="true"></i>
+    </button>
+
     <!-- Conversación (también acepta archivos arrastrados) -->
     <div
-      class="card bg-base-100 shadow-md border border-base-200 lg:col-span-2 relative lg:sticky lg:top-4"
+      class="chat-movil card bg-base-100 shadow-md border border-base-200 lg:col-span-2 relative lg:sticky lg:top-4"
+      [class.chat-movil--abierto]="chatMovilAbierto"
+      [attr.role]="chatMovilAbierto ? 'dialog' : null"
+      [attr.aria-modal]="chatMovilAbierto ? 'true' : null"
+      [attr.aria-label]="chatMovilAbierto ? 'Conversación del ticket' : null"
       (dragenter)="alArrastrarEntra($event)"
       (dragover)="alArrastrarSobre($event)"
       (dragleave)="alArrastrarSale()"
@@ -1290,6 +1308,15 @@
       <div class="card-body">
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="lg:hidden btn btn-ghost btn-sm btn-square"
+              (click)="cerrarChatMovil()"
+              title="Cerrar chat"
+              aria-label="Cerrar chat"
+            >
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            </button>
             <div
               class="p-1.5 rounded-lg bg-primary/10 text-primary"
               aria-hidden="true"
@@ -1348,10 +1375,10 @@
         </div>
 
         <!-- Mensajes. Sin paginador: se sube el scroll y entra la tanda anterior -->
-        <div class="relative">
+        <div class="relative chat-movil__mensajes">
         <div
           #chatScroll
-          class="ticket-chat-scroll chat-wa-bg space-y-4 p-3 rounded-lg h-[clamp(300px,calc(100dvh-31rem),720px)] overflow-y-auto"
+          class="chat-movil__scroll ticket-chat-scroll chat-wa-bg space-y-4 p-3 rounded-lg h-[clamp(300px,calc(100dvh-31rem),720px)] overflow-y-auto"
           (scroll)="alDesplazarChat()"
           (click)="alPulsarEnChat($event)"
         >

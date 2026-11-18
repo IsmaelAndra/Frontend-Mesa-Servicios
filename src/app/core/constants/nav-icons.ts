@@ -87,6 +87,7 @@ export const NAV_ICONS: Record<string, string> = {
   profile: 'fa-regular fa-user',
   password: 'fa-solid fa-lock',
   sounds: 'fa-solid fa-music',
+  devices: 'fa-solid fa-laptop',
 
   // Politica de privacidad y pantallas de error, que si llevan breadcrumb
   // (solo /auth/* se queda sin layout).

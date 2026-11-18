@@ -145,6 +145,26 @@
             </div>
           </div>
 
+          <!-- Asignar a: solo el jefe del área que atiende o el SUPER_ADMIN.
+               Vacío = se reparte como siempre. -->
+          <div class="form-control w-full" *ngIf="agentesDelArea.length">
+            <div class="label pt-0 pb-1">
+              <span class="label-text text-xs font-medium">Asignar a (opcional)</span>
+            </div>
+            <app-master-select
+              formControlName="agentId"
+              [options]="agentesDelArea"
+              icon="fa-solid fa-user-check"
+              [allowEmpty]="true"
+              emptyLabel="Reparto automático"
+              placeholder="Reparto automático"
+              label="Asignar a"
+            ></app-master-select>
+            <div class="label pt-1 pb-0">
+              <span class="label-text-alt text-xs opacity-70">Si no elige a nadie, el ticket se reparte automáticamente.</span>
+            </div>
+          </div>
+
           <!-- Confidencial: un tema personal o delicado. Solo lo ven quien lo
                atiende y el jefe de esa área; ni el súper admin sin permiso. -->
           <label class="flex items-start gap-3 p-3 rounded-xl border border-base-300 cursor-pointer md:col-span-2">

@@ -38,7 +38,7 @@
       <div cdkDropList [id]="col.key" [cdkDropListData]="col.tasks" [cdkDropListConnectedTo]="columnIds"
         class="flex-1 overflow-y-auto p-2 space-y-2 kanban-list" (cdkDropListDropped)="drop($event)">
         <!-- Clic en la tarjeta = abrirla (arrastrar no la abre: openEdit ignora el clic tras un arrastre). -->
-        <div *ngFor="let task of tareasVisibles(col)" cdkDrag (cdkDragStarted)="onDragStart()" (cdkDragEnded)="onDragEnd()"
+        <div *ngFor="let task of tareasVisibles(col)" cdkDrag [cdkDragDisabled]="sinArrastre" (cdkDragStarted)="onDragStart()" (cdkDragEnded)="onDragEnd()"
           (click)="openEdit(task)" (keydown.enter)="openEdit(task)" tabindex="0" role="button" [attr.aria-label]="'Abrir ' + task.title"
           class="kanban-card bg-base-100 rounded-lg shadow-sm border border-base-200 border-l-4 p-3 cursor-pointer hover:shadow-md transition group relative"
           [class.tarea-vencida]="vencida(task)"

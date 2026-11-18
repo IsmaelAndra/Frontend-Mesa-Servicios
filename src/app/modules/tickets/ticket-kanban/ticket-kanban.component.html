@@ -245,7 +245,7 @@
           cdkDrag
           (cdkDragStarted)="onDragStart()"
           (cdkDragEnded)="onDragEnd()"
-          [cdkDragDisabled]="isSaving(t.idTicket)"
+          [cdkDragDisabled]="sinArrastre || isSaving(t.idTicket)"
           (click)="openTicket(t.idTicket)"
           class="kanban-card bg-base-100 rounded-lg shadow-sm border border-base-200 border-l-4 p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition group relative"
           [class.saving]="isSaving(t.idTicket)"

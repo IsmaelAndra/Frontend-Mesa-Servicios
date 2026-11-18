@@ -1,3 +1,4 @@
+import { arrastreHabilitado } from '../../../core/utils/arrastre.util';
 import { Component, OnInit } from '@angular/core';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import Swal from 'sweetalert2';
@@ -15,6 +16,8 @@ import { urlDelApi } from '../../../core/utils/url-api.util';
   styleUrls: ['./kanban.component.css']
 })
 export class KanbanComponent implements OnInit {
+  /** En pantallas táctiles no se arrastra: el dedo desliza el tablero. */
+  readonly sinArrastre = !arrastreHabilitado();
   columns: { key: TaskStatus; label: string; color: string; tasks: TaskItem[] }[] = [];
   agents: AssignableAgent[] = [];
   loading = true;
@@ -186,9 +189,19 @@ export class KanbanComponent implements OnInit {
    * venga en /users/agents (un admin, por ejemplo), para que crear una actividad
    * propia no quede bloqueado.
    */
-  private opcionesDeAsignado(): AssignableAgent[] {
-    const lista = [...this.agents];
+  private opcionesDeAsignado(task: TaskItem | null = null): AssignableAgent[] {
     const yo = this.currentUser();
+    // Solo el jefe de área y el súper admin encargan actividades a otras personas;
+    // un agente o un usuario se las asigna a sí mismo (lo exige también el backend).
+    const rol = this.authService.getRole();
+    if (rol !== 'AREA_MANAGER' && rol !== 'SUPER_ADMIN') {
+      const propias: AssignableAgent[] = yo ? [yo] : [];
+      // Al editar una que ya tenía otra persona, se conserva esa opción.
+      const actual = task ? this.agents.find((a) => a.idUser === task.assignedUserId) : undefined;
+      if (actual && !propias.some((a) => a.idUser === actual.idUser)) propias.push(actual);
+      return propias;
+    }
+    const lista = [...this.agents];
     if (yo && !lista.some((a) => a.idUser === yo.idUser)) {
       lista.unshift(yo);
     }
@@ -205,7 +218,7 @@ export class KanbanComponent implements OnInit {
     // logged como ADMIN no aparecia en la lista y no podia asignarse a si mismo
     // (el backend lo marca como obligatorio). Se agrega el usuario actual a las
     // opciones y se deja preseleccionado al crear.
-    const opciones = this.opcionesDeAsignado();
+    const opciones = this.opcionesDeAsignado(task);
     const preseleccionado = task
       ? task.assignedUserId
       : (this.currentUser()?.idUser ?? opciones[0]?.idUser ?? null);
