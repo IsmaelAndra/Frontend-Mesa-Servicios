@@ -49,9 +49,13 @@
 
 /* En modo oscuro las letras del contenido que usan el color primario
    se aclaran para que no se pierdan sobre el fondo oscuro. */
-:root[data-theme="dark"] .text-primary {
+:root[data-theme="dark"] .text-primary,
+:root[data-theme="dark"] .link-primary,
+:root[data-theme="dark"] .calendar-wrap .cal-cab--hoy .cal-cab__num {
   /* #1d4ed8 seguía siendo oscuro sobre el fondo del modo oscuro (contraste
-     ~2,5:1). Un azul claro se lee bien y sigue siendo el color de marca. */
+     ~2,5:1). Un azul claro se lee bien y sigue siendo el color de marca.
+     También los enlaces (link-primary: "Ver todos los tickets →" salía 1,2:1)
+     y el número del día de hoy del calendario. */
   color: #7aa7ff;
 }
 /* Sobre fondo blanco (botones del encabezado del tablero, logo del login) el
@@ -1240,7 +1244,11 @@ main .tabs-boxed .tab-active {
 /* Etiquetas pintadas con el color de cada elemento (sede, área, equipo,
    categoría…): un color oscuro, como el azul institucional, no se leía sobre el
    fondo del modo oscuro. Solo en oscuro se aclaran; el color guardado no cambia. */
-:root[data-theme="dark"] main .table [style*="color:"][style*="background"] {
+:root[data-theme="dark"] main .table [style*="color:"][style*="background"],
+:root[data-theme="dark"] main .badge[style*="color:"][style*="background"],
+:root[data-theme="dark"] main .kanban-tag[style*="color:"] {
+  /* También fuera de las tablas: estados de proyecto, políticas SLA, prioridad
+     del área... (contraste 2,1–2,8 en oscuro). */
   filter: brightness(1.9) saturate(1.15);
 }
 
@@ -1991,8 +1999,11 @@ main .ql-snow.ql-toolbar button.ql-active .ql-stroke {
     right: 0;
     z-index: 1;
   }
-  .table thead.bg-primary tr > th:last-child {
-    background: oklch(var(--p));
+  /* Mismo fondo que el resto de la cabecera (banda suave): con el azul de marca
+     se veía un cuadrado azul con el título gris, ilegible en tema claro. */
+  .table thead.bg-primary tr > th:last-child,
+  .table thead tr > th:last-child {
+    background: linear-gradient(oklch(var(--bc) / 0.035), oklch(var(--bc) / 0.035)), oklch(var(--b1));
   }
   .table tbody tr > td:last-child:has(.btn) {
     background: oklch(var(--b1));
@@ -2102,8 +2113,9 @@ body.swal2-height-auto {
   text-align: center;
   box-shadow: 0 6px 16px -8px rgb(2 6 23 / 0.45);
   pointer-events: none;
-  /* Detrás del contenido, como un sello: no tapa el título ni el selector de estado. */
-  z-index: 0;
+  /* Delante de todo (en el teléfono la barra de avance la tapaba y no se leía).
+     Es semitransparente y no recibe clics, así que no estorba. */
+  z-index: 3;
 }
 .franja-terminado > *,
 .franja-cancelado > * {
@@ -2200,4 +2212,118 @@ body.chat-movil-bloqueo { overflow: hidden; }
    hace core/utils/desplegables-en-pantalla.util.ts). */
 .dropdown-content {
   max-width: calc(100vw - 16px);
+}
+
+/* Login en pantallas bajas (tableta en horizontal, 1024×600): el panel de la
+   izquierda con la lista de ventajas estiraba la página y el formulario,
+   centrado en esa altura, quedaba cortado por abajo. */
+@media (min-width: 1024px) and (max-height: 820px) {
+  .login-ventajas { display: none; }
+  .login-panel { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+  .login-panel > a { margin-bottom: 1.25rem; }
+  .login-columna { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+}
+
+/* ===== Chat a pantalla completa (teléfono / tableta) =====
+   - El botón flotante de MAPI quedaba encima del botón de enviar.
+   - La letra de los mensajes era demasiado grande para la pantalla.
+   - El texto guía del cuadro de escribir ("Escriba una respuesta... (puede
+     incluir imágenes)") no cabía y se salía en varias líneas. */
+body.chat-movil-bloqueo app-ai-float-button {
+  display: none !important;
+}
+@media (max-width: 1023.98px) {
+  .chat-movil--abierto .chat-burbuja,
+  .chat-movil--abierto .chat-message-user,
+  .chat-movil--abierto .chat-message-other,
+  .chat-movil--abierto .ql-editor {
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+  .chat-movil--abierto .ql-editor.ql-blank::before {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* ===== Acciones de las tablas: solo icono (teléfono y computador) =====
+   "Editar", "Eliminar", "Miembros"... junto al icono ocupaban mucho espacio.
+   El texto sigue en el botón (lo leen los lectores de pantalla) y sale como
+   ayuda al pasar el ratón: AppComponent copia el texto al title. */
+main .table tbody td:last-child .btn:has(> i, > .fa-solid, > .fa-regular) {
+  font-size: 0;
+  gap: 0;
+  min-width: 2rem;
+  padding-inline: 0.5rem;
+}
+main .table tbody td:last-child .btn:has(> i) > i {
+  font-size: 0.875rem;
+}
+main .table tbody td:last-child .btn:has(> i) > span:not(.loading) {
+  display: none;
+}
+
+/* Paginador en el teléfono: sin "primera"/"última" (11 botones de 32 px no
+   caben en 375 px y se salían del cuadro, p. ej. en Notificaciones). */
+@media (max-width: 639.98px) {
+  app-paginator [data-solo-ancho] { display: none; }
+}
+
+/* Texto guía de los cuadros de escribir del chat (ticket y proyecto): en una
+   línea, recortado con "…". Partido en varias líneas se salía del cuadro en el
+   teléfono y en la tableta con el menú abierto. */
+.ticket-editor-wrap .ql-editor.ql-blank::before,
+app-proyecto-chat .ql-editor.ql-blank::before {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tema oscuro: success/warning/info/error son tonos 600/700 (para que el texto
+   blanco se lea encima). Usados COMO TEXTO sobre el fondo oscuro (botones con
+   borde, iconos, text-success...) se aclaran. */
+:root[data-theme="dark"] .text-success,
+:root[data-theme="dark"] .btn-outline.btn-success { color: #34d399; border-color: #34d399; }
+:root[data-theme="dark"] .text-warning,
+:root[data-theme="dark"] .btn-outline.btn-warning { color: #fbbf24; border-color: #fbbf24; }
+:root[data-theme="dark"] .text-info,
+:root[data-theme="dark"] .btn-outline.btn-info { color: #60a5fa; border-color: #60a5fa; }
+:root[data-theme="dark"] .text-error,
+:root[data-theme="dark"] .btn-outline.btn-error { color: #f87171; border-color: #f87171; }
+:root[data-theme="dark"] .btn-outline.btn-success:hover,
+:root[data-theme="dark"] .btn-outline.btn-warning:hover,
+:root[data-theme="dark"] .btn-outline.btn-info:hover,
+:root[data-theme="dark"] .btn-outline.btn-error:hover { color: #fff; }
+/* text-*-content dentro de una insignia de color sigue siendo blanco. */
+:root[data-theme="dark"] .badge .text-success,
+:root[data-theme="dark"] .badge-success .text-success { color: inherit; }
+
+/* Tema oscuro: textos pintados con el color de su elemento (prioridad "MEDIA",
+   contador de cada columna del tablero, la opción elegida en un selector...).
+   Un color oscuro guardado no se leía sobre el fondo oscuro; solo se aclara. */
+:root[data-theme="dark"] main span[style*="color:"]:not([style*="background"]),
+:root[data-theme="dark"] app-master-select button [style*="color:"] {
+  filter: brightness(1.75) saturate(1.1);
+}
+
+/* Tema claro: el mismo caso al revés. Un color guardado claro (ámbar de la
+   prioridad "MEDIA", SLA Alto/Medio...) como texto sobre blanco no se leía
+   (2,5:1). Solo se oscurece al pintarlo; el color guardado no cambia. */
+:root:not([data-theme="dark"]) main span[style*="color:"]:not([style*="background"]),
+:root:not([data-theme="dark"]) main .badge[style*="color:"][style*="background"],
+:root:not([data-theme="dark"]) main .kanban-tag[style*="color:"] {
+  filter: brightness(0.78) saturate(1.15);
+}
+
+/* MAPI responde primero (V49): pregunta al solicitante bajo el chat del ticket. */
+.mapi-pregunta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  background: oklch(var(--p) / 0.06);
+  border: 1px solid oklch(var(--p) / 0.2);
 }

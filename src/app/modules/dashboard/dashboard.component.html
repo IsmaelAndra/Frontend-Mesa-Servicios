@@ -94,6 +94,17 @@
     </div>
   </header>
 
+  <!-- ============================ ACCESOS RÁPIDOS ============================ -->
+  <!-- Según el rol (mismos permisos que el menú). En el teléfono se desplazan de lado. -->
+  <nav *ngIf="accesos.length" aria-label="Accesos rápidos" class="accesos-rapidos">
+    <a *ngFor="let a of accesos; trackBy: trackAcceso" [routerLink]="a.ruta" class="acceso-rapido">
+      <span class="acceso-rapido__icono" [style.background-color]="a.color + '1F'" [style.color]="a.color" aria-hidden="true">
+        <i [class]="a.icono"></i>
+      </span>
+      <span class="acceso-rapido__texto">{{ a.texto }}</span>
+    </a>
+  </nav>
+
   <!-- ============================ CARGANDO ============================ -->
   <div *ngIf="loading" class="space-y-6">
     <app-skeleton tipo="tarjetas" [cantidad]="4" etiqueta="Cargando estadísticas…"></app-skeleton>

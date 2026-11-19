@@ -93,6 +93,18 @@ toggleTheme(): void {
   private aplicarImagenes(): void {
     this.logoUrl = this.tema?.logoUrl || this.marcaLogo;
     this.backgroundUrl = this.tema?.backgroundUrl || this.marcaFondo;
+    this.precargarFondo(this.backgroundUrl);
+  }
+
+  /** URL del fondo que ya terminó de descargarse (se muestra con un fundido). */
+  fondoCargado = '';
+
+  private precargarFondo(url: string): void {
+    if (!url || url === this.fondoCargado) return;
+    const img = new Image();
+    img.onload = () => { if (this.backgroundUrl === url) this.fondoCargado = url; };
+    // Si falla, queda el degradado de marca en vez de un hueco.
+    img.src = url;
   }
 
   forgotPassword(): void {

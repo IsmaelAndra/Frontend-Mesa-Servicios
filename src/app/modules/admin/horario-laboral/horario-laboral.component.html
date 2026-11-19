@@ -1,0 +1,79 @@
+<div *ngIf="cargando" class="flex justify-center py-10" role="status"><span class="loading loading-spinner"></span></div>
+
+<div *ngIf="!cargando" class="grid gap-6 xl:grid-cols-2">
+  <!-- Horario de cada día -->
+  <section class="card bg-base-100 shadow-md border border-base-200 self-start">
+    <div class="card-body gap-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 class="font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-business-time text-primary" aria-hidden="true"></i> Horario laboral
+        </h2>
+        <span class="badge badge-ghost">{{ horasSemana }} h por semana</span>
+      </div>
+      <p class="text-xs opacity-70 -mt-2">
+        Las políticas marcadas con <b>«Solo horario laboral»</b> cuentan el plazo únicamente en estas horas y no en
+        los feriados. Ejemplo: un plazo de 4 h abierto el viernes a las 16:00 vence el lunes a las 11:00.
+      </p>
+      <ul class="divide-y divide-base-200">
+        <li *ngFor="let d of dias; trackBy: trackDia" class="flex flex-wrap items-center gap-x-3 gap-y-2 py-2">
+          <label class="flex items-center gap-2 w-32 cursor-pointer">
+            <input type="checkbox" class="toggle toggle-sm toggle-success" [(ngModel)]="d.activo" [disabled]="soloLectura"
+                   [attr.aria-label]="'Se trabaja el ' + nombresDia[d.dia]" />
+            <span class="text-sm font-medium" [class.opacity-50]="!d.activo">{{ nombresDia[d.dia] }}</span>
+          </label>
+          <span *ngIf="d.activo; else libre" class="flex items-center gap-2">
+            <input type="time" class="input input-bordered input-sm w-36" [(ngModel)]="d.inicio" [disabled]="soloLectura"
+                   [attr.aria-label]="'Entrada del ' + nombresDia[d.dia]" />
+            <span class="opacity-60 text-sm">a</span>
+            <input type="time" class="input input-bordered input-sm w-36" [(ngModel)]="d.fin" [disabled]="soloLectura"
+                   [attr.aria-label]="'Salida del ' + nombresDia[d.dia]" />
+          </span>
+          <ng-template #libre><span class="text-sm opacity-60">No laborable</span></ng-template>
+        </li>
+      </ul>
+      <div *ngIf="!soloLectura" class="flex justify-end">
+        <button type="button" class="btn btn-sm btn-primary gap-2 text-white" (click)="guardarHorario()" [disabled]="guardando">
+          <span *ngIf="guardando" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+          <i *ngIf="!guardando" class="fa-solid fa-check" aria-hidden="true"></i> Guardar horario
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feriados -->
+  <section class="card bg-base-100 shadow-md border border-base-200 self-start">
+    <div class="card-body gap-4">
+      <h2 class="font-semibold flex items-center gap-2">
+        <i class="fa-solid fa-umbrella-beach text-primary" aria-hidden="true"></i> Feriados
+        <span class="badge badge-sm badge-ghost">{{ feriados.length }}</span>
+      </h2>
+      <p class="text-xs opacity-70 -mt-2">
+        Los de fecha fija se marcan «cada año». Carnaval, Viernes Santo y los traslados por decreto cambian: agréguelos
+        para cada año.
+      </p>
+      <form *ngIf="!soloLectura" class="flex flex-wrap items-center gap-2" (ngSubmit)="agregarFeriado()">
+        <input type="date" class="input input-bordered input-sm w-40" [(ngModel)]="nuevo.fecha" name="fecha" aria-label="Fecha del feriado" required />
+        <input class="input input-bordered input-sm flex-1 min-w-[12rem]" [(ngModel)]="nuevo.nombre" name="nombre" maxlength="120"
+               placeholder="Nombre (p. ej. Batalla de Pichincha)" aria-label="Nombre del feriado" required />
+        <label class="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap">
+          <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" [(ngModel)]="nuevo.anual" name="anual" /> Cada año
+        </label>
+        <button type="submit" class="btn btn-sm btn-primary text-white gap-1 ml-auto" [disabled]="!nuevo.fecha || !nuevo.nombre.trim()">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> Agregar
+        </button>
+      </form>
+      <ul class="divide-y divide-base-200 max-h-[26rem] overflow-y-auto">
+        <li *ngFor="let f of feriados; trackBy: trackFeriado" class="flex items-center gap-3 py-2">
+          <span class="w-24 shrink-0 font-mono text-sm tabular-nums whitespace-nowrap">{{ fecha(f) }}</span>
+          <span class="flex-1 min-w-0 truncate text-sm">{{ f.nombreFeriado }}</span>
+          <span *ngIf="f.anualFeriado" class="badge badge-sm badge-ghost gap-1"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Anual</span>
+          <button *ngIf="!soloLectura" type="button" class="btn btn-ghost btn-xs text-error" (click)="eliminarFeriado(f)"
+                  [attr.aria-label]="'Eliminar ' + f.nombreFeriado" title="Eliminar">
+            <i class="fa-solid fa-trash" aria-hidden="true"></i>
+          </button>
+        </li>
+        <li *ngIf="!feriados.length" class="py-6 text-center text-sm opacity-60">Sin feriados registrados.</li>
+      </ul>
+    </div>
+  </section>
+</div>

@@ -47,6 +47,8 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Menús desplegables dentro de la pantalla (en el teléfono se salían por un lado).
     this.quitarAjusteDesplegables = instalarAjusteDeDesplegables();
+    // Acciones de tabla solo con icono: su nombre sale como ayuda al pasar el ratón.
+    document.addEventListener('mouseover', this.ponerAyudaDeAccion, true);
     this.isAuthPage = this.router.url.startsWith('/acceso') || this.router.url.startsWith('/auth');
     this.loadBrandingIcons();
     // Tema de temporada (Halloween, Navidad...): público, vale también en el login.
@@ -99,6 +101,14 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private quitarAjusteDesplegables?: () => void;
+
+  /** Copia el texto de un botón de acción de tabla (que solo muestra el icono) a su title. */
+  private readonly ponerAyudaDeAccion = (e: Event): void => {
+    const boton = (e.target as Element | null)?.closest?.('main .table tbody td:last-child .btn') as HTMLElement | null;
+    if (!boton || boton.title) return;
+    const texto = (boton.getAttribute('aria-label') || boton.textContent || '').trim();
+    if (texto) boton.title = texto;
+  };
 
   /** Año del pie de página. */
   readonly anioActual = new Date().getFullYear();
@@ -161,6 +171,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.quitarAjusteDesplegables?.();
+    document.removeEventListener('mouseover', this.ponerAyudaDeAccion, true);
     if (this.hideTimer) clearTimeout(this.hideTimer);
     if (this.safetyTimer) clearTimeout(this.safetyTimer);
     this.routerSub?.unsubscribe();

@@ -716,10 +716,12 @@
   <!-- items-start: cada tarjeta con su altura natural. Con el estirado del grid
        la conversación se alargaba hasta la altura de la información y quedaba
        un hueco en blanco bajo el chat. -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+  <!-- Tres columnas desde xl: en una tableta horizontal (1024 px) con el menú abierto
+       el chat quedaba en 385 px y el cuadro de escribir no cabía. -->
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
     <!-- Información -->
     <div
-      class="card bg-base-100 shadow-md border border-base-200 lg:col-span-1"
+      class="card bg-base-100 shadow-md border border-base-200 xl:col-span-1"
     >
       <div class="card-body text-sm space-y-3">
         <div class="flex items-center gap-2">
@@ -1290,7 +1292,7 @@
 
     <!-- Conversación (también acepta archivos arrastrados) -->
     <div
-      class="chat-movil card bg-base-100 shadow-md border border-base-200 lg:col-span-2 relative lg:sticky lg:top-4"
+      class="chat-movil card bg-base-100 shadow-md border border-base-200 xl:col-span-2 relative xl:sticky xl:top-4"
       [class.chat-movil--abierto]="chatMovilAbierto"
       [attr.role]="chatMovilAbierto ? 'dialog' : null"
       [attr.aria-modal]="chatMovilAbierto ? 'true' : null"
@@ -1483,6 +1485,7 @@
                 desplazaba segun hubiera foto o no.
               -->
               <app-presence-dot
+                *ngIf="!a.mapiAnswer"
                 class="absolute -bottom-0.5 -right-0.5"
                 [state]="sesionAutor(a)"
               />
@@ -1748,6 +1751,26 @@
           <i class="fa-solid fa-arrow-down text-[11px]" aria-hidden="true"></i>
           {{ nuevosSinVer }} {{ nuevosSinVer === 1 ? "mensaje nuevo" : "mensajes nuevos" }}
         </button>
+        </div>
+
+        <!-- MAPI responde primero (V49): quien abrió el ticket dice si le sirvió. -->
+        <div *ngIf="preguntarMapi" class="mapi-pregunta mt-3" role="group" aria-label="¿Le ayudó la respuesta de MAPI?">
+          <span class="icono-mapi text-xl shrink-0" aria-hidden="true"></span>
+          <p class="flex-1 min-w-[12rem] text-sm"><b>¿Le ayudó la respuesta de MAPI?</b>
+            <span class="block text-xs opacity-75">Si se solucionó, el ticket queda resuelto; si no, le atiende un agente.</span>
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" class="btn btn-sm btn-ghost border border-base-300" (click)="responderMapi(false)" [disabled]="respondiendoMapi">
+              <i class="fa-solid fa-headset" aria-hidden="true"></i> No, necesito un agente
+            </button>
+            <button type="button" class="btn btn-sm btn-success text-white" (click)="responderMapi(true)" [disabled]="respondiendoMapi">
+              <span *ngIf="respondiendoMapi" class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+              <i *ngIf="!respondiendoMapi" class="fa-solid fa-check" aria-hidden="true"></i> Sí, se resolvió
+            </button>
+          </div>
+        </div>
+        <div *ngIf="mapiEstado === 'NECESITA_AGENTE'" class="mt-3 text-xs opacity-70 flex items-center gap-2">
+          <span class="icono-mapi" aria-hidden="true"></span> La respuesta de MAPI no le resolvió: le atiende un agente.
         </div>
 
         <!-- Solo lectura: lo ve (p. ej. seguimiento o la cola de su área) pero no responde. -->

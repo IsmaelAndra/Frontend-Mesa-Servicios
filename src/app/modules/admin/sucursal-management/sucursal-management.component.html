@@ -162,7 +162,9 @@
           <app-estado-activo [(ngModel)]="newSucursal.statusSucursal" name="statusSucursal" [femenino]="true" etiqueta="Estado"></app-estado-activo>
         </div>
 
-        <div class="flex justify-end gap-2">
+        <!-- Fila propia: en una columna de la rejilla los dos botones no cabían y
+             "Cancelar" se montaba sobre el estado (tableta). -->
+        <div class="md:col-span-4 flex flex-wrap justify-end gap-2">
           <button
             type="button"
             class="btn btn-ghost btn-sm"

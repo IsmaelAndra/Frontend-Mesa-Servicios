@@ -1,3 +1,4 @@
+import { filter } from 'rxjs/operators';
 import {
   Component,
   Output,
@@ -211,6 +212,12 @@ private sseService: SseService,
     this.notificationService
       .unreadChanged$()
       .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.loadNotifications());
+
+    // Lo leído en OTRO dispositivo de la misma persona (teléfono ↔ laptop):
+    // el contador de la campana se actualiza sin recargar.
+    this.sseService.cambio$
+      .pipe(filter((c) => c.tipo === 'notificaciones'), debounceTime(400), takeUntil(this.destroy$))
       .subscribe(() => this.loadNotifications());
 
     // Refresca cada 60 segundos como respaldo

@@ -1,16 +1,14 @@
 <div class="relative min-h-screen flex items-stretch overflow-hidden">
-  <!-- ============ Fondo: imagen SIN opacidad ============ -->
+  <!-- Degradado de marca siempre debajo: mientras la imagen de fondo se descarga
+       (la primera vez tarda) no se ve un fondo gris vacío. -->
+  <div class="absolute inset-0 bg-gradient-to-br from-primary to-primary/80" aria-hidden="true"></div>
+
+  <!-- ============ Fondo: imagen SIN opacidad, aparece cuando ya cargó ============ -->
   <div
     *ngIf="backgroundUrl"
-    class="absolute inset-0 bg-cover bg-center bg-no-repeat"
+    class="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-500"
+    [class.opacity-0]="fondoCargado !== backgroundUrl"
     [ngStyle]="{ 'background-image': 'url(' + backgroundUrl + ')' }"
-    aria-hidden="true"
-  ></div>
-
-  <!-- Fallback: gradiente primary si no hay imagen -->
-  <div
-    *ngIf="!backgroundUrl"
-    class="absolute inset-0 bg-gradient-to-br from-primary to-primary/80"
     aria-hidden="true"
   ></div>
 
@@ -41,7 +39,7 @@
   <div class="relative z-10 w-full grid lg:grid-cols-3">
     <!-- ============ Panel izquierdo (branding) ============ -->
     <div
-      class="hidden lg:flex flex-col justify-center bg-primary/40 backdrop-blur-sm px-8 xl:px-10 py-12 text-white border-r border-white/10"
+      class="login-panel hidden lg:flex flex-col justify-center bg-primary/40 backdrop-blur-sm px-8 xl:px-10 py-12 text-white border-r border-white/10"
       style="--tw-backdrop-blur: blur(7px) !important;"
     >
       <!-- Logo -->
@@ -73,8 +71,8 @@
         solicitudes y recibir soporte del equipo de TI.
       </p>
 
-      <!-- Features -->
-      <div class="mt-10 space-y-4">
+      <!-- Features (se ocultan en pantallas bajas: tableta en horizontal) -->
+      <div class="login-ventajas mt-10 space-y-4">
         <div class="flex items-start gap-3 text-white">
           <div class="p-2 rounded-lg bg-white/10 backdrop-blur-sm shrink-0">
             <i class="fa-solid fa-circle-check text-3xl" aria-hidden="true"></i>
@@ -119,7 +117,7 @@
 
     <!-- ============ Panel derecho (formulario) ============ -->
     <div
-      class="lg:col-span-2 flex items-center justify-center px-4 py-10 sm:px-8 lg:px-12"
+      class="login-columna lg:col-span-2 flex items-center justify-center px-4 py-10 sm:px-8 lg:px-12"
     >
       <div class="w-full max-w-md">
         <!-- Logo (solo móvil) -->

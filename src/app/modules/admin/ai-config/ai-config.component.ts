@@ -95,6 +95,7 @@ export class AiConfigComponent implements OnInit {
       rulesText: [""],
       enabledActions: ["SUMMARY,ANSWER"],
       dailyLimit: [50, [Validators.min(0), Validators.max(100000)]],
+      respondePrimero: [false],
     });
   }
 
@@ -236,6 +237,7 @@ export class AiConfigComponent implements OnInit {
             rulesText: config.rulesText || "",
             enabledActions: config.enabledActions || "SUMMARY,ANSWER",
             dailyLimit: config.dailyLimit ?? 0,
+            respondePrimero: !!config.respondePrimero,
           });
           this.usadasHoy = config.usedToday ?? null;
           this.isLoading = false;

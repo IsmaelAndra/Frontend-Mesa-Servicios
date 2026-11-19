@@ -44,7 +44,8 @@ export class SlaManagementComponent implements OnInit {
   newPolicy: Partial<SlaPolicy> = {
     activeSlaPolicy: true,
     iconSlaPolicy: 'fa-solid fa-clock',
-    colorSlaPolicy: '#D97706'
+    colorSlaPolicy: '#D97706',
+    horarioLaboralSlaPolicy: true
   };
   newRule: Partial<SlaRule> = { activeSlaRule: true };
   newEscalation: Partial<SlaEscalation> = {};
@@ -141,7 +142,7 @@ export class SlaManagementComponent implements OnInit {
     if (this.esJefe) this.activeTab = 'rules';
     // ?tab=escalations abre esa pestaña (el antiguo menú "Escalaciones" llega aquí).
     const tab = this.route?.snapshot?.queryParamMap?.get('tab');
-    if (tab && ['policies', 'rules', 'escalations'].includes(tab) && !(this.esJefe && tab === 'escalations')) this.activeTab = tab;
+    if (tab && ['policies', 'rules', 'escalations', 'horario'].includes(tab) && !(this.esJefe && tab === 'escalations')) this.activeTab = tab;
   }
 
   ngOnInit(): void { this.load(); }
@@ -242,7 +243,7 @@ export class SlaManagementComponent implements OnInit {
     if (!this.newPolicy.nameSlaPolicy || !this.newPolicy.responseTimeMinutes || !this.newPolicy.resolutionTimeMinutes) return;
     if (this.esJefe && !this.newPolicy.areaSlaPolicy) return;
     this.adminService.createSlaPolicy(this.newPolicy).subscribe({
-      next: () => { this.load(); this.newPolicy = { activeSlaPolicy: true, iconSlaPolicy: 'fa-solid fa-clock', colorSlaPolicy: '#D97706' }; this.showNewPolicy = false; this.toastService.success('Política SLA creada'); },
+      next: () => { this.load(); this.newPolicy = { activeSlaPolicy: true, iconSlaPolicy: 'fa-solid fa-clock', colorSlaPolicy: '#D97706', horarioLaboralSlaPolicy: true }; this.showNewPolicy = false; this.toastService.success('Política SLA creada'); },
       error: (e) => this.toastService.error(e?.error?.message || 'No se pudo crear')
     });
   }

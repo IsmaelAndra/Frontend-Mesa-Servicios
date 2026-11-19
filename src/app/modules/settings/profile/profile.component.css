@@ -28,9 +28,10 @@
 /* Fila rótulo/valor de las tarjetas laterales. */
 .perfil-fila {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.25rem 1rem;
   font-size: 0.85rem;
 }
 .perfil-fila + .perfil-fila {
@@ -50,7 +51,11 @@
   font-size: 0.75rem;
   opacity: 0.8;
 }
+/* Si rótulo y valor no caben en una línea (tarjeta estrecha en la tableta),
+   el valor baja a la siguiente en vez de salirse de la tarjeta. */
 .perfil-fila dd {
+  margin-left: auto;
+  max-width: 100%;
   font-weight: 600;
   text-align: right;
   min-width: 0;

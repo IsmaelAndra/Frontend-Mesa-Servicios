@@ -1,6 +1,9 @@
+import { Subscription } from 'rxjs';
+import { debounceTime, filter } from 'rxjs/operators';
+import { SseService } from '../../../../core/services/sse.service';
 import { agruparPorFecha } from "../../../../core/utils/agrupar-por-fecha.util";
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject } from "@angular/core";
+import { Component, OnDestroy, OnInit, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
@@ -23,7 +26,7 @@ import { SharedModule } from "src/app/modules/shared/shared.module";
   templateUrl: "./notification-page.component.html",
   styleUrls: ["./notification-page.component.css"],
 })
-export class NotificationPageComponent implements OnInit {
+export class NotificationPageComponent implements OnInit, OnDestroy {
   // Lista completa (para filtrar y paginar sin perder datos)
   private allNotifications: Notification[] = [];
 
@@ -46,9 +49,19 @@ export class NotificationPageComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private router = inject(Router);
   private toastService = inject(ToastService);
+  private sse = inject(SseService);
+  private cambioSub?: Subscription;
 
   ngOnInit(): void {
     this.loadNotifications();
+    // Leídas en otro dispositivo: la lista se pone al día sola.
+    this.cambioSub = this.sse.cambio$
+      .pipe(filter((c) => c.tipo === 'notificaciones'), debounceTime(400))
+      .subscribe(() => this.loadNotifications());
+  }
+
+  ngOnDestroy(): void {
+    this.cambioSub?.unsubscribe();
   }
 
   /** Carga todas las notificaciones del backend (una sola vez) */

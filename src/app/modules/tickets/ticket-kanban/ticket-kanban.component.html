@@ -230,9 +230,11 @@
           aria-hidden="true"
         ></span>
         <span class="font-semibold text-sm truncate">{{ col.label }}</span>
+        <!-- Contador neutro con borde del color de la columna: el número blanco
+             sobre colores claros (ámbar, celeste) no se leía. -->
         <span
-          class="ml-auto text-xs font-bold px-2 py-0.5 rounded-full min-w-[24px] text-center text-white"
-          [style.background]="col.color"
+          class="ml-auto text-xs font-bold px-2 py-0.5 rounded-full min-w-[24px] text-center bg-base-200 text-base-content border-2"
+          [style.border-color]="col.color"
         >
           {{ col.tickets.length }}
         </span>

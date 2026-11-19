@@ -32,12 +32,14 @@ import { NgChartsModule } from 'ng2-charts';
 import { SelectorIconoComponent } from '../shared/components/selector-icono/selector-icono.component';
 import { MailOutboxComponent } from './mail-outbox/mail-outbox.component';
 import { BaseDatosComponent } from './base-datos/base-datos.component';
+import { HorarioLaboralComponent } from './horario-laboral/horario-laboral.component';
 
 @NgModule({
   declarations: [
     PlantillasAreaComponent,
     MailOutboxComponent,
     BaseDatosComponent,
+    HorarioLaboralComponent,
     BrandingLogosComponent, BrandingImagenesComponent, BrandingColoresComponent, BrandingCargaComponent,
     AdminDashboardComponent,
     UserManagementComponent,

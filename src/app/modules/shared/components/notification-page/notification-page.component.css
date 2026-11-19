@@ -19,3 +19,11 @@
   color: oklch(var(--in));
   font-weight: 600;
 }
+/* En oscuro el azul de "info" sobre su propio tinte no se leía (2,5:1). */
+:host-context([data-theme="dark"]) .notif-nav--activo,
+:host-context([data-theme="dark"]) .notif-nav--activo:hover {
+  color: #93c5fd;
+}
+:host-context([data-theme="dark"]) .notif-nav .opacity-70 {
+  opacity: 0.85;
+}

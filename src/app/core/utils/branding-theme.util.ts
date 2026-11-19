@@ -42,6 +42,14 @@ export function setChatBackground(lightUrl?: string | null, darkUrl?: string | n
   const light = lightUrl?.trim() || '';
   const dark = darkUrl?.trim() || light;
   style.textContent = `${backgroundRule('light', light)}\n${backgroundRule('dark', dark)}`;
+  // Se descargan las dos ya: al cambiar de tema con un chat abierto, la imagen
+  // del otro tema aún no estaba y el chat se quedaba sin fondo hasta volver a entrar.
+  for (const url of new Set([light, dark])) {
+    if (url) {
+      const img = new Image();
+      img.src = url;
+    }
+  }
 }
 
 function backgroundRule(theme: 'light' | 'dark', url: string): string {

@@ -1,4 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { debounceTime, filter } from 'rxjs/operators';
+import { SseService } from '../../../core/services/sse.service';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { ProyectoService } from '../../../core/services/proyecto.service';
@@ -19,7 +22,13 @@ import { MasterOption } from '../../shared/components/master-select/master-selec
   selector: 'app-proyecto-lista',
   templateUrl: './proyecto-lista.component.html',
 })
-export class ProyectoListaComponent implements OnInit {
+export class ProyectoListaComponent implements OnInit, OnDestroy {
+  private cambioLeidos?: Subscription;
+
+  ngOnDestroy(): void {
+    this.cambioLeidos?.unsubscribe();
+  }
+
   proyectos: ProyectoResumen[] = [];
   invitaciones: InvitacionProyecto[] = [];
   cargando = false;
@@ -69,6 +78,7 @@ export class ProyectoListaComponent implements OnInit {
     private authService: AuthService,
     private toast: ToastService,
     private router: Router,
+    private sse: SseService,
   ) {
     const rol = this.authService.getRole();
     this.esSuperAdmin = rol === 'SUPER_ADMIN';
@@ -81,6 +91,10 @@ export class ProyectoListaComponent implements OnInit {
   ngOnInit(): void {
     this.cargar();
     this.servicio.noLeidos().subscribe({ next: (m) => (this.noLeidos = m || {}), error: () => undefined });
+    // Chat leído en otro dispositivo: la insignia se apaga sola.
+    this.cambioLeidos = this.sse.cambio$
+      .pipe(filter((c) => c.tipo === 'leidos-proyecto'), debounceTime(400))
+      .subscribe(() => this.servicio.noLeidos().subscribe({ next: (m) => (this.noLeidos = m || {}), error: () => undefined }));
     if (this.authService.getRole() === 'AREA_MANAGER') this.cargarInvitaciones();
     if (this.puedeCrear) {
       this.adminService.catalog().subscribe({

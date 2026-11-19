@@ -82,12 +82,18 @@ module.exports = {
           // `text-base-content` (incluidas las burbujas del chat) heredaba un
           // color claro sobre fondo claro, dejando texto blanco invisible.
           'base-content': '#1f2937',
-          info: '#3b82f6',
-          success: '#10b981',
-          warning: '#f59e0b',
+          // En el tema claro, tonos 600/700: los 500 (#10b981, #f59e0b...) con
+          // texto blanco o como texto sobre blanco no se leían (contraste 2–2,5):
+          // botones "Desactivar", insignias "Activo", avisos...
+          info: '#2563eb',
+          'info-content': '#ffffff',
+          success: '#047857',
+          'success-content': '#ffffff',
+          warning: '#b45309',
           // Texto blanco sobre el ámbar en botones e insignias de advertencia.
           'warning-content': '#ffffff',
-          error: '#ef4444',
+          error: '#dc2626',
+          'error-content': '#ffffff',
           // Esquinas más amables: cajas y desplegables 1rem, botones 0.75rem y
           // insignias e interruptores en píldora (con 0.25rem los toggles salían
           // cuadrados). Lo comparten todas las pantallas.
@@ -113,12 +119,17 @@ module.exports = {
           'base-200': '#0f172a',
           'base-300': '#334155',
           'base-content': '#e2e8f0',
-          info: '#3b82f6',
-          success: '#10b981',
-          warning: '#f59e0b',
+          // Mismos tonos 600/700 que el tema claro: con texto blanco encima los
+          // 500 no se leían (insignias "Activo", "Al día", "Este dispositivo").
+          info: '#2563eb',
+          'info-content': '#ffffff',
+          success: '#047857',
+          'success-content': '#ffffff',
+          warning: '#b45309',
           // Texto blanco sobre el ámbar en botones e insignias de advertencia.
           'warning-content': '#ffffff',
-          error: '#ef4444',
+          error: '#dc2626',
+          'error-content': '#ffffff',
           // Esquinas más amables: cajas y desplegables 1rem, botones 0.75rem y
           // insignias e interruptores en píldora (con 0.25rem los toggles salían
           // cuadrados). Lo comparten todas las pantallas.

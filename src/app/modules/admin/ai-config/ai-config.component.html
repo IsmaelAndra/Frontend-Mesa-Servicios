@@ -321,6 +321,31 @@
       </div>
     </div>
 
+    <!-- ============ MAPI responde primero (V49) ============ -->
+    <div class="xl:col-span-2 card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]">
+      <div class="card-body gap-3 sm:flex-row sm:items-center">
+        <div class="flex items-start gap-3 flex-1 min-w-0">
+          <span class="p-2 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 shrink-0" aria-hidden="true">
+            <span class="icono-mapi"></span>
+          </span>
+          <div class="min-w-0">
+            <h2 class="font-semibold">MAPI responde primero</h2>
+            <p class="text-xs opacity-60 leading-relaxed">
+              Al crearse un ticket, MAPI le propone a la persona pasos para resolverlo sola (reiniciar, revisar un
+              cable, cambiar su contraseña desde la opción oficial...). Si le sirven, pulsa «Sí, se resolvió» y el
+              ticket queda resuelto sin ocupar a un agente; si no, pulsa «No, necesito un agente» y sigue como
+              siempre. Nunca responde tickets confidenciales ni lo que necesite un técnico. Cuenta en el límite diario.
+            </p>
+          </div>
+        </div>
+        <label class="flex items-center gap-2 cursor-pointer shrink-0">
+          <input type="checkbox" class="toggle toggle-primary" formControlName="respondePrimero"
+                 aria-label="MAPI responde primero" />
+          <span class="text-sm font-medium">{{ aiForm.get('respondePrimero')?.value ? 'Activo' : 'Apagado' }}</span>
+        </label>
+      </div>
+    </div>
+
     <!-- ============ Límite diario de consultas ============ -->
     <div class="xl:col-span-2 card bg-base-100 shadow-md border border-base-200 rounded-[1.5rem]">
       <div class="card-body gap-3 sm:flex-row sm:items-center">

@@ -66,6 +66,7 @@ import {
           [disabled]="page === 0"
           (click)="goToPage(0)"
           aria-label="Primera página"
+          data-solo-ancho="1"
           title="Primera página"
         >
           <i class="fa-solid fa-angles-left text-[10px]" aria-hidden="true"></i>
@@ -86,7 +87,7 @@ import {
         <!-- Separador visual -->
         <span
           *ngIf="totalPages > 1"
-          class="w-px h-5 bg-base-300 mx-0.5"
+          class="hidden sm:block w-px h-5 bg-base-300 mx-0.5"
           aria-hidden="true"
         ></span>
 
@@ -121,7 +122,7 @@ import {
         <!-- Separador visual -->
         <span
           *ngIf="totalPages > 1"
-          class="w-px h-5 bg-base-300 mx-0.5"
+          class="hidden sm:block w-px h-5 bg-base-300 mx-0.5"
           aria-hidden="true"
         ></span>
 
@@ -144,6 +145,7 @@ import {
           [disabled]="page >= totalPages - 1"
           (click)="goToPage(totalPages - 1)"
           aria-label="Última página"
+          data-solo-ancho="1"
           title="Última página"
         >
           <i class="fa-solid fa-angles-right text-[10px]" aria-hidden="true"></i>

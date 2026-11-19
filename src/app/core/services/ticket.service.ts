@@ -159,4 +159,16 @@ uploadAttachment(id: string, file: File, answerId?: string): Observable<Attach> 
   solicitanteResumen(userId: string): Observable<SolicitanteResumen> {
     return this.http.get<SolicitanteResumen>(`${environment.apiUrl}/solicitantes/${userId}/resumen`);
   }
+
+  // ============ MAPI responde primero (V49) ============
+
+  /** Estado de la propuesta de MAPI: null, PROPUESTA, RESUELTO o NECESITA_AGENTE. */
+  estadoMapi(id: string): Observable<{ estado: string | null }> {
+    return this.http.get<{ estado: string | null }>(`${this.url}/${id}/mapi`);
+  }
+
+  /** El solicitante responde a la propuesta de MAPI. */
+  responderMapi(id: string, resuelto: boolean): Observable<{ estado: string }> {
+    return this.http.post<{ estado: string }>(`${this.url}/${id}/mapi/${resuelto ? 'resuelto' : 'necesito-agente'}`, {});
+  }
 }

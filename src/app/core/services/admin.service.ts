@@ -76,7 +76,7 @@ export interface Area { idArea: string; nameArea: string; descriptionArea?: stri
 export interface Category { idCategory: string; nameCategory: string; descriptionCategory?: string; iconCategory?: string; colorCategory?: string; teamCategory?: SupportTeam; /** Área de la categoría: la de su equipo (V28). */ areaId?: string | null; area?: string | null; }
 export interface SupportTeam { idTeam: string; nameTeam: string; descriptionTeam?: string; assignmentMethod: string; activeTeam: boolean; iconTeam?: string; colorTeam?: string; /** Incluye automáticamente a todos los agentes activos. */ autoMembersTeam?: boolean; /** Área que atiende el equipo (V28). */ areaId?: string | null; }
 /** areaSlaPolicy: área dueña (V32); null = global, solo la edita el súper admin. */
-export interface SlaPolicy { idSlaPolicy: string; nameSlaPolicy: string; descriptionSlaPolicy?: string; responseTimeMinutes: number; resolutionTimeMinutes: number; activeSlaPolicy: boolean; iconSlaPolicy?: string; colorSlaPolicy?: string; areaSlaPolicy?: string | null; }
+export interface SlaPolicy { idSlaPolicy: string; nameSlaPolicy: string; descriptionSlaPolicy?: string; responseTimeMinutes: number; resolutionTimeMinutes: number; activeSlaPolicy: boolean; iconSlaPolicy?: string; colorSlaPolicy?: string; areaSlaPolicy?: string | null; /** Cuenta solo en horario laboral (V49). */ horarioLaboralSlaPolicy?: boolean; }
 export interface SlaRule { idSlaRule: string; slaPolicyId: string; /** Nombre de la política (el jefe no lista las globales). */ slaPolicyName?: string | null; areaId: string; priorityId: string; categoryId?: string; typeId?: string; activeSlaRule: boolean; }
 export interface SlaEscalation { idEscalation: string; slaPolicyId: string; triggerPercentage: number; actionType: string; destinationTeamId?: string; destinationUserId?: string; notificationTemplateId?: string; }
 export interface NotificationTemplate { idTemplate: string; nameTemplate: string; typeTemplate: string; subjectTemplate: string; bodyTemplate: string; activeTemplate: boolean; recipientRule?: string; recipientEmail?: string | null; iconTemplate?: string; colorTemplate?: string; /** Imagen propia, para usarla en el HTML con [imagen] o [imagenUrl]. */ imageUrl?: string; }
@@ -179,6 +179,8 @@ export interface AiConfigAdmin {
         enabledActions?: string;
         /** Consultas máximas por día (0 = sin límite). */
         dailyLimit?: number | null;
+        /** MAPI responde primero al crearse un ticket (V49). */
+        respondePrimero?: boolean;
       }
 
 export interface AiConfigAdminResponse {
@@ -195,6 +197,8 @@ export interface AiConfigAdminResponse {
         /** Consultas máximas por día (null = sin límite) y las usadas hoy. */
         dailyLimit: number | null;
         usedToday: number | null;
+        /** MAPI responde primero al crearse un ticket (V49). */
+        respondePrimero?: boolean;
       }
 
 export interface AuditEvent {
@@ -694,7 +698,8 @@ agents(): Observable<AgentOption[]> {
       active: data.activeSlaPolicy ?? true,
       icon: data.iconSlaPolicy ?? '',
       color: data.colorSlaPolicy ?? '',
-      areaId: data.areaSlaPolicy ?? null
+      areaId: data.areaSlaPolicy ?? null,
+      horarioLaboral: data.horarioLaboralSlaPolicy ?? true
     };
   }
 

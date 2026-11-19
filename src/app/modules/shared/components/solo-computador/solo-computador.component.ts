@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
-/** Aviso en el teléfono para las pantallas que solo se usan desde un computador. */
+/** Aviso en el teléfono o la tableta para las pantallas que solo se usan desde un computador. */
 @Component({
   selector: 'app-solo-computador',
   standalone: true,
@@ -17,7 +17,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
           <h1 class="text-xl font-bold">Disponible en el computador</h1>
           <p class="text-sm opacity-75">
             Esta pantalla tiene editores y configuraciones que necesitan una pantalla grande.
-            Ábrala desde un computador; desde el teléfono puede seguir con tickets, actividades,
+            Ábrala desde un computador; desde el teléfono o la tableta puede seguir con tickets, actividades,
             proyectos, aprobaciones y sus equipos.
           </p>
           <p *ngIf="desde" class="text-xs font-mono opacity-60 break-all">{{ desde }}</p>

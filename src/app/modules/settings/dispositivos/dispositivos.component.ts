@@ -65,7 +65,13 @@ export class SettingsDispositivosComponent implements OnInit, OnDestroy {
     this.cargando = conSpinner;
     this.http.get<SesionDispositivo[]>(this.url, { withCredentials: true }).subscribe({
       next: (l) => { this.sesiones = l || []; this.cargando = false; },
-      error: () => { this.cargando = false; this.toast.error('No se pudieron cargar los dispositivos'); },
+      error: (e: { status?: number }) => {
+        this.cargando = false;
+        // Si esta sesión se cerró (desde otro dispositivo), ya sale el aviso
+        // "Sesión cerrada": un error de carga aquí solo confunde.
+        if (e?.status === 401 || e?.status === 403 || !this.auth.getToken()) return;
+        this.toast.error('No se pudieron cargar los dispositivos');
+      },
     });
   }
 

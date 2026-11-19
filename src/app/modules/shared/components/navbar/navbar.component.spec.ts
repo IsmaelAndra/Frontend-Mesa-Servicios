@@ -74,6 +74,8 @@ describe('NavbarComponent: aviso sonoro de las notificaciones', () => {
       // El navbar se engancha a status$ para recargar cuando la conexion pasa
       // a conectada, asi que sin el falla al arrancar.
       status$: new Subject(),
+      // Avisos "algo tuyo cambió" (notificaciones leídas en otro dispositivo).
+      cambio$: new Subject(),
       connect: () => {},
       close: () => {},
     } as unknown as SseService;

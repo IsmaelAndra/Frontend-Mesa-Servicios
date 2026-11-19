@@ -42,6 +42,7 @@ const LABELS: Record<string, string> = {
   mine: 'Mis tickets',
   assigned: 'Mis asignados',
   kanban: 'Tablero de tickets',
+  'panel-sla': 'Panel de SLA',
   activos: 'Activos de TI',
   admin: 'Administración',
   users: 'Usuarios',

@@ -75,6 +75,14 @@ export class SidebarComponent implements OnInit, OnDestroy {
       roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AGENT', 'AUDITOR']
     },
     {
+      // Tickets abiertos por urgencia de SLA (jefe: su área).
+      label: 'Panel de SLA',
+      seccion: 'principal',
+      route: '/tickets/panel-sla',
+      icon: navIcon('panel-sla'),
+      roles: ['SUPER_ADMIN', 'AREA_MANAGER', 'AUDITOR']
+    },
+    {
       label: 'Mis Tickets',
       seccion: 'principal',
       route: '/tickets/mios',

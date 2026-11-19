@@ -223,6 +223,8 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         }
         if (e.type !== "TICKET_ANSWERED" || e.ticketId !== this.ticketId)
           return;
+        // Puede ser MAPI respondiendo primero: se mira si hay propuesta.
+        this.cargarEstadoMapi();
 
         // Si el mensaje es de esta misma persona, no hay nada que avisarle.
         if (this.myUserId && e.actorId === this.myUserId) return;
@@ -574,6 +576,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       next: (t) => {
         this.ticket = t;
         this.loadAnswers();
+        this.cargarEstadoMapi();
         this.loadAttachments();
         this.loadAudit();
         this.loadSla();
@@ -2048,7 +2051,48 @@ export class TicketDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   avatarSrc(a: Answer): string | null {
+    if (a.mapiAnswer) return 'assets/mapi/mapi.svg';
     return this.resolverFoto(a.userPhotoUrl);
+  }
+
+  // ============ MAPI responde primero (V49) ============
+
+  /** Estado de la propuesta de MAPI en este ticket (null si no propuso nada). */
+  mapiEstado: string | null = null;
+  respondiendoMapi = false;
+
+  /** Quien abrió el ticket decide si la respuesta de MAPI le sirvió. */
+  get preguntarMapi(): boolean {
+    return this.mapiEstado === 'PROPUESTA' && !!this.ticket && this.ticket.userId === this.myUserId;
+  }
+
+  private cargarEstadoMapi(): void {
+    if (!this.ticketId) return;
+    this.ticketService.estadoMapi(this.ticketId).subscribe({
+      next: (r) => (this.mapiEstado = r?.estado ?? null),
+      error: () => undefined,
+    });
+  }
+
+  responderMapi(resuelto: boolean): void {
+    if (!this.ticketId || this.respondiendoMapi) return;
+    this.respondiendoMapi = true;
+    this.ticketService.responderMapi(this.ticketId, resuelto).subscribe({
+      next: (r) => {
+        this.respondiendoMapi = false;
+        this.mapiEstado = r?.estado ?? null;
+        if (resuelto) {
+          this.toastService.success('¡Listo! El ticket quedó resuelto.', 'Gracias');
+          this.ticketService.getById(this.ticketId!).subscribe({ next: (t) => (this.ticket = t), error: () => undefined });
+        } else {
+          this.toastService.info('Un agente le atenderá en este mismo chat.', 'Entendido');
+        }
+      },
+      error: (e) => {
+        this.respondiendoMapi = false;
+        this.toastService.error(e?.error?.message || 'No se pudo registrar su respuesta');
+      },
+    });
   }
 
   /**

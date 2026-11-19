@@ -22,6 +22,7 @@ export const NAV_ICONS: Record<string, string> = {
   mine: 'fa-solid fa-inbox',
   assigned: 'fa-solid fa-user-check',
   kanban: 'fa-solid fa-table-cells-large',
+  'panel-sla': 'fa-solid fa-gauge-high',
   activities: 'fa-solid fa-table-cells-large',
   calendar: 'fa-regular fa-calendar',
   // Inventario de activos de TI. La clave coincide con el segmento "activos",

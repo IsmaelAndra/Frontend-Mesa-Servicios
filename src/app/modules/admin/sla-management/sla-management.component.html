@@ -26,8 +26,15 @@
         <i class="fa-solid fa-arrow-trend-up text-[15px]" aria-hidden="true"></i>
         Escalaciones
       </a>
+      <a role="tab" class="tab gap-2" [class.tab-active]="activeTab === 'horario'" (click)="activeTab = 'horario'">
+        <i class="fa-solid fa-business-time text-[15px]" aria-hidden="true"></i>
+        Horario y feriados
+      </a>
     </div>
   </header>
+
+  <!-- ===================== HORARIO Y FERIADOS (V49) ===================== -->
+  <app-horario-laboral *ngIf="activeTab === 'horario'" [soloLectura]="esJefe"></app-horario-laboral>
 
   <!-- ===================== POLÍTICAS ===================== -->
   <div class="card bg-base-100 shadow-md border border-base-200 overflow-hidden" *ngIf="activeTab === 'policies'">
@@ -117,6 +124,15 @@
                 class="input input-bordered input-sm w-full font-mono" placeholder="#D97706" />
             </div>
           </div>
+
+          <label class="md:col-span-4 flex items-start gap-3 p-3 rounded-xl border border-base-300 cursor-pointer">
+            <input type="checkbox" class="checkbox checkbox-sm checkbox-primary mt-0.5" [(ngModel)]="newPolicy.horarioLaboralSlaPolicy"
+                   name="horarioLaboralSlaPolicy" />
+            <span class="text-sm">
+              <span class="font-semibold">Solo horario laboral</span>
+              <span class="block text-xs opacity-70">El plazo corre solo en el horario laboral y no en feriados (pestaña «Horario y feriados»). Desmárquelo para contar las 24 horas, p. ej. en caídas críticas.</span>
+            </span>
+          </label>
 
           <div class="md:col-span-4 flex justify-end gap-2 pt-2 border-t border-base-300">
             <button type="button" class="btn btn-sm btn-ghost" (click)="showNewPolicy = false">Cancelar</button>
@@ -216,6 +232,14 @@
                       <app-estado-activo [(ngModel)]="editPolicy!.activeSlaPolicy" [femenino]="true" etiqueta="Estado"></app-estado-activo>
                     </div>
 
+                    <label class="col-span-full flex items-start gap-3 p-3 rounded-xl border border-base-300 cursor-pointer">
+                      <input type="checkbox" class="checkbox checkbox-sm checkbox-primary mt-0.5" [(ngModel)]="editPolicy!.horarioLaboralSlaPolicy" />
+                      <span class="text-sm">
+                        <span class="font-semibold">Solo horario laboral</span>
+                        <span class="block text-xs opacity-70">Desmarcado = 24 horas. Se aplica a los tickets nuevos y a los que se recalculan.</span>
+                      </span>
+                    </label>
+
                     <div class="col-span-full flex justify-end gap-2 pt-2 border-t border-base-300">
                       <button class="btn btn-sm btn-ghost gap-1" (click)="cancelEditPolicy()">
                         <i class="fa-solid fa-xmark text-[15px]" aria-hidden="true"></i>
@@ -274,6 +298,9 @@
                   <span class="badge badge-sm badge-outline gap-1">
                     <i class="fa-solid fa-circle-check text-xs" aria-hidden="true"></i>
                     {{ duracion(p.resolutionTimeMinutes) }}
+                  </span>
+                  <span class="block text-[10px] opacity-60 mt-0.5" [title]="p.horarioLaboralSlaPolicy === false ? 'Cuenta las 24 horas' : 'Cuenta solo en horario laboral y no en feriados'">
+                    {{ p.horarioLaboralSlaPolicy === false ? '24 h' : 'Horario laboral' }}
                   </span>
                 </td>
                 <td class="text-center">

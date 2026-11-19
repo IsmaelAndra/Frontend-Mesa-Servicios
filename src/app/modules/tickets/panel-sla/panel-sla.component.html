@@ -1,0 +1,125 @@
+<div class="space-y-6">
+  <header class="page-head">
+    <div class="flex items-center gap-3 min-w-0">
+      <span class="p-2.5 rounded-xl bg-primary/10 text-primary shrink-0" aria-hidden="true"><i class="fa-solid fa-gauge-high text-lg"></i></span>
+      <div class="min-w-0">
+        <h1 class="page-head__titulo text-xl font-bold">Panel de SLA</h1>
+        <p class="text-xs opacity-70">
+          Tickets abiertos ordenados por urgencia. Se actualiza solo
+          <span *ngIf="panel">· {{ panel.generado | date: 'HH:mm:ss' }}</span>
+        </p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" class="btn btn-sm btn-ghost border border-base-300 gap-2" (click)="cargar()" [disabled]="cargando">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="cargando" aria-hidden="true"></i> Actualizar
+      </button>
+    </div>
+  </header>
+
+  <div *ngIf="cargando && !panel" class="flex justify-center py-16" role="status"><span class="loading loading-spinner loading-lg"></span></div>
+  <div *ngIf="error" class="alert alert-error"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> No se pudo cargar el panel.</div>
+
+  <ng-container *ngIf="panel">
+    <!-- Resumen: cada tarjeta filtra la lista -->
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+      <button type="button" class="card bg-base-100 border shadow-sm text-left p-4 transition hover:shadow-md"
+              [ngClass]="filtro === 'TODOS' ? 'border-primary ring-1 ring-primary/30' : 'border-base-200'" (click)="filtro = 'TODOS'">
+        <span class="text-xs opacity-70">Abiertos</span>
+        <span class="text-2xl font-bold tabular-nums">{{ panel.total }}</span>
+      </button>
+      <button type="button" class="card bg-base-100 border shadow-sm text-left p-4 transition hover:shadow-md"
+              [ngClass]="filtro === 'VENCIDO' ? 'border-error ring-1 ring-error/30' : 'border-base-200'" (click)="filtro = 'VENCIDO'">
+        <span class="text-xs opacity-70 flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-error" aria-hidden="true"></i> Vencidos</span>
+        <span class="text-2xl font-bold tabular-nums text-error">{{ panel.vencidos }}</span>
+      </button>
+      <button type="button" class="card bg-base-100 border shadow-sm text-left p-4 transition hover:shadow-md"
+              [ngClass]="filtro === 'EN_RIESGO' ? 'border-warning ring-1 ring-warning/30' : 'border-base-200'" (click)="filtro = 'EN_RIESGO'">
+        <span class="text-xs opacity-70 flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation text-warning" aria-hidden="true"></i> En riesgo</span>
+        <span class="text-2xl font-bold tabular-nums text-warning">{{ panel.enRiesgo }}</span>
+        <span class="text-[10px] opacity-60">≥ {{ panel.umbralRiesgo }} % del plazo</span>
+      </button>
+      <button type="button" class="card bg-base-100 border shadow-sm text-left p-4 transition hover:shadow-md"
+              [ngClass]="filtro === 'EN_TIEMPO' ? 'border-success ring-1 ring-success/30' : 'border-base-200'" (click)="filtro = 'EN_TIEMPO'">
+        <span class="text-xs opacity-70 flex items-center gap-1"><i class="fa-solid fa-circle-check text-success" aria-hidden="true"></i> A tiempo</span>
+        <span class="text-2xl font-bold tabular-nums text-success">{{ panel.enTiempo }}</span>
+      </button>
+      <button type="button" class="card bg-base-100 border shadow-sm text-left p-4 transition hover:shadow-md"
+              [ngClass]="filtro === 'SIN_AGENTE' ? 'border-primary ring-1 ring-primary/30' : 'border-base-200'" (click)="filtro = 'SIN_AGENTE'">
+        <span class="text-xs opacity-70 flex items-center gap-1"><i class="fa-solid fa-user-slash" aria-hidden="true"></i> Sin agente</span>
+        <span class="text-2xl font-bold tabular-nums">{{ panel.sinAgente }}</span>
+      </button>
+      <div class="card bg-base-100 border border-base-200 shadow-sm p-4">
+        <span class="text-xs opacity-70 flex items-center gap-1"><i class="fa-regular fa-comment" aria-hidden="true"></i> Sin primera respuesta</span>
+        <span class="text-2xl font-bold tabular-nums">{{ panel.sinRespuesta }}</span>
+      </div>
+    </div>
+
+    <div class="grid gap-6 xl:grid-cols-12">
+      <!-- Tickets por urgencia -->
+      <section class="xl:col-span-8 card bg-base-100 border border-base-200 shadow-sm">
+        <div class="card-body gap-3 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="font-semibold">Tickets <span class="badge badge-sm badge-ghost">{{ tickets.length }}</span></h2>
+            <label class="input input-bordered input-sm flex items-center gap-2 w-full sm:w-64">
+              <i class="fa-solid fa-magnifying-glass opacity-60" aria-hidden="true"></i>
+              <input type="search" class="grow min-w-0" [(ngModel)]="buscar" placeholder="Número, título, agente…" aria-label="Buscar en el panel" />
+            </label>
+          </div>
+
+          <ul class="divide-y divide-base-200">
+            <li *ngFor="let t of tickets; trackBy: trackTicket" class="py-3">
+              <a [routerLink]="['/tickets', t.id]" class="flex flex-wrap items-start gap-3 rounded-lg -mx-2 px-2 py-1 hover:bg-base-200/60">
+                <span class="font-mono text-sm font-semibold w-14 shrink-0 tabular-nums">#{{ t.numero }}</span>
+                <span class="flex-1 min-w-[12rem]">
+                  <span class="block text-sm font-medium truncate" [class.italic]="t.confidencial">
+                    <i *ngIf="t.confidencial" class="fa-solid fa-lock text-xs opacity-60 mr-1" aria-hidden="true"></i>{{ t.titulo | tituloPlano }}
+                  </span>
+                  <span class="block text-xs opacity-70 truncate">
+                    {{ t.agente || 'Sin agente' }}<span *ngIf="t.area"> · {{ t.area }}</span><span *ngIf="t.politica"> · {{ t.politica }}</span>
+                    <span *ngIf="!t.respondido" class="text-warning"> · sin primera respuesta</span>
+                  </span>
+                  <progress class="progress h-1.5 mt-1.5 w-full" [ngClass]="colorBarra(t)" [value]="t.pctConsumido > 100 ? 100 : t.pctConsumido" max="100"
+                            [attr.aria-label]="t.pctConsumido + ' % del plazo consumido'"></progress>
+                </span>
+                <span class="flex flex-col items-end gap-1 shrink-0">
+                  <span class="badge badge-sm gap-1 text-white" [ngClass]="claseEstado(t.estadoSla)">
+                    <i [class]="iconoEstado(t.estadoSla)" aria-hidden="true"></i> {{ etiquetaEstado(t.estadoSla) }}
+                  </span>
+                  <span class="text-xs font-medium tabular-nums" [ngClass]="t.minutosRestantes < 0 ? 'text-error' : ''">{{ restante(t) }}</span>
+                  <span class="text-[10px] opacity-60" [title]="t.horarioLaboral ? 'Cuenta solo en horario laboral' : 'Cuenta las 24 horas'">
+                    vence {{ t.resolucionVence | date: 'dd/MM HH:mm' }}<span *ngIf="t.horarioLaboral"> · h. laboral</span>
+                  </span>
+                </span>
+              </a>
+            </li>
+            <li *ngIf="!tickets.length" class="py-10 text-center text-sm opacity-60">
+              <i class="fa-solid fa-mug-hot text-2xl block mb-2" aria-hidden="true"></i>Nada por aquí.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Carga por agente -->
+      <section class="xl:col-span-4 card bg-base-100 border border-base-200 shadow-sm self-start">
+        <div class="card-body gap-3 p-4">
+          <h2 class="font-semibold flex items-center gap-2"><i class="fa-solid fa-users text-primary" aria-hidden="true"></i> Carga por agente</h2>
+          <ul class="space-y-3">
+            <li *ngFor="let a of panel.porAgente; trackBy: trackAgente">
+              <div class="flex items-center justify-between gap-2 text-sm">
+                <button type="button" class="truncate text-left hover:underline" (click)="buscar = a.nombre; filtro = 'TODOS'">{{ a.nombre }}</button>
+                <span class="flex items-center gap-1 shrink-0 text-xs tabular-nums">
+                  <span *ngIf="a.vencidos" class="badge badge-xs badge-error text-white" [title]="a.vencidos + ' vencidos'">{{ a.vencidos }}</span>
+                  <span *ngIf="a.enRiesgo" class="badge badge-xs badge-warning text-white" [title]="a.enRiesgo + ' en riesgo'">{{ a.enRiesgo }}</span>
+                  <b>{{ a.abiertos }}</b>
+                </span>
+              </div>
+              <progress class="progress progress-primary h-1.5 w-full" [value]="pctCarga(a)" max="100" [attr.aria-label]="a.abiertos + ' abiertos'"></progress>
+            </li>
+            <li *ngIf="!panel.porAgente.length" class="text-sm opacity-60">Sin tickets asignados.</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+</div>

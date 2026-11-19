@@ -71,6 +71,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   isAgent = false;
   rol = '';
+
+  /** Accesos rápidos de Inicio (los mismos permisos que el menú lateral). */
+  accesos: { texto: string; ruta: string; icono: string; color: string }[] = [];
+
+  trackAcceso(_: number, a: { ruta: string }): string {
+    return a.ruta;
+  }
+
+  private armarAccesos(): { texto: string; ruta: string; icono: string; color: string }[] {
+    const roles = new Set(this.authService.rolesEfectivos());
+    const tiene = (...r: string[]) => r.some((x) => roles.has(x));
+    const personal = tiene('SUPER_ADMIN', 'AREA_MANAGER', 'AGENT');
+    const lista: { texto: string; ruta: string; icono: string; color: string; ver: boolean }[] = [
+      { texto: 'Nuevo ticket', ruta: '/tickets/nuevo', icono: 'fa-solid fa-plus', color: '#2563EB', ver: !tiene('AUDITOR') },
+      { texto: 'Mis tickets', ruta: '/tickets/mios', icono: 'fa-solid fa-ticket', color: '#0EA5E9', ver: tiene('USER') },
+      { texto: 'Tablero', ruta: '/tickets/tablero', icono: 'fa-solid fa-table-columns', color: '#0EA5E9', ver: personal || tiene('AUDITOR') },
+      { texto: 'Actividades', ruta: '/actividades', icono: 'fa-solid fa-list-check', color: '#7C3AED', ver: true },
+      { texto: 'Calendario', ruta: '/calendario', icono: 'fa-solid fa-calendar-days', color: '#DB2777', ver: true },
+      { texto: 'Proyectos', ruta: '/proyectos', icono: 'fa-solid fa-diagram-project', color: '#EA580C', ver: true },
+      { texto: 'Activos de TI', ruta: '/activos', icono: 'fa-solid fa-laptop', color: '#0D9488', ver: tiene('SUPER_ADMIN', 'GESTOR_ACTIVOS', 'AUDITOR') },
+      { texto: 'Mis equipos', ruta: '/activos/mis-equipos', icono: 'fa-solid fa-computer', color: '#0D9488', ver: true },
+      { texto: 'Aprobaciones', ruta: '/aprobaciones', icono: 'fa-solid fa-stamp', color: '#CA8A04', ver: tiene('SUPER_ADMIN', 'AREA_MANAGER') },
+      { texto: 'Reportes', ruta: '/reportes', icono: 'fa-solid fa-chart-column', color: '#16A34A', ver: tiene('SUPER_ADMIN', 'AREA_MANAGER', 'AUDITOR') },
+    ];
+    return lista.filter((a) => a.ver).map(({ ver: _ver, ...a }) => a);
+  }
   nombre = '';
   evaluations: MonthlyEvaluation[] = [];
   loadingEvaluation = false;
@@ -134,6 +160,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     window.addEventListener('scroll', this.ocultarTooltips, { capture: true, passive: true });
     this.subscriptions.push(this.temaTemporada.temaVisible$.subscribe((t) => (this.tema = t)));
     this.rol = this.authService.getRole();
+    this.accesos = this.armarAccesos();
     this.isAgent = this.rol === 'AGENT';
     // Un agente solo ve su propia información: la operación en tiempo real es
     // una vista de supervisión y no le corresponde.

@@ -352,7 +352,7 @@
 .calor__hora {
   font-size: 9px;
   text-align: center;
-  color: oklch(var(--bc) / 0.45);
+  color: oklch(var(--bc) / 0.7);
 }
 .calor__dia {
   font-size: 10px;
@@ -406,4 +406,43 @@
 /* Chart.js necesita un contenedor relativo para medir al redimensionar. */
 .dash-panel canvas {
   max-width: 100%;
+}
+
+/* Accesos rápidos bajo la cabecera de Inicio: en el teléfono una fila que se
+   desplaza de lado; en pantallas anchas se reparten en varias líneas. */
+.accesos-rapidos {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: none;
+}
+.accesos-rapidos::-webkit-scrollbar { display: none; }
+@media (min-width: 768px) {
+  .accesos-rapidos { flex-wrap: wrap; overflow: visible; }
+}
+.acceso-rapido {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  padding: 0.45rem 0.85rem 0.45rem 0.45rem;
+  border-radius: 999px;
+  background: oklch(var(--b1));
+  border: 1px solid oklch(var(--bc) / 0.08);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: oklch(var(--bc) / 0.85);
+  transition: transform 0.12s ease-out, border-color 0.15s;
+}
+.acceso-rapido:hover { border-color: oklch(var(--p) / 0.4); }
+.acceso-rapido:active { transform: scale(0.97); }
+.acceso-rapido__icono {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
 }
